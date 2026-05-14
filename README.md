@@ -19,6 +19,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Admin readiness | Pulls FitRep reminders, admin watch items, local document gaps, readiness references, and travel/admin support into an AdminO / S-1 style view. | Working local digest |
 | S-1 / Admin chief advisor | Adds an explicit S-1/Admin chief perspective for reserve admin continuity, routing discipline, awards, orders, DTS, and suspense management. | Working advisory agent |
 | S-3 / OpsO advisor | Adds an explicit S-3/OpsO perspective for reserve operations planning, training synchronization, battle rhythm, and decision support. | Working advisory agent |
+| S-4 / logistics advisor | Adds an explicit S-4/LogO perspective for reserve supportability, movement, sustainment, supply, maintenance, and logistics friction. | Working advisory agent |
 | AirO advisor | Adds a generic aviation-support and air-ground coordination planning perspective for training and public staff-planning contexts. | Working advisory agent |
 | JAG / legal advisor | Adds issue-spotting and escalation prompts while clearly refusing to replace formal legal counsel. | Working advisory agent |
 | Chaplain advisor | Adds morale, welfare, ethics, and referral-minded leader prompts without claiming to replace real chaplain or care channels. | Working advisory agent |
@@ -322,6 +323,22 @@ Run the S-3 / OpsO advisor:
 curl -X POST http://127.0.0.1:8000/agents/s3-opso/run `
   -H "Content-Type: application/json" `
   -d "{\"input\":\"Help me shape a drill weekend synchronization plan.\",\"context\":{\"user_role\":\"S-3\"}}"
+```
+
+Build an S-4 / logistics planning support draft:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/training/s4-plan `
+  -H "Content-Type: application/json" `
+  -d "{\"title\":\"AT logistics sync\",\"supported_event\":\"Annual training movement\",\"support_objective\":\"Support distributed personnel arrival and sustainment.\",\"travel_required\":true,\"overnight\":true,\"support_requirements\":[\"Billeting\",\"Chow\",\"Equipment issue\"]}"
+```
+
+Run the S-4 / logistics advisor:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/agents/s4-logistics/run `
+  -H "Content-Type: application/json" `
+  -d "{\"input\":\"Help me think through supportability for an AT movement plan.\",\"context\":{\"user_role\":\"S-4\"}}"
 ```
 
 Build a range/RSO support checklist:

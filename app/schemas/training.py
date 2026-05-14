@@ -111,3 +111,26 @@ class S3PlanningResponse(BaseModel):
     required_outputs: list[str] = Field(default_factory=list)
     reserve_friction_points: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+
+
+class S4PlanningRequest(BaseModel):
+    title: str
+    supported_event: str
+    support_objective: str
+    audience: str | None = None
+    travel_required: bool = True
+    overnight: bool = False
+    distributed_personnel: bool = True
+    constraints: list[str] = Field(default_factory=list)
+    support_requirements: list[str] = Field(default_factory=list)
+
+
+class S4PlanningResponse(BaseModel):
+    title: str
+    support_estimate: list[str] = Field(default_factory=list)
+    critical_support_requirements: list[str] = Field(default_factory=list)
+    movement_and_billeting: list[str] = Field(default_factory=list)
+    sustainment_checks: list[str] = Field(default_factory=list)
+    coordination_points: list[str] = Field(default_factory=list)
+    reserve_friction_points: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)

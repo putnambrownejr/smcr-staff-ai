@@ -104,3 +104,26 @@ def test_s3_planner_returns_battle_rhythm_and_outputs() -> None:
     assert payload["coordination_matrix"]
     assert payload["battle_rhythm"]
     assert payload["required_outputs"]
+
+
+def test_s4_planner_returns_support_and_sustainment_elements() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/training/s4-plan",
+        json={
+            "title": "AT logistics sync",
+            "supported_event": "Annual training movement",
+            "support_objective": "Support distributed personnel arrival and sustainment.",
+            "travel_required": True,
+            "overnight": True,
+            "support_requirements": ["Billeting", "Chow", "Equipment issue"],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["support_estimate"]
+    assert payload["critical_support_requirements"]
+    assert payload["movement_and_billeting"]
+    assert payload["sustainment_checks"]
