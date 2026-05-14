@@ -15,6 +15,7 @@ from app.services.agents.g9_civil_military_agent import build_g9_civil_military_
 from app.services.agents.jag_agent import build_jag_agent
 from app.services.agents.leadership_agent import build_leadership_agent
 from app.services.agents.maradmin_agent import build_maradmin_agent
+from app.services.agents.medical_doc_agent import build_medical_doc_agent
 from app.services.agents.mos_civil_affairs_agent import build_mos_civil_affairs_agent
 from app.services.agents.mos_commo_agent import build_mos_commo_agent
 from app.services.agents.opord_agent import build_opord_agent
@@ -70,6 +71,7 @@ def default_agents() -> list[Agent]:
         build_chief_of_staff_agent(),
         build_correspondence_formatting_agent(),
         build_maradmin_agent(),
+        build_medical_doc_agent(),
         build_uniform_agent(),
         build_drill_prep_agent(),
         build_opord_agent(),

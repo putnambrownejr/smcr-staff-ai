@@ -43,6 +43,14 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         ("resources", "gear", "field execution"),
     ),
     StaffRoleDefinition(
+        StaffEchelon.company,
+        "doc",
+        "Company Doc",
+        "tactical/company",
+        "Medical support, casualty planning, and CASEVAC awareness",
+        ("casualty response", "CASEVAC", "medical risk"),
+    ),
+    StaffRoleDefinition(
         StaffEchelon.battalion,
         "xo",
         "Battalion XO",
@@ -117,6 +125,14 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
     ),
     StaffRoleDefinition(
         StaffEchelon.battalion,
+        "surgeon",
+        "Battalion Surgeon / Medical Planner",
+        "battalion staff",
+        "Medical support, TCCC awareness, and evacuation planning",
+        ("medical support", "TCCC", "evacuation planning"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.battalion,
         "s9",
         "S-9 / Civil-Military",
         "battalion staff",
@@ -179,6 +195,14 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "division/group staff",
         "Civil-military integration, community context, and partner coordination",
         ("civil impact", "external coordination", "continuity"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "surgeon",
+        "Division/Group Surgeon",
+        "division/group staff",
+        "Medical planning, health-service-support awareness, and evacuation oversight",
+        ("medical planning", "CASEVAC", "supportability"),
     ),
 )
 

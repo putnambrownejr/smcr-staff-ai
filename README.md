@@ -23,6 +23,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | S-4 / logistics advisor | Adds an explicit S-4/LogO perspective for reserve supportability, movement, sustainment, supply, maintenance, and logistics friction. | Working advisory agent |
 | S-6 / communications advisor | Adds an explicit S-6/CommO perspective for reserve C2 support, generic PACE framing, permissions, equipment, supportability friction, and PKI/CAC user-access issues as a subordinate lane. | Working advisory agent |
 | G-9 / civil-military advisor | Adds an explicit G-9 perspective for civil considerations, partner coordination, external engagement continuity, and public context framing. | Working advisory agent |
+| Medical / Doc advisor | Adds a training-safe medical-support perspective for TCCC-aware planning, 9-line familiarity, CASEVAC structure, and event medical coordination. | Working advisory agent |
 | AirO advisor | Adds a generic aviation-support and air-ground coordination planning perspective for training and public staff-planning contexts. | Working advisory agent |
 | JAG / legal advisor | Adds issue-spotting and escalation prompts while clearly refusing to replace formal legal counsel. | Working advisory agent |
 | Chaplain advisor | Adds morale, welfare, ethics, and referral-minded leader prompts without claiming to replace real chaplain or care channels. | Working advisory agent |
@@ -428,6 +429,22 @@ Run the G-9 advisor:
 curl -X POST http://127.0.0.1:8000/agents/g9-civil-military/run `
   -H "Content-Type: application/json" `
   -d "{\"input\":\"Help me think through external coordination and continuity for a reserve-supported event.\",\"context\":{\"user_role\":\"G-9\"}}"
+```
+
+Build a medical-support planning draft:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/staff/medical-plan `
+  -H "Content-Type: application/json" `
+  -d "{\"title\":\"Field training med plan\",\"supported_event\":\"One-day field event\",\"medical_risk_context\":[\"Heat injury risk\",\"Distributed personnel\"],\"casualty_scenarios\":[\"Vehicle rollover\",\"Heat casualty\"],\"travel_required\":true}"
+```
+
+Run the Doc advisor:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/agents/medical-doc-advisor/run `
+  -H "Content-Type: application/json" `
+  -d "{\"input\":\"Help me think through a training-safe CASEVAC and TCCC support plan.\",\"context\":{\"user_role\":\"Doc\"}}"
 ```
 
 Build a range/RSO support checklist:

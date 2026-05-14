@@ -124,3 +124,24 @@ class G9PlanningResponse(BaseModel):
     engagement_considerations: list[str] = Field(default_factory=list)
     continuity_and_transition: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+
+
+class MedicalPlanningRequest(BaseModel):
+    title: str
+    supported_event: str
+    medical_risk_context: list[str] = Field(default_factory=list)
+    casualty_scenarios: list[str] = Field(default_factory=list)
+    audience: str | None = None
+    overnight: bool = False
+    travel_required: bool = False
+    training_only: bool = True
+
+
+class MedicalPlanningResponse(BaseModel):
+    title: str
+    medical_support_estimate: list[str] = Field(default_factory=list)
+    tccc_considerations: list[str] = Field(default_factory=list)
+    nine_line_considerations: list[str] = Field(default_factory=list)
+    casevac_plan_elements: list[str] = Field(default_factory=list)
+    coordination_requirements: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)

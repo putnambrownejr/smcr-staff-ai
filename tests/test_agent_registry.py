@@ -14,6 +14,7 @@ def test_agent_registry_loads_expected_agents() -> None:
         "s4-logistics",
         "s6-comms",
         "g9-civil-military",
+        "medical-doc-advisor",
         "airo-advisor",
         "jag-legal-advisor",
         "chaplain-advisor",
@@ -152,6 +153,22 @@ def test_g9_agent_returns_civil_military_structure() -> None:
     )
 
     assert "G-9 / civil-military advisory" in response.answer
+    assert response.structured_citations
+    assert response.source_trust
+
+
+def test_medical_doc_agent_returns_casevac_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("medical-doc-advisor")
+    assert agent is not None
+
+    response = agent.run(
+        "Help me think through a training-safe CASEVAC and TCCC support plan.",
+        context=AgentContext(),
+    )
+
+    assert "Medical / Doc advisory" in response.answer
+    assert "CASEVAC" in response.answer
     assert response.structured_citations
     assert response.source_trust
 

@@ -21,10 +21,13 @@ def test_registry_includes_chief_and_staff_agents() -> None:
 
     assert "chief-of-staff-aide" in ids
     assert "staff-company-xo" in ids
+    assert "staff-company-doc" in ids
     assert "staff-battalion-s2" in ids
     assert "staff-battalion-s9" in ids
+    assert "staff-battalion-surgeon" in ids
     assert "staff-division_group-g2" in ids
     assert "staff-division_group-g9" in ids
+    assert "staff-division_group-surgeon" in ids
 
 
 def test_chief_of_staff_agent_surfaces_handoff_watch_items() -> None:
@@ -162,6 +165,42 @@ def test_g9_planner_returns_partner_and_continuity_elements() -> None:
     assert payload["civil_situation_frame"]
     assert payload["partner_coordination"]
     assert payload["continuity_and_transition"]
+
+
+def test_medical_planner_returns_tccc_and_casevac_elements() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/staff/medical-plan",
+        json={
+            "title": "Field event med plan",
+            "supported_event": "One-day field event",
+            "medical_risk_context": ["Heat injury risk"],
+            "casualty_scenarios": ["Vehicle rollover"],
+            "travel_required": True,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["medical_support_estimate"]
+    assert payload["tccc_considerations"]
+    assert payload["nine_line_considerations"]
+    assert payload["casevac_plan_elements"]
+
+
+def test_staff_council_normalizes_doc_alias() -> None:
+    service = StaffCouncilService()
+    response = service.vet_idea(
+        StaffCouncilRequest(
+            question="How should we think about casualty response for a field event?",
+            echelon=StaffEchelon.company,
+            roles=["corpsman"],
+        )
+    )
+
+    assert len(response.perspectives) == 1
+    assert response.perspectives[0].role == "doc"
 
 
 def test_staff_s6_pki_wrapper_route_returns_pki_playbook() -> None:

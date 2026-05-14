@@ -11,6 +11,8 @@ from app.schemas.pki import PkiTroubleshootingRequest, PkiTroubleshootingRespons
 from app.schemas.staff import (
     G9PlanningRequest,
     G9PlanningResponse,
+    MedicalPlanningRequest,
+    MedicalPlanningResponse,
     S2EstimateRequest,
     S2EstimateResponse,
     S6PlanRequest,
@@ -27,6 +29,7 @@ from app.services.agents.base import AgentContext
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.staff.council import StaffCouncilService
 from app.services.staff.g9_planner import G9Planner
+from app.services.staff.medical_planner import MedicalPlanner
 from app.services.staff.s2_estimator import S2Estimator
 from app.services.staff.s6_planner import S6Planner
 
@@ -34,6 +37,7 @@ router = APIRouter(prefix="/staff", tags=["staff council"])
 
 _service = StaffCouncilService()
 _g9_planner = G9Planner()
+_medical_planner = MedicalPlanner()
 _s2_estimator = S2Estimator()
 _s6_planner = S6Planner()
 _pki_service = PkiTroubleshootingService()
@@ -75,6 +79,11 @@ def build_s6_plan(request: S6PlanRequest) -> S6PlanResponse:
 @router.post("/g9-plan", response_model=G9PlanningResponse)
 def build_g9_plan(request: G9PlanningRequest) -> G9PlanningResponse:
     return _g9_planner.build(request)
+
+
+@router.post("/medical-plan", response_model=MedicalPlanningResponse)
+def build_medical_plan(request: MedicalPlanningRequest) -> MedicalPlanningResponse:
+    return _medical_planner.build(request)
 
 
 @router.post("/s6/pki-troubleshooting", response_model=PkiTroubleshootingResponse)
