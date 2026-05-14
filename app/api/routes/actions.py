@@ -9,6 +9,9 @@ from app.core.config import get_settings
 from app.schemas.actions import (
     ActionBundleTrackRequest,
     ActionBundleTrackResponse,
+    ActionFollowUpRequest,
+    ActionFollowUpResponse,
+    ActionFollowUpResult,
     ActionLinkRequest,
     ActionPromoteRequest,
     ActionPromoteResponse,
@@ -18,11 +21,14 @@ from app.schemas.actions import (
     ActionTrackResponse,
     ActionUpdateRequest,
     AnnualTrainingActionBundleRequest,
+    CorrespondenceActionBundleRequest,
+    RangePackageActionBundleRequest,
 )
 from app.schemas.chief import ChiefBriefRequest
 from app.schemas.context import LocalContextMetadata
 from app.schemas.source_updates import DocumentationUpdateCandidate
 from app.services.actions.bundle_builder import ActionBundleBuilder
+from app.services.actions.follow_up import ActionFollowUpProcessor
 from app.services.actions.promoter import ActionPromoter
 from app.services.actions.tracker import ActionTracker
 from app.services.admin.readiness import AdminReadinessService
@@ -31,15 +37,19 @@ from app.services.chief.orchestrator import ChiefAideOrchestrator
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.opportunities.tracker import OpportunityTracker
+from app.services.personnel.correspondence_converter import CorrespondenceConverter
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
-from app.services.training.event_planner import AnnualTrainingPlanner
+from app.services.training.event_planner import AnnualTrainingPlanner, RangePackagePlanner
 
 router = APIRouter(prefix="/actions", tags=["action tracker"], dependencies=[LocalApiKeyDependency])
 _promoter = ActionPromoter()
 _bundle_builder = ActionBundleBuilder()
 _annual_training_planner = AnnualTrainingPlanner()
+_range_package_planner = RangePackagePlanner()
+_correspondence_converter = CorrespondenceConverter()
+_follow_up_processor = ActionFollowUpProcessor()
 SEED_DIR = Path("data/seed")
 
 
@@ -176,6 +186,56 @@ def track_actions_from_annual_training_plan(
         )
     )
     return _bundle_response(plan.title, tracked, len(tracked), "annual training plan")
+
+
+@router.post("/from-correspondence-conversion", response_model=ActionBundleTrackResponse)
+def track_actions_from_correspondence_conversion(
+    request: CorrespondenceActionBundleRequest,
+    tracker: Annotated[ActionTracker, Depends(get_tracker)],
+) -> ActionBundleTrackResponse:
+    draft = _correspondence_converter.build(request.draft)
+    tracked = tracker.track(
+        _bundle_builder.from_correspondence_conversion(
+            draft,
+            user_key=request.options.user_key,
+            owner=request.options.owner,
+        )
+    )
+    return _bundle_response(draft.title, tracked, len(tracked), "correspondence conversion")
+
+
+@router.post("/from-range-package", response_model=ActionBundleTrackResponse)
+def track_actions_from_range_package(
+    request: RangePackageActionBundleRequest,
+    tracker: Annotated[ActionTracker, Depends(get_tracker)],
+) -> ActionBundleTrackResponse:
+    package = _range_package_planner.build(request.package)
+    tracked = tracker.track(
+        _bundle_builder.from_range_package(
+            package,
+            user_key=request.options.user_key,
+            owner=request.options.owner,
+        )
+    )
+    return _bundle_response(package.title, tracked, len(tracked), "range package")
+
+
+@router.post("/follow-up", response_model=ActionFollowUpResponse)
+def apply_action_follow_up(
+    request: ActionFollowUpRequest,
+    tracker: Annotated[ActionTracker, Depends(get_tracker)],
+) -> ActionFollowUpResponse:
+    updated = _follow_up_processor.apply(tracker, request)
+    return ActionFollowUpResponse(
+        updated=[
+            ActionFollowUpResult(action_id=item[0], title=item[1], status=item[2], notes=item[3]) for item in updated
+        ],
+        summary_lines=[
+            f"Updated {len(updated)} action(s) from follow-up notes.",
+            "Statuses may be inferred from note language unless you set one explicitly.",
+        ],
+        message="Applied follow-up notes to tracked actions.",
+    )
 
 
 @router.patch("/{action_id}", response_model=ActionRecord)

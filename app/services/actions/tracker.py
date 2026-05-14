@@ -131,7 +131,11 @@ def _sort_key(record: ActionRecord) -> tuple[int, date | datetime, str]:
         ActionPriority.medium: 1,
         ActionPriority.low: 2,
     }
-    when = record.suspense_date if record.suspense_date is not None else record.updated_at
+    when = (
+        datetime.combine(record.suspense_date, datetime.min.time(), tzinfo=UTC)
+        if record.suspense_date is not None
+        else record.updated_at
+    )
     return (priority_rank[record.priority], when, record.title.lower())
 
 

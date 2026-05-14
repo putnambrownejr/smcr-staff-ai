@@ -3,7 +3,8 @@ from __future__ import annotations
 from app.schemas.actions import ActionCategory, ActionItemRequest
 from app.schemas.admin import AdminReadinessResponse
 from app.schemas.chief import ChiefBriefResponse
-from app.schemas.training import AnnualTrainingPlanResponse
+from app.schemas.personnel import CorrespondenceConversionResponse
+from app.schemas.training import AnnualTrainingPlanResponse, RangePackageResponse
 
 
 class ActionBundleBuilder:
@@ -83,6 +84,78 @@ class ActionBundleBuilder:
                 notes="Promoted from annual training planner.",
             )
             for line in response.readiness_checks[:6]
+        )
+        return items
+
+    def from_correspondence_conversion(
+        self,
+        response: CorrespondenceConversionResponse,
+        *,
+        user_key: str | None,
+        owner: str | None,
+    ) -> list[ActionItemRequest]:
+        items: list[ActionItemRequest] = []
+        items.extend(
+            ActionItemRequest(
+                user_key=user_key,
+                title=note,
+                description="Routing or coordination note identified during correspondence conversion.",
+                owner=owner,
+                category=ActionCategory.admin,
+                priority="medium",
+                source_ref=response.title,
+                notes="Promoted from correspondence conversion.",
+            )
+            for note in response.routing_notes[:6]
+        )
+        items.extend(
+            ActionItemRequest(
+                user_key=user_key,
+                title=point,
+                description="Review point identified during correspondence conversion.",
+                owner=owner,
+                category=ActionCategory.documents,
+                priority="medium",
+                source_ref=response.title,
+                notes="Promoted from correspondence conversion.",
+            )
+            for point in response.review_points[:6]
+        )
+        return items
+
+    def from_range_package(
+        self,
+        response: RangePackageResponse,
+        *,
+        user_key: str | None,
+        owner: str | None,
+    ) -> list[ActionItemRequest]:
+        items: list[ActionItemRequest] = []
+        items.extend(
+            ActionItemRequest(
+                user_key=user_key,
+                title=item,
+                description="Range packet component identified by range package support.",
+                owner=owner,
+                category=ActionCategory.training,
+                priority="high",
+                source_ref=response.title,
+                notes="Promoted from range package planner.",
+            )
+            for item in response.packet_components[:6]
+        )
+        items.extend(
+            ActionItemRequest(
+                user_key=user_key,
+                title=item,
+                description="Safety or comm check identified by range package support.",
+                owner=owner,
+                category=ActionCategory.readiness,
+                priority="high",
+                source_ref=response.title,
+                notes="Promoted from range package planner.",
+            )
+            for item in [*response.safety_controls[:3], *response.medevac_and_comm_checks[:3]]
         )
         return items
 

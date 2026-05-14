@@ -5,7 +5,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from app.schemas.training import AnnualTrainingPlanRequest
+from app.schemas.personnel import CorrespondenceConversionRequest
+from app.schemas.training import AnnualTrainingPlanRequest, RangePackageRequest
 
 
 class ActionStatus(StrEnum):
@@ -154,3 +155,32 @@ class ActionBundleTrackResponse(BaseModel):
 class AnnualTrainingActionBundleRequest(BaseModel):
     plan: AnnualTrainingPlanRequest
     options: ActionBundleTrackRequest = Field(default_factory=ActionBundleTrackRequest)
+
+
+class CorrespondenceActionBundleRequest(BaseModel):
+    draft: CorrespondenceConversionRequest
+    options: ActionBundleTrackRequest = Field(default_factory=ActionBundleTrackRequest)
+
+
+class RangePackageActionBundleRequest(BaseModel):
+    package: RangePackageRequest
+    options: ActionBundleTrackRequest = Field(default_factory=ActionBundleTrackRequest)
+
+
+class ActionFollowUpRequest(BaseModel):
+    action_ids: list[str] = Field(default_factory=list)
+    notes: str
+    status: ActionStatus | None = None
+
+
+class ActionFollowUpResult(BaseModel):
+    action_id: str
+    title: str
+    status: ActionStatus
+    notes: str | None = None
+
+
+class ActionFollowUpResponse(BaseModel):
+    updated: list[ActionFollowUpResult] = Field(default_factory=list)
+    summary_lines: list[str] = Field(default_factory=list)
+    message: str

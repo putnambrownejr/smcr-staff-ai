@@ -267,5 +267,49 @@ def test_action_bundle_routes_track_from_chief_admin_and_at(tmp_path: Path) -> N
         payload = at_response.json()
         assert payload["tracked"]
         assert any(item["category"] == "training" for item in payload["tracked"])
+
+        correspondence_response = client.post(
+            "/actions/from-correspondence-conversion",
+            json={
+                "draft": {
+                    "format_type": "naval_letter",
+                    "title": "Travel support request",
+                    "purpose": "Request travel support for upcoming drill attendance.",
+                    "source_text": "Need a short formal request for drill travel support.",
+                },
+                "options": {"user_key": "capt-example", "owner": "Capt Example"},
+            },
+        )
+        assert correspondence_response.status_code == 200
+        assert correspondence_response.json()["tracked"]
+
+        range_response = client.post(
+            "/actions/from-range-package",
+            json={
+                "package": {
+                    "event_name": "Annual rifle range",
+                    "weapon_systems": ["M4"],
+                    "ammunition": ["5.56 ball"],
+                    "travel_required": True,
+                },
+                "options": {"user_key": "capt-example", "owner": "Capt Example"},
+            },
+        )
+        assert range_response.status_code == 200
+        assert range_response.json()["tracked"]
+
+        tracked_actions = tracker.list(user_key="capt-example", include_closed=True)
+        assert tracked_actions
+        follow_up_response = client.post(
+            "/actions/follow-up",
+            json={
+                "action_ids": [tracked_actions[0].action_id],
+                "notes": "Completed after final review.",
+            },
+        )
+        assert follow_up_response.status_code == 200
+        follow_up_payload = follow_up_response.json()
+        assert follow_up_payload["updated"]
+        assert follow_up_payload["updated"][0]["status"] == "complete"
     finally:
         app.dependency_overrides.clear()

@@ -404,6 +404,32 @@ curl -X POST http://127.0.0.1:8000/actions/from-annual-training-plan `
   -d "{\"plan\":{\"unit_name\":\"Example Company\",\"training_objectives\":[\"Run AT battle drill\"],\"travel_required\":true},\"options\":{\"user_key\":\"capt-example\",\"owner\":\"Capt Example\"}}"
 ```
 
+Promote a correspondence conversion into tracked actions:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/actions/from-correspondence-conversion `
+  -H "Content-Type: application/json" `
+  -d "{\"draft\":{\"format_type\":\"naval_letter\",\"title\":\"Travel support request\",\"purpose\":\"Request travel support for drill attendance.\",\"source_text\":\"Need a short formal request for drill travel support.\"},\"options\":{\"user_key\":\"capt-example\",\"owner\":\"Capt Example\"}}"
+```
+
+Promote a range package into tracked actions:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/actions/from-range-package `
+  -H "Content-Type: application/json" `
+  -d "{\"package\":{\"event_name\":\"Annual rifle range\",\"weapon_systems\":[\"M4\"],\"ammunition\":[\"5.56 ball\"],\"travel_required\":true},\"options\":{\"user_key\":\"capt-example\",\"owner\":\"Capt Example\"}}"
+```
+
+Apply follow-up notes to tracked actions:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/actions/follow-up `
+  -H "Content-Type: application/json" `
+  -d "{\"action_ids\":[\"abc123\"],\"notes\":\"Completed after final review.\"}"
+```
+
+If you do not set `status`, the system infers one from note language such as `completed`, `blocked`, `waiting`, or `in progress`.
+
 ### Vetted Social / News Trend Ingestion
 
 List allowed source categories:
