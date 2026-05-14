@@ -1,9 +1,21 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.session import CareerTrend, FitrepReminder, HandoffUpsertResponse, PmeStatus, UserSessionHandoff
 
 
 class HandoffUpdateDraftRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "notes": (
+                    "- PME: EWSDEP incomplete due 2026-06-30\n"
+                    "- FitRep Annual for MRO due 06/15/2026\n"
+                    "- DTS voucher after drill\n"
+                    "- Every drill confirm uniform and haircut"
+                )
+            }
+        }
+    )
     notes: str = Field(min_length=1, max_length=50000)
     title: str | None = None
 

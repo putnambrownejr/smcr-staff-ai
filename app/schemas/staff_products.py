@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.agents import Confidence, StructuredCitation
 
@@ -17,6 +17,17 @@ class StaffProductType(StrEnum):
 
 
 class StaffProductDraftRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "product_type": "opord",
+                "topic": "Training-only drill weekend field exercise",
+                "audience": "Company staff",
+                "facts": ["Timeline is tentative", "Scenario is fictional and training-only"],
+                "training_or_fictional": True,
+            }
+        }
+    )
     product_type: StaffProductType
     topic: str = Field(min_length=1)
     audience: str | None = None

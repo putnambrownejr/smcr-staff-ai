@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Confidence(StrEnum):
@@ -39,6 +39,14 @@ class StructuredCitation(BaseModel):
 
 
 class AgentRunRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "input": "Build a training-only PACE checklist for a drill weekend.",
+                "context": {"request_is_training_or_fictional": True, "user_role": "CommO"},
+            }
+        }
+    )
     input: str = Field(min_length=1)
     context: dict[str, Any] = Field(default_factory=dict)
 

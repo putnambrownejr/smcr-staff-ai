@@ -1,7 +1,18 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TextAnalysisRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "focus": "drill weekend prep",
+                "text": (
+                    "Planning notes for drill. Confirm muster timeline with the company office. "
+                    "DTS voucher due NLT 06/10/2026. Prepare uniform and pack field gear."
+                ),
+            }
+        }
+    )
     text: str = Field(min_length=1, max_length=50000)
     title: str | None = None
     focus: str | None = None

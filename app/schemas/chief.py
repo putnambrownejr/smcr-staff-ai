@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.calendar import DrillPrepPlanResponse
 from app.schemas.ingestion import MessageRecord
@@ -10,6 +10,21 @@ from app.schemas.source_updates import DocumentationUpdateCandidate
 
 
 class ChiefBriefRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "user_key": "capt-example",
+                "maradmin_records": [
+                    {
+                        "source_id": "maradmin-123-26",
+                        "title": "MARADMIN 123/26 Revision of MCO 1610.7 Performance Evaluation System",
+                        "canonical_url": "https://example.test/maradmin-123-26",
+                        "summary": "This message announces an update to FitRep/PES policy published on MCPEL.",
+                    }
+                ],
+            }
+        }
+    )
     user_key: str | None = None
     include_personal_documents: bool = True
     include_drill_plans: bool = True
