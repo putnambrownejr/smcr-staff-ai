@@ -30,9 +30,12 @@ class ChiefBriefResponse(BaseModel):
     user_key: str | None = None
     handoff: UserSessionHandoff | None = None
     handoff_is_stale: bool = False
+    summary_lines: list[str] = Field(default_factory=list)
     action_items: list[ChiefActionItem]
+    top_priority_items: list[ChiefActionItem] = Field(default_factory=list)
     document_summary: PersonalDocumentSummary | None = None
     drill_plans: list[DrillPrepPlanResponse] = Field(default_factory=list)
     documentation_updates: list[DocumentationUpdateCandidate] = Field(default_factory=list)
     reading_recommendations: list[str] = Field(default_factory=list)
+    recommended_courses: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

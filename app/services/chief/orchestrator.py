@@ -44,23 +44,37 @@ class ChiefAideOrchestrator:
         if request.maradmin_records:
             scanned_updates = DocumentUpdateMonitor().scan_maradmin_records(request.maradmin_records).candidates
             updates = self.document_update_store.save_many(scanned_updates)
-        action_items = [
+        action_items = _dedupe_actions(
+            [
             *_handoff_actions(handoff),
             *_document_actions(document_summary, handoff),
             *_opportunity_actions(opportunities, handoff),
+            *_career_actions(handoff),
             *_drill_actions(drill_plans),
             *_update_actions(updates),
-        ]
+            ]
+        )
+        sorted_actions = _sort_actions(action_items)
         return ChiefBriefResponse(
             title="Chief of Staff / Aide de Camp triage brief",
             user_key=request.user_key,
             handoff=handoff,
             handoff_is_stale=handoff_is_stale,
-            action_items=_sort_actions(action_items),
+            summary_lines=_summary_lines(
+                handoff=handoff,
+                handoff_is_stale=handoff_is_stale,
+                actions=sorted_actions,
+                updates=updates,
+                drill_plans=drill_plans,
+                document_summary=document_summary,
+            ),
+            action_items=sorted_actions,
+            top_priority_items=_top_priority_items(sorted_actions),
             document_summary=document_summary,
             drill_plans=drill_plans,
             documentation_updates=updates,
             reading_recommendations=_reading_recommendations(self.reading_catalog),
+            recommended_courses=_recommended_courses(handoff),
             warnings=[
                 *DEFAULT_WARNINGS,
                 *(
@@ -240,6 +254,32 @@ def _opportunity_actions(
     return actions
 
 
+def _career_actions(handoff: UserSessionHandoff | None) -> list[ChiefActionItem]:
+    if handoff is None:
+        return []
+    actions = [
+        ChiefActionItem(
+            title=f"Career trend: {trend.label}",
+            category="career",
+            priority="medium",
+            source="session_handoff",
+            recommendation=trend.recommended_action or "Review this trend and convert it into a concrete next step.",
+        )
+        for trend in handoff.career_trends
+    ]
+    actions.extend(
+        ChiefActionItem(
+            title=f"Course recommendation: {course}",
+            category="career",
+            priority="low",
+            source="session_handoff",
+            recommendation="Decide whether to enroll, defer, or remove this course recommendation.",
+        )
+        for course in handoff.recommended_courses
+    )
+    return actions
+
+
 def _update_actions(updates: list[DocumentationUpdateCandidate]) -> list[ChiefActionItem]:
     return [
         ChiefActionItem(
@@ -259,6 +299,16 @@ def _reading_recommendations(catalog: ReadingListCatalogService) -> list[str]:
     return [book.title for book in books[:3]]
 
 
+def _recommended_courses(handoff: UserSessionHandoff | None) -> list[str]:
+    if handoff is None:
+        return []
+    ordered: list[str] = []
+    for pme in handoff.pme:
+        ordered.append(f"PME follow-up: {pme.program}")
+    ordered.extend(handoff.recommended_courses)
+    return _dedupe_strings(ordered)[:5]
+
+
 def _handoff_is_stale(handoff: UserSessionHandoff | None) -> bool:
     if handoff is None:
         return False
@@ -273,6 +323,40 @@ def _sort_actions(actions: list[ChiefActionItem]) -> list[ChiefActionItem]:
         return (priority_order.get(action.priority, 3), action.due_date or fallback_date)
 
     return sorted(actions, key=sort_key)
+
+
+def _top_priority_items(actions: list[ChiefActionItem]) -> list[ChiefActionItem]:
+    return [item for item in actions if item.priority in {"high", "medium"}][:5]
+
+
+def _summary_lines(
+    handoff: UserSessionHandoff | None,
+    handoff_is_stale: bool,
+    actions: list[ChiefActionItem],
+    updates: list[DocumentationUpdateCandidate],
+    drill_plans: list[DrillPrepPlanResponse],
+    document_summary: PersonalDocumentSummary | None,
+) -> list[str]:
+    lines: list[str] = []
+    if handoff is None:
+        lines.append("No session handoff is stored yet, so the brief is operating with limited user context.")
+    elif handoff_is_stale:
+        lines.append("Session handoff is stale and should be refreshed before relying on PME, FitRep, or admin notes.")
+    else:
+        lines.append("Session handoff is current enough to support drill, admin, and career reminders.")
+    if drill_plans:
+        lines.append(f"{len(drill_plans)} stored drill plan(s) are in view for near-term prep.")
+    new_updates = [update for update in updates if update.review_status == "new"]
+    if new_updates:
+        lines.append(f"{len(new_updates)} documentation update candidate(s) need review against official sources.")
+    if document_summary is not None and document_summary.missing_recommended_types:
+        lines.append(
+            "Missing recommended local references: " + ", ".join(document_summary.missing_recommended_types[:4]) + "."
+        )
+    high_priority = [item for item in actions if item.priority == "high"]
+    if high_priority:
+        lines.append(f"{len(high_priority)} high-priority item(s) should be handled first.")
+    return lines
 
 
 def _priority(due_date: date | None) -> str:
@@ -294,3 +378,33 @@ def _update_priority(update: DocumentationUpdateCandidate) -> str:
     if update.review_status == "reviewed":
         return "medium"
     return "low"
+
+
+def _dedupe_actions(actions: list[ChiefActionItem]) -> list[ChiefActionItem]:
+    seen: set[str] = set()
+    result: list[ChiefActionItem] = []
+    for action in actions:
+        key = "|".join(
+            [
+                action.category.lower(),
+                action.title.lower(),
+                (action.source or "").lower(),
+            ]
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(action)
+    return result
+
+
+def _dedupe_strings(items: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for item in items:
+        key = item.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(item)
+    return result

@@ -5,7 +5,7 @@ from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
 from app.schemas.chief import ChiefBriefRequest
 from app.schemas.ingestion import MessageRecord
 from app.schemas.opportunities import ManualOpportunityRequest
-from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff
+from app.schemas.session import CareerTrend, FitrepReminder, PmeStatus, UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateReviewStatus
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.chief.orchestrator import ChiefAideOrchestrator
@@ -32,6 +32,8 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
             pme=[PmeStatus(program="EWSDEP", status="incomplete", due_date=date(2026, 6, 1))],
             fitreps=[FitrepReminder(occasion="Annual", due_date=date(2026, 6, 30))],
             admin_watch_items=["DTS voucher after drill"],
+            recommended_courses=["MarineNet writing refresher"],
+            career_trends=[CareerTrend(label="Broaden planning exposure")],
         )
     )
     plan_store = DrillPrepPlanStore(tmp_path / "plans")
@@ -79,6 +81,9 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
     assert brief.document_summary.pii_flagged_count == 1
     assert brief.documentation_updates
     assert brief.reading_recommendations
+    assert brief.recommended_courses
+    assert brief.summary_lines
+    assert brief.top_priority_items
 
 
 def test_chief_brief_flags_stale_handoff_and_missing_core_docs(tmp_path: Path) -> None:
@@ -170,3 +175,37 @@ def test_chief_brief_surfaces_tracked_career_opportunities(tmp_path: Path) -> No
 
     career_titles = [item.title for item in brief.action_items if item.category == "career"]
     assert "Career opportunity (ados): ADOS Planner" in career_titles
+
+
+def test_chief_brief_dedupes_and_prioritizes_digest_items(tmp_path: Path) -> None:
+    handoff_store = SessionHandoffStore(tmp_path / "handoffs")
+    handoff_store.upsert(
+        UserSessionHandoff(
+            user_key="capt-digest",
+            updated_at=datetime(2026, 5, 10, tzinfo=UTC),
+            pme=[PmeStatus(program="EWSDEP", status="incomplete", due_date=date(2026, 5, 18))],
+            recommended_courses=["MarineNet writing refresher", "MarineNet writing refresher"],
+            career_trends=[
+                CareerTrend(
+                    label="Broadening assignment interest",
+                    recommended_action="Review ADOS opportunities before next drill.",
+                )
+            ],
+        )
+    )
+    orchestrator = ChiefAideOrchestrator(
+        handoff_store=handoff_store,
+        document_organizer=PersonalDocumentOrganizer(LocalContextStore(tmp_path / "context")),
+        drill_plan_store=DrillPrepPlanStore(tmp_path / "plans"),
+        reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
+        document_update_store=DocumentUpdateStore(tmp_path / "updates"),
+        opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+    )
+
+    brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-digest"))
+
+    assert brief.summary_lines
+    assert brief.top_priority_items
+    assert len(brief.recommended_courses) == 2
+    course_titles = [item.title for item in brief.action_items if item.title.startswith("Course recommendation:")]
+    assert len(course_titles) == 1

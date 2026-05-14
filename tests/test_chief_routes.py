@@ -57,6 +57,8 @@ def test_get_chief_brief_route_returns_sorted_actions(tmp_path: Path) -> None:
         payload = response.json()
         assert payload["user_key"] == "capt-route"
         assert payload["action_items"]
+        assert payload["summary_lines"]
+        assert payload["top_priority_items"]
         priorities = [item["priority"] for item in payload["action_items"]]
         assert priorities == sorted(priorities, key=lambda priority: {"high": 0, "medium": 1, "low": 2}[priority])
     finally:

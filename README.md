@@ -268,6 +268,12 @@ Chief/Aide action items are sorted by priority and due date. The brief also warn
 
 Tracked ADOS and SMCR BIC opportunities also appear in the brief as career-oriented action items when stored locally.
 
+The brief now also includes:
+
+- `summary_lines` for a quick digest
+- `top_priority_items` for the short list
+- `recommended_courses` pulled from the handoff and PME follow-ups
+
 ### Staff Council
 
 List staff roles:
