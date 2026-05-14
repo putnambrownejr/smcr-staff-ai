@@ -1,0 +1,52 @@
+{
+  "title": "Annual training coordination package",
+  "event_type": "annual_training",
+  "mission_or_training_goal": "Build an advisory annual training package that prioritizes readiness, administration, supportability, and useful evaluation.",
+  "audience": "Battalion staff and company leadership",
+  "timeframe": "Upcoming annual training period",
+  "constraints": [
+    "Mixed readiness levels across the formation",
+    "Limited time for pre-AT coordination during drill weekends",
+    "Travel and billeting friction",
+    "Need to protect high-value training time from admin churn"
+  ],
+  "coordinating_sections": [
+    "S-1",
+    "S-2",
+    "S-4",
+    "S-6",
+    "Medical"
+  ],
+  "support_requirements": [
+    "Billeting",
+    "Movement plan",
+    "DTS and GTCC readiness",
+    "Medical readiness review",
+    "Communications support"
+  ],
+  "partner_types": [
+    "Higher headquarters",
+    "Adjacent reserve units"
+  ],
+  "civil_considerations": [],
+  "medical_risk_context": [
+    "Heat injury risk",
+    "Fatigue across multi-day training",
+    "Movement-related injuries"
+  ],
+  "casualty_scenarios": [
+    "Training injury during field event",
+    "Medical evacuation during multi-site operations"
+  ],
+  "intelligence_question": "What public-source environmental or regional conditions should inform training assumptions for this annual training period?",
+  "c2_objective": "Preserve reliable reporting, accountability, and leader synchronization over a multi-day reserve training period.",
+  "support_objective": "Build a support concept that protects training time and reduces avoidable reserve admin friction.",
+  "include_g9": false,
+  "product_types": [
+    "warno",
+    "frago",
+    "aar"
+  ],
+  "preferred_format": "memorandum",
+  "training_only": true
+}

@@ -1,0 +1,51 @@
+{
+  "title": "Range event support package",
+  "event_type": "range_training",
+  "mission_or_training_goal": "Build a range-event planning package that keeps safety, supportability, accountability, and after-action learning aligned.",
+  "audience": "Company leadership and range support team",
+  "timeframe": "Next live-fire drill period",
+  "constraints": [
+    "Short drill timeline",
+    "Ammunition draw and accountability friction",
+    "Transportation coordination required",
+    "Need for range safety and medical planning discipline"
+  ],
+  "coordinating_sections": [
+    "S-1",
+    "S-4",
+    "S-6",
+    "Medical",
+    "Safety / ORM"
+  ],
+  "support_requirements": [
+    "Transportation",
+    "Ammunition accountability",
+    "Water and chow",
+    "Medical support",
+    "Range control coordination"
+  ],
+  "partner_types": [
+    "Range control",
+    "Supporting attachments"
+  ],
+  "civil_considerations": [],
+  "medical_risk_context": [
+    "Heat injury risk",
+    "Weapons-handling injuries",
+    "Vehicle movement risk"
+  ],
+  "casualty_scenarios": [
+    "Heat casualty on the firing line",
+    "Weapons-related training injury"
+  ],
+  "intelligence_question": "",
+  "c2_objective": "Maintain simple, reliable communications and accountability during a range event without depending on sensitive or complex comm assumptions.",
+  "support_objective": "Build a broad-stroke logistics and medical support concept that keeps the range event executable.",
+  "include_g9": false,
+  "product_types": [
+    "frago",
+    "aar"
+  ],
+  "preferred_format": "memorandum",
+  "training_only": true
+}

@@ -1,0 +1,56 @@
+{
+  "title": "Reserve drill weekend field training package",
+  "event_type": "field_training",
+  "mission_or_training_goal": "Build a one-day field training event that improves planning discipline, reporting, and civil reconnaissance readiness.",
+  "audience": "Civil affairs company",
+  "timeframe": "Next drill weekend",
+  "constraints": [
+    "One field day only",
+    "Distributed Marines arriving from multiple locations",
+    "Travel required for some personnel",
+    "Limited time for equipment draw and rehearsals"
+  ],
+  "coordinating_sections": [
+    "S-1",
+    "S-4",
+    "S-6",
+    "Medical",
+    "Safety / ORM"
+  ],
+  "support_requirements": [
+    "Accountability plan",
+    "Movement control",
+    "Medical support",
+    "Water and chow support",
+    "Training area access"
+  ],
+  "partner_types": [
+    "Local role players",
+    "Civil affairs training audience"
+  ],
+  "civil_considerations": [
+    "Urban operating area",
+    "Public-facing training optics",
+    "Need for realistic but generic humanitarian context"
+  ],
+  "medical_risk_context": [
+    "Heat stress risk",
+    "Field movement injuries",
+    "Limited daylight for recovery and consolidation"
+  ],
+  "casualty_scenarios": [
+    "Heat casualty during movement",
+    "Minor trauma during field lane"
+  ],
+  "intelligence_question": "What open-source humanitarian and civil-support issues in South Florida could inform a realistic training scenario without creating unnecessary operational specificity?",
+  "c2_objective": "Maintain reliable internal reporting and accountability during a one-day distributed field event using commercial-safe communications assumptions.",
+  "support_objective": "Keep the event administratively supportable for a reserve unit with limited setup time and travel friction.",
+  "include_g9": true,
+  "product_types": [
+    "warno",
+    "frago",
+    "aar"
+  ],
+  "preferred_format": "naval_letter",
+  "training_only": true
+}
