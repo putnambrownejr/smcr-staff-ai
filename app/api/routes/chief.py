@@ -41,3 +41,11 @@ def build_chief_brief(
     orchestrator: Annotated[ChiefAideOrchestrator, Depends(get_orchestrator)],
 ) -> ChiefBriefResponse:
     return orchestrator.build_brief(request)
+
+
+@router.get("/brief/{user_key}", response_model=ChiefBriefResponse)
+def get_chief_brief(
+    user_key: str,
+    orchestrator: Annotated[ChiefAideOrchestrator, Depends(get_orchestrator)],
+) -> ChiefBriefResponse:
+    return orchestrator.build_brief(ChiefBriefRequest(user_key=user_key))

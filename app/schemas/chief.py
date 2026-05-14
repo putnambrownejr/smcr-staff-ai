@@ -29,6 +29,7 @@ class ChiefBriefResponse(BaseModel):
     title: str
     user_key: str | None = None
     handoff: UserSessionHandoff | None = None
+    handoff_is_stale: bool = False
     action_items: list[ChiefActionItem]
     document_summary: PersonalDocumentSummary | None = None
     drill_plans: list[DrillPrepPlanResponse] = Field(default_factory=list)

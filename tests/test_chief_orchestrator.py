@@ -73,3 +73,30 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
     assert brief.document_summary.pii_flagged_count == 1
     assert brief.documentation_updates
     assert brief.reading_recommendations
+
+
+def test_chief_brief_flags_stale_handoff_and_missing_core_docs(tmp_path: Path) -> None:
+    context_store = LocalContextStore(tmp_path / "context")
+    handoff_store = SessionHandoffStore(tmp_path / "handoffs")
+    handoff_store.upsert(
+        UserSessionHandoff(
+            user_key="capt-stale",
+            updated_at=datetime(2026, 1, 1, tzinfo=UTC),
+            pme=[PmeStatus(program="EWSDEP", status="incomplete", due_date=date(2026, 5, 20))],
+        )
+    )
+    orchestrator = ChiefAideOrchestrator(
+        handoff_store=handoff_store,
+        document_organizer=PersonalDocumentOrganizer(context_store),
+        drill_plan_store=DrillPrepPlanStore(tmp_path / "plans"),
+        reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
+    )
+
+    brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-stale"))
+
+    assert brief.handoff_is_stale is True
+    assert any("stale" in warning.lower() for warning in brief.warnings)
+    titles = {item.title for item in brief.action_items}
+    assert "Add RQS reference" in titles
+    assert "Add a current BIO reference" in titles
+    assert "Add current orders reference" in titles

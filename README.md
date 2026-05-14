@@ -212,6 +212,14 @@ curl -X POST http://127.0.0.1:8000/chief/brief `
 
 The response combines local handoff data, local personal document summaries, stored drill plans, source-update candidates, reading suggestions, and action items.
 
+Fetch the current brief for a stored user key:
+
+```powershell
+curl http://127.0.0.1:8000/chief/brief/capt-example
+```
+
+Chief/Aide action items are sorted by priority and due date. The brief also warns when a session handoff looks stale or when core personal references such as `RQS`, `BIO`, `orders`, or PME references are missing.
+
 ### Staff Council
 
 List staff roles:
