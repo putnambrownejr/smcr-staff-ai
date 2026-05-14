@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.schemas.agents import AgentRunRequest, AgentRunResponse
 from app.schemas.analysis import TextAnalysisRequest, TextAnalysisResponse
 from app.schemas.career import CareerWatchResponse
+from app.schemas.chatgpt_surface import ChatGptToolSurfaceEntry, ChatGptToolSurfaceResponse
 from app.schemas.chief import ChiefBriefResponse
 from app.schemas.staff_products import StaffProductDraftRequest, StaffProductDraftResponse
 from app.services.agents.base import AgentContext
@@ -35,6 +36,84 @@ def demo_status() -> dict[str, object]:
             "/demo/agents/{agent_id}/run",
         ],
     }
+
+
+@router.get(
+    "/tool-catalog",
+    response_model=ChatGptToolSurfaceResponse,
+    summary="Show the recommended ChatGPT-facing tool surface",
+)
+def demo_tool_catalog() -> ChatGptToolSurfaceResponse:
+    return ChatGptToolSurfaceResponse(
+        archetype="tool-only",
+        mode="stateless_demo_first",
+        tool_entries=[
+            ChatGptToolSurfaceEntry(
+                name="chief_brief_demo",
+                route="/demo/chief/brief",
+                method="GET",
+                purpose="Return a stateless Chief of Staff / Aide de Camp triage brief.",
+                use_when=(
+                    "Use this when the user wants a high-level digest of drill, admin, docs, "
+                    "and career priorities."
+                ),
+                notes=["Read-only", "Best first surface for dashboard-style summaries"],
+            ),
+            ChatGptToolSurfaceEntry(
+                name="career_watch_demo",
+                route="/demo/career/watch",
+                method="GET",
+                purpose="Return a stateless career-maintenance view.",
+                use_when="Use this when the user wants PME, FitRep, opportunity, or self-development nudges.",
+                notes=["Read-only", "Career-centric companion to the Chief brief"],
+            ),
+            ChatGptToolSurfaceEntry(
+                name="summarize_text_demo",
+                route="/demo/analysis/summarize",
+                method="POST",
+                purpose="Turn pasted text into summary points, due-outs, checklist items, and follow-up questions.",
+                use_when="Use this when the user pastes notes, emails, orders, or working text and wants structure.",
+                notes=["Read-only", "Does not store submitted text"],
+            ),
+            ChatGptToolSurfaceEntry(
+                name="draft_staff_product_demo",
+                route="/demo/staff-products/draft",
+                method="POST",
+                purpose="Draft an advisory OPORD, WARNO, FRAGO, SITREP, AAR, memo, or letter scaffold.",
+                use_when="Use this when the user needs a staff-product starting point or review checklist.",
+                notes=["Read-only", "Training-only and human-review guardrails apply"],
+            ),
+            ChatGptToolSurfaceEntry(
+                name="run_staff_agent_demo",
+                route="/demo/agents/{agent_id}/run",
+                method="POST",
+                purpose="Run a stateless agent such as CommO, OSINT, leadership, MARADMIN, or Chief/Aide.",
+                use_when=(
+                    "Use this when the user wants targeted advisory help from one specific "
+                    "staff role or specialty."
+                ),
+                notes=["Read-only", "Maps cleanly to a future MCP tool layer"],
+            ),
+        ],
+        future_private_tools=[
+            "chief_brief_personal",
+            "career_watch_personal",
+            "handoff_draft_update",
+            "handoff_apply_update",
+            "personal_document_organizer",
+            "opportunity_tracker_personal",
+        ],
+        warnings=[
+            (
+                "This catalog is the recommended first-pass ChatGPT tool surface, "
+                "not a full exposure of private/local workflows."
+            ),
+            (
+                "Private user data, local context, and mutating routes should stay behind "
+                "explicit runtime boundaries until an auth model is in place."
+            ),
+        ],
+    )
 
 
 @router.get("/chief/brief", response_model=ChiefBriefResponse, summary="Get a stateless demo Chief/Aide brief")

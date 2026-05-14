@@ -91,6 +91,7 @@ http://127.0.0.1:8000/docs
 ```
 
 For GitHub/ChatGPT-friendly orientation, also see [docs/chatgpt_repo_mode.md](/C:/smcr-staff-ai/docs/chatgpt_repo_mode.md).
+For the first-pass ChatGPT-facing tool plan, see [docs/chatgpt_app_surface.md](/C:/smcr-staff-ai/docs/chatgpt_app_surface.md).
 
 ## Calling The API
 
@@ -120,6 +121,7 @@ If you only want to understand the repo behavior, or want a ChatGPT-friendly sur
 
 ```powershell
 curl http://127.0.0.1:8000/demo/status
+curl http://127.0.0.1:8000/demo/tool-catalog
 curl http://127.0.0.1:8000/demo/chief/brief
 curl http://127.0.0.1:8000/demo/career/watch
 ```
@@ -129,6 +131,8 @@ The demo routes:
 - do not require prior local context
 - do not depend on your stored handoffs or uploaded files
 - are intended as the canonical stateless examples for repo-mode and OpenAPI readers
+
+`/demo/tool-catalog` returns the recommended first-pass ChatGPT-facing tool surface for a future Apps/MCP integration.
 
 ### Agents
 
