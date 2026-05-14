@@ -18,7 +18,27 @@ TAG_KEYWORDS: dict[str, tuple[str, ...]] = {
     "Fitness": ("pft", "cft", "fitness"),
     "Awards": ("award", "decoration"),
     "Safety": ("safety", "risk"),
-    "Doctrine": ("doctrine", "publication", "order"),
+    "Doctrine": ("doctrine", "publication", "order", "mcdp", "mcwp", "mctp", "mcrp"),
+    "DocumentUpdate": (
+        "revision",
+        "revised",
+        "change",
+        "update",
+        "updated",
+        "published",
+        "effective",
+        "cancel",
+        "canceled",
+        "cancelled",
+        "supersede",
+        "superseded",
+        "mcpel",
+        "mcramm",
+        "5216.20",
+        "5216.5",
+        "1020.34",
+        "1610.7",
+    ),
 }
 
 
