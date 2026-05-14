@@ -47,7 +47,7 @@ class LocalContextStore:
         file_path.write_bytes(content)
 
         warnings = [*DEFAULT_WARNINGS]
-        text = _decode_preview(content)
+        text = _decode_preview(content) if _is_text_like(content_type, safe_name) else ""
         warnings.extend(detect_sensitive_input(text))
         contains_pii = bool(detect_pii_input(text))
 
@@ -96,7 +96,9 @@ class LocalContextStore:
         file_path = self._file_path_for(metadata)
         if file_path is None:
             return None
-        return redact_pii(_decode_preview(file_path.read_bytes()))[:max_chars]
+        if _is_text_like(metadata.content_type, metadata.filename):
+            return redact_pii(_decode_preview(file_path.read_bytes()))[:max_chars]
+        return _binary_preview(metadata)
 
     def delete(self, context_id: str) -> bool:
         if not is_valid_context_id(context_id):
@@ -144,3 +146,21 @@ def _decode_preview(content: bytes) -> str:
 def _safe_filename(filename: str) -> str:
     name = Path(filename).name.strip() or "upload.bin"
     return "".join(char if char.isalnum() or char in {".", "-", "_"} else "_" for char in name)
+
+
+def _is_text_like(content_type: str, filename: str) -> bool:
+    lowered = content_type.lower()
+    suffix = Path(filename).suffix.lower()
+    return lowered.startswith("text/") or suffix in {".txt", ".md", ".json", ".yaml", ".yml", ".csv"}
+
+
+def _binary_preview(metadata: LocalContextMetadata) -> str:
+    tags = ", ".join(metadata.tags) if metadata.tags else "none"
+    return (
+        f"Binary local context item: {metadata.filename}\n"
+        f"Content type: {metadata.content_type}\n"
+        f"Size bytes: {metadata.size_bytes}\n"
+        f"Document type: {metadata.document_type}\n"
+        f"Tags: {tags}\n"
+        "No text preview is available for this media item."
+    )

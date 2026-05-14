@@ -802,11 +802,13 @@ VECTOR_STORE_BACKEND="local-stub"
 LOCAL_CONTEXT_STORAGE_DIR="data/local_context"
 SESSION_HANDOFF_STORAGE_DIR="data/local_context/session_handoffs"
 LOCAL_API_KEY=""
-MAX_UPLOAD_BYTES="10000000"
+MAX_UPLOAD_BYTES="50000000"
 PUBLIC_SOURCE_ONLY="true"
 ```
 
 If `LOCAL_API_KEY` is set, personal/local routes such as `/context`, `/handoffs`, `/calendar`, and `/connectors` require `X-Local-API-Key`. Leave it empty for quick local prototyping only.
+
+`MAX_UPLOAD_BYTES` defaults to `50 MB`, which is enough for common local drill products and short training media clips. Larger media ingestion should stay local and user-managed.
 
 SQLite is the default for quick local development. Docker Compose includes Postgres for future Postgres-ready development.
 

@@ -76,3 +76,21 @@ def test_rqs_bio_upload_metadata_and_redacted_preview(tmp_path: Path) -> None:
     assert "123-45-6789" not in preview
     assert "555-123-4567" not in preview
     assert "[REDACTED-SSN]" in preview
+
+
+def test_binary_local_context_returns_metadata_preview(tmp_path: Path) -> None:
+    store = LocalContextStore(tmp_path)
+    item = store.save(
+        filename="demo.mp4",
+        content=b"\x00\x00\x00\x18ftypmp42",
+        content_type="video/mp4",
+        document_type="training_media",
+        tags=["video", "use_case"],
+        consent_ack=True,
+    )
+
+    preview = store.read_preview(item.context_id)
+    assert preview is not None
+    assert "Binary local context item: demo.mp4" in preview
+    assert "video/mp4" in preview
+    assert "No text preview is available" in preview

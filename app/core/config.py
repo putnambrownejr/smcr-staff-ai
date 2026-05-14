@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     local_context_storage_dir: str = "data/local_context"
     session_handoff_storage_dir: str = "data/local_context/session_handoffs"
     local_api_key: str | None = None
-    max_upload_bytes: int = 10_000_000
+    max_upload_bytes: int = 50_000_000
     public_source_only: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
