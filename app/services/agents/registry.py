@@ -4,11 +4,14 @@ import yaml
 
 from app.schemas.agents import AgentMetadata
 from app.services.agents.admin_agent import build_admin_readiness_agent
+from app.services.agents.airo_agent import build_airo_agent
 from app.services.agents.base import Agent
+from app.services.agents.chaplain_agent import build_chaplain_agent
 from app.services.agents.chief_of_staff_agent import build_chief_of_staff_agent
 from app.services.agents.correspondence_agent import build_correspondence_formatting_agent
 from app.services.agents.drill_prep_agent import build_drill_prep_agent
 from app.services.agents.fitrep_agent import build_fitrep_agent
+from app.services.agents.jag_agent import build_jag_agent
 from app.services.agents.leadership_agent import build_leadership_agent
 from app.services.agents.maradmin_agent import build_maradmin_agent
 from app.services.agents.mos_civil_affairs_agent import build_mos_civil_affairs_agent
@@ -53,6 +56,8 @@ class AgentRegistry:
 def default_agents() -> list[Agent]:
     return [
         build_admin_readiness_agent(),
+        build_airo_agent(),
+        build_chaplain_agent(),
         build_s1_admin_chief_agent(),
         build_s3_opso_agent(),
         build_chief_of_staff_agent(),
@@ -65,6 +70,7 @@ def default_agents() -> list[Agent]:
         build_training_agent(),
         build_orm_agent(),
         build_fitrep_agent(),
+        build_jag_agent(),
         build_pki_troubleshooter_agent(),
         build_leadership_agent(),
         build_osint_agent(),

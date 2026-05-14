@@ -10,6 +10,9 @@ def test_agent_registry_loads_expected_agents() -> None:
         "admin-readiness-advisor",
         "s1-admin-chief",
         "s3-opso",
+        "airo-advisor",
+        "jag-legal-advisor",
+        "chaplain-advisor",
         "maradmin-monitor",
         "correspondence-formatting",
         "uniform-advisor",
@@ -95,4 +98,40 @@ def test_s3_opso_agent_returns_staff_planning_structure() -> None:
 
     assert "S-3 / OpsO advisory" in response.answer
     assert response.structured_citations
+    assert response.source_trust
+
+
+def test_airo_agent_returns_planning_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("airo-advisor")
+    assert agent is not None
+
+    response = agent.run(
+        "Help me think through generic air-support coordination for an exercise.",
+        context=AgentContext(),
+    )
+
+    assert "AirO advisory" in response.answer
+    assert response.structured_citations
+
+
+def test_jag_agent_is_explicitly_non_authoritative() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("jag-legal-advisor")
+    assert agent is not None
+
+    response = agent.run("What legal issue should I spot before routing this matter?", context=AgentContext())
+
+    assert "not legal advice" in response.answer.lower()
+    assert response.source_trust
+
+
+def test_chaplain_agent_routes_to_real_support_channels() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("chaplain-advisor")
+    assert agent is not None
+
+    response = agent.run("Help me think through a morale and welfare concern.", context=AgentContext())
+
+    assert "Chaplain advisory" in response.answer
     assert response.source_trust

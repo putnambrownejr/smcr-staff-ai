@@ -5,6 +5,12 @@ agents:
     doctrine_categories: [reserve_administration, fitrep_pes, correspondence_formatting]
   - id: s3-opso
     doctrine_categories: [core_marine_doctrine, operations_planning, training_readiness, orm]
+  - id: airo-advisor
+    doctrine_categories: [aviation_support, operations_planning]
+  - id: jag-legal-advisor
+    doctrine_categories: [reserve_administration, correspondence_formatting]
+  - id: chaplain-advisor
+    doctrine_categories: [leadership]
   - id: chief-of-staff-aide
     doctrine_categories: [core_marine_doctrine, reserve_administration, training_readiness, fitrep_pes]
   - id: correspondence-formatting
