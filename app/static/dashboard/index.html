@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SMCR Staff AI Dashboard</title>
+    <link rel="stylesheet" href="/static/dashboard/dashboard.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">UNCLASSIFIED advisory workspace</p>
+          <h1>SMCR Staff AI</h1>
+          <p class="subhead">
+            One local operations board for drill, admin, career maintenance, and drafting support.
+          </p>
+        </div>
+        <div class="status-stack">
+          <span class="status-pill" id="mode-badge">Demo mode</span>
+          <span class="status-pill muted">Human review required</span>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel config-panel">
+          <div class="panel-header">
+            <h2>Workspace</h2>
+            <p>Use demo mode for a stateless tour, or provide a local user key and API key for personal views.</p>
+          </div>
+          <div class="config-grid">
+            <label>
+              <span>User key</span>
+              <input id="user-key" type="text" placeholder="capt-example" />
+            </label>
+            <label>
+              <span>Local API key</span>
+              <input id="api-key" type="password" placeholder="Optional" />
+            </label>
+          </div>
+          <div class="button-row">
+            <button id="load-demo">Load demo brief</button>
+            <button id="load-personal" class="secondary">Load personal view</button>
+          </div>
+          <p class="helper-text" id="workspace-note">
+            Demo mode keeps everything read-only and stateless. Personal mode reads the local backend with your key.
+          </p>
+        </section>
+
+        <section class="summary-grid">
+          <article class="panel metric-panel">
+            <div class="panel-header compact">
+              <h2>Chief brief</h2>
+              <span id="chief-count" class="metric">0</span>
+            </div>
+            <ul id="chief-summary" class="bullet-list"></ul>
+          </article>
+          <article class="panel metric-panel">
+            <div class="panel-header compact">
+              <h2>Admin readiness</h2>
+              <span id="admin-count" class="metric">0</span>
+            </div>
+            <ul id="admin-summary" class="bullet-list"></ul>
+          </article>
+          <article class="panel metric-panel">
+            <div class="panel-header compact">
+              <h2>Career watch</h2>
+              <span id="career-count" class="metric">0</span>
+            </div>
+            <ul id="career-summary" class="bullet-list"></ul>
+          </article>
+        </section>
+
+        <section class="two-column">
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Priority queue</h2>
+              <p>What matters now from the Chief/Aide and admin digest.</p>
+            </div>
+            <div id="priority-queue" class="stack-list empty-state">Load the workspace to see current priorities.</div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Local document watch</h2>
+              <p>Quick inventory of personal support docs that live only on this machine.</p>
+            </div>
+            <div id="document-watch" class="stack-list empty-state">Personal mode can show RQS, BIO, orders, PME, and other local references.</div>
+          </article>
+        </section>
+
+        <section class="tool-grid">
+          <article class="panel tool-panel">
+            <div class="panel-header">
+              <h2>Personnel products</h2>
+              <p>FitRep, awards, and routing-package support.</p>
+            </div>
+            <form id="personnel-form" class="tool-form">
+              <div class="form-row">
+                <label>
+                  <span>Type</span>
+                  <select name="product_type">
+                    <option value="fitrep_planning">FitRep planning</option>
+                    <option value="fitrep_bullets">FitRep bullets</option>
+                    <option value="award_package">Award package</option>
+                    <option value="routing_package">Routing package</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Title</span>
+                  <input name="title" type="text" value="Annual package review" />
+                </label>
+              </div>
+              <div class="form-row">
+                <label>
+                  <span>Subject</span>
+                  <input name="subject_name" type="text" placeholder="Capt Example" />
+                </label>
+                <label>
+                  <span>Occasion / purpose</span>
+                  <input name="occasion" type="text" placeholder="Annual / routing to XO" />
+                </label>
+              </div>
+              <label>
+                <span>Facts (one per line)</span>
+                <textarea name="facts" rows="4" placeholder="Documented billet facts"></textarea>
+              </label>
+              <label>
+                <span>Achievements / evidence (one per line)</span>
+                <textarea name="achievements" rows="4" placeholder="Accomplishments, evidence, support notes"></textarea>
+              </label>
+              <div class="button-row">
+                <button type="submit">Build personnel support</button>
+              </div>
+            </form>
+            <div id="personnel-output" class="tool-output empty-state">Generated sections, routing steps, and review points will appear here.</div>
+          </article>
+
+          <article class="panel tool-panel">
+            <div class="panel-header">
+              <h2>Staff products</h2>
+              <p>Fast scaffolds for orders, correspondence, reports, and AARs.</p>
+            </div>
+            <form id="staff-form" class="tool-form">
+              <div class="form-row">
+                <label>
+                  <span>Type</span>
+                  <select name="product_type">
+                    <option value="warno">WARNO</option>
+                    <option value="opord">OPORD</option>
+                    <option value="frago">FRAGO</option>
+                    <option value="sitrep">SITREP</option>
+                    <option value="aar">AAR</option>
+                    <option value="naval_letter">Naval letter</option>
+                    <option value="memorandum">Memorandum</option>
+                    <option value="endorsement">Endorsement</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Topic</span>
+                  <input name="topic" type="text" value="Training-only drill weekend support package" />
+                </label>
+              </div>
+              <div class="button-row">
+                <button type="submit">Draft staff scaffold</button>
+              </div>
+            </form>
+            <div id="staff-output" class="tool-output empty-state">Sections and review notes will appear here.</div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/dashboard/dashboard.js"></script>
+  </body>
+</html>

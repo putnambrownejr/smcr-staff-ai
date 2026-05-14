@@ -24,6 +24,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Session handoffs | Stores minimum necessary local user context for PME, FitRep, admin, drill, and preference reminders. | Working local storage |
 | Local context storage | Lets users upload files/notes, RQS/BIO references, and drill templates as advisory local context without changing doctrine, org, exercise, agent, or canonical document structure. | Working local storage |
 | Personal document organizer | Lists local RQS/BIO/orders/travel/PME-style uploads by type and flags PII/local-retention warnings. | Working local organizer |
+| Personnel products | Builds advisory FitRep planning, FitRep bullet capture, award package, and routing package support with citations and review points. | Working local support |
 | Career opportunity tracker | Stores ADOS and SMCR BIC opportunities locally, ranks them against a user profile, and surfaces them in the Chief/Aide brief. | Working local tracker |
 | Career watch | Pulls PME gaps, FitRep reminders, career trends, recommended courses/books, missing documents, and tracked opportunities into one advisory career-maintenance view. | Working local watch |
 | Drill prep planner | Turns a drill date into advisory prep tasks, can use templated local key events, persists plans locally, and exports `.ics` calendar content. | Working local planner |
@@ -36,6 +37,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Exercise cadence | Provides typical/advisory exercise and battle rhythm examples. | Working example data |
 | RSS/MARADMIN parsing | Parses local RSS XML fixtures and tags messages by staff relevance. | Working parser; live ingestion is later |
 | RAG foundations | Includes document/chunk models, chunking, local embedding stub, vector-store stub, doctrine manifest validation, and citation-preserving local RAG pipeline. | Ready for expansion |
+| Lightweight dashboard | Serves a browser-based local operations board for Chief brief, admin readiness, career watch, and drafting tools. | Working local UI |
 
 ## What It Does Not Do Yet
 
@@ -90,6 +92,12 @@ Open the API docs:
 
 ```text
 http://127.0.0.1:8000/docs
+```
+
+Open the lightweight dashboard:
+
+```text
+http://127.0.0.1:8000/dashboard
 ```
 
 For GitHub/ChatGPT-friendly orientation, also see [docs/chatgpt_repo_mode.md](/C:/smcr-staff-ai/docs/chatgpt_repo_mode.md).
@@ -185,6 +193,31 @@ Supported admin workflow types:
 - `admin_package`
 - `award_package`
 
+### Personnel Products
+
+Build a more detailed FitRep, awards, or routing support package:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/personnel/products `
+  -H "Content-Type: application/json" `
+  -d "{\"product_type\":\"fitrep_planning\",\"title\":\"Annual FitRep prep\",\"subject_name\":\"Capt Example\",\"occasion\":\"Annual\",\"facts\":[\"Served as battalion CommO during AT planning cycle\"],\"achievements\":[\"Built a reserve communications tracker\"]}"
+```
+
+Supported personnel product types:
+
+- `fitrep_planning`
+- `fitrep_bullets`
+- `award_package`
+- `routing_package`
+
+This route returns:
+
+- structured planning sections
+- routing steps
+- required documents
+- review points
+- citations and warnings
+
 ### Training And ORM
 
 Build a training scenario scaffold:
@@ -257,6 +290,8 @@ Agent responses use this shape:
   "follow_up_questions": ["Is the scenario fictional/training-only?"]
 }
 ```
+
+The local dashboard uses these same backend routes and can be a friendlier way to exercise the system when you do not want to hand-build payloads.
 
 The OSINT agent is intentionally source-evaluation oriented. It does not bypass access controls or scrape social platforms directly. Pass already-collected public source summaries/URLs in `context.extra.source_items`; the agent will cite them, identify counterarguments, and mark truth confidence as high/medium/low/unknown style language in the answer.
 

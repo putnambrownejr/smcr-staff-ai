@@ -1,0 +1,255 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, "Segoe UI", sans-serif;
+  --bg: #f3f6f9;
+  --surface: #ffffff;
+  --surface-alt: #eef3f8;
+  --text: #132033;
+  --muted: #617086;
+  --border: #d4ddea;
+  --accent: #0f6c8d;
+  --accent-soft: #dff0f7;
+  --critical: #b54735;
+  --shadow: 0 16px 36px rgba(17, 34, 51, 0.08);
+  --radius: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfd 100%);
+}
+
+.topbar h1,
+.panel h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.subhead,
+.panel-header p,
+.helper-text {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.status-stack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  align-content: flex-start;
+}
+
+.status-pill,
+.metric {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.status-pill.muted {
+  color: var(--muted);
+}
+
+.layout {
+  display: grid;
+  gap: 20px;
+  padding: 24px 32px 40px;
+}
+
+.config-panel,
+.summary-grid,
+.two-column,
+.tool-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.two-column,
+.tool-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+.panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.panel-header.compact {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.config-grid,
+.form-row {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: #fff;
+  color: var(--text);
+}
+
+textarea {
+  resize: vertical;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+button {
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0 14px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: var(--surface-alt);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.bullet-list,
+.stack-list,
+.tool-output ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.bullet-list li,
+.stack-list li,
+.tool-output li {
+  margin: 0 0 8px;
+  line-height: 1.45;
+}
+
+.empty-state {
+  color: var(--muted);
+}
+
+.tool-form {
+  display: grid;
+  gap: 14px;
+}
+
+.tool-output {
+  margin-top: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  padding: 14px;
+}
+
+.tool-output section + section {
+  margin-top: 16px;
+}
+
+.callout {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.critical {
+  color: var(--critical);
+}
+
+@media (max-width: 980px) {
+  .summary-grid,
+  .two-column,
+  .tool-grid,
+  .config-grid,
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-direction: column;
+  }
+}

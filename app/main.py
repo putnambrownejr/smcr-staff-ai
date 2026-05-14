@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import (
     admin,
@@ -10,6 +11,7 @@ from app.api.routes import (
     chief,
     connectors,
     context,
+    dashboard,
     demo,
     documents,
     handoffs,
@@ -17,6 +19,7 @@ from app.api.routes import (
     opportunities,
     org,
     personal_documents,
+    personnel,
     reading,
     social,
     staff,
@@ -49,14 +52,17 @@ def create_app() -> FastAPI:
     app.include_router(handoffs.router)
     app.include_router(calendar.router)
     app.include_router(chief.router)
+    app.include_router(dashboard.router)
     app.include_router(org.router)
     app.include_router(opportunities.router)
     app.include_router(personal_documents.router)
+    app.include_router(personnel.router)
     app.include_router(reading.router)
     app.include_router(social.router)
     app.include_router(staff.router)
     app.include_router(staff_products.router)
     app.include_router(training.router)
+    app.mount("/static", StaticFiles(directory="app/static"), name="static")
     return app
 
 
