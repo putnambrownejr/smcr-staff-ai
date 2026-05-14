@@ -1,0 +1,234 @@
+notice: "Example manifest only. Fetch official public sources at runtime; do not commit large publication text."
+planning_refs:
+  - title: Source Inventory and Integration Plan
+    local_path: docs/deep_research/source_inventory_integration_plan.md
+    summary_path: docs/sources/source_inventory_integration_plan.md
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_policy: planning_reference_only
+categories:
+  - id: core_marine_doctrine
+    name: Core Marine doctrine
+    publication_families: ["MCDP", "MCWP", "MCRP"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_refs:
+      - title: MCDP 1 Warfighting
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899773/mcdp-1/
+      - title: MCDP 1-1 Strategy
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899769/mcdp-1-1/
+      - title: MCDP 1-2 Campaigning
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899842/mcdp-1-2/
+      - title: MCDP 1-3 Tactics
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899772/mcdp-1-3/
+      - title: MCDP 1-4 Competing
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2653457/mcdp-1-4/
+      - title: MCDP 2 Intelligence
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcdp-2/
+      - title: MCDP 3 Expeditionary Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899770/mcdp-3/
+      - title: MCDP 4 Logistics
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899840/mcdp-4/
+      - title: MCDP 5 Planning
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899841/mcdp-5/
+      - title: MCDP 6 Command and Control
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899771/mcdp-6/
+      - title: MCDP 7 Learning
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3174243/mcdp-7/
+      - title: MCDP 8 Information
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3159467/mcdp-8/
+      - title: MCTP 3-30B Information Management
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899781/mctp-3-30b/
+  - id: uniform_regulations
+    name: Uniform regulations
+    publication_families: ["orders", "MARADMIN"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_refs:
+      - title: MCO 1020.34H Marine Corps Uniform Regulations
+        url: https://www.marines.mil/portals/1/Publications/MCO%201020.34H%20v2.pdf?ver=20
+      - title: Marine Corps Uniform Board Frequently Asked Questions
+        url: https://www.hqmc.marines.mil/Agencies/Marine-Corps-Uniform-Board/Frequently-Asked-Questions/
+  - id: reserve_administration
+    name: Reserve administration and MCRAMM
+    publication_families: ["MCO", "MARADMIN", "Reserve policy"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_refs:
+      - title: MCO 1001R.1L w/ Ch-2 Marine Corps Reserve Administrative Management Manual (MCRAMM)
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900627/mco-1001r1l-w-ch-2/index.html
+  - id: orm
+    name: Risk management / ORM
+    publication_families: ["orders", "safety guidance"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_refs:
+      - title: MCO 5100.29C Marine Corps Safety Management System
+        url: https://www.marines.mil/News/Publications/MCPEL/Tag/162585/safety/
+  - id: fitrep_pes
+    name: FitRep / PES
+    publication_families: ["PES manual", "orders"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_refs:
+      - title: MCO 1610.7B Performance Evaluation System
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1513503/mco-16107b/
+      - title: MARADMIN 308/23 Revision of MCO 1610.7 Performance Evaluation System
+        url: https://www.marines.mil/News/Messages/Messages-Display/Article/3428853/revision-of-mco-16107-performance-evaluation-system/
+  - id: training_readiness
+    name: Training and readiness
+    publication_families: ["T&R", "orders"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+  - id: communications
+    name: Communications doctrine
+    publication_families: ["MCWP", "MCRP"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+  - id: civil_affairs
+    name: Civil Affairs / civil-military operations doctrine
+    publication_families: ["MCRP", "joint public doctrine"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+  - id: logistics
+    name: Logistics doctrine
+    publication_families: ["MCDP", "MCWP"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+  - id: logistics_04xx
+    name: Logistics / 04XX doctrine, supply, transportation, maintenance, and training
+    publication_families: ["MCDP", "MCWP", "MCTP", "MCRP", "MCO", "NAVMC"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_refs:
+      - title: MCDP 4 Logistics
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899840/mcdp-4/
+      - title: MCWP 3-40 Marine Corps Logistics
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1114634/mcwp-3-40/
+      - title: MCTP 3-40B Tactical Logistics
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899787/mctp-3-40b/
+      - title: MCTP 3-40C Operational-Level Logistics
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1129173/mctp-3-40c/
+      - title: MCTP 3-40A Health Service Support
+        url: https://www.marines.mil/news/publications/mcpel/electronic-library-
+      - title: MCTP 3-40E Maintenance Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2076116/mctp-3-40e/
+      - title: MCTP 3-40F Distribution and Transportation Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899565/mctp-3-40f/
+      - title: MCTP 3-40H MAGTF Supply Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1127793/mctp-3-40h/
+      - title: MCRP 3-40B.5 Petroleum Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1132614/mcrp-3-40b5/
+      - title: MCRP 3-40B.6 Multi-Service Tactics, Techniques, and Procedures for Operational Contract Support
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3403440/mcrp-3-40b6/
+      - title: MCRP 3-40D.14 Water Support Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1130631/mcrp-3-40d14/
+      - title: MCRP 3-40G.1 Marine Corps Field Feeding Program
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899524/mcrp-3-40g1/
+      - title: NAVMC 3500.64D Supply Chain Management Training and Readiness Manual
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3259614/navmc-350064d/
+      - title: MCO 3502.8A Marine Corps Logistics Tactics, Training, and Education Program
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2221611/mco-35028a/
+      - title: MCO 4000.60 Logistics and Supply Chain Management Business Process Management Program
+        url: https://www.marines.mil/News/Publications/MCPEL/Tag/20250/logistics/
+      - title: MCO 4200.33A Contractor Logistics Support
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2438639/mco-420033a/
+      - title: MCO 5230.19A Logistics Data Management
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1132754/mco-523019a/
+      - title: NAVMC 4000.4B Naval Logistics Integration Playbook - Edition 5
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3184169/navmc-40004b/
+      - title: NAVMC 4000.8 U.S. Marine Corps Forces Logistics for Deployed Forces Handbook, Edition 5
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2962418/navmc-40008/
+  - id: operations_planning
+    name: Operations/planning doctrine
+    publication_families: ["MCDP", "MCWP", "MCRP"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+  - id: infantry_03xx
+    name: Infantry / 03XX tactics, operations, and training
+    publication_families: ["MCWP", "MCTP", "MCRP", "NAVMC"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_refs:
+      - title: MCWP 3-10 MAGTF Ground Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899778/mcwp-3-10/
+      - title: MCWP 3-01 Offensive and Defensive Tactics
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2362952/mcwp-3-01/
+      - title: MCRP 3-10A.1 Infantry Battalion Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2325356/mcrp-3-10a1/
+      - title: MCRP 3-10A.2 Infantry Company Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1780135/mcrp-3-10a2/
+      - title: MCRP 3-10A.3 Marine Infantry Platoon
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2500719/mcrp-3-10a3/
+      - title: MCRP 3-10A.4 Marine Rifle Squad
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2472229/mcrp-3-10a4/
+      - title: MCTP 3-01A Scouting and Patrolling
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899780/mctp-3-01a/
+      - title: NAVMC 3500.44D Infantry Training and Readiness Manual
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2187958/navmc-350044d/
+  - id: aviation_support
+    name: Aviation support doctrine
+    publication_families: ["MCWP", "orders"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+  - id: intelligence_osint
+    name: Intelligence/OSINT doctrine
+    publication_families: ["public doctrine", "official public guidance"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+  - id: leadership
+    name: Leadership doctrine
+    publication_families: ["MCDP", "public leadership guidance"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+  - id: professional_reading
+    name: Commandant's Professional Reading List and PME classics
+    publication_families: ["books", "periodicals", "podcasts", "public-domain classics", "official reading lists"]
+    source_policy: metadata_and_summaries_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_refs:
+      - title: 2026 Commandant's Professional Reading List
+        url: https://www.mca-marines.org/commandants-professional-reading-list/
+      - title: Marine Corps University Professional Reading List and Archive
+        url: https://www.usmcu.edu/Academic-Programs/Lejeune-Leadership-Institute/LLI-Professional-Reading-List/
+      - title: The Defence of Duffer's Drift - Project Gutenberg
+        url: https://www.gutenberg.org/ebooks/24842
+      - title: The Art of War - Project Gutenberg
+        url: https://www.gutenberg.org/files/132/132-h/132-h.htm
+  - id: tactical_handbooks
+    name: Tactical handbooks and field leader guides
+    publication_families: ["field handbook", "leader guide", "checklist"]
+    source_policy: metadata_only_until_public_distribution_verified
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_refs:
+      - title: Leader's Tactical Handbook / Tactical Handbook, Unit Leader, Small (THULS)
+        url: https://soldiersystems.net/2010/09/14/thuls/
+        notes: "Reference/background only. No official public PDF verified; do not ingest unofficial mirrors or proprietary contents."
+  - id: humanitarian_disaster_response
+    name: Humanitarian assistance, disaster response, and field assessment guides
+    publication_families: ["field operations guide", "interagency guide", "civil-military coordination"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_refs:
+      - title: USAID Field Operations Guide for Disaster Assessment and Response
+        url: https://pdf.usaid.gov/pdf_docs/pnade100.pdf
+      - title: USAID Field Ops Guide museum/archive page
+        url: https://diplomacy.state.gov/items/usaid-field-ops-guide/

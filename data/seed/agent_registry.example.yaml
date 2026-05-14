@@ -1,0 +1,38 @@
+agents:
+  - id: chief-of-staff-aide
+    doctrine_categories: [core_marine_doctrine, reserve_administration, training_readiness, fitrep_pes]
+  - id: maradmin-monitor
+    doctrine_categories: [uniform_regulations, fitrep_pes, training_readiness]
+  - id: uniform-advisor
+    doctrine_categories: [uniform_regulations]
+  - id: drill-prep-calendar
+    doctrine_categories: [training_readiness]
+  - id: doctrine-opord-assistant
+    doctrine_categories: [core_marine_doctrine, operations_planning, infantry_03xx, logistics_04xx, tactical_handbooks]
+  - id: training-planner
+    doctrine_categories: [training_readiness, infantry_03xx, logistics_04xx, tactical_handbooks]
+  - id: orm-risk-management
+    doctrine_categories: [orm]
+  - id: fitrep-assistant
+    doctrine_categories: [fitrep_pes]
+  - id: leadership-advisor
+    doctrine_categories: [core_marine_doctrine, leadership, professional_reading]
+  - id: osint-research-assistant
+    doctrine_categories: [core_marine_doctrine, intelligence_osint, professional_reading, humanitarian_disaster_response]
+  - id: mos-commo
+    doctrine_categories: [core_marine_doctrine, communications, operations_planning, logistics_04xx]
+  - id: mos-civil-affairs
+    doctrine_categories: [civil_affairs, intelligence_osint, operations_planning, humanitarian_disaster_response]
+staff_agent_patterns:
+  - id_pattern: staff-company-*
+    doctrine_categories: [core_marine_doctrine, reserve_administration, training_readiness]
+  - id_pattern: staff-battalion-s*
+    doctrine_categories: [core_marine_doctrine, operations_planning, training_readiness]
+  - id_pattern: staff-division_group-g*
+    doctrine_categories: [core_marine_doctrine, operations_planning]
+  - id_pattern: staff-battalion-s2
+    doctrine_categories: [core_marine_doctrine, intelligence_osint]
+    linked_agent: osint-research-assistant
+  - id_pattern: staff-division_group-g2
+    doctrine_categories: [core_marine_doctrine, intelligence_osint]
+    linked_agent: osint-research-assistant

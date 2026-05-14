@@ -1,0 +1,129 @@
+# Staff Operating Model
+
+This document describes the planned operating model for `smcr-staff-ai` as a reserve staff assistant.
+
+## Chief Of Staff / Aide de Camp
+
+The Chief of Staff / Aide de Camp function is the user's front door for routine staff awareness.
+
+Initial responsibilities:
+
+- Drill weekend preparation
+- General news and MARADMIN awareness
+- PME/FitRep/admin watch items
+- Routing questions to staff agents
+- Calendar/email triage once user-approved connectors are implemented
+- Local session handoff management
+
+Current implementation:
+
+- Agent id: `chief-of-staff-aide`
+- API: `/agents/chief-of-staff-aide/run`
+- Session handoff API: `/handoffs/{user_key}`
+- Calendar status: local ICS export exists; Microsoft Graph and Google Calendar are stubs.
+- Email status: provider interface exists; live mailbox access is not enabled.
+
+## Session Handoffs
+
+Session handoffs persist minimum necessary local user context, such as:
+
+- Rank, MOS, billet, and unit id
+- PME status and due dates
+- FitRep reminders
+- Recurring drill notes
+- Admin watch items
+- User preferences
+
+Do not store secrets, PII beyond minimum required, CUI, classified information, or sensitive operational details.
+
+## Staff Council
+
+The staff council lets a user run ideas through role-based advisors by echelon.
+
+API:
+
+- `GET /staff/roles`
+- `POST /staff/vet-idea`
+- `POST /staff/round-robin`
+
+Company roles:
+
+- XO
+- 1stSgt
+- Company Gunnery Sergeant
+
+Battalion roles:
+
+- XO
+- OpsO / S-3
+- SgtMaj
+- S-1 through S-6
+
+Division/group roles:
+
+- G-1 through G-6
+
+The roles are housed in a single implementation file with different instructions, maturity, scope, and role lenses.
+
+The round-robin route runs staff perspectives across company, battalion, and division/group echelons by default. It returns requested roles, roles run, structured citations where available, assumptions, action items, and warnings. Unknown role names are rejected so a partial review is not mistaken for a complete staff pass.
+
+## S-2 / G-2 And OSINT
+
+The S-2 and G-2 roles are tied to the OSINT source-evaluation workflow. When staff council context includes `source_items`, S-2/G-2 perspectives call the OSINT agent and include citations from that public-source evidence.
+
+Rules:
+
+- Topic-level public trends only
+- Always cite supplied source URLs
+- Treat social media as noisy signal
+- Do not infer sensitive operational details from public chatter
+- Do not collect private personal data or bypass access controls
+
+## Build Stages
+
+### Stage 1: Staff OS Scaffolding
+
+- Chief of Staff / Aide agent
+- Local session handoff store
+- Staff council API
+- S-2/G-2 to OSINT tie-in
+- Email/calendar provider interfaces
+
+### Stage 2: Live Public Source Awareness
+
+- MARADMIN RSS and print-view parser
+- MCPEL item-page parser and PDF-link extractor
+- MARFORRES hierarchy and exercise-page parsers
+- News/MARADMIN digest surfaced to Chief/Aide
+
+### Stage 3: RAG With Citations
+
+- Allowlisted source ingestion from manifests
+- Chunked doctrine/publication retrieval
+- Citation-aware agent responses
+- Document freshness and supersession warnings
+
+### Stage 4: User-Approved Email And Calendar
+
+- Microsoft Graph integration
+- Google Calendar integration if needed
+- Gmail/Outlook provider option if approved
+- Token protection, least scopes, no hidden mailbox reads
+- Calendar/email summaries routed to Chief/Aide
+
+### Stage 5: Staff Maturity And Workflow Automation
+
+- Staff estimates
+- Decision logs
+- Task trackers
+- Drill weekend battle rhythm
+- PME/FitRep/admin suspense dashboards
+- Multi-agent staff review with dissent/counterarguments
+
+### Stage 6: Frontend
+
+- Staff dashboard
+- Drill prep view
+- Handoff editor
+- Staff council panel
+- Source/citation explorer

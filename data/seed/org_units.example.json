@@ -1,0 +1,85 @@
+{
+  "notice": "Example placeholder data only. Not authoritative and not unit-sensitive.",
+  "units": [
+    {
+      "unit_id": "marforres",
+      "name": "Marine Forces Reserve",
+      "unit_type": "force",
+      "component": "Reserve",
+      "location": "Example: New Orleans, LA",
+      "higher_headquarters_id": null,
+      "supported_relationships": [],
+      "example_data": true
+    },
+    {
+      "unit_id": "4th-mardiv",
+      "name": "4th Marine Division",
+      "unit_type": "division",
+      "component": "Reserve",
+      "location": "Example data",
+      "higher_headquarters_id": "marforres",
+      "supported_relationships": [],
+      "example_data": true
+    },
+    {
+      "unit_id": "4th-mlg",
+      "name": "4th Marine Logistics Group",
+      "unit_type": "logistics group",
+      "component": "Reserve",
+      "location": "Example data",
+      "higher_headquarters_id": "marforres",
+      "supported_relationships": [],
+      "example_data": true
+    },
+    {
+      "unit_id": "4th-maw",
+      "name": "4th Marine Aircraft Wing",
+      "unit_type": "aircraft wing",
+      "component": "Reserve",
+      "location": "Example data",
+      "higher_headquarters_id": "marforres",
+      "supported_relationships": [],
+      "example_data": true
+    },
+    {
+      "unit_id": "fhg",
+      "name": "Force Headquarters Group",
+      "unit_type": "headquarters group",
+      "component": "Reserve",
+      "location": "Example data",
+      "higher_headquarters_id": "marforres",
+      "supported_relationships": [],
+      "example_data": true
+    },
+    {
+      "unit_id": "example-25th-marines",
+      "name": "Example Infantry Regiment",
+      "unit_type": "regiment",
+      "component": "Reserve",
+      "location": "Example data",
+      "higher_headquarters_id": "4th-mardiv",
+      "supported_relationships": [],
+      "example_data": true
+    },
+    {
+      "unit_id": "example-1-25",
+      "name": "Example Infantry Battalion",
+      "unit_type": "battalion",
+      "component": "Reserve",
+      "location": "Example data",
+      "higher_headquarters_id": "example-25th-marines",
+      "supported_relationships": ["example-supported-company"],
+      "example_data": true
+    },
+    {
+      "unit_id": "example-supported-company",
+      "name": "Example Rifle Company",
+      "unit_type": "company",
+      "component": "Reserve",
+      "location": "Example data",
+      "higher_headquarters_id": "example-1-25",
+      "supported_relationships": [],
+      "example_data": true
+    }
+  ]
+}

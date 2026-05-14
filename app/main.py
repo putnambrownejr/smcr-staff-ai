@@ -1,0 +1,45 @@
+from fastapi import FastAPI
+
+from app.api.routes import (
+    agents,
+    billets,
+    calendar,
+    connectors,
+    context,
+    documents,
+    handoffs,
+    health,
+    org,
+    reading,
+    social,
+    staff,
+)
+from app.core.config import get_settings
+
+
+def create_app() -> FastAPI:
+    settings = get_settings()
+    app = FastAPI(
+        title=settings.app_name,
+        version=settings.app_version,
+        description=(
+            "UNCLASSIFIED prototype toolkit for SMCR staff workflows. "
+            "Outputs are advisory drafts requiring human review."
+        ),
+    )
+    app.include_router(health.router)
+    app.include_router(agents.router)
+    app.include_router(billets.router)
+    app.include_router(context.router)
+    app.include_router(connectors.router)
+    app.include_router(documents.router)
+    app.include_router(handoffs.router)
+    app.include_router(calendar.router)
+    app.include_router(org.router)
+    app.include_router(reading.router)
+    app.include_router(social.router)
+    app.include_router(staff.router)
+    return app
+
+
+app = create_app()

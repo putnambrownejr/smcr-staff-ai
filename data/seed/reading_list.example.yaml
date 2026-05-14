@@ -1,0 +1,136 @@
+notice: "Example professional reading catalog. Verify current list membership against official USMC/MCU/MCA pages before relying on it."
+sources:
+  - name: "2026 Commandant's Professional Reading List"
+    url: "https://www.mca-marines.org/commandants-professional-reading-list/"
+    source_type: "current_list"
+    notes: "MCA-hosted current Commandant's Professional Reading List with category pages."
+  - name: "Marine Corps University Professional Reading List and Archive"
+    url: "https://www.usmcu.edu/Academic-Programs/Lejeune-Leadership-Institute/LLI-Professional-Reading-List/"
+    source_type: "archive_index"
+    notes: "MCU page includes archive links for prior reading-list iterations."
+  - name: "Marine Corps Professional Reading Program LibGuide"
+    url: "https://grc-usmcu.libguides.com/"
+    source_type: "library_guide"
+    notes: "Official library guide entry point for current and archived lists."
+books:
+  - slug: "defence-of-duffers-drift"
+    title: "The Defence of Duffer's Drift"
+    author: "Ernest Dunlop Swinton"
+    categories: ["strategy", "tactics", "classic", "open_source"]
+    list_years: ["2026", "prior_iterations"]
+    open_source_available: true
+    public_domain: true
+    source_urls:
+      - "https://www.mca-marines.org/commandants-professional-reading-list-strategy/"
+      - "https://www.gutenberg.org/ebooks/24842"
+    summary: "A short tactical teaching story in which a junior officer repeatedly dreams through the defense of the same river crossing, fails, learns, and improves. Its value is in showing how terrain, security, reconnaissance, fire planning, local population dynamics, logistics, and enemy adaptation matter at small-unit level."
+    key_themes: ["small-unit tactics", "terrain", "security", "reconnaissance", "iterative learning", "defense"]
+    discussion_prompts:
+      - "Which failure in the early dreams is most relevant to modern reserve training?"
+      - "How would communications, sensors, and drones change the problem without changing the fundamentals?"
+      - "What is the difference between learning a checklist and learning tactical judgment?"
+    cautions:
+      - "Historic colonial context and language require critical discussion."
+      - "Use as a tactical learning tool, not as a direct template for modern operations."
+  - slug: "art-of-war"
+    title: "The Art of War"
+    author: "Sun Tzu"
+    categories: ["strategy", "classic", "open_source"]
+    list_years: ["prior_iterations"]
+    open_source_available: true
+    public_domain: true
+    source_urls:
+      - "https://www.gutenberg.org/files/132/132-h/132-h.htm"
+    summary: "A compact classical work on strategy, deception, preparation, morale, intelligence, and the relationship between commander judgment and battlefield success. It is useful less as a rulebook than as a set of prompts about advantage, timing, economy, and knowing both oneself and the adversary."
+    key_themes: ["strategy", "deception", "intelligence", "decision-making", "preparation"]
+    discussion_prompts:
+      - "Which ideas remain useful for staff planning, and which become too abstract without doctrine?"
+      - "How does the text treat information advantage?"
+      - "What should modern leaders avoid overreading into aphorisms?"
+    cautions:
+      - "Many translations differ; cite the translation used."
+  - slug: "warfighting"
+    title: "MCDP 1 Warfighting"
+    author: "United States Marine Corps"
+    categories: ["foundational", "doctrine", "open_source"]
+    list_years: ["foundational", "prior_iterations"]
+    open_source_available: true
+    public_domain: false
+    source_urls:
+      - "https://www.marines.mil/portals/1/Publications/MCDP%201%20Warfighting%20GN.pdf?ver=2019-01-31-"
+    summary: "The Marine Corps' foundational statement on the nature of war, maneuver warfare, command and control, friction, uncertainty, tempo, and commander judgment. It is the doctrinal baseline for understanding how Marines think about warfighting rather than a procedural manual."
+    key_themes: ["maneuver warfare", "friction", "uncertainty", "tempo", "commander's intent", "mission tactics"]
+    discussion_prompts:
+      - "How should reserve staffs train for decision-making under uncertainty?"
+      - "Where does commander's intent reduce friction?"
+      - "What does tempo mean outside a combat vignette?"
+    cautions:
+      - "Use official public Marine Corps publication links for citation."
+  - slug: "war-is-a-racket"
+    title: "War Is a Racket"
+    author: "Smedley D. Butler"
+    categories: ["heritage", "ethics", "classic", "open_source"]
+    list_years: ["prior_iterations"]
+    open_source_available: true
+    public_domain: false
+    source_urls:
+      - "https://gutenberg.ca/ebooks/butlersd-warisaracket/butlersd-warisaracket-00-e.html"
+    summary: "A polemical antiwar work by Major General Smedley Butler arguing that war can be distorted by profit motives and political interests. It is useful for ethics discussions about civil-military responsibility, public accountability, and skepticism about incentives."
+    key_themes: ["ethics", "civil-military relations", "public accountability", "war and economics"]
+    discussion_prompts:
+      - "How should Marines separate professional duty from political critique?"
+      - "What incentives does Butler warn about?"
+      - "How should leaders discuss dissenting historical voices professionally?"
+    cautions:
+      - "Treat as a primary viewpoint, not neutral history."
+  - slug: "fleet-tactics-and-naval-operations"
+    title: "Fleet Tactics and Naval Operations"
+    author: "Wayne P. Hughes and Robert P. Girrier"
+    categories: ["strategy", "naval", "current_list"]
+    list_years: ["2026"]
+    open_source_available: false
+    public_domain: false
+    source_urls:
+      - "https://www.mca-marines.org/commandants-professional-reading-list-strategy/"
+    summary: "A naval tactics and operations text focused on enduring tactical variables at sea and the effects of technological change. For Marines, it supports thinking about naval campaigning, sea control, littoral operations, and the interaction of platforms, sensors, weapons, and command decisions."
+    key_themes: ["naval tactics", "sea control", "technology", "maritime operations"]
+    discussion_prompts:
+      - "How should Marines think about naval integration from the littorals?"
+      - "Which tactical constants persist across eras?"
+      - "How do unmanned systems alter but not erase tactical fundamentals?"
+    cautions:
+      - "Copyrighted work; store metadata and study notes only."
+  - slug: "new-makers-of-modern-strategy"
+    title: "The New Makers of Modern Strategy"
+    author: "Hal Brands, editor"
+    categories: ["strategy", "current_list"]
+    list_years: ["2026"]
+    open_source_available: false
+    public_domain: false
+    source_urls:
+      - "https://www.mca-marines.org/commandants-professional-reading-list-strategy/"
+    summary: "A broad edited survey of strategic thought across eras and regions. It is useful for comparing classical and modern strategic concepts, understanding how strategic ideas evolve, and connecting military action to political purpose."
+    key_themes: ["strategy", "strategic thought", "history", "political purpose"]
+    discussion_prompts:
+      - "Which strategic thinkers best illuminate current Marine Corps problems?"
+      - "How do strategic ideas change when technology and politics change?"
+      - "What is the danger of reading strategy without historical context?"
+    cautions:
+      - "Copyrighted work; store metadata and summaries only."
+  - slug: "closing-of-the-american-mind"
+    title: "The Closing of the American Mind"
+    author: "Allan Bloom"
+    categories: ["strategy", "education", "current_list"]
+    list_years: ["2026"]
+    open_source_available: false
+    public_domain: false
+    source_urls:
+      - "https://www.mca-marines.org/commandants-professional-reading-list-strategy/"
+    summary: "A critique of modern higher education and intellectual life. In a PME context, it can prompt discussion about curiosity, civic education, intellectual humility, and the relationship between culture and military judgment."
+    key_themes: ["education", "culture", "critical thinking", "intellectual formation"]
+    discussion_prompts:
+      - "What does intellectual curiosity require from officers and staff leaders?"
+      - "Where can cultural critique help or hinder military professionalism?"
+      - "How should readers test a provocative argument?"
+    cautions:
+      - "Copyrighted and argumentative; pair with counterarguments."

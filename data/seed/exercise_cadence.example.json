@@ -1,0 +1,126 @@
+{
+  "notice": "Typical/advisory examples only. Exercise timing is not fixed and requires official source confirmation.",
+  "exercises": [
+    {
+      "exercise_name": "ITX",
+      "description": "Integrated training exercise planning rhythm example.",
+      "typical_months": ["varies"],
+      "participating_unit_types": ["battalion", "regiment", "division"],
+      "planning_lead_time_days": 180,
+      "common_staff_requirements": ["training objectives", "movement planning", "risk management", "logistics coordination"],
+      "related_agents": ["training-planner", "orm-risk-management", "doctrine-opord-assistant"],
+      "confidence_level": "low",
+      "source_required": true
+    },
+    {
+      "exercise_name": "WTI",
+      "description": "Weapons and tactics instructor support cadence example.",
+      "typical_months": ["varies"],
+      "participating_unit_types": ["aircraft wing", "aviation support", "staff"],
+      "planning_lead_time_days": 180,
+      "common_staff_requirements": ["aviation support coordination", "training objectives", "travel planning"],
+      "related_agents": ["training-planner", "orm-risk-management"],
+      "confidence_level": "low",
+      "source_required": true
+    },
+    {
+      "exercise_name": "Annual training",
+      "description": "Reserve annual training planning cycle.",
+      "typical_months": ["summer", "varies"],
+      "participating_unit_types": ["company", "battalion", "regiment"],
+      "planning_lead_time_days": 120,
+      "common_staff_requirements": ["orders", "DTS", "training schedule", "gear lists", "medical readiness"],
+      "related_agents": ["drill-prep-calendar", "training-planner"],
+      "confidence_level": "medium",
+      "source_required": true
+    },
+    {
+      "exercise_name": "Battalion FEX",
+      "description": "Field exercise planning example.",
+      "typical_months": ["varies"],
+      "participating_unit_types": ["company", "battalion"],
+      "planning_lead_time_days": 90,
+      "common_staff_requirements": ["OPORD", "ORM", "communications plan", "logistics support"],
+      "related_agents": ["doctrine-opord-assistant", "orm-risk-management", "mos-commo"],
+      "confidence_level": "medium",
+      "source_required": true
+    },
+    {
+      "exercise_name": "Rifle range / annual weapons training",
+      "description": "Annual weapons training preparation example.",
+      "typical_months": ["varies"],
+      "participating_unit_types": ["company", "battalion"],
+      "planning_lead_time_days": 60,
+      "common_staff_requirements": ["range coordination", "ammo forecast", "safety plan", "transportation"],
+      "related_agents": ["training-planner", "orm-risk-management"],
+      "confidence_level": "medium",
+      "source_required": true
+    },
+    {
+      "exercise_name": "PFT cycle",
+      "description": "Physical Fitness Test cycle reminder.",
+      "typical_months": ["January", "February", "March", "April", "May", "June"],
+      "participating_unit_types": ["all"],
+      "planning_lead_time_days": 45,
+      "common_staff_requirements": ["monitor assignment", "safety plan", "score reporting"],
+      "related_agents": ["training-planner", "orm-risk-management"],
+      "confidence_level": "medium",
+      "source_required": true
+    },
+    {
+      "exercise_name": "CFT cycle",
+      "description": "Combat Fitness Test cycle reminder.",
+      "typical_months": ["July", "August", "September", "October", "November", "December"],
+      "participating_unit_types": ["all"],
+      "planning_lead_time_days": 45,
+      "common_staff_requirements": ["monitor assignment", "safety plan", "score reporting"],
+      "related_agents": ["training-planner", "orm-risk-management"],
+      "confidence_level": "medium",
+      "source_required": true
+    },
+    {
+      "exercise_name": "FitRep reporting windows",
+      "description": "Performance evaluation reminder windows.",
+      "typical_months": ["varies"],
+      "participating_unit_types": ["all"],
+      "planning_lead_time_days": 30,
+      "common_staff_requirements": ["roster review", "billet accomplishments", "RS/RO coordination"],
+      "related_agents": ["fitrep-assistant"],
+      "confidence_level": "low",
+      "source_required": true
+    },
+    {
+      "exercise_name": "Fiscal year planning cycle",
+      "description": "Annual training and resource planning rhythm example.",
+      "typical_months": ["August", "September", "October"],
+      "participating_unit_types": ["staff", "command"],
+      "planning_lead_time_days": 180,
+      "common_staff_requirements": ["training plan", "budget inputs", "exercise calendar", "readiness priorities"],
+      "related_agents": ["training-planner", "leadership-advisor"],
+      "confidence_level": "medium",
+      "source_required": true
+    },
+    {
+      "exercise_name": "Drill weekend prep cycle",
+      "description": "Common individual and staff drill preparation reminders.",
+      "typical_months": ["monthly"],
+      "participating_unit_types": ["all"],
+      "planning_lead_time_days": 14,
+      "common_staff_requirements": ["uniform prep", "travel check", "orders review", "training reminders"],
+      "related_agents": ["drill-prep-calendar"],
+      "confidence_level": "medium",
+      "source_required": false
+    },
+    {
+      "exercise_name": "DTS/travel voucher prep cycle",
+      "description": "Travel authorization and voucher reminder rhythm.",
+      "typical_months": ["monthly", "as required"],
+      "participating_unit_types": ["all"],
+      "planning_lead_time_days": 14,
+      "common_staff_requirements": ["authorization", "receipts", "voucher submission", "approver follow-up"],
+      "related_agents": ["drill-prep-calendar"],
+      "confidence_level": "medium",
+      "source_required": true
+    }
+  ]
+}

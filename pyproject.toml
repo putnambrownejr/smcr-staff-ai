@@ -1,0 +1,54 @@
+[project]
+name = "smcr-staff-ai"
+version = "0.1.0"
+description = "UNCLASSIFIED public-source prototype toolkit for SMCR staff workflows."
+requires-python = ">=3.12"
+dependencies = [
+  "beautifulsoup4>=4.12.3",
+  "fastapi>=0.115.0",
+  "feedparser>=6.0.11",
+  "httpx>=0.27.0",
+  "pydantic>=2.8.0",
+  "pydantic-settings>=2.4.0",
+  "python-multipart>=0.0.9",
+  "pypdf>=4.3.0",
+  "pyyaml>=6.0.2",
+  "sqlmodel>=0.0.21",
+  "uvicorn[standard]>=0.30.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "mypy>=1.11.0",
+  "pytest>=8.3.0",
+  "ruff>=0.6.0",
+]
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["data*", "docs*", "tests*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+exclude = ["\\.venv"]
+
+[[tool.mypy.overrides]]
+module = ["feedparser.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["yaml.*"]
+ignore_missing_imports = true

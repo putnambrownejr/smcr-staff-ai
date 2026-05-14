@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Sample MARADMIN Feed</title>
+    <item>
+      <title>Reserve Officer PME Training Update</title>
+      <link>https://example.test/maradmin/001-26</link>
+      <pubDate>Mon, 05 Jan 2026 12:00:00 GMT</pubDate>
+      <description>Administrative training message for reserve officers.</description>
+    </item>
+    <item>
+      <title>Uniform Guidance Reminder</title>
+      <link>https://example.test/maradmin/002-26</link>
+      <pubDate>Tue, 06 Jan 2026 12:00:00 GMT</pubDate>
+      <description>Uniform and grooming reminder.</description>
+    </item>
+  </channel>
+</rss>
