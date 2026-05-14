@@ -84,6 +84,13 @@ def _scenario_parts(
             ["Orders/admin support", "roster/accountability", "travel if required"],
             ["Weapons handling", "medical response", "weather/environment controls"],
         )
+    if scenario_type == TrainingScenarioType.annual_training:
+        return (
+            ["Frame the AT event as a phased reserve-support problem with pre-AT prep, execution, and recovery."],
+            ["Billeting", "transportation", "comm support", "training-area or facility support"],
+            ["Orders/admin support", "travel and DTS continuity", "roster and readiness tracking"],
+            ["Movement and travel", "medical support", "equipment accountability", "leader continuity"],
+        )
     if scenario_type == TrainingScenarioType.staff_drill:
         return (
             ["Frame the decision problem, injects, timeline, and expected staff products."],

@@ -13,6 +13,15 @@ class PersonnelProductType(StrEnum):
     routing_package = "routing_package"
 
 
+class CorrespondenceFormatType(StrEnum):
+    naval_letter = "naval_letter"
+    memorandum = "memorandum"
+    endorsement = "endorsement"
+    routing_package = "routing_package"
+    point_paper = "point_paper"
+    professional_email = "professional_email"
+
+
 class PersonnelProductRequest(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
@@ -57,6 +66,55 @@ class PersonnelProductResponse(BaseModel):
     sections: list[PersonnelDraftSection] = Field(default_factory=list)
     routing_steps: list[str] = Field(default_factory=list)
     required_documents: list[str] = Field(default_factory=list)
+    review_points: list[str] = Field(default_factory=list)
+    citations: list[str] = Field(default_factory=list)
+    structured_citations: list[StructuredCitation] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    follow_up_questions: list[str] = Field(default_factory=list)
+    confidence: Confidence = Confidence.low
+
+
+class CorrespondenceConversionRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "format_type": "naval_letter",
+                "title": "Request for drill travel support",
+                "purpose": "Request travel support for drill attendance.",
+                "audience": "Battalion S-1",
+                "source_text": (
+                    "Need a short formal request asking for travel support for reserve "
+                    "drill attendance next month."
+                ),
+                "references": ["Current orders", "Local travel guidance"],
+                "enclosures": ["Orders", "Travel estimate"],
+                "constraints": ["Keep it brief", "Use advisory placeholders only"],
+            }
+        }
+    )
+
+    format_type: CorrespondenceFormatType
+    title: str
+    purpose: str
+    audience: str | None = None
+    source_text: str = Field(min_length=1)
+    references: list[str] = Field(default_factory=list)
+    enclosures: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+
+
+class CorrespondenceSection(BaseModel):
+    heading: str
+    lines: list[str] = Field(default_factory=list)
+
+
+class CorrespondenceConversionResponse(BaseModel):
+    format_type: CorrespondenceFormatType
+    title: str
+    summary: list[str] = Field(default_factory=list)
+    required_headers: list[str] = Field(default_factory=list)
+    sections: list[CorrespondenceSection] = Field(default_factory=list)
+    routing_notes: list[str] = Field(default_factory=list)
     review_points: list[str] = Field(default_factory=list)
     citations: list[str] = Field(default_factory=list)
     structured_citations: list[StructuredCitation] = Field(default_factory=list)

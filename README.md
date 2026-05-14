@@ -17,6 +17,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Agent registry | Lists and runs placeholder staff/MOS agents with structured responses, warnings, confidence, citations, and follow-up questions. | Working stub |
 | Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, and future email/calendar triage. | Working scaffold |
 | Admin readiness | Pulls FitRep reminders, admin watch items, local document gaps, readiness references, and travel/admin support into an AdminO / S-1 style view. | Working local digest |
+| PKI / CAC troubleshooting | Builds advisory troubleshooting playbooks for CAC detection, certificate, middleware, browser-auth, signing/encryption, and portal-access issues. | Working local support |
 | Chief/Aide orchestration brief | Combines session handoff, local personal docs, drill plans, MARADMIN-driven source updates, and reading suggestions into one advisory triage brief. | Working local orchestrator |
 | Text summarizer / checklist API | Turns pasted text into a local summary, due-outs, action items, checklist, and follow-up questions without storing the input. | Working local analysis |
 | Staff council | Vets ideas through company, battalion, and division/group staff roles, with S-2/G-2 tied to OSINT. Includes round-robin review. | Working scaffold |
@@ -25,9 +26,12 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Local context storage | Lets users upload files/notes, RQS/BIO references, and drill templates as advisory local context without changing doctrine, org, exercise, agent, or canonical document structure. | Working local storage |
 | Personal document organizer | Lists local RQS/BIO/orders/travel/PME-style uploads by type and flags PII/local-retention warnings. | Working local organizer |
 | Personnel products | Builds advisory FitRep planning, FitRep bullet capture, award package, and routing package support with citations and review points. | Working local support |
+| Correspondence conversion | Converts rough text into NAVMAC-style naval letter, memo, endorsement, routing package, point paper, or professional email scaffolds. | Working local support |
 | Career opportunity tracker | Stores ADOS and SMCR BIC opportunities locally, ranks them against a user profile, and surfaces them in the Chief/Aide brief. | Working local tracker |
 | Career watch | Pulls PME gaps, FitRep reminders, career trends, recommended courses/books, missing documents, and tracked opportunities into one advisory career-maintenance view. | Working local watch |
 | Drill prep planner | Turns a drill date into advisory prep tasks, can use templated local key events, persists plans locally, and exports `.ics` calendar content. | Working local planner |
+| Annual training planning | Back-plans AT admin, logistics, readiness, and coordination considerations for reserve units. | Working local planner |
+| Range / RSO package support | Builds advisory range packet, role, safety-control, and medevac/comm checklists. | Working local support |
 | SMCR BIC discovery | Lists official public billet source pages, parses public billet tables/cards where available, discovers Reserve Hub links, and ranks billets against user MOS/rank/location/keywords. | Working parser/recommender with live-source caveats |
 | OSINT trend aggregation | Aggregates user-supplied trusted public-source news/social trend summaries with citations, counterarguments, and confidence weighting. | Working source-evaluation agent |
 | Vetted social ingestion | Normalizes public news/social trend records into OSINT/deep-research-ready source items without unrestricted scraping. | Working connector |
@@ -193,6 +197,16 @@ Supported admin workflow types:
 - `admin_package`
 - `award_package`
 
+Build a PKI / CAC troubleshooting playbook:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/admin/pki-troubleshooting `
+  -H "Content-Type: application/json" `
+  -d "{\"title\":\"MarineNet CAC login issue\",\"issue_type\":\"browser_auth_issue\",\"symptoms\":[\"Certificate prompt never appears\"],\"browser\":\"Chrome\",\"affected_systems\":[\"MarineNet\"],\"on_government_furnished_equipment\":false}"
+```
+
+This route returns likely causes, immediate checks, deeper checks, escalation steps, and safe data-handling notes. It stays advisory and does not attempt enterprise IT actions on your behalf.
+
 ### Personnel Products
 
 Build a more detailed FitRep, awards, or routing support package:
@@ -218,6 +232,23 @@ This route returns:
 - review points
 - citations and warnings
 
+Convert rough text into a correspondence scaffold:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/personnel/convert-correspondence `
+  -H "Content-Type: application/json" `
+  -d "{\"format_type\":\"naval_letter\",\"title\":\"Travel support request\",\"purpose\":\"Request travel support for reserve drill attendance.\",\"audience\":\"Battalion S-1\",\"source_text\":\"Need a short formal request asking for travel support for next month's drill.\",\"references\":[\"Orders\"],\"enclosures\":[\"Orders\",\"Travel estimate\"]}"
+```
+
+Supported correspondence formats:
+
+- `naval_letter`
+- `memorandum`
+- `endorsement`
+- `routing_package`
+- `point_paper`
+- `professional_email`
+
 ### Training And ORM
 
 Build a training scenario scaffold:
@@ -234,6 +265,22 @@ Build a range/RSO support checklist:
 curl -X POST http://127.0.0.1:8000/training/range-safety `
   -H "Content-Type: application/json" `
   -d "{\"event_name\":\"Annual rifle range\",\"weapon_systems\":[\"M4\"],\"ammunition\":[\"5.56 ball\"]}"
+```
+
+Build an annual training planning scaffold:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/training/annual-training-plan `
+  -H "Content-Type: application/json" `
+  -d "{\"unit_name\":\"Example Company\",\"training_objectives\":[\"Complete AT readiness lane\",\"Run staff battle drill\"],\"date_window\":\"FY26 Q3\",\"travel_required\":true,\"distributed_personnel\":true}"
+```
+
+Build a fuller range package:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/training/range-package `
+  -H "Content-Type: application/json" `
+  -d "{\"event_name\":\"Annual rifle range\",\"unit_name\":\"Example Company\",\"weapon_systems\":[\"M4\"],\"ammunition\":[\"5.56 ball\"],\"travel_required\":true}"
 ```
 
 ### Source Verification
