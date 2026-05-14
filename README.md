@@ -167,6 +167,24 @@ This route:
 - returns read plans, action items, and staged write ideas
 - keeps review-before-write guardrails intact
 
+Adapt plugin-fed connector summaries into Chief/Aide, handoff, and action-ready local shapes:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/connectors/workflow-adapter `
+  -H "Content-Type: application/json" `
+  -d "{\"user_key\":\"capt-example\",\"consents\":[{\"provider\":\"google_calendar\",\"access_mode\":\"read_only\",\"user_key\":\"capt-example\",\"enabled\":true},{\"provider\":\"gmail\",\"access_mode\":\"read_only\",\"user_key\":\"capt-example\",\"enabled\":true}],\"calendar_events\":[{\"provider\":\"google_calendar\",\"title\":\"Drill weekend muster\",\"start_at\":\"2026-06-06T08:00:00Z\",\"location\":\"NOSC New Orleans\",\"notes\":\"Travel the night prior.\"}],\"email_messages\":[{\"provider\":\"gmail\",\"subject\":\"DTS voucher reminder\",\"received_at\":\"2026-06-07T14:30:00Z\",\"action_hint\":\"Voucher due this week\"}]}"
+```
+
+This route:
+
+- does not perform connector auth or live connector reads
+- assumes Gmail/Calendar or similar plugins already handled access
+- returns:
+  - a Chief/Aide digest
+  - a `handoff_draft_request` ready for `/handoffs/{user_key}/draft-update`
+  - an `action_promote_request` ready for `/actions/promote`
+- keeps the repo focused on reserve-specific interpretation instead of connector plumbing
+
 ### Admin Readiness
 
 Get an AdminO / S-1 style readiness digest:

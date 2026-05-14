@@ -5,9 +5,15 @@ from fastapi import APIRouter, Depends
 
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
-from app.schemas.connector_digest import ChiefConnectorDigestRequest, ChiefConnectorDigestResponse
+from app.schemas.connector_digest import (
+    ChiefConnectorDigestRequest,
+    ChiefConnectorDigestResponse,
+    ConnectorWorkflowAdapterRequest,
+    ConnectorWorkflowAdapterResponse,
+)
 from app.schemas.connectors import ConnectorConsent, ConnectorConsentResponse, ConnectorWriteAction
 from app.services.connectors.digest_planner import ChiefConnectorDigestPlanner
+from app.services.connectors.workflow_adapter import ConnectorWorkflowAdapter
 from app.services.session.handoff_store import SessionHandoffStore
 
 router = APIRouter(prefix="/connectors", tags=["connectors"], dependencies=[LocalApiKeyDependency])
@@ -50,3 +56,13 @@ def build_chief_connector_digest(
 ) -> ChiefConnectorDigestResponse:
     planner = ChiefConnectorDigestPlanner(store)
     return planner.build(request)
+
+
+@router.post("/workflow-adapter", response_model=ConnectorWorkflowAdapterResponse)
+def build_connector_workflow_adapter(
+    request: ConnectorWorkflowAdapterRequest,
+    store: Annotated[SessionHandoffStore, Depends(get_handoff_store)],
+) -> ConnectorWorkflowAdapterResponse:
+    planner = ChiefConnectorDigestPlanner(store)
+    adapter = ConnectorWorkflowAdapter(planner)
+    return adapter.build(request)
