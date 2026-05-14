@@ -4,7 +4,15 @@ import hashlib
 from datetime import UTC, date, datetime
 from pathlib import Path
 
-from app.schemas.actions import ActionItemRequest, ActionPriority, ActionRecord, ActionStatus, ActionUpdateRequest
+from app.schemas.actions import (
+    ActionItemRequest,
+    ActionLinkRecord,
+    ActionLinkRequest,
+    ActionPriority,
+    ActionRecord,
+    ActionStatus,
+    ActionUpdateRequest,
+)
 
 
 class ActionTracker:
@@ -58,6 +66,29 @@ class ActionTracker:
         self._path(action_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
         return record
 
+    def add_link(self, action_id: str, link: ActionLinkRequest) -> ActionRecord | None:
+        record = self.get(action_id)
+        if record is None:
+            return None
+        link_record = _link_record(link)
+        record.links = [item for item in record.links if item.link_id != link_record.link_id]
+        record.links.append(link_record)
+        record.updated_at = datetime.now(UTC)
+        self._path(action_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
+        return record
+
+    def remove_link(self, action_id: str, link_id: str) -> ActionRecord | None:
+        record = self.get(action_id)
+        if record is None:
+            return None
+        original_count = len(record.links)
+        record.links = [item for item in record.links if item.link_id != link_id]
+        if len(record.links) == original_count:
+            return None
+        record.updated_at = datetime.now(UTC)
+        self._path(action_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
+        return record
+
     def delete(self, action_id: str) -> bool:
         path = self._path(action_id)
         if not path.exists():
@@ -104,3 +135,15 @@ def _sort_key(record: ActionRecord) -> tuple[int, date | datetime, str]:
     }
     when = record.suspense_date if record.suspense_date is not None else record.updated_at
     return (priority_rank[record.priority], when, record.title.lower())
+
+
+def _link_record(link: ActionLinkRequest) -> ActionLinkRecord:
+    seed = "|".join([link.link_type.value, link.label, link.target_id or "", link.url or ""])
+    return ActionLinkRecord(
+        link_id=hashlib.sha256(seed.encode()).hexdigest()[:20],
+        link_type=link.link_type,
+        label=link.label,
+        target_id=link.target_id,
+        url=link.url,
+        notes=link.notes,
+    )

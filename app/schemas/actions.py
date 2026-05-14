@@ -33,6 +33,22 @@ class ActionCategory(StrEnum):
     other = "other"
 
 
+class ActionLinkType(StrEnum):
+    local_context = "local_context"
+    documentation_update = "documentation_update"
+    url = "url"
+
+
+class ActionLinkRecord(BaseModel):
+    link_id: str
+    link_type: ActionLinkType
+    label: str
+    target_id: str | None = None
+    url: str | None = None
+    notes: str | None = None
+    added_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
 class ActionRecord(BaseModel):
     action_id: str
     user_key: str | None = None
@@ -45,6 +61,7 @@ class ActionRecord(BaseModel):
     suspense_date: date | None = None
     source_ref: str | None = None
     notes: str | None = None
+    links: list[ActionLinkRecord] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
@@ -80,4 +97,12 @@ class ActionUpdateRequest(BaseModel):
     status: ActionStatus | None = None
     suspense_date: date | None = None
     source_ref: str | None = None
+    notes: str | None = None
+
+
+class ActionLinkRequest(BaseModel):
+    link_type: ActionLinkType
+    label: str
+    target_id: str | None = None
+    url: str | None = None
     notes: str | None = None
