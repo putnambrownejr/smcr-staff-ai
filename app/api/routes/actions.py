@@ -22,7 +22,9 @@ from app.schemas.actions import (
     ActionUpdateRequest,
     AnnualTrainingActionBundleRequest,
     CorrespondenceActionBundleRequest,
+    PoamActionBundleRequest,
     RangePackageActionBundleRequest,
+    TdgActionBundleRequest,
 )
 from app.schemas.chief import ChiefBriefRequest
 from app.schemas.context import LocalContextMetadata
@@ -40,8 +42,10 @@ from app.services.opportunities.tracker import OpportunityTracker
 from app.services.personnel.correspondence_converter import CorrespondenceConverter
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
+from app.services.staff_products.poam_builder import PoamBuilder
 from app.services.storage.local_context_store import LocalContextStore
 from app.services.training.event_planner import AnnualTrainingPlanner, RangePackagePlanner
+from app.services.training.tdg_builder import TdgBuilder
 
 router = APIRouter(prefix="/actions", tags=["action tracker"], dependencies=[LocalApiKeyDependency])
 _promoter = ActionPromoter()
@@ -50,6 +54,8 @@ _annual_training_planner = AnnualTrainingPlanner()
 _range_package_planner = RangePackagePlanner()
 _correspondence_converter = CorrespondenceConverter()
 _follow_up_processor = ActionFollowUpProcessor()
+_tdg_builder = TdgBuilder()
+_poam_builder = PoamBuilder()
 SEED_DIR = Path("data/seed")
 
 
@@ -218,6 +224,32 @@ def track_actions_from_range_package(
         )
     )
     return _bundle_response(package.title, tracked, len(tracked), "range package")
+
+
+@router.post("/from-tdg", response_model=ActionBundleTrackResponse)
+def track_actions_from_tdg(
+    request: TdgActionBundleRequest,
+    tracker: Annotated[ActionTracker, Depends(get_tracker)],
+) -> ActionBundleTrackResponse:
+    tdg = _tdg_builder.build(request.tdg)
+    tracked = tracker.track(
+        _bundle_builder.from_tdg(
+            tdg,
+            user_key=request.options.user_key,
+            owner=request.options.owner,
+        )
+    )
+    return _bundle_response(tdg.title, tracked, len(tracked), "tdg")
+
+
+@router.post("/from-poam", response_model=ActionBundleTrackResponse)
+def track_actions_from_poam(
+    request: PoamActionBundleRequest,
+    tracker: Annotated[ActionTracker, Depends(get_tracker)],
+) -> ActionBundleTrackResponse:
+    poam = _poam_builder.build(request.poam)
+    tracked = tracker.track(_bundle_builder.from_poam(poam, user_key=request.options.user_key))
+    return _bundle_response(poam.title, tracked, len(tracked), "poam")
 
 
 @router.post("/follow-up", response_model=ActionFollowUpResponse)

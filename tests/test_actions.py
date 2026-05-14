@@ -298,6 +298,37 @@ def test_action_bundle_routes_track_from_chief_admin_and_at(tmp_path: Path) -> N
         assert range_response.status_code == 200
         assert range_response.json()["tracked"]
 
+        tdg_response = client.post(
+            "/actions/from-tdg",
+            json={
+                "tdg": {
+                    "title": "Reserve convoy link-up",
+                    "theme": "small-unit decision-making under time pressure",
+                    "training_objective": "Practice tactical judgment.",
+                },
+                "options": {"user_key": "capt-example", "owner": "Capt Example"},
+            },
+        )
+        assert tdg_response.status_code == 200
+        assert tdg_response.json()["tracked"]
+
+        poam_response = client.post(
+            "/actions/from-poam",
+            json={
+                "poam": {
+                    "title": "Drill support order POA&M",
+                    "higher_guidance": [
+                        "Establish reporting timeline for drill weekend support.",
+                        "Coordinate S-6 comm checks and S-4 logistics support.",
+                    ],
+                    "staff_sections": ["S-3", "S-4", "S-6"],
+                },
+                "options": {"user_key": "capt-example"},
+            },
+        )
+        assert poam_response.status_code == 200
+        assert poam_response.json()["tracked"]
+
         tracked_actions = tracker.list(user_key="capt-example", include_closed=True)
         assert tracked_actions
         follow_up_response = client.post(

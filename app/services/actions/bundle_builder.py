@@ -4,6 +4,8 @@ from app.schemas.actions import ActionCategory, ActionItemRequest
 from app.schemas.admin import AdminReadinessResponse
 from app.schemas.chief import ChiefBriefResponse
 from app.schemas.personnel import CorrespondenceConversionResponse
+from app.schemas.poam import PoamResponse
+from app.schemas.tdg import TdgGenerationResponse
 from app.schemas.training import AnnualTrainingPlanResponse, RangePackageResponse
 
 
@@ -158,6 +160,62 @@ class ActionBundleBuilder:
             for item in [*response.safety_controls[:3], *response.medevac_and_comm_checks[:3]]
         )
         return items
+
+    def from_tdg(
+        self,
+        response: TdgGenerationResponse,
+        *,
+        user_key: str | None,
+        owner: str | None,
+    ) -> list[ActionItemRequest]:
+        items: list[ActionItemRequest] = []
+        items.extend(
+            ActionItemRequest(
+                user_key=user_key,
+                title=item,
+                description="Decision point identified by TDG generator.",
+                owner=owner,
+                category=ActionCategory.training,
+                priority="medium",
+                source_ref=response.title,
+                notes="Promoted from TDG generator.",
+            )
+            for item in response.decision_points[:4]
+        )
+        items.extend(
+            ActionItemRequest(
+                user_key=user_key,
+                title=item,
+                description="Instructor follow-up note identified by TDG generator.",
+                owner=owner,
+                category=ActionCategory.pme,
+                priority="low",
+                source_ref=response.title,
+                notes="Promoted from TDG generator.",
+            )
+            for item in response.instructor_notes[:4]
+        )
+        return items
+
+    def from_poam(
+        self,
+        response: PoamResponse,
+        *,
+        user_key: str | None,
+    ) -> list[ActionItemRequest]:
+        return [
+            ActionItemRequest(
+                user_key=user_key,
+                title=item.task,
+                description=f"Workstream: {item.workstream}. Coordination: {', '.join(item.coordination)}.",
+                owner=item.owner,
+                category=ActionCategory.poam,
+                priority="high",
+                source_ref=response.title,
+                notes=f"Suspense hint: {item.suspense_hint}",
+            )
+            for item in response.line_items[:24]
+        ]
 
 
 def _chief_category(category: str) -> ActionCategory:

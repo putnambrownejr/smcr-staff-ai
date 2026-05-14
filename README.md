@@ -430,6 +430,22 @@ curl -X POST http://127.0.0.1:8000/actions/follow-up `
 
 If you do not set `status`, the system infers one from note language such as `completed`, `blocked`, `waiting`, or `in progress`.
 
+Promote a TDG into tracked actions:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/actions/from-tdg `
+  -H "Content-Type: application/json" `
+  -d "{\"tdg\":{\"title\":\"Reserve convoy link-up\",\"theme\":\"small-unit decision-making under time pressure\",\"training_objective\":\"Practice tactical judgment.\"},\"options\":{\"user_key\":\"capt-example\",\"owner\":\"Capt Example\"}}"
+```
+
+Promote a POA&M scaffold into tracked actions:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/actions/from-poam `
+  -H "Content-Type: application/json" `
+  -d "{\"poam\":{\"title\":\"Drill support order POA&M\",\"higher_guidance\":[\"Establish reporting timeline for drill weekend support.\",\"Coordinate S-6 comm checks and S-4 logistics support.\"],\"staff_sections\":[\"S-3\",\"S-4\",\"S-6\"]},\"options\":{\"user_key\":\"capt-example\"}}"
+```
+
 ### Vetted Social / News Trend Ingestion
 
 List allowed source categories:

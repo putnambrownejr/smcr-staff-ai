@@ -6,6 +6,8 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from app.schemas.personnel import CorrespondenceConversionRequest
+from app.schemas.poam import PoamRequest
+from app.schemas.tdg import TdgGenerationRequest
 from app.schemas.training import AnnualTrainingPlanRequest, RangePackageRequest
 
 
@@ -164,6 +166,16 @@ class CorrespondenceActionBundleRequest(BaseModel):
 
 class RangePackageActionBundleRequest(BaseModel):
     package: RangePackageRequest
+    options: ActionBundleTrackRequest = Field(default_factory=ActionBundleTrackRequest)
+
+
+class TdgActionBundleRequest(BaseModel):
+    tdg: TdgGenerationRequest
+    options: ActionBundleTrackRequest = Field(default_factory=ActionBundleTrackRequest)
+
+
+class PoamActionBundleRequest(BaseModel):
+    poam: PoamRequest
     options: ActionBundleTrackRequest = Field(default_factory=ActionBundleTrackRequest)
 
 
