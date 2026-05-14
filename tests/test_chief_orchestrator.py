@@ -4,12 +4,14 @@ from pathlib import Path
 from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
 from app.schemas.chief import ChiefBriefRequest
 from app.schemas.ingestion import MessageRecord
+from app.schemas.opportunities import ManualOpportunityRequest
 from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateReviewStatus
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.chief.orchestrator import ChiefAideOrchestrator
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_store import DocumentUpdateStore
+from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
@@ -53,6 +55,7 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
         drill_plan_store=plan_store,
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
         document_update_store=DocumentUpdateStore(tmp_path / "updates"),
+        opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
     )
 
     brief = orchestrator.build_brief(
@@ -94,6 +97,7 @@ def test_chief_brief_flags_stale_handoff_and_missing_core_docs(tmp_path: Path) -
         drill_plan_store=DrillPrepPlanStore(tmp_path / "plans"),
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
         document_update_store=DocumentUpdateStore(tmp_path / "updates"),
+        opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
     )
 
     brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-stale"))
@@ -130,6 +134,7 @@ def test_chief_brief_uses_persisted_document_updates_and_skips_ignored(tmp_path:
         drill_plan_store=DrillPrepPlanStore(tmp_path / "plans"),
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
         document_update_store=update_store,
+        opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
     )
 
     brief = orchestrator.build_brief(ChiefBriefRequest(user_key=None))
@@ -137,3 +142,31 @@ def test_chief_brief_uses_persisted_document_updates_and_skips_ignored(tmp_path:
     update_titles = [item.title for item in brief.action_items if item.category == "source_updates"]
     assert "Source update (new): PES / FitRep" in update_titles
     assert all("Uniform Regulations" not in title for title in update_titles)
+
+
+def test_chief_brief_surfaces_tracked_career_opportunities(tmp_path: Path) -> None:
+    opportunity_tracker = OpportunityTracker(tmp_path / "opportunities")
+    opportunity_tracker.track(
+        [
+            ManualOpportunityRequest(
+                title="ADOS Planner",
+                opportunity_type="ados",
+                location="Remote",
+                rank="Capt",
+                due_date=date(2026, 6, 15),
+            )
+        ]
+    )
+    orchestrator = ChiefAideOrchestrator(
+        handoff_store=SessionHandoffStore(tmp_path / "handoffs"),
+        document_organizer=PersonalDocumentOrganizer(LocalContextStore(tmp_path / "context")),
+        drill_plan_store=DrillPrepPlanStore(tmp_path / "plans"),
+        reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
+        document_update_store=DocumentUpdateStore(tmp_path / "updates"),
+        opportunity_tracker=opportunity_tracker,
+    )
+
+    brief = orchestrator.build_brief(ChiefBriefRequest(user_key=None))
+
+    career_titles = [item.title for item in brief.action_items if item.category == "career"]
+    assert "Career opportunity (ados): ADOS Planner" in career_titles

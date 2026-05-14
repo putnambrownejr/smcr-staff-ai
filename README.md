@@ -22,6 +22,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Session handoffs | Stores minimum necessary local user context for PME, FitRep, admin, drill, and preference reminders. | Working local storage |
 | Local context storage | Lets users upload files/notes, RQS/BIO references, and drill templates as advisory local context without changing doctrine, org, exercise, agent, or canonical document structure. | Working local storage |
 | Personal document organizer | Lists local RQS/BIO/orders/travel/PME-style uploads by type and flags PII/local-retention warnings. | Working local organizer |
+| Career opportunity tracker | Stores ADOS and SMCR BIC opportunities locally, ranks them against a user profile, and surfaces them in the Chief/Aide brief. | Working local tracker |
 | Drill prep planner | Turns a drill date into advisory prep tasks, can use templated local key events, persists plans locally, and exports `.ics` calendar content. | Working local planner |
 | SMCR BIC discovery | Lists official public billet source pages, parses public billet tables/cards where available, discovers Reserve Hub links, and ranks billets against user MOS/rank/location/keywords. | Working parser/recommender with live-source caveats |
 | OSINT trend aggregation | Aggregates user-supplied trusted public-source news/social trend summaries with citations, counterarguments, and confidence weighting. | Working source-evaluation agent |
@@ -54,7 +55,9 @@ app/
     agents/            Agent interface, registry, placeholder agents
     billets/           SMCR billet recommendation
     calendar/          Drill-prep planner and calendar provider stubs
+    chief/             Chief/Aide orchestration and triage brief
     ingestion/         RSS, PDF, MCPEL, MARADMIN, and billet parsing helpers
+    opportunities/     Local ADOS/BIC tracking and recommendation
     org_awareness/     Example hierarchy and exercise cadence services
     rag/               Chunking, embeddings, vector store, retriever stubs
     storage/           Local user-context storage
@@ -220,6 +223,8 @@ curl http://127.0.0.1:8000/chief/brief/capt-example
 
 Chief/Aide action items are sorted by priority and due date. The brief also warns when a session handoff looks stale or when core personal references such as `RQS`, `BIO`, `orders`, or PME references are missing.
 
+Tracked ADOS and SMCR BIC opportunities also appear in the brief as career-oriented action items when stored locally.
+
 ### Staff Council
 
 List staff roles:
@@ -314,6 +319,38 @@ curl http://127.0.0.1:8000/personal-documents/{context_id}
 ```
 
 The organizer now highlights missing core document types such as `RQS`, `BIO`, `orders`, and `PME certificates`, along with review-due and expired records.
+
+### Career Opportunities
+
+Track ADOS or SMCR BIC opportunities locally:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/opportunities/track `
+  -H "Content-Type: application/json" `
+  -d "{\"opportunities\":[{\"title\":\"ADOS Planner\",\"opportunity_type\":\"ados\",\"unit\":\"4th MLG\",\"location\":\"New Orleans, LA\",\"mos\":\"0502\",\"rank\":\"Capt\",\"source_url\":\"https://example.test/ados\",\"description\":\"Temporary planning support billet.\",\"due_date\":\"2026-06-15\"}]}"
+```
+
+List tracked opportunities:
+
+```powershell
+curl http://127.0.0.1:8000/opportunities
+```
+
+Filter by type:
+
+```powershell
+curl "http://127.0.0.1:8000/opportunities?opportunity_type=smcr_bic"
+```
+
+Rank manual opportunities against a user profile:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/opportunities/recommend `
+  -H "Content-Type: application/json" `
+  -d "{\"profile\":{\"rank\":\"Capt\",\"mos\":\"0602\",\"preferred_locations\":[\"New Orleans, LA\"],\"keywords\":[\"communications\",\"plans\"]},\"opportunities\":[{\"title\":\"Communications Officer\",\"opportunity_type\":\"smcr_bic\",\"unit\":\"6th Comm Bn\",\"location\":\"New Orleans, LA\",\"mos\":\"0602\",\"rank\":\"Capt\",\"source_url\":\"https://example.test/bic\"},{\"title\":\"ADOS Planner\",\"opportunity_type\":\"ados\",\"unit\":\"4th MLG\",\"location\":\"Remote\",\"mos\":\"0502\",\"rank\":\"Capt\",\"source_url\":\"https://example.test/ados\"}]}"
+```
+
+The opportunity tracker is advisory only. It does not determine eligibility, orders, selection, or command approval.
 
 Read a preview:
 

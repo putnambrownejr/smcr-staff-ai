@@ -10,6 +10,7 @@ from app.schemas.chief import ChiefBriefRequest, ChiefBriefResponse
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.chief.orchestrator import ChiefAideOrchestrator
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
+from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
@@ -32,6 +33,7 @@ def get_orchestrator(
         document_organizer=PersonalDocumentOrganizer(context_store),
         drill_plan_store=DrillPrepPlanStore(f"{settings.local_context_storage_dir}/drill_plans"),
         reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
+        opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
     )
 
 

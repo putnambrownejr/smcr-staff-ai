@@ -1,8 +1,10 @@
+from collections.abc import Sequence
 from datetime import UTC, date, datetime, timedelta
 
 from app.core.security import DEFAULT_WARNINGS
 from app.schemas.calendar import DrillPrepPlanResponse
 from app.schemas.chief import ChiefActionItem, ChiefBriefRequest, ChiefBriefResponse
+from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate
@@ -10,6 +12,7 @@ from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_monitor import DocumentUpdateMonitor
 from app.services.ingestion.document_update_store import DocumentUpdateStore
+from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
 
@@ -22,18 +25,21 @@ class ChiefAideOrchestrator:
         drill_plan_store: DrillPrepPlanStore,
         reading_catalog: ReadingListCatalogService,
         document_update_store: DocumentUpdateStore | None = None,
+        opportunity_tracker: OpportunityTracker | None = None,
     ) -> None:
         self.handoff_store = handoff_store
         self.document_organizer = document_organizer
         self.drill_plan_store = drill_plan_store
         self.reading_catalog = reading_catalog
         self.document_update_store = document_update_store or DocumentUpdateStore()
+        self.opportunity_tracker = opportunity_tracker or OpportunityTracker()
 
     def build_brief(self, request: ChiefBriefRequest) -> ChiefBriefResponse:
         handoff = self.handoff_store.get(request.user_key) if request.user_key else None
         handoff_is_stale = _handoff_is_stale(handoff)
         document_summary = self.document_organizer.list_documents() if request.include_personal_documents else None
         drill_plans = self.drill_plan_store.list() if request.include_drill_plans else []
+        opportunities = self.opportunity_tracker.list()
         updates = self.document_update_store.list()
         if request.maradmin_records:
             scanned_updates = DocumentUpdateMonitor().scan_maradmin_records(request.maradmin_records).candidates
@@ -41,6 +47,7 @@ class ChiefAideOrchestrator:
         action_items = [
             *_handoff_actions(handoff),
             *_document_actions(document_summary, handoff),
+            *_opportunity_actions(opportunities, handoff),
             *_drill_actions(drill_plans),
             *_update_actions(updates),
         ]
@@ -200,6 +207,37 @@ def _drill_actions(drill_plans: list[DrillPrepPlanResponse]) -> list[ChiefAction
         )
         for plan in drill_plans[:3]
     ]
+
+
+def _opportunity_actions(
+    opportunities: Sequence[OpportunityRecord],
+    handoff: UserSessionHandoff | None,
+) -> list[ChiefActionItem]:
+    actions = [
+        ChiefActionItem(
+            title=f"Career opportunity ({opportunity.opportunity_type}): {opportunity.title}",
+            category="career",
+            priority=_priority(opportunity.due_date),
+            due_date=opportunity.due_date,
+            source=opportunity.source_url,
+            recommendation="Review fit, confirm eligibility, and decide whether to pursue or archive this opportunity.",
+        )
+        for opportunity in opportunities[:5]
+        if opportunity.tracked
+    ]
+    if handoff is not None:
+        actions.extend(
+            ChiefActionItem(
+                title=f"Career opportunity ({opportunity.opportunity_type}): {opportunity.title}",
+                category="career",
+                priority=_priority(opportunity.due_date),
+                due_date=opportunity.due_date,
+                source=opportunity.source_url,
+                recommendation="Review fit and add next action or decision note to the handoff.",
+            )
+            for opportunity in handoff.career_opportunities
+        )
+    return actions
 
 
 def _update_actions(updates: list[DocumentationUpdateCandidate]) -> list[ChiefActionItem]:
