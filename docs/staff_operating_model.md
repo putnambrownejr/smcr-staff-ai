@@ -49,6 +49,13 @@ The admin readiness digest combines:
 
 This is advisory continuity support only. It is not a replacement for official S-1/AdminO processes, unit systems of record, or command review.
 
+The admin workflow builder adds focused support for:
+
+- DTS voucher checklists
+- orders review
+- general admin package routing
+- award package routing support
+
 ## Session Handoffs
 
 Session handoffs persist minimum necessary local user context, such as:
@@ -140,6 +147,8 @@ Rules:
 - Chunked doctrine/publication retrieval
 - Citation-aware agent responses
 - Document freshness and supersession warnings
+
+The current source verification route is an intermediate step toward stronger freshness handling. It validates source refs, flags tag-page-only and placeholder sources, and helps identify MCPEL references that still need exact item-page verification.
 
 ### Stage 4: User-Approved Email And Calendar
 

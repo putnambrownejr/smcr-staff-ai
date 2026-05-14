@@ -11,9 +11,11 @@ from app.schemas.source_updates import (
     DocumentationUpdateStatusUpdate,
     UpdateReviewStatus,
 )
+from app.schemas.source_verification import SourceVerificationRequest, SourceVerificationResponse
 from app.schemas.sources import validate_manifest
 from app.services.ingestion.document_update_monitor import DocumentUpdateMonitor
 from app.services.ingestion.document_update_store import DocumentUpdateStore
+from app.services.ingestion.source_verifier import SourceVerifier
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 _update_store = DocumentUpdateStore()
@@ -81,3 +83,11 @@ def update_document_update_status(
     if candidate is None:
         raise HTTPException(status_code=404, detail=f"Unknown documentation update candidate: {candidate_id}")
     return candidate
+
+
+@router.post("/verify-sources", response_model=SourceVerificationResponse)
+def verify_sources(request: SourceVerificationRequest) -> SourceVerificationResponse:
+    try:
+        return SourceVerifier().verify(request)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

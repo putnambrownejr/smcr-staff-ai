@@ -170,6 +170,55 @@ This view combines:
 - readiness reference gaps
 - travel/DTS support gaps
 
+Build a focused admin workflow checklist:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/admin/workflow `
+  -H "Content-Type: application/json" `
+  -d "{\"workflow_type\":\"dts_voucher\",\"title\":\"Post-drill voucher\",\"facts\":[\"Receipts are complete\"]}"
+```
+
+Supported admin workflow types:
+
+- `dts_voucher`
+- `orders_review`
+- `admin_package`
+- `award_package`
+
+### Training And ORM
+
+Build a training scenario scaffold:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/training/scenario `
+  -H "Content-Type: application/json" `
+  -d "{\"scenario_type\":\"staff_drill\",\"title\":\"Battalion planning drill\",\"training_objective\":\"Practice decision-making and product flow.\",\"constraints\":[\"Three-hour window\"]}"
+```
+
+Build a range/RSO support checklist:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/training/range-safety `
+  -H "Content-Type: application/json" `
+  -d "{\"event_name\":\"Annual rifle range\",\"weapon_systems\":[\"M4\"],\"ammunition\":[\"5.56 ball\"]}"
+```
+
+### Source Verification
+
+Verify source freshness and public-prototype eligibility:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/documents/verify-sources `
+  -H "Content-Type: application/json" `
+  -d "{\"manifest_path\":\"data/seed/doctrine_manifest.example.yaml\"}"
+```
+
+This verification route highlights:
+
+- placeholder or tag-page-only source refs
+- public-prototype eligibility issues
+- MCPEL refs that still need exact item-page verification
+
 ### Agents
 
 List available agents:
