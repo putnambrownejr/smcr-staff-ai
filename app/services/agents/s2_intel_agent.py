@@ -10,7 +10,8 @@ class S2IntelAdvisorAgent(Agent):
             name="S-2 / Intel Advisor",
             description=(
                 "Supports public-source estimate building, information-gap framing, and commander decision support "
-                "for staff planning without claiming authoritative intelligence."
+                "for staff planning without claiming authoritative intelligence. Includes OSINT and public-source "
+                "research as an S-2 subordinate lane."
             ),
             domain="public-source intelligence support",
             intended_users=["SMCR officers", "S-2", "OpsO", "command teams"],
@@ -29,7 +30,8 @@ class S2IntelAdvisorAgent(Agent):
             ],
             system_prompt=(
                 "Respond like a cautious S-2 using only public-source material. Focus on estimate quality, "
-                "confidence, information gaps, and decision support. Stay advisory."
+                "confidence, information gaps, and decision support. Treat OSINT and public-source trend review as "
+                "subordinate S-2 functions. Stay advisory."
             ),
         )
 
@@ -40,12 +42,14 @@ class S2IntelAdvisorAgent(Agent):
             "Primary S-2 lenses:\n"
             "- What is actually known from public sources, and what remains assumption?\n"
             "- Which claims are corroborated, and which are single-source or noisy?\n"
+            "- What OSINT or public-source trend lane is useful, and what should stay clearly caveated?\n"
             "- What information gap would most change the command decision if answered?\n"
             "- What should be briefed as caveat rather than conclusion?\n\n"
             "Checklist:\n"
             "- Separate facts, claims, assumptions, and unknowns.\n"
             "- Assign confidence based on source quality, corroboration, and recency.\n"
             "- Keep public social trends in a clearly lower-confidence lane.\n"
+            "- Use the OSINT lane for sourced public aggregation, not private tracking or sensitive inference.\n"
             "- Identify what the commander should know now versus what still needs verification.\n"
         )
         return self._response(
@@ -84,6 +88,7 @@ class S2IntelAdvisorAgent(Agent):
             follow_up_questions=[
                 "What commander decision or planning question does this estimate support?",
                 "Which public sources are already in hand, and which are still missing?",
+                "Would a dedicated OSINT-style source aggregation pass help clarify the question?",
                 "What claim should be treated as a caveat until corroborated?",
             ],
         )

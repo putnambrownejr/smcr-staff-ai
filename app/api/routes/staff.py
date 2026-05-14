@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
+from app.schemas.agents import AgentRunRequest, AgentRunResponse
+from app.schemas.pki import PkiTroubleshootingRequest, PkiTroubleshootingResponse
 from app.schemas.staff import (
     S2EstimateRequest,
     S2EstimateResponse,
@@ -11,6 +13,9 @@ from app.schemas.staff import (
     StaffRoundRobinRequest,
     StaffRoundRobinResponse,
 )
+from app.services.admin.pki_support import PkiTroubleshootingService
+from app.services.agents.base import AgentContext
+from app.services.agents.osint_agent import build_osint_agent
 from app.services.staff.council import StaffCouncilService
 from app.services.staff.s2_estimator import S2Estimator
 from app.services.staff.s6_planner import S6Planner
@@ -20,6 +25,8 @@ router = APIRouter(prefix="/staff", tags=["staff council"])
 _service = StaffCouncilService()
 _s2_estimator = S2Estimator()
 _s6_planner = S6Planner()
+_pki_service = PkiTroubleshootingService()
+_osint_agent = build_osint_agent()
 
 
 @router.get("/roles", response_model=list[StaffRoleMetadata])
@@ -51,3 +58,23 @@ def build_s2_estimate(request: S2EstimateRequest) -> S2EstimateResponse:
 @router.post("/s6-plan", response_model=S6PlanResponse)
 def build_s6_plan(request: S6PlanRequest) -> S6PlanResponse:
     return _s6_planner.build(request)
+
+
+@router.post("/s6/pki-troubleshooting", response_model=PkiTroubleshootingResponse)
+def build_s6_pki_troubleshooting(request: PkiTroubleshootingRequest) -> PkiTroubleshootingResponse:
+    return _pki_service.build(request)
+
+
+@router.post("/s2/osint-estimate", response_model=AgentRunResponse)
+def build_s2_osint_estimate(request: AgentRunRequest) -> AgentRunResponse:
+    context_payload = dict(request.context)
+    known_keys = {"user_role", "unit_id", "request_is_training_or_fictional", "extra"}
+    unknown_context = {key: value for key, value in context_payload.items() if key not in known_keys}
+    if unknown_context:
+        extra = dict(context_payload.get("extra") or {})
+        extra.update(unknown_context)
+        context_payload["extra"] = extra
+    context = AgentContext.model_validate(context_payload)
+    if context.user_role is None:
+        context.user_role = "S-2"
+    return _osint_agent.run(request.input, context)

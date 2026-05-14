@@ -18,14 +18,14 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, and future email/calendar triage. | Working scaffold |
 | Admin readiness | Pulls FitRep reminders, admin watch items, local document gaps, readiness references, and travel/admin support into an AdminO / S-1 style view. | Working local digest |
 | S-1 / Admin chief advisor | Adds an explicit S-1/Admin chief perspective for reserve admin continuity, routing discipline, awards, orders, DTS, and suspense management. | Working advisory agent |
-| S-2 / intel advisor | Adds an explicit S-2 perspective for public-source estimates, information gaps, and confidence-weighted staff support. | Working advisory agent |
+| S-2 / intel advisor | Adds an explicit S-2 perspective for public-source estimates, information gaps, confidence-weighted staff support, and OSINT/public-source aggregation as a subordinate lane. | Working advisory agent |
 | S-3 / OpsO advisor | Adds an explicit S-3/OpsO perspective for reserve operations planning, training synchronization, battle rhythm, and decision support. | Working advisory agent |
 | S-4 / logistics advisor | Adds an explicit S-4/LogO perspective for reserve supportability, movement, sustainment, supply, maintenance, and logistics friction. | Working advisory agent |
-| S-6 / communications advisor | Adds an explicit S-6/CommO perspective for reserve C2 support, generic PACE framing, permissions, equipment, and supportability friction. | Working advisory agent |
+| S-6 / communications advisor | Adds an explicit S-6/CommO perspective for reserve C2 support, generic PACE framing, permissions, equipment, supportability friction, and PKI/CAC user-access issues as a subordinate lane. | Working advisory agent |
 | AirO advisor | Adds a generic aviation-support and air-ground coordination planning perspective for training and public staff-planning contexts. | Working advisory agent |
 | JAG / legal advisor | Adds issue-spotting and escalation prompts while clearly refusing to replace formal legal counsel. | Working advisory agent |
 | Chaplain advisor | Adds morale, welfare, ethics, and referral-minded leader prompts without claiming to replace real chaplain or care channels. | Working advisory agent |
-| PKI / CAC troubleshooting | Builds advisory troubleshooting playbooks for CAC detection, certificate, middleware, browser-auth, signing/encryption, and portal-access issues. | Working local support |
+| PKI / CAC troubleshooting | Builds advisory troubleshooting playbooks for CAC detection, certificate, middleware, browser-auth, signing/encryption, and portal-access issues. Also exposed as an S-6 staff-support lane. | Working local support |
 | Chief/Aide orchestration brief | Combines session handoff, local personal docs, drill plans, MARADMIN-driven source updates, and reading suggestions into one advisory triage brief. | Working local orchestrator |
 | Text summarizer / checklist API | Turns pasted text into a local summary, due-outs, action items, checklist, and follow-up questions without storing the input. | Working local analysis |
 | Staff council | Vets ideas through company, battalion, and division/group staff roles, with S-2/G-2 tied to OSINT. Includes round-robin review. | Working scaffold |
@@ -41,7 +41,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Annual training planning | Back-plans AT admin, logistics, readiness, and coordination considerations for reserve units. | Working local planner |
 | Range / RSO package support | Builds advisory range packet, role, safety-control, and medevac/comm checklists. | Working local support |
 | SMCR BIC discovery | Lists official public billet source pages, parses public billet tables/cards where available, discovers Reserve Hub links, and ranks billets against user MOS/rank/location/keywords. | Working parser/recommender with live-source caveats |
-| OSINT trend aggregation | Aggregates user-supplied trusted public-source news/social trend summaries with citations, counterarguments, and confidence weighting. | Working source-evaluation agent |
+| OSINT trend aggregation | Aggregates user-supplied trusted public-source news/social trend summaries with citations, counterarguments, and confidence weighting. Also exposed as an S-2 staff-support lane. | Working source-evaluation agent |
 | Vetted social ingestion | Normalizes public news/social trend records into OSINT/deep-research-ready source items without unrestricted scraping. | Working connector |
 | Professional reading catalog | Tracks Commandant's Reading List sources, archive references, open-source classics, and study summaries. | Working catalog |
 | USMC history context | Provides an easy-access Marine Corps history and heritage study reference for agent context and PME prompts. | Markdown reference |
@@ -259,6 +259,14 @@ curl -X POST http://127.0.0.1:8000/admin/pki-troubleshooting `
 
 This route returns likely causes, immediate checks, deeper checks, escalation steps, and safe data-handling notes. It stays advisory and does not attempt enterprise IT actions on your behalf.
 
+If you want the same capability surfaced in staff taxonomy, use the S-6 wrapper:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/staff/s6/pki-troubleshooting `
+  -H "Content-Type: application/json" `
+  -d "{\"title\":\"MarineNet CAC login issue\",\"issue_type\":\"browser_auth_issue\",\"symptoms\":[\"Certificate prompt never appears\"],\"browser\":\"Chrome\",\"affected_systems\":[\"MarineNet\"],\"on_government_furnished_equipment\":false}"
+```
+
 ### Personnel Products
 
 Build a more detailed FitRep, awards, or routing support package:
@@ -361,6 +369,16 @@ curl -X POST http://127.0.0.1:8000/agents/s2-intel/run `
   -d "{\"input\":\"Help me shape a public-source estimate for a staff question.\",\"context\":{\"user_role\":\"S-2\"}}"
 ```
 
+Run the S-2 OSINT wrapper when you already have trusted public source items to aggregate:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/staff/s2/osint-estimate `
+  -H "Content-Type: application/json" `
+  -d "{\"input\":\"Build an OSINT-style public-source estimate for the commander.\",\"context\":{\"source_items\":[{\"title\":\"Official release\",\"publisher\":\"Example official source\",\"source_type\":\"official\",\"url\":\"https://example.test/official\",\"claim\":\"Training event details were publicly announced.\",\"corroborated\":\"true\"}]}}"
+```
+
+This keeps OSINT as a specialist public-source lane under the S-2 surface instead of a separate free-floating function.
+
 Build an S-6 communications support draft:
 
 ```powershell
@@ -376,6 +394,8 @@ curl -X POST http://127.0.0.1:8000/agents/s6-comms/run `
   -H "Content-Type: application/json" `
   -d "{\"input\":\"Help me shape generic comm support for next drill.\",\"context\":{\"user_role\":\"S-6\"}}"
 ```
+
+This S-6 lane now also owns PKI/CAC troubleshooting at the staff surface, while still keeping the specialist troubleshooting workflow available on its own route.
 
 Build a range/RSO support checklist:
 

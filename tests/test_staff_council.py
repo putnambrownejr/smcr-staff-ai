@@ -1,3 +1,6 @@
+from fastapi.testclient import TestClient
+
+from app.main import app
 from app.schemas.staff import (
     S2EstimateRequest,
     S6PlanRequest,
@@ -136,3 +139,52 @@ def test_s6_planner_returns_pace_and_support_requirements() -> None:
     assert response.c2_support_estimate
     assert response.pace_considerations
     assert response.support_requirements
+
+
+def test_staff_s6_pki_wrapper_route_returns_pki_playbook() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/staff/s6/pki-troubleshooting",
+        json={
+            "title": "Portal access issue",
+            "issue_type": "portal_access_issue",
+            "symptoms": ["Portal loads but access fails after CAC selection."],
+            "affected_systems": ["Marine Online"],
+            "on_government_furnished_equipment": False,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["issue_type"] == "portal_access_issue"
+    assert payload["immediate_checks"]
+
+
+def test_staff_s2_osint_wrapper_route_runs_specialist_lane() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/staff/s2/osint-estimate",
+        json={
+            "input": "Build a public-source estimate for the commander.",
+            "context": {
+                "source_items": [
+                    {
+                        "title": "Official release",
+                        "publisher": "Example official source",
+                        "source_type": "official",
+                        "url": "https://example.test/official",
+                        "claim": "Training event details were publicly announced.",
+                        "corroborated": "true",
+                    }
+                ]
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["agent_id"] == "osint-research-assistant"
+    assert payload["citations"]
+    assert "counterarguments" in payload["answer"].lower()

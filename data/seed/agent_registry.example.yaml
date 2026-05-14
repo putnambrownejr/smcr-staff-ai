@@ -5,12 +5,14 @@ agents:
     doctrine_categories: [reserve_administration, fitrep_pes, correspondence_formatting]
   - id: s2-intel
     doctrine_categories: [intelligence_osint, operations_planning]
+    linked_agent: osint-research-assistant
   - id: s3-opso
     doctrine_categories: [core_marine_doctrine, operations_planning, training_readiness, orm]
   - id: s4-logistics
     doctrine_categories: [logistics_04xx, operations_planning]
   - id: s6-comms
     doctrine_categories: [communications, operations_planning]
+    linked_agent: pki-cac-troubleshooter
   - id: airo-advisor
     doctrine_categories: [aviation_support, operations_planning]
   - id: jag-legal-advisor
@@ -38,7 +40,7 @@ agents:
   - id: fitrep-assistant
     doctrine_categories: [fitrep_pes]
   - id: pki-cac-troubleshooter
-    doctrine_categories: [reserve_administration]
+    doctrine_categories: [communications, reserve_administration]
   - id: leadership-advisor
     doctrine_categories: [core_marine_doctrine, leadership, professional_reading]
   - id: osint-research-assistant
