@@ -504,6 +504,7 @@ Read these before expanding the project:
 - `docs/sources/source_inventory_integration_plan.md`
 - `docs/sources/infantry_03xx.md`
 - `docs/sources/logistics_04xx.md`
+- `docs/sources/correspondence_formatting.md`
 - `docs/sources/commandants_reading_list.md`
 - `docs/sources/tactical_handbooks_and_field_guides.md`
 - `docs/usmc_history_context.md`

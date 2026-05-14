@@ -60,6 +60,17 @@ categories:
     source_refs:
       - title: MCO 1001R.1L w/ Ch-2 Marine Corps Reserve Administrative Management Manual (MCRAMM)
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900627/mco-1001r1l-w-ch-2/index.html
+  - id: correspondence_formatting
+    name: Naval correspondence and document formatting
+    publication_families: ["SECNAV Manual", "MCO", "NAVMC forms"]
+    source_policy: official_public_sources_only
+    classification_label: UNCLASSIFIED
+    cui_flag: false
+    source_refs:
+      - title: SECNAV M-5216.5 CH-1 Department of the Navy Correspondence Manual
+        url: https://www.secnav.navy.mil/doni/SECNAV%20Manuals1/5216.5%20%20CH-1.pdf
+      - title: MCO 5216.20B w/Admin Ch-4 Marine Corps Supplement to the Department of the Navy Correspondence Manual
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2795618/mco-521620b-wadmin-ch-4/
   - id: orm
     name: Risk management / ORM
     publication_families: ["orders", "safety guidance"]

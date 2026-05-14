@@ -31,3 +31,4 @@ When real ingestion is added, fetch from the official URL, calculate source hash
 - [Tactical Handbooks And Field Guides](tactical_handbooks_and_field_guides.md)
 - [Administration Records And Leave](admin_records_leave.md)
 - [MCPEL And MARADMIN Indexes](mcpel_maradmin_indexes.md)
+- [Correspondence And Document Formatting](correspondence_formatting.md)
