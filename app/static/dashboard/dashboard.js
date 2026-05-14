@@ -51,35 +51,34 @@ async function loadWorkspace() {
   updateModeBanner();
   try {
     if (state.mode === "demo") {
-      const [chief, career] = await Promise.all([
-        apiFetch("/demo/chief/brief"),
-        apiFetch("/demo/career/watch"),
-      ]);
-      renderChief(chief);
-      renderCareer(career);
-      renderAdminFromChief(chief);
-      setDocumentWatch("Personal mode can show local document inventory and gaps.");
+      const workspace = await apiFetch("/demo/dashboard/data");
+      renderWorkspace(workspace);
     } else {
       const userKey = state.userKey;
       if (!userKey) {
         setWorkspaceNote("Add a user key to load personal views.");
         return;
       }
-      const [chief, career, admin, documents] = await Promise.all([
-        apiFetch(`/chief/brief/${encodeURIComponent(userKey)}`, { auth: true }),
-        apiFetch(`/career/watch/${encodeURIComponent(userKey)}`, { auth: true }),
-        apiFetch(`/admin/readiness/${encodeURIComponent(userKey)}`, { auth: true }),
-        apiFetch("/personal-documents", { auth: true }),
-      ]);
-      renderChief(chief);
-      renderCareer(career);
-      renderAdmin(admin);
-      renderDocuments(documents);
+      const workspace = await apiFetch(`/dashboard/data/${encodeURIComponent(userKey)}`, { auth: true });
+      renderWorkspace(workspace);
     }
     setWorkspaceNote("Workspace refreshed.");
   } catch (error) {
     setWorkspaceNote(error.message, true);
   }
+}
+
+function renderWorkspace(payload) {
+  renderChief(payload.chief_brief);
+  renderCareer(payload.career_watch);
+  if (payload.mode === "demo") {
+    renderAdmin(payload.admin_readiness);
+  } else {
+    renderAdmin(payload.admin_readiness);
+  }
+  renderDocuments(payload.document_summary || payload.chief_brief.document_summary || { records: [] });
+  renderOpportunities(payload.tracked_opportunities || payload.career_watch.tracked_opportunities || []);
+  renderSourceUpdates(payload.documentation_updates || payload.chief_brief.documentation_updates || []);
 }
 
 function renderChief(payload) {
@@ -94,18 +93,13 @@ function renderAdmin(payload) {
   renderList("admin-summary", payload.summary_lines || []);
 }
 
-function renderAdminFromChief(payload) {
-  const items = (payload.action_items || []).filter((item) => ["admin", "fitrep", "documents"].includes(item.category));
-  document.getElementById("admin-count").textContent = String(items.length);
+function renderCareer(payload) {
+  const items = payload.watch_items || [];
+  document.getElementById("career-count").textContent = String(items.length);
   renderList(
-    "admin-summary",
+    "career-summary",
     items.slice(0, 4).map((item) => `${item.title}${item.due_date ? ` (${item.due_date})` : ""}`),
   );
-}
-
-function renderCareer(payload) {
-  document.getElementById("career-count").textContent = String((payload.items || []).length);
-  renderList("career-summary", payload.summary_lines || []);
 }
 
 function renderDocuments(payload) {
@@ -117,6 +111,50 @@ function renderDocuments(payload) {
     payload.review_due_count ? `${payload.review_due_count} document(s) due for review` : "No local reviews due right now.",
   ];
   setDocumentWatch(lines, records);
+}
+
+function renderOpportunities(items) {
+  const target = document.getElementById("opportunity-watch");
+  if (!items.length) {
+    target.className = "stack-list empty-state";
+    target.textContent = "No tracked opportunities available yet.";
+    return;
+  }
+  target.className = "stack-list";
+  target.innerHTML = items
+    .map(
+      (item) => `
+        <div class="info-card">
+          <span class="callout">${escapeHtml(item.opportunity_type || "opportunity")}</span>
+          <h3>${escapeHtml(item.title)}</h3>
+          <p>${escapeHtml([item.unit, item.location, item.rank, item.mos].filter(Boolean).join(" | ") || "Local tracked opportunity")}</p>
+          <p>${escapeHtml(item.description || item.notes || "Review fit, eligibility, and suspense.")}</p>
+        </div>
+      `,
+    )
+    .join("");
+}
+
+function renderSourceUpdates(items) {
+  const target = document.getElementById("source-updates");
+  if (!items.length) {
+    target.className = "stack-list empty-state";
+    target.textContent = "No source updates are currently stored.";
+    return;
+  }
+  target.className = "stack-list";
+  target.innerHTML = items
+    .map(
+      (item) => `
+        <div class="info-card">
+          <span class="callout">${escapeHtml(item.review_status || "new")}</span>
+          <h3>${escapeHtml(item.tracked_title)}</h3>
+          <p>${escapeHtml((item.change_signals || []).join(", ") || "Potential source update detected.")}</p>
+          <p>${escapeHtml((item.matched_terms || []).join(", ") || "No matched terms recorded.")}</p>
+        </div>
+      `,
+    )
+    .join("");
 }
 
 function renderQueue(items) {
