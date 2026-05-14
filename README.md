@@ -17,6 +17,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Agent registry | Lists and runs placeholder staff/MOS agents with structured responses, warnings, confidence, citations, and follow-up questions. | Working stub |
 | Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, and future email/calendar triage. | Working scaffold |
 | Chief/Aide orchestration brief | Combines session handoff, local personal docs, drill plans, MARADMIN-driven source updates, and reading suggestions into one advisory triage brief. | Working local orchestrator |
+| Text summarizer / checklist API | Turns pasted text into a local summary, due-outs, action items, checklist, and follow-up questions without storing the input. | Working local analysis |
 | Staff council | Vets ideas through company, battalion, and division/group staff roles, with S-2/G-2 tied to OSINT. Includes round-robin review. | Working scaffold |
 | Staff products | Builds advisory scaffolds for OPORDs, WARNOs, FRAGOs, SITREPs, AARs, naval letters, memos, and endorsements. | Working scaffold |
 | Session handoffs | Stores minimum necessary local user context for PME, FitRep, admin, drill, and preference reminders. | Working local storage |
@@ -53,6 +54,7 @@ app/
   schemas/             Pydantic request/response models
   services/
     agents/            Agent interface, registry, placeholder agents
+    analysis/          Local text summarization and checklist extraction
     billets/           SMCR billet recommendation
     calendar/          Drill-prep planner and calendar provider stubs
     chief/             Chief/Aide orchestration and triage brief
@@ -148,6 +150,27 @@ Agent responses use this shape:
 ```
 
 The OSINT agent is intentionally source-evaluation oriented. It does not bypass access controls or scrape social platforms directly. Pass already-collected public source summaries/URLs in `context.extra.source_items`; the agent will cite them, identify counterarguments, and mark truth confidence as high/medium/low/unknown style language in the answer.
+
+### Local Text Analysis
+
+Analyze pasted notes without storing them:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/analysis/summarize `
+  -H "Content-Type: application/json" `
+  -d "{\"focus\":\"drill weekend prep\",\"text\":\"Planning notes for drill. Confirm muster timeline with the company office. DTS voucher due NLT 06/10/2026. Prepare uniform and pack field gear. Need to review the training lane sequence before Friday.\"}"
+```
+
+The response includes:
+
+- `summary_points`
+- `action_items`
+- `due_outs`
+- `checklist`
+- `follow_up_questions`
+- `warnings`
+
+This route is local-only and does not store the submitted text. If the text looks operationally sensitive or includes likely PII, the service falls back to generic handling guidance instead of echoing details back.
 
 ### Vetted Social / News Trend Ingestion
 

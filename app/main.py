@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from app.api.routes import (
     agents,
+    analysis,
     billets,
     calendar,
     chief,
@@ -32,6 +33,7 @@ def create_app() -> FastAPI:
         ),
     )
     app.include_router(health.router)
+    app.include_router(analysis.router)
     app.include_router(agents.router)
     app.include_router(billets.router)
     app.include_router(context.router)
