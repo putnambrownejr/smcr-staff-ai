@@ -230,6 +230,24 @@ curl -X PUT http://127.0.0.1:8000/handoffs/capt-example `
 
 Session handoffs can reference RQS/BIO uploads by `rqs_context_id` and `bio_context_id`, but those uploads remain local context records. They do not automatically update a profile or become authoritative facts without later user confirmation logic.
 
+Draft a proposed handoff update from notes:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/handoffs/capt-example/draft-update `
+  -H "Content-Type: application/json" `
+  -d "{\"notes\":\"- PME: EWSDEP incomplete due 2026-06-30\n- FitRep Annual for MRO due 06/15/2026\n- DTS voucher after drill\n- Every drill confirm uniform and haircut\n- MarineNet course: writing refresher\"}"
+```
+
+Apply a confirmed draft patch:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/handoffs/capt-example/apply-update `
+  -H "Content-Type: application/json" `
+  -d "{\"patch\":{\"pme\":[{\"program\":\"EWSDEP\",\"status\":\"incomplete\",\"due_date\":\"2026-06-30\"}],\"admin_watch_items\":[\"DTS voucher after drill\"]}}"
+```
+
+This two-step flow is intentional. The prototype can propose structured updates from notes, but it should not silently mutate a stored user profile.
+
 Build an advisory Chief/Aide triage brief:
 
 ```powershell
