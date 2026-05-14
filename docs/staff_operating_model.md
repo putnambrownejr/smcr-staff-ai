@@ -21,10 +21,13 @@ Current implementation:
 - API: `/agents/chief-of-staff-aide/run`
 - Orchestration API: `/chief/brief`
 - Session handoff API: `/handoffs/{user_key}`
+- Connector planning API: `/connectors/chief-digest-plan`
 - Calendar status: local ICS export exists; Microsoft Graph and Google Calendar are stubs.
 - Email status: provider interface exists; live mailbox access is not enabled.
 
 The orchestration brief combines session handoff data, local personal documents, stored drill plans, MARADMIN-driven documentation update candidates, and professional reading suggestions into one advisory triage object.
+
+The connector digest planner is the next bridge step before live integration. It accepts consent state plus summarized calendar/email metadata and returns a consent-safe digest plan, suggested read scope, staged follow-up actions, and warnings without performing any external read or write.
 
 ## Session Handoffs
 

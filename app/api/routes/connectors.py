@@ -1,9 +1,20 @@
-from fastapi import APIRouter
+from collections.abc import Iterator
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
 
 from app.core.auth import LocalApiKeyDependency
+from app.core.config import get_settings
+from app.schemas.connector_digest import ChiefConnectorDigestRequest, ChiefConnectorDigestResponse
 from app.schemas.connectors import ConnectorConsent, ConnectorConsentResponse, ConnectorWriteAction
+from app.services.connectors.digest_planner import ChiefConnectorDigestPlanner
+from app.services.session.handoff_store import SessionHandoffStore
 
 router = APIRouter(prefix="/connectors", tags=["connectors"], dependencies=[LocalApiKeyDependency])
+
+
+def get_handoff_store() -> Iterator[SessionHandoffStore]:
+    yield SessionHandoffStore(get_settings().session_handoff_storage_dir)
 
 
 @router.post("/consent-plan", response_model=ConnectorConsentResponse)
@@ -30,3 +41,12 @@ def stage_write_action(action: ConnectorWriteAction) -> ConnectorWriteAction:
         "A future connector must require explicit user confirmation before executing this action.",
     ]
     return action
+
+
+@router.post("/chief-digest-plan", response_model=ChiefConnectorDigestResponse)
+def build_chief_connector_digest(
+    request: ChiefConnectorDigestRequest,
+    store: Annotated[SessionHandoffStore, Depends(get_handoff_store)],
+) -> ChiefConnectorDigestResponse:
+    planner = ChiefConnectorDigestPlanner(store)
+    return planner.build(request)

@@ -135,6 +135,23 @@ The demo routes:
 
 `/demo/tool-catalog` returns the recommended first-pass ChatGPT-facing tool surface for a future Apps/MCP integration.
 
+### Connector Planning
+
+Create a consent-safe Chief/Aide connector digest plan from summarized calendar and email inputs:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/connectors/chief-digest-plan `
+  -H "Content-Type: application/json" `
+  -d "{\"user_key\":\"capt-example\",\"consents\":[{\"provider\":\"google_calendar\",\"access_mode\":\"read_only\",\"user_key\":\"capt-example\",\"enabled\":false},{\"provider\":\"gmail\",\"access_mode\":\"read_only\",\"user_key\":\"capt-example\",\"enabled\":false}],\"calendar_events\":[{\"provider\":\"google_calendar\",\"title\":\"Drill weekend muster\",\"start_at\":\"2026-06-06T08:00:00Z\",\"location\":\"NOSC New Orleans\"}],\"email_messages\":[{\"provider\":\"gmail\",\"subject\":\"DTS voucher reminder\",\"received_at\":\"2026-06-07T14:30:00Z\",\"action_hint\":\"Voucher due this week\"}]}"
+```
+
+This route:
+
+- performs no live mailbox or calendar reads
+- takes only user-provided consent state and summarized metadata
+- returns read plans, action items, and staged write ideas
+- keeps review-before-write guardrails intact
+
 ### Agents
 
 List available agents:
