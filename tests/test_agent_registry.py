@@ -8,6 +8,7 @@ def test_agent_registry_loads_expected_agents() -> None:
 
     assert {
         "admin-readiness-advisor",
+        "s1-admin-chief",
         "maradmin-monitor",
         "correspondence-formatting",
         "uniform-advisor",
@@ -70,3 +71,15 @@ def test_pki_agent_returns_troubleshooting_structure() -> None:
     assert "PKI/CAC troubleshooting advisory" in response.answer
     assert "Immediate checks" in response.answer
     assert response.structured_citations
+
+
+def test_s1_admin_chief_agent_returns_source_trust_markers() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("s1-admin-chief")
+    assert agent is not None
+
+    response = agent.run("Help me organize awards, DTS, and FitRep due-outs.", context=AgentContext())
+
+    assert "S-1 / Admin chief advisory" in response.answer
+    assert response.structured_citations
+    assert response.source_trust

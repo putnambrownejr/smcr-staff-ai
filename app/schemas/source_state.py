@@ -32,3 +32,11 @@ class SourceStateAcceptRequest(BaseModel):
     current_source_hash: str | None = None
     verification_source_url: str | None = None
     notes: str | None = None
+
+
+class SourceTrustMarker(BaseModel):
+    tracked_title: str
+    status: VerifiedSourceStatus = VerifiedSourceStatus.needs_review
+    verification_source_url: str | None = None
+    last_verified_at: datetime | None = None
+    notes: str | None = None

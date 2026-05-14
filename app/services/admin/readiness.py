@@ -6,6 +6,7 @@ from app.core.security import DEFAULT_WARNINGS
 from app.schemas.admin import AdminReadinessItem, AdminReadinessResponse
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import FitrepReminder, UserSessionHandoff
+from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.session.handoff_store import SessionHandoffStore
 
@@ -38,6 +39,7 @@ class AdminReadinessService:
             summary_lines=_summary_lines(handoff, document_summary, items),
             items=items,
             document_summary=document_summary,
+            source_trust=_admin_source_trust(),
             warnings=[
                 *DEFAULT_WARNINGS,
                 "Admin readiness is advisory only and does not replace official unit administration processes.",
@@ -60,6 +62,13 @@ def _fitrep_item(fitrep: FitrepReminder) -> AdminReadinessItem:
         due_date=fitrep.due_date,
         recommendation="Confirm reporting chain, suspense dates, and required accomplishments/bullets.",
         source="session_handoff",
+        source_trust=[
+            SourceTrustMarker(
+                tracked_title="PES / FitRep references",
+                status=VerifiedSourceStatus.needs_review,
+                notes="Verify the current PES / FitRep source before relying on this reminder.",
+            )
+        ],
     )
 
 
@@ -104,6 +113,7 @@ def _document_items(document_summary: PersonalDocumentSummary | None) -> list[Ad
                     category="documents",
                     priority="medium" if document_type in {"rqs", "orders"} else "low",
                     recommendation="Store a local reference to support admin readiness and continuity.",
+                    source_trust=_document_source_trust(document_type),
                 )
             )
     if document_summary.review_due_count:
@@ -236,3 +246,43 @@ def _watch_priority(item: str) -> str:
     if any(token in lowered for token in ("travel", "pay", "dts", "award")):
         return "medium"
     return "low"
+
+
+def _admin_source_trust() -> list[SourceTrustMarker]:
+    return [
+        SourceTrustMarker(
+            tracked_title="MCRAMM / Reserve administration references",
+            status=VerifiedSourceStatus.needs_review,
+            notes="Use current public reserve administration references before acting.",
+        ),
+        SourceTrustMarker(
+            tracked_title="PES / FitRep references",
+            status=VerifiedSourceStatus.needs_review,
+            notes="Use the current verified PES / FitRep reference before finalizing admin products.",
+        ),
+        SourceTrustMarker(
+            tracked_title="DON / USMC correspondence guidance",
+            status=VerifiedSourceStatus.needs_review,
+            notes="Check current correspondence-formatting guidance before routing official packages.",
+        ),
+    ]
+
+
+def _document_source_trust(document_type: str) -> list[SourceTrustMarker]:
+    if document_type == "orders":
+        return [
+            SourceTrustMarker(
+                tracked_title="Current orders reference",
+                status=VerifiedSourceStatus.needs_review,
+                notes="Confirm the local orders copy is current and complete before using it.",
+            )
+        ]
+    if document_type == "fitrep":
+        return [
+            SourceTrustMarker(
+                tracked_title="PES / FitRep references",
+                status=VerifiedSourceStatus.needs_review,
+                notes="Check current FitRep guidance before relying on stored support documents.",
+            )
+        ]
+    return []

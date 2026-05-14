@@ -69,8 +69,15 @@ class ActionRecord(BaseModel):
     source_ref: str | None = None
     notes: str | None = None
     links: list[ActionLinkRecord] = Field(default_factory=list)
+    history: list[ActionHistoryEntry] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class ActionHistoryEntry(BaseModel):
+    changed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    event: str
+    detail: str | None = None
 
 
 class ActionItemRequest(BaseModel):
@@ -194,5 +201,21 @@ class ActionFollowUpResult(BaseModel):
 
 class ActionFollowUpResponse(BaseModel):
     updated: list[ActionFollowUpResult] = Field(default_factory=list)
+    summary_lines: list[str] = Field(default_factory=list)
+    message: str
+
+
+class ActionBulkUpdateRequest(BaseModel):
+    action_ids: list[str] = Field(default_factory=list)
+    status: ActionStatus | None = None
+    owner: str | None = None
+    priority: ActionPriority | None = None
+    category: ActionCategory | None = None
+    suspense_date: date | None = None
+    notes: str | None = None
+
+
+class ActionBulkUpdateResponse(BaseModel):
+    updated: list[ActionRecord] = Field(default_factory=list)
     summary_lines: list[str] = Field(default_factory=list)
     message: str

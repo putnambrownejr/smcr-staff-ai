@@ -17,6 +17,7 @@ from app.services.agents.opord_agent import build_opord_agent
 from app.services.agents.orm_agent import build_orm_agent
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.pki_agent import build_pki_troubleshooter_agent
+from app.services.agents.s1_admin_chief_agent import build_s1_admin_chief_agent
 from app.services.agents.staff_advisor_agent import build_staff_advisor_agents
 from app.services.agents.staff_products_agent import build_staff_products_agent
 from app.services.agents.training_agent import build_training_agent
@@ -51,6 +52,7 @@ class AgentRegistry:
 def default_agents() -> list[Agent]:
     return [
         build_admin_readiness_agent(),
+        build_s1_admin_chief_agent(),
         build_chief_of_staff_agent(),
         build_correspondence_formatting_agent(),
         build_maradmin_agent(),

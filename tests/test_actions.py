@@ -44,6 +44,7 @@ def test_action_tracker_tracks_and_updates_records(tmp_path: Path) -> None:
     )
     assert updated is not None
     assert updated.status.value == "in_progress"
+    assert updated.history
     assert tracker.list(user_key="capt-action")
 
 
@@ -104,6 +105,10 @@ def test_action_routes_track_list_update_delete(tmp_path: Path) -> None:
         assert list_response.status_code == 200
         assert list_response.json()[0]["title"] == "Confirm drill POAM"
 
+        filtered_response = client.get("/actions?user_key=capt-action&owner=Capt%20Example&priority=high")
+        assert filtered_response.status_code == 200
+        assert len(filtered_response.json()) == 1
+
         update_response = client.patch(
             f"/actions/{action_id}",
             json={"status": "blocked", "notes": "Waiting on higher HQ input."},
@@ -132,6 +137,37 @@ def test_action_routes_track_list_update_delete(tmp_path: Path) -> None:
 
         delete_response = client.delete(f"/actions/{action_id}")
         assert delete_response.status_code == 204
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_action_bulk_update_route_changes_multiple_records(tmp_path: Path) -> None:
+    tracker = ActionTracker(tmp_path)
+    tracked = tracker.track(
+        [
+            ActionItemRequest(user_key="capt-action", title="Item A", owner="Capt Example"),
+            ActionItemRequest(user_key="capt-action", title="Item B", owner="Capt Example"),
+        ]
+    )
+
+    def override_tracker() -> ActionTracker:
+        return tracker
+
+    app.dependency_overrides[get_tracker] = override_tracker
+    client = TestClient(app)
+    try:
+        response = client.post(
+            "/actions/bulk-update",
+            json={
+                "action_ids": [item.action_id for item in tracked],
+                "status": "waiting",
+                "notes": "Awaiting review.",
+            },
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert len(payload["updated"]) == 2
+        assert all(item["status"] == "waiting" for item in payload["updated"])
     finally:
         app.dependency_overrides.clear()
 

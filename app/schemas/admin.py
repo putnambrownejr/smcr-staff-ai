@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import UserSessionHandoff
+from app.schemas.source_state import SourceTrustMarker
 
 
 class AdminReadinessItem(BaseModel):
@@ -13,6 +14,7 @@ class AdminReadinessItem(BaseModel):
     due_date: date | None = None
     recommendation: str
     source: str | None = None
+    source_trust: list[SourceTrustMarker] = Field(default_factory=list)
 
 
 class AdminReadinessResponse(BaseModel):
@@ -22,4 +24,5 @@ class AdminReadinessResponse(BaseModel):
     summary_lines: list[str] = Field(default_factory=list)
     items: list[AdminReadinessItem] = Field(default_factory=list)
     document_summary: PersonalDocumentSummary | None = None
+    source_trust: list[SourceTrustMarker] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

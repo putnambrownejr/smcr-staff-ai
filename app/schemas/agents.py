@@ -3,6 +3,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.source_state import SourceTrustMarker
+
 
 class Confidence(StrEnum):
     low = "low"
@@ -56,6 +58,7 @@ class AgentRunResponse(BaseModel):
     answer: str
     citations: list[str] = Field(default_factory=list)
     structured_citations: list[StructuredCitation] = Field(default_factory=list)
+    source_trust: list[SourceTrustMarker] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     human_review_required: bool = True
     confidence: Confidence = Confidence.low

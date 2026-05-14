@@ -5,6 +5,8 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 from app.schemas.actions import (
+    ActionCategory,
+    ActionHistoryEntry,
     ActionItemRequest,
     ActionLinkRecord,
     ActionLinkRequest,
@@ -31,6 +33,9 @@ class ActionTracker:
         *,
         user_key: str | None = None,
         status: ActionStatus | None = None,
+        owner: str | None = None,
+        category: ActionCategory | None = None,
+        priority: ActionPriority | None = None,
         include_closed: bool = False,
     ) -> list[ActionRecord]:
         records = [
@@ -41,6 +46,12 @@ class ActionTracker:
             records = [record for record in records if record.user_key in {None, user_key}]
         if status is not None:
             records = [record for record in records if record.status == status]
+        if owner is not None:
+            records = [record for record in records if record.owner == owner]
+        if category is not None:
+            records = [record for record in records if record.category == category]
+        if priority is not None:
+            records = [record for record in records if record.priority == priority]
         if not include_closed:
             records = [
                 record
@@ -62,6 +73,12 @@ class ActionTracker:
         payload = update.model_dump(exclude_unset=True)
         for key, value in payload.items():
             setattr(record, key, value)
+        record.history.append(
+            ActionHistoryEntry(
+                event="update",
+                detail=", ".join(sorted(payload.keys())) or "manual update",
+            )
+        )
         record.updated_at = datetime.now(UTC)
         self._path(action_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
         return record
@@ -73,6 +90,7 @@ class ActionTracker:
         link_record = _link_record(link)
         record.links = [item for item in record.links if item.link_id != link_record.link_id]
         record.links.append(link_record)
+        record.history.append(ActionHistoryEntry(event="link_added", detail=link.label))
         record.updated_at = datetime.now(UTC)
         self._path(action_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
         return record
@@ -85,6 +103,7 @@ class ActionTracker:
         record.links = [item for item in record.links if item.link_id != link_id]
         if len(record.links) == original_count:
             return None
+        record.history.append(ActionHistoryEntry(event="link_removed", detail=link_id))
         record.updated_at = datetime.now(UTC)
         self._path(action_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
         return record
@@ -103,9 +122,14 @@ class ActionTracker:
             payload = existing.model_dump()
             payload.update(action.model_dump())
             payload["action_id"] = action_id
+            history = list(existing.history)
+            history.append(ActionHistoryEntry(event="track_refresh", detail="Tracked again from a new request."))
+            payload["history"] = history
             payload["updated_at"] = datetime.now(UTC)
             return ActionRecord(**payload)
-        return ActionRecord(action_id=action_id, **action.model_dump())
+        record = ActionRecord(action_id=action_id, **action.model_dump())
+        record.history.append(ActionHistoryEntry(event="created", detail="Initial tracked action."))
+        return record
 
     def _path(self, action_id: str) -> Path:
         safe_id = "".join(char if char.isalnum() or char in {"-", "_"} else "_" for char in action_id)

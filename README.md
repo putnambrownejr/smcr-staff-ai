@@ -17,6 +17,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Agent registry | Lists and runs placeholder staff/MOS agents with structured responses, warnings, confidence, citations, and follow-up questions. | Working stub |
 | Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, and future email/calendar triage. | Working scaffold |
 | Admin readiness | Pulls FitRep reminders, admin watch items, local document gaps, readiness references, and travel/admin support into an AdminO / S-1 style view. | Working local digest |
+| S-1 / Admin chief advisor | Adds an explicit S-1/Admin chief perspective for reserve admin continuity, routing discipline, awards, orders, DTS, and suspense management. | Working advisory agent |
 | PKI / CAC troubleshooting | Builds advisory troubleshooting playbooks for CAC detection, certificate, middleware, browser-auth, signing/encryption, and portal-access issues. | Working local support |
 | Chief/Aide orchestration brief | Combines session handoff, local personal docs, drill plans, MARADMIN-driven source updates, and reading suggestions into one advisory triage brief. | Working local orchestrator |
 | Text summarizer / checklist API | Turns pasted text into a local summary, due-outs, action items, checklist, and follow-up questions without storing the input. | Working local analysis |
@@ -200,6 +201,7 @@ This view combines:
 - missing or stale local admin-support documents
 - readiness reference gaps
 - travel/DTS support gaps
+- source-trust markers for the admin references that should be verified before action
 
 Build a focused admin workflow checklist:
 
@@ -215,6 +217,30 @@ Supported admin workflow types:
 - `orders_review`
 - `admin_package`
 - `award_package`
+
+Run the S-1 / Admin chief advisor:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/agents/s1-admin-chief/run `
+  -H "Content-Type: application/json" `
+  -d "{\"input\":\"Help me organize awards, DTS, and FitRep due-outs for next drill.\",\"context\":{\"user_role\":\"S-1\"}}"
+```
+
+### Action Tracking
+
+Filter tracked actions:
+
+```powershell
+curl "http://127.0.0.1:8000/actions?user_key=capt-example&owner=Capt%20Example&priority=high"
+```
+
+Bulk-update tracked actions:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/actions/bulk-update `
+  -H "Content-Type: application/json" `
+  -d "{\"action_ids\":[\"action-a\",\"action-b\"],\"status\":\"waiting\",\"notes\":\"Awaiting review.\"}"
+```
 
 Build a PKI / CAC troubleshooting playbook:
 

@@ -43,6 +43,7 @@ def test_admin_readiness_route_surfaces_due_outs_and_document_gaps(tmp_path: Pat
         assert response.status_code == 200
         payload = response.json()
         assert payload["summary_lines"]
+        assert payload["source_trust"]
         categories = {item["category"] for item in payload["items"]}
         assert {"fitrep", "admin", "documents", "travel"}.issubset(categories)
     finally:

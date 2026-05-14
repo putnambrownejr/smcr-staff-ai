@@ -7,12 +7,16 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.actions import (
+    ActionBulkUpdateRequest,
+    ActionBulkUpdateResponse,
     ActionBundleTrackRequest,
     ActionBundleTrackResponse,
+    ActionCategory,
     ActionFollowUpRequest,
     ActionFollowUpResponse,
     ActionFollowUpResult,
     ActionLinkRequest,
+    ActionPriority,
     ActionPromoteRequest,
     ActionPromoteResponse,
     ActionRecord,
@@ -104,9 +108,19 @@ def list_actions(
     tracker: Annotated[ActionTracker, Depends(get_tracker)],
     user_key: str | None = None,
     status: ActionStatus | None = None,
+    owner: str | None = None,
+    category: ActionCategory | None = None,
+    priority: ActionPriority | None = None,
     include_closed: bool = False,
 ) -> list[ActionRecord]:
-    return tracker.list(user_key=user_key, status=status, include_closed=include_closed)
+    return tracker.list(
+        user_key=user_key,
+        status=status,
+        owner=owner,
+        category=category,
+        priority=priority,
+        include_closed=include_closed,
+    )
 
 
 @router.post("/track", response_model=ActionTrackResponse)
@@ -280,6 +294,34 @@ def update_action(
     if record is None:
         raise HTTPException(status_code=404, detail=f"Unknown action item: {action_id}")
     return record
+
+
+@router.post("/bulk-update", response_model=ActionBulkUpdateResponse)
+def bulk_update_actions(
+    request: ActionBulkUpdateRequest,
+    tracker: Annotated[ActionTracker, Depends(get_tracker)],
+) -> ActionBulkUpdateResponse:
+    updated: list[ActionRecord] = []
+    update_payload = ActionUpdateRequest(
+        status=request.status,
+        owner=request.owner,
+        priority=request.priority,
+        category=request.category,
+        suspense_date=request.suspense_date,
+        notes=request.notes,
+    )
+    for action_id in request.action_ids:
+        record = tracker.update(action_id, update_payload)
+        if record is not None:
+            updated.append(record)
+    return ActionBulkUpdateResponse(
+        updated=updated,
+        summary_lines=[
+            f"Updated {len(updated)} action(s) in bulk.",
+            "Bulk edits should still be spot-checked for owner, suspense, and priority accuracy.",
+        ],
+        message="Applied bulk updates to tracked actions.",
+    )
 
 
 @router.post("/{action_id}/links", response_model=ActionRecord)

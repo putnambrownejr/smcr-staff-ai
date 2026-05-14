@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from app.core.security import DEFAULT_WARNINGS, detect_sensitive_input, should_limit_to_generic_response
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
+from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
 
 
 class AgentContext(BaseModel):
@@ -27,6 +28,7 @@ class Agent(ABC):
         follow_up_questions: list[str] | None = None,
         citations: list[str] | None = None,
         structured_citations: list[StructuredCitation] | None = None,
+        source_trust: list[SourceTrustMarker] | None = None,
         confidence: Confidence = Confidence.low,
     ) -> AgentRunResponse:
         warnings = [*DEFAULT_WARNINGS, *detect_sensitive_input(input_text)]
@@ -43,6 +45,7 @@ class Agent(ABC):
             answer=answer,
             citations=citations or [],
             structured_citations=structured_citations or [],
+            source_trust=source_trust or _default_source_trust(self.metadata),
             warnings=warnings,
             human_review_required=self.metadata.required_human_review,
             confidence=confidence,
@@ -76,3 +79,16 @@ class PlaceholderAgent(Agent):
             input_text=input_text,
             follow_up_questions=self.default_follow_up_questions,
         )
+
+
+def _default_source_trust(metadata: AgentMetadata) -> list[SourceTrustMarker]:
+    if not metadata.citation_required:
+        return []
+    return [
+        SourceTrustMarker(
+            tracked_title=source,
+            status=VerifiedSourceStatus.needs_review,
+            notes="Review this source against the latest verified public reference before acting.",
+        )
+        for source in metadata.allowed_sources[:3]
+    ]
