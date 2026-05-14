@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
+from app.schemas.actions import ActionRecord, ActionStatus
 from app.schemas.admin import AdminReadinessResponse
 from app.schemas.career import CareerWatchResponse
 from app.schemas.chief import ChiefActionItem, ChiefBriefRequest, ChiefBriefResponse
@@ -14,6 +15,7 @@ from app.schemas.dashboard import AnalystBrief, DailyOpsBrief, DailyOpsEntry, Da
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateReviewStatus
+from app.services.actions.tracker import ActionTracker
 from app.services.admin.readiness import AdminReadinessService
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.career.watch import CareerWatchService
@@ -93,6 +95,11 @@ def get_update_store() -> Iterator[DocumentUpdateStore]:
     yield DocumentUpdateStore(f"{settings.local_context_storage_dir}/document_updates")
 
 
+def get_action_tracker() -> Iterator[ActionTracker]:
+    settings = get_settings()
+    yield ActionTracker(f"{settings.local_context_storage_dir}/actions")
+
+
 @router.get(
     "/dashboard/data/{user_key}",
     response_model=DashboardWorkspaceResponse,
@@ -105,6 +112,7 @@ def get_dashboard_data(
     admin_service: Annotated[AdminReadinessService, Depends(get_admin_service)],
     career_service: Annotated[CareerWatchService, Depends(get_career_service)],
     organizer: Annotated[PersonalDocumentOrganizer, Depends(get_document_organizer)],
+    action_tracker: Annotated[ActionTracker, Depends(get_action_tracker)],
     opportunity_tracker: Annotated[OpportunityTracker, Depends(get_opportunity_tracker)],
     update_store: Annotated[DocumentUpdateStore, Depends(get_update_store)],
 ) -> DashboardWorkspaceResponse:
@@ -112,6 +120,7 @@ def get_dashboard_data(
     admin_readiness = admin_service.build(user_key)
     career_watch = career_service.build_watch(user_key)
     document_summary = organizer.list_documents()
+    tracked_actions = action_tracker.list(user_key=user_key, include_closed=False)[:12]
     tracked_opportunities = list(opportunity_tracker.list())[:8]
     documentation_updates = [
         item for item in update_store.list() if item.review_status != UpdateReviewStatus.ignored
@@ -123,6 +132,7 @@ def get_dashboard_data(
         admin_readiness=admin_readiness,
         career_watch=career_watch,
         document_summary=document_summary,
+        tracked_actions=tracked_actions,
         tracked_opportunities=tracked_opportunities,
         documentation_updates=documentation_updates,
     )
@@ -144,6 +154,7 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
         admin_readiness=admin_readiness,
         career_watch=career_watch,
         document_summary=chief_brief.document_summary,
+        tracked_actions=[],
         tracked_opportunities=career_watch.tracked_opportunities,
         documentation_updates=chief_brief.documentation_updates,
     )
@@ -157,6 +168,7 @@ def _workspace_response(
     admin_readiness: AdminReadinessResponse,
     career_watch: CareerWatchResponse,
     document_summary: PersonalDocumentSummary | None,
+    tracked_actions: list[ActionRecord],
     tracked_opportunities: list[OpportunityRecord],
     documentation_updates: list[DocumentationUpdateCandidate],
 ) -> DashboardWorkspaceResponse:
@@ -181,6 +193,7 @@ def _workspace_response(
             chief_brief=chief_brief,
             admin_readiness=admin_readiness,
             career_watch=career_watch,
+            tracked_actions=tracked_actions,
             documentation_updates=documentation_updates,
             document_summary=document_summary,
         ),
@@ -189,10 +202,12 @@ def _workspace_response(
             admin_readiness=admin_readiness,
             career_watch=career_watch,
             documentation_updates=documentation_updates,
+            tracked_actions=tracked_actions,
             tracked_opportunities=tracked_opportunities,
             document_summary=document_summary,
         ),
         document_summary=document_summary,
+        tracked_actions=tracked_actions,
         tracked_opportunities=tracked_opportunities,
         documentation_updates=documentation_updates,
         warnings=warnings,
@@ -234,6 +249,7 @@ def _daily_ops_brief(
     admin_readiness: AdminReadinessResponse,
     career_watch: CareerWatchResponse,
     documentation_updates: list[DocumentationUpdateCandidate],
+    tracked_actions: list[ActionRecord],
     document_summary: PersonalDocumentSummary | None,
 ) -> DailyOpsBrief:
     actions = chief_brief.action_items
@@ -242,6 +258,30 @@ def _daily_ops_brief(
         must_do = [_entry_from_action(item) for item in chief_brief.top_priority_items[:3]]
     should_do = [_entry_from_action(item) for item in actions if item.priority == "medium"][:5]
     can_defer = [_entry_from_action(item) for item in actions if item.priority == "low"][:5]
+    blocked_entries = [
+        _entry_from_tracked_action(item)
+        for item in tracked_actions
+        if item.status == ActionStatus.blocked
+    ][:2]
+    active_entries = [
+        _entry_from_tracked_action(item)
+        for item in tracked_actions
+        if item.status in {ActionStatus.open, ActionStatus.in_progress}
+    ][:4]
+    waiting_entries = [
+        _entry_from_tracked_action(item)
+        for item in tracked_actions
+        if item.status == ActionStatus.waiting
+    ][:3]
+    must_do = [*must_do, *blocked_entries][:6]
+    should_do = [
+        *active_entries,
+        *should_do,
+    ][:6]
+    can_defer = [
+        *waiting_entries,
+        *can_defer,
+    ][:6]
 
     waiting_on: list[str] = []
     if documentation_updates:
@@ -254,6 +294,13 @@ def _daily_ops_brief(
         )
     if chief_brief.handoff_is_stale:
         waiting_on.append("Session handoff is stale and should be refreshed before relying on watch items.")
+    waiting_on.extend(
+        [
+            f"{item.title} is waiting on {item.owner or 'an owner'}."
+            for item in tracked_actions
+            if item.status == ActionStatus.waiting
+        ][:3]
+    )
 
     blockers: list[str] = []
     if document_summary is not None:
@@ -266,6 +313,13 @@ def _daily_ops_brief(
             blockers.append(f"{document_summary.expired_count} local document(s) are expired.")
     if any(item.category == "fitrep" for item in admin_readiness.items):
         blockers.append("FitRep watch items exist and still require confirmed support, routing, or suspense checks.")
+    blockers.extend(
+        [
+            f"{item.title} is blocked{f' by {item.owner}' if item.owner else ''}."
+            for item in tracked_actions
+            if item.status == ActionStatus.blocked
+        ][:3]
+    )
 
     leverage_actions = [
         item.title for item in chief_brief.top_priority_items[:3]
@@ -281,6 +335,13 @@ def _daily_ops_brief(
             "Review the next drill-prep plan.",
             "Confirm travel, uniform, and gear timelines.",
         ]
+    prep_follow_ups.extend(
+        [
+            f"{item.title} -> {item.owner or 'assign owner'}"
+            for item in tracked_actions
+            if item.status in {ActionStatus.open, ActionStatus.in_progress}
+        ][:3]
+    )
 
     return DailyOpsBrief(
         executive_snapshot=chief_brief.summary_lines[:3],
@@ -300,6 +361,7 @@ def _analyst_brief(
     admin_readiness: AdminReadinessResponse,
     career_watch: CareerWatchResponse,
     documentation_updates: list[DocumentationUpdateCandidate],
+    tracked_actions: list[ActionRecord],
     tracked_opportunities: list[OpportunityRecord],
     document_summary: PersonalDocumentSummary | None,
 ) -> AnalystBrief:
@@ -325,6 +387,7 @@ def _analyst_brief(
         f"{len(chief_brief.action_items)} total action item(s) in the Chief/Aide brief.",
         f"{len(admin_readiness.items)} admin readiness cue(s) currently surfaced.",
         f"{len(career_watch.watch_items)} career watch cue(s) currently surfaced.",
+        f"{len(tracked_actions)} tracked POAM/action item(s) currently open.",
         f"{len(tracked_opportunities)} tracked opportunity record(s) in local storage.",
     ]
 
@@ -337,9 +400,13 @@ def _analyst_brief(
         anomalies.append("Core local support documents are incomplete for the current profile.")
     if chief_brief.handoff is None:
         anomalies.append("No session handoff is present, which makes the dashboard less personalized.")
+    blocked_actions = [item for item in tracked_actions if item.status == ActionStatus.blocked]
+    if blocked_actions:
+        anomalies.append(f"{len(blocked_actions)} tracked action item(s) are blocked.")
 
     likely_causes = [
         "Reserve workflows are fragmented across local notes, watch items, and manually tracked opportunities.",
+        "Action ownership and suspense discipline are still partly local and manually maintained.",
         "Source freshness depends on scans and human review rather than automatic authoritative reconciliation.",
     ]
     if documentation_updates:
@@ -360,6 +427,8 @@ def _analyst_brief(
     ]
     if tracked_opportunities:
         follow_up_checks.append("Compare tracked opportunities against MOS, rank, geography, and timing before acting.")
+    if tracked_actions:
+        follow_up_checks.append("Review blocked and waiting action items for owner, suspense, and next-move clarity.")
 
     return AnalystBrief(
         executive_summary=chief_brief.summary_lines[:2] or ["Dashboard loaded with current local advisory context."],
@@ -379,4 +448,20 @@ def _entry_from_action(item: ChiefActionItem) -> DailyOpsEntry:
         category=item.category,
         priority=item.priority,
         due_date=item.due_date.isoformat() if item.due_date else None,
+    )
+
+
+def _entry_from_tracked_action(item: ActionRecord) -> DailyOpsEntry:
+    detail_parts = [
+        item.description or "",
+        f"Owner: {item.owner}" if item.owner else "",
+        f"Status: {item.status.value}",
+        f"Suspense: {item.suspense_date.isoformat()}" if item.suspense_date else "",
+    ]
+    return DailyOpsEntry(
+        title=item.title,
+        detail=" | ".join(part for part in detail_parts if part),
+        category=item.category.value,
+        priority=item.priority.value,
+        due_date=item.suspense_date.isoformat() if item.suspense_date else None,
     )

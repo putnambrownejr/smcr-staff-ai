@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+from app.schemas.actions import ActionRecord
 from app.schemas.admin import AdminReadinessResponse
 from app.schemas.career import CareerWatchResponse
 from app.schemas.chief import ChiefBriefResponse
@@ -47,6 +48,7 @@ class DashboardWorkspaceResponse(BaseModel):
     daily_ops_brief: DailyOpsBrief
     analyst_brief: AnalystBrief
     document_summary: PersonalDocumentSummary | None = None
+    tracked_actions: list[ActionRecord] = Field(default_factory=list)
     tracked_opportunities: list[OpportunityRecord] = Field(default_factory=list)
     documentation_updates: list[DocumentationUpdateCandidate] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

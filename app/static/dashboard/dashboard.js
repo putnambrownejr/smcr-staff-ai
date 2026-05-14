@@ -75,6 +75,7 @@ function renderWorkspace(payload) {
   renderDailyBrief(payload.daily_ops_brief || {});
   renderAnalystBrief(payload.analyst_brief || {});
   renderDocuments(payload.document_summary || payload.chief_brief.document_summary || { records: [] });
+  renderTrackedActions(payload.tracked_actions || []);
   renderOpportunities(payload.tracked_opportunities || payload.career_watch.tracked_opportunities || []);
   renderSourceUpdates(payload.documentation_updates || payload.chief_brief.documentation_updates || []);
 }
@@ -148,6 +149,29 @@ function renderOpportunities(items) {
           <h3>${escapeHtml(item.title)}</h3>
           <p>${escapeHtml([item.unit, item.location, item.rank, item.mos].filter(Boolean).join(" | ") || "Local tracked opportunity")}</p>
           <p>${escapeHtml(item.description || item.notes || "Review fit, eligibility, and suspense.")}</p>
+        </div>
+      `,
+    )
+    .join("");
+}
+
+function renderTrackedActions(items) {
+  const target = document.getElementById("action-watch");
+  if (!items.length) {
+    target.className = "stack-list empty-state";
+    target.textContent = "No tracked POAM items available yet.";
+    return;
+  }
+  target.className = "stack-list";
+  target.innerHTML = items
+    .map(
+      (item) => `
+        <div class="info-card">
+          <span class="callout">${escapeHtml(item.status || "open")}</span>
+          <h3>${escapeHtml(item.title)}</h3>
+          <p>${escapeHtml(item.owner ? `Owner: ${item.owner}` : "Owner not assigned")}</p>
+          <p>${escapeHtml([item.category, item.priority, item.suspense_date ? `Due ${item.suspense_date}` : ""].filter(Boolean).join(" | "))}</p>
+          <p>${escapeHtml(item.description || item.notes || "No additional notes yet.")}</p>
         </div>
       `,
     )

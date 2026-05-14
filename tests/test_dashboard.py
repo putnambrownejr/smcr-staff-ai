@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.api.routes.dashboard import (
+    get_action_tracker,
     get_admin_service,
     get_career_service,
     get_chief_orchestrator,
@@ -12,10 +13,12 @@ from app.api.routes.dashboard import (
     get_update_store,
 )
 from app.main import app
+from app.schemas.actions import ActionItemRequest
 from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
 from app.schemas.opportunities import ManualOpportunityRequest
 from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate
+from app.services.actions.tracker import ActionTracker
 from app.services.admin.readiness import AdminReadinessService
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.career.watch import CareerWatchService
@@ -67,6 +70,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     handoff_store = SessionHandoffStore(tmp_path / "handoffs")
     plan_store = DrillPrepPlanStore(tmp_path / "plans")
     opportunity_tracker = OpportunityTracker(tmp_path / "opportunities")
+    action_tracker = ActionTracker(tmp_path / "actions")
     update_store = DocumentUpdateStore(tmp_path / "updates")
     reading_catalog = ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml"))
 
@@ -101,6 +105,18 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
                 location="Remote",
                 mos="0502",
                 rank="Capt",
+            )
+        ]
+    )
+    action_tracker.track(
+        [
+            ActionItemRequest(
+                user_key="capt-dash",
+                title="Finalize drill POAM",
+                owner="Capt Example",
+                category="poam",
+                priority="high",
+                status="in_progress",
             )
         ]
     )
@@ -147,6 +163,9 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     def override_tracker() -> OpportunityTracker:
         return opportunity_tracker
 
+    def override_action_tracker() -> ActionTracker:
+        return action_tracker
+
     def override_updates() -> DocumentUpdateStore:
         return update_store
 
@@ -154,6 +173,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     app.dependency_overrides[get_admin_service] = override_admin
     app.dependency_overrides[get_career_service] = override_career
     app.dependency_overrides[get_document_organizer] = override_organizer
+    app.dependency_overrides[get_action_tracker] = override_action_tracker
     app.dependency_overrides[get_opportunity_tracker] = override_tracker
     app.dependency_overrides[get_update_store] = override_updates
 
@@ -166,6 +186,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["chief_brief"]["user_key"] == "capt-dash"
         assert payload["daily_ops_brief"]["must_do"]
         assert payload["analyst_brief"]["data_quality_notes"]
+        assert payload["tracked_actions"][0]["title"] == "Finalize drill POAM"
         assert payload["document_summary"]["total_documents"] == 1
         assert payload["tracked_opportunities"][0]["title"] == "ADOS Planner"
         assert payload["documentation_updates"][0]["tracked_title"] == "MCO 1610.7"
