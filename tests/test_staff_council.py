@@ -188,3 +188,39 @@ def test_staff_s2_osint_wrapper_route_runs_specialist_lane() -> None:
     assert payload["agent_id"] == "osint-research-assistant"
     assert payload["citations"]
     assert "counterarguments" in payload["answer"].lower()
+
+
+def test_staff_s1_dts_helper_route_returns_s1_travel_admin_workflow() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/staff/s1/dts-helper",
+        json={
+            "title": "Next drill authorization",
+            "facts": ["Travel starts Friday night."],
+            "constraints": ["Need approval before Thursday."],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["workflow_type"] == "dts_authorization"
+    assert payload["required_documents"]
+
+
+def test_staff_s1_gtcc_helper_route_returns_s1_gtcc_workflow() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/staff/s1/gtcc-helper",
+        json={
+            "title": "Travel card follow-up",
+            "facts": ["Voucher is pending."],
+            "constraints": ["Avoid delinquency risk."],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["workflow_type"] == "gtcc"
+    assert any("gtcc" in item.lower() or "travel-card" in item.lower() for item in payload["checklist"])

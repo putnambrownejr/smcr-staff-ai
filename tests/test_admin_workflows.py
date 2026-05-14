@@ -19,3 +19,20 @@ def test_admin_workflow_builder_supports_dts_and_orders() -> None:
     payload = response.json()
     assert payload["required_documents"]
     assert any("receipts" in item.lower() for item in payload["required_documents"])
+
+
+def test_admin_workflow_builder_supports_gtcc() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/admin/workflow",
+        json={
+            "workflow_type": "gtcc",
+            "title": "Travel card follow-up",
+            "facts": ["Voucher is pending"],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert any("gtcc" in item.lower() or "travel-card" in item.lower() for item in payload["checklist"])

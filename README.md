@@ -17,7 +17,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Agent registry | Lists and runs placeholder staff/MOS agents with structured responses, warnings, confidence, citations, and follow-up questions. | Working stub |
 | Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, and future email/calendar triage. | Working scaffold |
 | Admin readiness | Pulls FitRep reminders, admin watch items, local document gaps, readiness references, and travel/admin support into an AdminO / S-1 style view. | Working local digest |
-| S-1 / Admin chief advisor | Adds an explicit S-1/Admin chief perspective for reserve admin continuity, routing discipline, awards, orders, DTS, and suspense management. | Working advisory agent |
+| S-1 / Admin chief advisor | Adds an explicit S-1/Admin chief perspective for reserve admin continuity, routing discipline, awards, orders, DTS, GTCC, and suspense management. | Working advisory agent |
 | S-2 / intel advisor | Adds an explicit S-2 perspective for public-source estimates, information gaps, confidence-weighted staff support, and OSINT/public-source aggregation as a subordinate lane. | Working advisory agent |
 | S-3 / OpsO advisor | Adds an explicit S-3/OpsO perspective for reserve operations planning, training synchronization, battle rhythm, and decision support. | Working advisory agent |
 | S-4 / logistics advisor | Adds an explicit S-4/LogO perspective for reserve supportability, movement, sustainment, supply, maintenance, and logistics friction. | Working advisory agent |
@@ -220,7 +220,9 @@ curl -X POST http://127.0.0.1:8000/admin/workflow `
 
 Supported admin workflow types:
 
+- `dts_authorization`
 - `dts_voucher`
+- `gtcc`
 - `orders_review`
 - `admin_package`
 - `award_package`
@@ -232,6 +234,20 @@ curl -X POST http://127.0.0.1:8000/agents/s1-admin-chief/run `
   -H "Content-Type: application/json" `
   -d "{\"input\":\"Help me organize awards, DTS, and FitRep due-outs for next drill.\",\"context\":{\"user_role\":\"S-1\"}}"
 ```
+
+Use the S-1 staff wrappers for travel-admin support:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/staff/s1/dts-helper `
+  -H "Content-Type: application/json" `
+  -d "{\"title\":\"Next drill authorization\",\"facts\":[\"Travel will start Friday night\"],\"constraints\":[\"Need approval before the end of the week\"]}"
+
+curl -X POST http://127.0.0.1:8000/staff/s1/gtcc-helper `
+  -H "Content-Type: application/json" `
+  -d "{\"title\":\"Travel card reconciliation follow-up\",\"facts\":[\"Voucher is pending\"],\"constraints\":[\"Avoid delinquency risk before next drill\"]}"
+```
+
+These keep DTS and GTCC support under the S-1/Admin-chief lane instead of treating them as stand-alone functions.
 
 ### Action Tracking
 

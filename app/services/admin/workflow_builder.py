@@ -26,6 +26,20 @@ class AdminWorkflowBuilder:
 
 
 def _workflow_parts(workflow_type: AdminWorkflowType) -> tuple[list[str], list[str], list[str]]:
+    if workflow_type == AdminWorkflowType.dts_authorization:
+        return (
+            [
+                "Confirm the mission purpose, travel dates, and expected funding path.",
+                "Check whether the traveler has current orders or requires updated supporting documentation.",
+                "Validate lodging, transportation, and estimated reimbursable expenses before submission.",
+                "Identify approval chain timing early enough to avoid last-minute travel issues.",
+            ],
+            ["DTS authorization draft", "orders or travel directive", "cost estimate", "itinerary"],
+            [
+                "Verify official travel policy and local command routing before submission.",
+                "Confirm the traveler understands what receipts and follow-up items will be needed later.",
+            ],
+        )
     if workflow_type == AdminWorkflowType.dts_voucher:
         return (
             [
@@ -36,6 +50,21 @@ def _workflow_parts(workflow_type: AdminWorkflowType) -> tuple[list[str], list[s
             ],
             ["DTS reference", "travel receipts", "orders", "supporting itinerary"],
             ["Verify claimant data and amounts against official systems.", "Route through the appropriate approver."],
+        )
+    if workflow_type == AdminWorkflowType.gtcc:
+        return (
+            [
+                "Identify the GTCC issue type: activation, declined charge, split disbursement, "
+                "delinquency risk, or reconciliation.",
+                "Confirm the related travel authorization, voucher status, and known suspense dates.",
+                "Separate what the cardholder can do directly from what requires APC, S-1, or command follow-up.",
+                "Capture follow-up owners before the issue goes stale between drills.",
+            ],
+            ["GTCC statement or issue summary", "related DTS authorization or voucher reference", "orders if relevant"],
+            [
+                "Verify current travel-card policy and local APC process before taking action.",
+                "Do not place full card numbers or sensitive account details into local advisory notes.",
+            ],
         )
     if workflow_type == AdminWorkflowType.orders_review:
         return (

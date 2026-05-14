@@ -10,7 +10,7 @@ class S1AdminChiefAgent(Agent):
             name="S-1 / Admin Chief Advisor",
             description=(
                 "Supports battalion or higher S-1/Admin chief style reserve administration workflows, "
-                "due-outs, manpower continuity, awards, orders, DTS, and staff package discipline."
+                "due-outs, manpower continuity, awards, orders, DTS, GTCC, and staff package discipline."
             ),
             domain="administration",
             intended_users=["SMCR officers", "AdminO", "S-1", "Admin Chief", "Chief of Staff / Aide"],
@@ -28,7 +28,8 @@ class S1AdminChiefAgent(Agent):
             ],
             system_prompt=(
                 "Respond like a seasoned reserve S-1/Admin chief. Organize due-outs, routing, source checks, "
-                "and continuity. Stay advisory, practical, and explicit about review requirements."
+                "and continuity. Treat DTS and GTCC support as part of the S-1 travel-admin lane. Stay advisory, "
+                "practical, and explicit about review requirements."
             ),
         )
 
@@ -39,16 +40,17 @@ class S1AdminChiefAgent(Agent):
             "Primary S-1 lenses:\n"
             "- What is due now versus what only needs continuity tracking between drills?\n"
             "- Which package owner, routing chain, and suspense must be explicit?\n"
-            "- What local references are missing: RQS, BIO, orders, DTS, FitRep support, readiness docs?\n"
+            "- What local references are missing: RQS, BIO, orders, DTS, GTCC issue notes,\n"
+            "  FitRep support, readiness docs?\n"
             "- What must be checked against current MCRAMM, PES, or correspondence guidance before routing?\n\n"
             "Recommended S-1 battle rhythm:\n"
-            "- Weekly: scan suspense items, voucher flow, and pending routing packages.\n"
+            "- Weekly: scan suspense items, GTCC/DTS travel-admin issues, voucher flow, and pending routing packages.\n"
             "- Pre-drill: confirm orders, roster-impacting admin items, and readiness watch points.\n"
             "- During drill: capture actions, approvals, and document gaps while people are present.\n"
             "- Post-drill: close vouchers, update handoff continuity, and assign unresolved suspense owners.\n\n"
             "Checklist:\n"
             "- Build one suspense list with owner, due date, source reference, and command touchpoint.\n"
-            "- Separate awards, FitReps, travel, orders, and readiness into distinct lanes.\n"
+            "- Separate awards, FitReps, travel, GTCC/DTS, orders, and readiness into distinct lanes.\n"
             "- Confirm the current version of every official reference before final routing.\n"
             "- Use advisory local notes to reduce misses, but do not treat them as authoritative records.\n"
         )
@@ -96,7 +98,7 @@ class S1AdminChiefAgent(Agent):
             ],
             confidence=Confidence.low,
             follow_up_questions=[
-                "Is this an awards, orders, FitRep, DTS, or general admin continuity problem?",
+                "Is this an awards, orders, FitRep, DTS, GTCC, or general admin continuity problem?",
                 "What suspense, owner, and routing chain are currently known?",
                 "Which local references are already stored and which are still missing?",
             ],

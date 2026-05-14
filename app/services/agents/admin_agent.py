@@ -9,7 +9,7 @@ class AdminReadinessAdvisorAgent(Agent):
             name="Admin Readiness Advisor",
             description=(
                 "Supports AdminO / S-1 style reserve administration planning, due-outs, readiness references, "
-                "orders/DTS continuity, and FitRep-adjacent workflow support."
+                "orders/DTS/GTCC continuity, and FitRep-adjacent workflow support."
             ),
             domain="administration",
             intended_users=["SMCR officers", "AdminO", "S-1", "Chief of Staff / Aide", "command teams"],
@@ -39,6 +39,7 @@ class AdminReadinessAdvisorAgent(Agent):
             "- Confirm current orders, RQS/BIO support references, and contact continuity.\n"
             "- Track FitRep occasions, due dates, RS/RO coordination, and required inputs.\n"
             "- Track DTS authorizations, vouchers, receipts, and follow-up suspense items.\n"
+            "- Track GTCC issues, reconciliation risks, and travel-card follow-up suspense.\n"
             "- Watch medical/dental readiness references needed for drill, AT, or mobilization prep.\n"
             "- Keep correspondence and routing products aligned with current DON and USMC formatting guidance.\n"
             "- Use local handoff and personal document summaries to reduce missed admin due-outs between drills.\n\n"

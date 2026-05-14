@@ -3,6 +3,7 @@ agents:
     doctrine_categories: [reserve_administration, fitrep_pes, correspondence_formatting]
   - id: s1-admin-chief
     doctrine_categories: [reserve_administration, fitrep_pes, correspondence_formatting]
+    linked_workflows: [dts_authorization, dts_voucher, gtcc]
   - id: s2-intel
     doctrine_categories: [intelligence_osint, operations_planning]
     linked_agent: osint-research-assistant

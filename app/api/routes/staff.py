@@ -1,5 +1,11 @@
 from fastapi import APIRouter, HTTPException
 
+from app.schemas.admin_workflows import (
+    AdminWorkflowDraftRequest,
+    AdminWorkflowRequest,
+    AdminWorkflowResponse,
+    AdminWorkflowType,
+)
 from app.schemas.agents import AgentRunRequest, AgentRunResponse
 from app.schemas.pki import PkiTroubleshootingRequest, PkiTroubleshootingResponse
 from app.schemas.staff import (
@@ -14,6 +20,7 @@ from app.schemas.staff import (
     StaffRoundRobinResponse,
 )
 from app.services.admin.pki_support import PkiTroubleshootingService
+from app.services.admin.workflow_builder import AdminWorkflowBuilder
 from app.services.agents.base import AgentContext
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.staff.council import StaffCouncilService
@@ -26,6 +33,7 @@ _service = StaffCouncilService()
 _s2_estimator = S2Estimator()
 _s6_planner = S6Planner()
 _pki_service = PkiTroubleshootingService()
+_admin_workflow_builder = AdminWorkflowBuilder()
 _osint_agent = build_osint_agent()
 
 
@@ -78,3 +86,27 @@ def build_s2_osint_estimate(request: AgentRunRequest) -> AgentRunResponse:
     if context.user_role is None:
         context.user_role = "S-2"
     return _osint_agent.run(request.input, context)
+
+
+@router.post("/s1/dts-helper", response_model=AdminWorkflowResponse)
+def build_s1_dts_helper(request: AdminWorkflowDraftRequest) -> AdminWorkflowResponse:
+    return _admin_workflow_builder.build(
+        AdminWorkflowRequest(
+            workflow_type=AdminWorkflowType.dts_authorization,
+            title=request.title,
+            facts=request.facts,
+            constraints=request.constraints,
+        )
+    )
+
+
+@router.post("/s1/gtcc-helper", response_model=AdminWorkflowResponse)
+def build_s1_gtcc_helper(request: AdminWorkflowDraftRequest) -> AdminWorkflowResponse:
+    return _admin_workflow_builder.build(
+        AdminWorkflowRequest(
+            workflow_type=AdminWorkflowType.gtcc,
+            title=request.title,
+            facts=request.facts,
+            constraints=request.constraints,
+        )
+    )
