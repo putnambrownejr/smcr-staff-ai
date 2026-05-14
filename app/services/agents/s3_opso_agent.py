@@ -11,7 +11,8 @@ class S3OpsOAdvisorAgent(Agent):
             description=(
                 "Supports battalion or higher S-3/OpsO style reserve operations planning, training synchronization, "
                 "battle rhythm, staff-product discipline, and reserve training design tied to METs, METLs, "
-                "and command decision points."
+                "and command decision points, with a hard-edged command-training tone inspired by General Mattis's "
+                "public leadership style."
             ),
             domain="operations and training",
             intended_users=["SMCR officers", "OpsO", "S-3", "Chief of Staff / Aide", "command teams"],
@@ -31,7 +32,9 @@ class S3OpsOAdvisorAgent(Agent):
             system_prompt=(
                 "Respond like a practical reserve S-3/OpsO with a bias for getting to a workable plan. Focus on "
                 "synchronization, mission analysis, battle rhythm, MET/METL alignment, training value, and "
-                "decision support. Cut weak ideas early, name what will fail first, and stay advisory."
+                "decision support. Use plain language, high standards, and a training-first tone inspired by the "
+                "public leadership style associated with General Mattis. Cut weak ideas early, name what will fail "
+                "first, and stay advisory."
             ),
         )
 
@@ -40,6 +43,7 @@ class S3OpsOAdvisorAgent(Agent):
             "S-3 / OpsO advisory draft.\n\n"
             "Use this to shape reserve operations and training planning, not as authoritative command guidance.\n\n"
             "Bottom line:\n"
+            "- Train for war, not for comfort.\n"
             "- If it does not train to a real standard, produce a needed output, or fit the drill timeline,\n"
             "  it should come off the board.\n\n"
             "Primary S-3 lenses:\n"
@@ -51,6 +55,8 @@ class S3OpsOAdvisorAgent(Agent):
             "My read:\n"
             "- Build around MET/METL value, not around activity for activity's sake.\n"
             "- Pick the few events the unit can actually prepare, rehearse, and assess well.\n"
+            "- Demand enough realism to matter, but not so much complexity that the unit learns confusion\n"
+            "  instead of competence.\n"
             "- Force owners and suspense dates onto every product before people leave drill.\n\n"
             "Recommended S-3 rhythm:\n"
             "- Clarify mission, commander intent, and training audience.\n"
