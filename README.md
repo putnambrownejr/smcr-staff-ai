@@ -18,6 +18,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, and future email/calendar triage. | Working scaffold |
 | Chief/Aide orchestration brief | Combines session handoff, local personal docs, drill plans, MARADMIN-driven source updates, and reading suggestions into one advisory triage brief. | Working local orchestrator |
 | Staff council | Vets ideas through company, battalion, and division/group staff roles, with S-2/G-2 tied to OSINT. Includes round-robin review. | Working scaffold |
+| Staff products | Builds advisory scaffolds for OPORDs, WARNOs, FRAGOs, SITREPs, AARs, naval letters, memos, and endorsements. | Working scaffold |
 | Session handoffs | Stores minimum necessary local user context for PME, FitRep, admin, drill, and preference reminders. | Working local storage |
 | Local context storage | Lets users upload files/notes, RQS/BIO references, and drill templates as advisory local context without changing doctrine, org, exercise, agent, or canonical document structure. | Working local storage |
 | Personal document organizer | Lists local RQS/BIO/orders/travel/PME-style uploads by type and flags PII/local-retention warnings. | Working local organizer |
@@ -170,6 +171,7 @@ Initial agents:
 - `uniform-advisor`
 - `drill-prep-calendar`
 - `doctrine-opord-assistant`
+- `staff-products`
 - `training-planner`
 - `orm-risk-management`
 - `fitrep-assistant`
@@ -227,6 +229,29 @@ curl -X POST http://127.0.0.1:8000/staff/vet-idea `
 ```
 
 The S-2 and G-2 roles call the OSINT source-evaluation workflow when `source_items` are present.
+
+### Staff Products
+
+Draft a staff product scaffold:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/staff-products/draft `
+  -H "Content-Type: application/json" `
+  -d "{\"product_type\":\"opord\",\"topic\":\"Training-only drill weekend field exercise\",\"audience\":\"Company staff\",\"facts\":[\"Timeline is tentative\"],\"training_or_fictional\":true}"
+```
+
+Supported `product_type` values:
+
+- `opord`
+- `warno`
+- `frago`
+- `sitrep`
+- `aar`
+- `naval_letter`
+- `memorandum`
+- `endorsement`
+
+This route produces section prompts and review checklists. It does not produce official orders or approved correspondence.
 
 Run a full staff round robin across company, battalion, and division/group lenses:
 

@@ -11,6 +11,8 @@ agents:
     doctrine_categories: [training_readiness]
   - id: doctrine-opord-assistant
     doctrine_categories: [core_marine_doctrine, operations_planning, infantry_03xx, logistics_04xx, tactical_handbooks]
+  - id: staff-products
+    doctrine_categories: [core_marine_doctrine, operations_planning, correspondence_formatting, training_readiness, orm]
   - id: training-planner
     doctrine_categories: [training_readiness, infantry_03xx, logistics_04xx, tactical_handbooks]
   - id: orm-risk-management

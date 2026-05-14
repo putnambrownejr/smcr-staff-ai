@@ -12,6 +12,7 @@ def test_agent_registry_loads_expected_agents() -> None:
         "uniform-advisor",
         "drill-prep-calendar",
         "doctrine-opord-assistant",
+        "staff-products",
         "training-planner",
         "orm-risk-management",
         "fitrep-assistant",
@@ -43,3 +44,15 @@ def test_agent_sensitive_input_gets_warning() -> None:
 
     assert response.confidence == "low"
     assert any("sensitive" in warning.lower() for warning in response.warnings)
+
+
+def test_staff_products_agent_builds_scaffold() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("staff-products")
+    assert agent is not None
+
+    response = agent.run("Build a training-only AAR for a drill admin process.", context=AgentContext())
+
+    assert "AAR" in response.answer
+    assert response.structured_citations
+    assert any("human review" in warning.lower() for warning in response.warnings)

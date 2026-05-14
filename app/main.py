@@ -15,6 +15,7 @@ from app.api.routes import (
     reading,
     social,
     staff,
+    staff_products,
 )
 from app.core.config import get_settings
 
@@ -43,6 +44,7 @@ def create_app() -> FastAPI:
     app.include_router(reading.router)
     app.include_router(social.router)
     app.include_router(staff.router)
+    app.include_router(staff_products.router)
     return app
 
 
