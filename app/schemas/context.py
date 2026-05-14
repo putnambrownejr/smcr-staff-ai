@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
@@ -15,6 +15,8 @@ class LocalContextMetadata(BaseModel):
     contains_pii: bool = False
     retention_policy: str = "user_managed_local"
     consent_ack: bool = False
+    review_date: date | None = None
+    expiration_date: date | None = None
     advisory_only: bool = True
     affects_canonical_structure: bool = False
     warnings: list[str] = Field(default_factory=list)

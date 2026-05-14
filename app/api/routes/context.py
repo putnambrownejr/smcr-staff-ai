@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -23,6 +24,8 @@ async def upload_context(
     tags: Annotated[str | None, Form()] = None,
     document_type: Annotated[str, Form()] = "other",
     consent_ack: Annotated[bool, Form()] = False,
+    review_date: Annotated[date | None, Form()] = None,
+    expiration_date: Annotated[date | None, Form()] = None,
 ) -> LocalContextUploadResponse:
     content = await file.read()
     try:
@@ -33,6 +36,8 @@ async def upload_context(
             tags=parse_tags(tags),
             document_type=document_type,
             consent_ack=consent_ack,
+            review_date=review_date,
+            expiration_date=expiration_date,
         )
     except ValueError as exc:
         raise HTTPException(status_code=413, detail=str(exc)) from exc

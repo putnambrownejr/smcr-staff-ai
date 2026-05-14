@@ -49,6 +49,8 @@ API:
 
 These files remain local context and do not become canonical doctrine or official records. PII warnings are surfaced so the user can decide whether the local record is necessary to retain.
 
+The organizer also supports review and expiration dates for local records so the Chief/Aide brief can nudge the user about stale or missing personal references.
+
 ## Staff Council
 
 The staff council lets a user run ideas through role-based advisors by echelon.

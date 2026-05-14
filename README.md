@@ -282,7 +282,9 @@ curl -X POST http://127.0.0.1:8000/context/upload `
   -F "file=@notes.txt" `
   -F "tags=drill,local" `
   -F "document_type=other" `
-  -F "consent_ack=true"
+  -F "consent_ack=true" `
+  -F "review_date=2026-06-01" `
+  -F "expiration_date=2026-12-01"
 ```
 
 For RQS/BIO references, use `document_type=rqs` or `document_type=bio`. The prototype stores the file locally, marks whether likely PII was detected, and redacts basic PII from previews. It does not parse those records into permanent profile facts yet.
@@ -304,6 +306,14 @@ Filter by document type:
 ```powershell
 curl "http://127.0.0.1:8000/personal-documents?document_type=bio"
 ```
+
+Get a single personal document with safe preview:
+
+```powershell
+curl http://127.0.0.1:8000/personal-documents/{context_id}
+```
+
+The organizer now highlights missing core document types such as `RQS`, `BIO`, `orders`, and `PME certificates`, along with review-due and expired records.
 
 Read a preview:
 

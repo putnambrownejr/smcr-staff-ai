@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
@@ -29,14 +29,24 @@ class PersonalDocumentRecord(BaseModel):
     size_bytes: int
     contains_pii: bool = False
     retention_policy: str = "user_managed_local"
+    review_date: date | None = None
+    expiration_date: date | None = None
     advisory_only: bool = True
     warnings: list[str] = Field(default_factory=list)
+
+
+class PersonalDocumentDetail(BaseModel):
+    record: PersonalDocumentRecord
+    text_preview: str
 
 
 class PersonalDocumentSummary(BaseModel):
     total_documents: int
     by_type: dict[str, int]
     pii_flagged_count: int
+    missing_recommended_types: list[str]
+    review_due_count: int
+    expired_count: int
     records: list[PersonalDocumentRecord]
     warnings: list[str] = Field(default_factory=list)
 
@@ -53,6 +63,8 @@ def record_from_context(item: LocalContextMetadata) -> PersonalDocumentRecord:
         size_bytes=item.size_bytes,
         contains_pii=item.contains_pii,
         retention_policy=item.retention_policy,
+        review_date=item.review_date,
+        expiration_date=item.expiration_date,
         advisory_only=item.advisory_only,
         warnings=item.warnings,
     )

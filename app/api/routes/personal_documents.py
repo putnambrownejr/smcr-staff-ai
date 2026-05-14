@@ -1,11 +1,11 @@
 from collections.abc import Iterator
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
-from app.schemas.personal_documents import PersonalDocumentSummary
+from app.schemas.personal_documents import PersonalDocumentDetail, PersonalDocumentSummary
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.storage.local_context_store import LocalContextStore
 
@@ -33,3 +33,14 @@ def list_personal_documents(
     document_type: str | None = None,
 ) -> PersonalDocumentSummary:
     return organizer.list_documents(document_type=document_type)
+
+
+@router.get("/{context_id}", response_model=PersonalDocumentDetail)
+def get_personal_document(
+    context_id: str,
+    organizer: Annotated[PersonalDocumentOrganizer, Depends(get_document_organizer)],
+) -> PersonalDocumentDetail:
+    detail = organizer.get_document(context_id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail=f"Unknown personal document: {context_id}")
+    return detail

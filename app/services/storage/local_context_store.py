@@ -1,6 +1,6 @@
 import hashlib
 import re
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from app.core.security import DEFAULT_WARNINGS, detect_pii_input, detect_sensitive_input, redact_pii
@@ -35,6 +35,8 @@ class LocalContextStore:
         tags: list[str] | None = None,
         document_type: str = "other",
         consent_ack: bool = False,
+        review_date: date | None = None,
+        expiration_date: date | None = None,
     ) -> LocalContextMetadata:
         if len(content) > self.max_upload_bytes:
             raise ValueError(f"Upload exceeds max_upload_bytes={self.max_upload_bytes}.")
@@ -60,6 +62,8 @@ class LocalContextStore:
             document_type=document_type,
             contains_pii=contains_pii,
             consent_ack=consent_ack,
+            review_date=review_date,
+            expiration_date=expiration_date,
             warnings=warnings,
         )
         self._metadata_path(context_id).write_text(
