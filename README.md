@@ -431,6 +431,8 @@ curl -X POST http://127.0.0.1:8000/agents/g9-civil-military/run `
   -d "{\"input\":\"Help me think through external coordination and continuity for a reserve-supported event.\",\"context\":{\"user_role\":\"G-9\"}}"
 ```
 
+In staff round robins, G-9 is treated as a division/group-level lane and is only pulled into general-staff passes when the question is civil-military or partner-coordination relevant, unless you explicitly request it.
+
 Build a medical-support planning draft:
 
 ```powershell

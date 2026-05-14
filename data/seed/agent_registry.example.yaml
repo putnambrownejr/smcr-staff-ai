@@ -68,9 +68,6 @@ staff_agent_patterns:
   - id_pattern: staff-division_group-g2
     doctrine_categories: [core_marine_doctrine, intelligence_osint]
     linked_agent: osint-research-assistant
-  - id_pattern: staff-battalion-s9
-    doctrine_categories: [civil_affairs, operations_planning, humanitarian_disaster_response]
-    linked_agent: mos-civil-affairs
   - id_pattern: staff-division_group-g9
     doctrine_categories: [civil_affairs, operations_planning, humanitarian_disaster_response]
     linked_agent: mos-civil-affairs

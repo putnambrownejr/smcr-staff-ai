@@ -26,10 +26,13 @@ class StaffCouncilService:
         roles_missing = sorted(selected_roles - available_roles)
         if roles_missing:
             raise ValueError(f"Unknown roles for {request.echelon.value}: {', '.join(roles_missing)}")
+        g9_relevant = _is_g9_relevant(request.question, request.context)
         candidates = [
             role
             for role in self._roles
-            if role.echelon == request.echelon and (not selected_roles or role.role in selected_roles)
+            if role.echelon == request.echelon
+            and (not selected_roles or role.role in selected_roles)
+            and (selected_roles or role.role != "g9" or g9_relevant)
         ]
         context = AgentContext(extra=request.context)
         perspectives: list[StaffPerspective] = []
@@ -95,6 +98,34 @@ class StaffCouncilService:
                 "Round robin is an advisory staff simulation, not command guidance or an order.",
             ],
         )
+
+
+def _is_g9_relevant(question: str, context: dict[str, object]) -> bool:
+    keyword_text = " ".join(
+        [
+            question,
+            " ".join(str(value) for value in context.values() if value is not None),
+        ]
+    ).lower()
+    relevance_terms = {
+        "civil",
+        "civilian",
+        "community",
+        "partner",
+        "ngo",
+        "interagency",
+        "humanitarian",
+        "disaster",
+        "local authority",
+        "population",
+        "external coordination",
+        "engagement",
+        "key leader",
+        "cmo",
+        "ca ",
+        "civil affairs",
+    }
+    return any(term in keyword_text for term in relevance_terms)
 
 
 def _extract_section(answer: str, marker: str) -> list[str]:

@@ -132,14 +132,6 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         ("medical support", "TCCC", "evacuation planning"),
     ),
     StaffRoleDefinition(
-        StaffEchelon.battalion,
-        "s9",
-        "S-9 / Civil-Military",
-        "battalion staff",
-        "Civil considerations, partner coordination, and continuity",
-        ("stakeholders", "partner coordination", "civil considerations"),
-    ),
-    StaffRoleDefinition(
         StaffEchelon.division_group,
         "g1",
         "G-1",

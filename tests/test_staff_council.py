@@ -23,7 +23,6 @@ def test_registry_includes_chief_and_staff_agents() -> None:
     assert "staff-company-xo" in ids
     assert "staff-company-doc" in ids
     assert "staff-battalion-s2" in ids
-    assert "staff-battalion-s9" in ids
     assert "staff-battalion-surgeon" in ids
     assert "staff-division_group-g2" in ids
     assert "staff-division_group-g9" in ids
@@ -89,6 +88,24 @@ def test_staff_round_robin_runs_all_default_echelons() -> None:
 
     assert len(response.councils) == 3
     assert response.phases == ["initial_estimate", "critique", "cross_staff_risks", "synthesis"]
+    division_group_council = next(
+        council for council in response.councils if council.echelon == StaffEchelon.division_group
+    )
+    assert "g9" not in division_group_council.roles_run
+
+
+def test_staff_round_robin_includes_g9_when_relevant() -> None:
+    service = StaffCouncilService()
+    response = service.round_robin(
+        request=StaffRoundRobinRequest(
+            question="How should we coordinate with community partners for a humanitarian support exercise?"
+        )
+    )
+
+    division_group_council = next(
+        council for council in response.councils if council.echelon == StaffEchelon.division_group
+    )
+    assert "g9" in division_group_council.roles_run
 
 
 def test_staff_council_rejects_unknown_role() -> None:
