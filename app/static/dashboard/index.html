@@ -23,7 +23,31 @@
       </header>
 
       <main class="layout">
-        <section class="panel config-panel">
+        <section class="panel focus-panel" data-section-group="global">
+          <div class="panel-header">
+            <h2>What matters now</h2>
+            <p>Use the lanes below to move between briefing, watchstanding, drafting, and workspace setup.</p>
+          </div>
+          <div class="focus-toolbar" role="tablist" aria-label="Dashboard lanes">
+            <button type="button" class="lane-button active" data-lane="overview">Overview</button>
+            <button type="button" class="lane-button" data-lane="watch">Watch floor</button>
+            <button type="button" class="lane-button" data-lane="draft">Drafting</button>
+            <button type="button" class="lane-button" data-lane="configure">Workspace</button>
+            <button type="button" class="lane-button secondary" data-lane="all">Show all</button>
+          </div>
+          <div class="focus-grid">
+            <article class="focus-card">
+              <span class="callout">Mission focus</span>
+              <ul id="workspace-summary" class="bullet-list"></ul>
+            </article>
+            <article class="focus-card">
+              <span class="callout">Guardrails</span>
+              <ul id="workspace-warnings" class="bullet-list"></ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel config-panel is-hidden" data-section-group="configure">
           <div class="panel-header">
             <h2>Workspace</h2>
             <p>Use demo mode for a stateless tour, or provide a local user key and API key for personal views.</p>
@@ -47,7 +71,7 @@
           </p>
         </section>
 
-        <section class="summary-grid">
+        <section class="summary-grid" data-section-group="overview">
           <article class="panel metric-panel">
             <div class="panel-header compact">
               <h2>Chief brief</h2>
@@ -71,7 +95,7 @@
           </article>
         </section>
 
-        <section class="two-column">
+        <section class="two-column" data-section-group="overview">
           <article class="panel">
             <div class="panel-header">
               <h2>Daily Brief</h2>
@@ -151,7 +175,7 @@
           </article>
         </section>
 
-        <section class="two-column">
+        <section class="two-column" data-section-group="overview">
           <article class="panel">
             <div class="panel-header">
               <h2>Priority queue</h2>
@@ -169,7 +193,7 @@
           </article>
         </section>
 
-        <section class="two-column">
+        <section class="two-column is-hidden" data-section-group="watch">
           <article class="panel">
             <div class="panel-header">
               <h2>Action Tracker</h2>
@@ -195,7 +219,7 @@
           </article>
         </section>
 
-        <section class="tool-grid">
+        <section class="tool-grid is-hidden" data-section-group="draft">
           <article class="panel tool-panel">
             <div class="panel-header">
               <h2>Personnel products</h2>

@@ -2,7 +2,15 @@ const state = {
   mode: "demo",
   userKey: "",
   apiKey: "",
+  activeLane: resolveInitialLane(),
 };
+
+for (const button of document.querySelectorAll(".lane-button")) {
+  button.addEventListener("click", () => {
+    state.activeLane = button.dataset.lane || "overview";
+    applyLaneVisibility();
+  });
+}
 
 document.getElementById("load-demo").addEventListener("click", () => {
   state.mode = "demo";
@@ -69,6 +77,7 @@ async function loadWorkspace() {
 }
 
 function renderWorkspace(payload) {
+  renderWorkspaceSummary(payload.summary_lines || [], payload.warnings || []);
   renderChief(payload.chief_brief);
   renderCareer(payload.career_watch);
   renderAdmin(payload.admin_readiness);
@@ -78,6 +87,11 @@ function renderWorkspace(payload) {
   renderTrackedActions(payload.tracked_actions || []);
   renderOpportunities(payload.tracked_opportunities || payload.career_watch.tracked_opportunities || []);
   renderSourceUpdates(payload.documentation_updates || payload.chief_brief.documentation_updates || []);
+}
+
+function renderWorkspaceSummary(summaryLines, warnings) {
+  renderList("workspace-summary", summaryLines);
+  renderList("workspace-warnings", warnings.slice(0, 4));
 }
 
 function renderChief(payload) {
@@ -324,6 +338,27 @@ function updateModeBanner() {
   document.getElementById("mode-badge").textContent = state.mode === "demo" ? "Demo mode" : "Personal mode";
 }
 
+function resolveInitialLane() {
+  const lane = window.location.hash.replace("#", "").trim().toLowerCase();
+  return lane || "overview";
+}
+
+function applyLaneVisibility() {
+  const active = state.activeLane;
+  for (const button of document.querySelectorAll(".lane-button")) {
+    button.classList.toggle("active", button.dataset.lane === active);
+  }
+  for (const section of document.querySelectorAll("[data-section-group]")) {
+    const group = section.dataset.sectionGroup;
+    const show = group === "global" || active === "all" || group === active;
+    section.classList.toggle("is-hidden", !show);
+  }
+  window.location.hash = active === "overview" ? "" : active;
+  if (active === "configure") {
+    document.getElementById("workspace-note").textContent ||= "Configure local access and reload the workspace.";
+  }
+}
+
 function splitLines(value) {
   return String(value || "")
     .split(/\r?\n/)
@@ -341,3 +376,4 @@ function escapeHtml(value) {
 }
 
 loadWorkspace();
+applyLaneVisibility();
