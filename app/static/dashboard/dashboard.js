@@ -71,11 +71,9 @@ async function loadWorkspace() {
 function renderWorkspace(payload) {
   renderChief(payload.chief_brief);
   renderCareer(payload.career_watch);
-  if (payload.mode === "demo") {
-    renderAdmin(payload.admin_readiness);
-  } else {
-    renderAdmin(payload.admin_readiness);
-  }
+  renderAdmin(payload.admin_readiness);
+  renderDailyBrief(payload.daily_ops_brief || {});
+  renderAnalystBrief(payload.analyst_brief || {});
   renderDocuments(payload.document_summary || payload.chief_brief.document_summary || { records: [] });
   renderOpportunities(payload.tracked_opportunities || payload.career_watch.tracked_opportunities || []);
   renderSourceUpdates(payload.documentation_updates || payload.chief_brief.documentation_updates || []);
@@ -111,6 +109,27 @@ function renderDocuments(payload) {
     payload.review_due_count ? `${payload.review_due_count} document(s) due for review` : "No local reviews due right now.",
   ];
   setDocumentWatch(lines, records);
+}
+
+function renderDailyBrief(payload) {
+  renderList("daily-executive", payload.executive_snapshot || []);
+  renderEntryCards("daily-must-do", payload.must_do || [], "No must-do items.");
+  renderEntryCards("daily-should-do", payload.should_do || [], "No should-do items.");
+  renderEntryCards("daily-can-defer", payload.can_defer || [], "No defer candidates.");
+  renderList("daily-waiting", payload.waiting_on || []);
+  renderList("daily-blockers", payload.blockers || []);
+  renderList("daily-leverage", payload.leverage_actions || []);
+  renderList("daily-followups", payload.prep_follow_ups || []);
+}
+
+function renderAnalystBrief(payload) {
+  renderList("analyst-executive", payload.executive_summary || []);
+  renderList("analyst-data-quality", payload.data_quality_notes || []);
+  renderList("analyst-kpis", payload.kpi_summary || []);
+  renderList("analyst-anomalies", payload.anomalies || []);
+  renderList("analyst-causes", payload.likely_causes || []);
+  renderList("analyst-assumptions", payload.assumptions || []);
+  renderList("analyst-followups", payload.follow_up_checks || []);
 }
 
 function renderOpportunities(items) {
@@ -172,6 +191,28 @@ function renderQueue(items) {
           <span class="callout">${escapeHtml(item.category || "watch")}</span>
           <h3>${escapeHtml(item.title || "Untitled item")}</h3>
           <p>${escapeHtml(item.recommendation || item.notes || "")}</p>
+        </div>
+      `,
+    )
+    .join("");
+}
+
+function renderEntryCards(targetId, items, emptyText) {
+  const target = document.getElementById(targetId);
+  if (!items.length) {
+    target.className = "stack-list empty-state";
+    target.textContent = emptyText;
+    return;
+  }
+  target.className = "stack-list";
+  target.innerHTML = items
+    .map(
+      (item) => `
+        <div class="info-card">
+          <span class="callout">${escapeHtml(item.category || item.priority || "watch")}</span>
+          <h3>${escapeHtml(item.title || "Untitled item")}</h3>
+          <p>${escapeHtml(item.detail || "")}</p>
+          ${item.due_date ? `<p>${escapeHtml(`Due: ${item.due_date}`)}</p>` : ""}
         </div>
       `,
     )

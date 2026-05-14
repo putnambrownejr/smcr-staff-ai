@@ -57,6 +57,8 @@ def test_demo_dashboard_data_route_returns_workspace_payload() -> None:
     payload = response.json()
     assert payload["mode"] == "demo"
     assert payload["chief_brief"]["summary_lines"]
+    assert payload["daily_ops_brief"]["executive_snapshot"]
+    assert payload["analyst_brief"]["kpi_summary"]
     assert "tracked_opportunities" in payload
 
 
@@ -162,6 +164,8 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         payload = response.json()
         assert payload["mode"] == "personal"
         assert payload["chief_brief"]["user_key"] == "capt-dash"
+        assert payload["daily_ops_brief"]["must_do"]
+        assert payload["analyst_brief"]["data_quality_notes"]
         assert payload["document_summary"]["total_documents"] == 1
         assert payload["tracked_opportunities"][0]["title"] == "ADOS Planner"
         assert payload["documentation_updates"][0]["tracked_title"] == "MCO 1610.7"

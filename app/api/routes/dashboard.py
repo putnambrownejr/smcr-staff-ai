@@ -9,8 +9,8 @@ from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.admin import AdminReadinessResponse
 from app.schemas.career import CareerWatchResponse
-from app.schemas.chief import ChiefBriefRequest, ChiefBriefResponse
-from app.schemas.dashboard import DashboardWorkspaceResponse
+from app.schemas.chief import ChiefActionItem, ChiefBriefRequest, ChiefBriefResponse
+from app.schemas.dashboard import AnalystBrief, DailyOpsBrief, DailyOpsEntry, DashboardWorkspaceResponse
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateReviewStatus
@@ -177,6 +177,21 @@ def _workspace_response(
         chief_brief=chief_brief,
         admin_readiness=admin_readiness,
         career_watch=career_watch,
+        daily_ops_brief=_daily_ops_brief(
+            chief_brief=chief_brief,
+            admin_readiness=admin_readiness,
+            career_watch=career_watch,
+            documentation_updates=documentation_updates,
+            document_summary=document_summary,
+        ),
+        analyst_brief=_analyst_brief(
+            chief_brief=chief_brief,
+            admin_readiness=admin_readiness,
+            career_watch=career_watch,
+            documentation_updates=documentation_updates,
+            tracked_opportunities=tracked_opportunities,
+            document_summary=document_summary,
+        ),
         document_summary=document_summary,
         tracked_opportunities=tracked_opportunities,
         documentation_updates=documentation_updates,
@@ -210,4 +225,158 @@ def _admin_from_demo_brief(chief_brief: ChiefBriefResponse) -> AdminReadinessRes
         items=items[:6],
         document_summary=document_summary,
         warnings=["Demo mode is stateless and read-only."],
+    )
+
+
+def _daily_ops_brief(
+    *,
+    chief_brief: ChiefBriefResponse,
+    admin_readiness: AdminReadinessResponse,
+    career_watch: CareerWatchResponse,
+    documentation_updates: list[DocumentationUpdateCandidate],
+    document_summary: PersonalDocumentSummary | None,
+) -> DailyOpsBrief:
+    actions = chief_brief.action_items
+    must_do = [_entry_from_action(item) for item in actions if item.priority == "high"][:5]
+    if not must_do:
+        must_do = [_entry_from_action(item) for item in chief_brief.top_priority_items[:3]]
+    should_do = [_entry_from_action(item) for item in actions if item.priority == "medium"][:5]
+    can_defer = [_entry_from_action(item) for item in actions if item.priority == "low"][:5]
+
+    waiting_on: list[str] = []
+    if documentation_updates:
+        waiting_on.append(
+            f"{len(documentation_updates)} documentation update candidate(s) still need review or disposition."
+        )
+    if career_watch.tracked_opportunities:
+        waiting_on.append(
+            f"{len(career_watch.tracked_opportunities)} tracked opportunity record(s) need pursue/archive decisions."
+        )
+    if chief_brief.handoff_is_stale:
+        waiting_on.append("Session handoff is stale and should be refreshed before relying on watch items.")
+
+    blockers: list[str] = []
+    if document_summary is not None:
+        if document_summary.missing_recommended_types:
+            blockers.append(
+                "Missing recommended local documents: "
+                + ", ".join(document_summary.missing_recommended_types[:4])
+            )
+        if document_summary.expired_count:
+            blockers.append(f"{document_summary.expired_count} local document(s) are expired.")
+    if any(item.category == "fitrep" for item in admin_readiness.items):
+        blockers.append("FitRep watch items exist and still require confirmed support, routing, or suspense checks.")
+
+    leverage_actions = [
+        item.title for item in chief_brief.top_priority_items[:3]
+    ] or [
+        "Refresh the session handoff.",
+        "Confirm the next drill or admin suspense.",
+        "Review source-update or opportunity watch items.",
+    ]
+
+    prep_follow_ups = [task.title for plan in chief_brief.drill_plans for task in plan.tasks[:2]][:4]
+    if not prep_follow_ups:
+        prep_follow_ups = [
+            "Review the next drill-prep plan.",
+            "Confirm travel, uniform, and gear timelines.",
+        ]
+
+    return DailyOpsBrief(
+        executive_snapshot=chief_brief.summary_lines[:3],
+        must_do=must_do,
+        should_do=should_do,
+        can_defer=can_defer,
+        waiting_on=waiting_on,
+        blockers=blockers,
+        leverage_actions=leverage_actions,
+        prep_follow_ups=prep_follow_ups,
+    )
+
+
+def _analyst_brief(
+    *,
+    chief_brief: ChiefBriefResponse,
+    admin_readiness: AdminReadinessResponse,
+    career_watch: CareerWatchResponse,
+    documentation_updates: list[DocumentationUpdateCandidate],
+    tracked_opportunities: list[OpportunityRecord],
+    document_summary: PersonalDocumentSummary | None,
+) -> AnalystBrief:
+    data_quality_notes: list[str] = []
+    if document_summary is not None:
+        data_quality_notes.extend(
+            [
+                f"{document_summary.total_documents} local document(s) indexed.",
+                f"{document_summary.review_due_count} document(s) due for review.",
+                f"{document_summary.expired_count} document(s) expired.",
+            ]
+        )
+        if document_summary.pii_flagged_count:
+            data_quality_notes.append(
+                f"{document_summary.pii_flagged_count} local document(s) contain detected PII and need care."
+            )
+    if chief_brief.handoff_is_stale:
+        data_quality_notes.append(
+            "Session handoff is stale, which lowers confidence in career and admin watch signals."
+        )
+
+    kpi_summary = [
+        f"{len(chief_brief.action_items)} total action item(s) in the Chief/Aide brief.",
+        f"{len(admin_readiness.items)} admin readiness cue(s) currently surfaced.",
+        f"{len(career_watch.watch_items)} career watch cue(s) currently surfaced.",
+        f"{len(tracked_opportunities)} tracked opportunity record(s) in local storage.",
+    ]
+
+    anomalies: list[str] = []
+    if documentation_updates:
+        anomalies.append(
+            f"{len(documentation_updates)} source update candidate(s) may indicate stale doctrine or admin references."
+        )
+    if document_summary is not None and document_summary.missing_recommended_types:
+        anomalies.append("Core local support documents are incomplete for the current profile.")
+    if chief_brief.handoff is None:
+        anomalies.append("No session handoff is present, which makes the dashboard less personalized.")
+
+    likely_causes = [
+        "Reserve workflows are fragmented across local notes, watch items, and manually tracked opportunities.",
+        "Source freshness depends on scans and human review rather than automatic authoritative reconciliation.",
+    ]
+    if documentation_updates:
+        likely_causes.append(
+            "Recent MARADMIN or MCPEL change signals have not yet been reviewed into the local corpus."
+        )
+
+    assumptions = [
+        "Local uploads are advisory context only and are not authoritative doctrine or official records.",
+        "Tracked opportunities do not establish eligibility, approval, or final availability.",
+        "Unreviewed source updates should be treated as warnings, not confirmed changes.",
+    ]
+
+    follow_up_checks = [
+        "Run or review document/source freshness checks before relying on older policy summaries.",
+        "Refresh the handoff when PME, FitRep, or billet interests change.",
+        "Confirm document gaps and expirations against real user-owned records.",
+    ]
+    if tracked_opportunities:
+        follow_up_checks.append("Compare tracked opportunities against MOS, rank, geography, and timing before acting.")
+
+    return AnalystBrief(
+        executive_summary=chief_brief.summary_lines[:2] or ["Dashboard loaded with current local advisory context."],
+        data_quality_notes=data_quality_notes,
+        kpi_summary=kpi_summary,
+        anomalies=anomalies,
+        likely_causes=likely_causes,
+        assumptions=assumptions,
+        follow_up_checks=follow_up_checks,
+    )
+
+
+def _entry_from_action(item: ChiefActionItem) -> DailyOpsEntry:
+    return DailyOpsEntry(
+        title=item.title,
+        detail=item.recommendation,
+        category=item.category,
+        priority=item.priority,
+        due_date=item.due_date.isoformat() if item.due_date else None,
     )
