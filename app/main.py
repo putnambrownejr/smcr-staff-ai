@@ -21,6 +21,7 @@ from app.api.routes import (
     org,
     personal_documents,
     personnel,
+    planning,
     reading,
     social,
     staff,
@@ -57,6 +58,7 @@ def create_app() -> FastAPI:
     app.include_router(dashboard.router)
     app.include_router(org.router)
     app.include_router(opportunities.router)
+    app.include_router(planning.router)
     app.include_router(personal_documents.router)
     app.include_router(personnel.router)
     app.include_router(reading.router)

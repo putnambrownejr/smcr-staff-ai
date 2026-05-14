@@ -371,6 +371,23 @@ curl -X POST http://127.0.0.1:8000/agents/s4-logistics/run `
 
 ### Staff Estimates And Support Plans
 
+Build a general staff-planning package:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/planning/staff-package `
+  -H "Content-Type: application/json" `
+  -d "{\"title\":\"Reserve field training package\",\"event_type\":\"field_training\",\"mission_or_training_goal\":\"Build a one-day field event that improves staff and small-unit readiness.\",\"audience\":\"Civil affairs company\",\"timeframe\":\"Next drill weekend\",\"constraints\":[\"One field day\",\"Distributed Marines\",\"Travel required\"],\"coordinating_sections\":[\"S-1\",\"S-4\",\"S-6\",\"Safety / ORM\"],\"support_requirements\":[\"Billeting\",\"Movement accountability\",\"Medical support\"],\"product_types\":[\"warno\",\"frago\",\"aar\"],\"training_only\":true}"
+```
+
+This route is the current best single-entry planning workflow. It:
+
+- builds cross-staff estimates
+- synthesizes a recommended course of action
+- surfaces commander decisions, top risks, cuts, and execution framework
+- runs battalion staff review and XO vet
+- optionally pulls in G-9 when the problem is civil-military relevant
+- returns a product package ready for follow-on drafting and action promotion
+
 Build an S-2 public-source estimate:
 
 ```powershell
