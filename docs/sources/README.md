@@ -32,3 +32,4 @@ When real ingestion is added, fetch from the official URL, calculate source hash
 - [Administration Records And Leave](admin_records_leave.md)
 - [MCPEL And MARADMIN Indexes](mcpel_maradmin_indexes.md)
 - [Correspondence And Document Formatting](correspondence_formatting.md)
+- [Staff Function Training References](staff_function_training.md)

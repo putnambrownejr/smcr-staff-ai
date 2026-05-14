@@ -60,6 +60,10 @@ categories:
     source_refs:
       - title: MCO 1001R.1L w/ Ch-2 Marine Corps Reserve Administrative Management Manual (MCRAMM)
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900627/mco-1001r1l-w-ch-2/index.html
+      - title: Travel Explorer / Defense Travel System training resources
+        url: https://www.travel.dod.mil/Training/Travel-Explorer/
+      - title: Government Travel Charge Card training resources
+        url: https://www.travel.dod.mil/Programs/Government-Travel-Charge-Card/
   - id: correspondence_formatting
     name: Naval correspondence and document formatting
     publication_families: ["SECNAV Manual", "MCO", "NAVMC forms"]
@@ -97,12 +101,26 @@ categories:
     source_policy: official_public_sources_only
     classification_label: UNCLASSIFIED
     cui_flag: false
+    source_refs:
+      - title: MCO 1553.3C Unit Training Management
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899431/mco-15533c/
+      - title: NAVMC 3500.18D Common Skills Training and Readiness Manual
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2158067/navmc-350018d/
+      - title: MCWP 5-10 Marine Corps Planning Process
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/
   - id: communications
     name: Communications doctrine
     publication_families: ["MCWP", "MCRP"]
     source_policy: official_public_sources_only
     classification_label: UNCLASSIFIED
     cui_flag: false
+    source_refs:
+      - title: MCDP 6 Command and Control
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899771/mcdp-6/
+      - title: MCTP 3-30B Information Management
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899781/mctp-3-30b/
+      - title: NAVMC 3500.56C Communications Training and Readiness Manual
+        url: https://www.marines.mil/News/Publications/MCPEL/Tag/21778/communications/
   - id: civil_affairs
     name: Civil Affairs / civil-military operations doctrine
     publication_families: ["MCRP", "joint public doctrine"]
@@ -131,7 +149,7 @@ categories:
       - title: MCTP 3-40C Operational-Level Logistics
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1129173/mctp-3-40c/
       - title: MCTP 3-40A Health Service Support
-        url: https://www.marines.mil/news/publications/mcpel/electronic-library-
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899786/mctp-3-40a/
       - title: MCTP 3-40E Maintenance Operations
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2076116/mctp-3-40e/
       - title: MCTP 3-40F Distribution and Transportation Operations

@@ -23,6 +23,13 @@
 - Classification label: UNCLASSIFIED
 - CUI flag: false
 
+- Title: MCWP 5-10 Marine Corps Planning Process
+- Type: Marine Corps Warfighting Publication
+- Category: Planning process
+- Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/
+- Classification label: UNCLASSIFIED
+- CUI flag: false
+
 ## Expected Uses
 
 - `training-planner`
@@ -30,7 +37,15 @@
 - Exercise cadence
 - Annual training reminders
 - PME/training prerequisite checklists
+- S-3 training design and event planning
+- MET / METL and eval-plan framing
 
 ## Notes
 
 T&R sources are version-sensitive and may contain MOS/community-specific manuals. Ingestion should preserve version, publication date, and current/superseded status.
+
+For staff-function grounding, the strongest pairing is usually:
+
+- `MCO 1553.3C` for unit training management
+- `MCWP 5-10` for planning structure
+- the relevant T&R manual for the unit or functional lane being trained

@@ -1,0 +1,74 @@
+# Staff Function Training References
+
+This note pulls together the most useful public-source training and doctrine references for staff-function
+personality, reasoning, and workflow grounding. It is intentionally practical rather than exhaustive.
+
+## S-1 / Admin
+
+- MCO 1001R.1L w/ Ch-2 Marine Corps Reserve Administrative Management Manual (MCRAMM)
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900627/mco-1001r1l-w-ch-2/index.html
+  - Why it matters: reserve-specific continuity, participation, and admin reality.
+
+- MCO 1610.7B Performance Evaluation System
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1513503/mco-16107b/
+  - Why it matters: FitRep/PES discipline and suspense awareness.
+
+- Travel Explorer / Defense Travel System training resources
+  - Official URL: https://www.travel.dod.mil/Training/Travel-Explorer/
+  - Why it matters: official DTS training support instead of hearsay.
+
+- Government Travel Charge Card training resources
+  - Official URL: https://www.travel.dod.mil/Programs/Government-Travel-Charge-Card/
+  - Why it matters: official GTCC training and continuity reference.
+
+## S-3 / OpsO / XO
+
+- MCWP 5-10 Marine Corps Planning Process
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/
+  - Why it matters: MCPP structure and staff planning rhythm.
+
+- MCO 1553.3C Unit Training Management
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899431/mco-15533c/
+  - Why it matters: event design, training standards, assessment, and command training focus.
+
+- Relevant T&R manuals
+  - Why they matter: MET/METL and standard-driven training design.
+
+## S-4 / Logistics
+
+- MCDP 4 Logistics
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899840/mcdp-4/
+  - Why it matters: logistics mindset and support philosophy.
+
+- MCTP 3-40B Tactical Logistics
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899787/mctp-3-40b/
+  - Why it matters: practical planning and tactical support relationships.
+
+- MCO 3502.8A Marine Corps Logistics Tactics, Training, and Education Program
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2221611/mco-35028a/
+  - Why it matters: logistics training expectations and professional development grounding.
+
+## S-6 / Comm
+
+- MCDP 6 Command and Control
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899771/mcdp-6/
+  - Why it matters: doctrinal command-and-control thinking.
+
+- MCTP 3-30B Information Management
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899781/mctp-3-30b/
+  - Why it matters: staff information flow and information-management discipline.
+
+- NAVMC 3500.56C Communications Training and Readiness Manual
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Tag/21778/communications/
+  - Why it matters: communications training expectations and readiness framing.
+
+## Guidance For Agent Personality
+
+These references should not make agents sound like manuals. They should help agents:
+
+- choose and prioritize instead of just listing
+- name the first likely failure point
+- separate critical-path tasks from admin noise
+- sound like staff officers protecting execution, not template generators
+
+Use the sources to sharpen judgment, not to drown answers in sterile checklist language.

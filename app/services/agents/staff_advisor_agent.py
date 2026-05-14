@@ -238,21 +238,7 @@ class StaffAdvisorAgent(Agent):
                 "- This role should call the OSINT source-evaluation workflow for public-source claims.\n"
                 "- Treat trend/social evidence as low confidence unless corroborated.\n"
             )
-        answer = (
-            f"{self.definition.title} staff-vetting perspective.\n\n"
-            f"Scope: {self.definition.scope}\n\n"
-            "Primary lenses:\n"
-            f"{focus_lines}\n\n"
-            "Concerns to test:\n"
-            "- Does the idea have a clear purpose, owner, timeline, and decision point?\n"
-            "- What breaks during a reserve drill weekend with limited time and distributed personnel?\n"
-            "- What official/public source should be checked before action?\n"
-            "- What risk, admin, logistics, communications, or training dependency is being assumed?\n\n"
-            "Recommended next action:\n"
-            "- Turn the idea into a short staff estimate with assumptions, required coordination, risks, "
-            "and a human reviewer."
-            f"{osint_note}"
-        )
+        answer = _build_staff_answer(self.definition, focus_lines, osint_note)
         return self._response(
             answer=answer,
             input_text=input_text,
@@ -287,3 +273,63 @@ def list_staff_role_metadata() -> list[StaffRoleMetadata]:
         )
         for definition in ROLE_DEFINITIONS
     ]
+
+
+def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint_note: str) -> str:
+    if definition.role == "xo":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- If this does not have a clear owner, suspense, and command decision point, it is not ready.\n"
+            "- If the plan depends on everyone remembering what they meant between drills, it will drift.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What is the actual decision that needs to be made now?\n"
+            "- What will break first in execution, not in theory?\n"
+            "- Which staff assumption is doing too much work?\n"
+            "- What needs to be cut, simplified, or assigned immediately?\n\n"
+            "Recommended next action:\n"
+            "- Reduce this to a workable plan with owners, suspense dates, and one commander decision.\n"
+            "- Push unresolved friction back to the responsible staff section before calling it ready."
+            f"{osint_note}"
+        )
+
+    if definition.role in {"opso", "s3"}:
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- If it does not train a real standard, produce a needed output, or fit the available time,\n"
+            "  it should not be on the schedule.\n"
+            "- S-3 owns the training architecture: event design, timeline, products, and assessment.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What MET, METL, or required skill does this event actually improve?\n"
+            "- What products, rehearsals, or support requests are on the critical path?\n"
+            "- What is training value, and what is just activity?\n"
+            "- What must be complete by the end of this drill to keep the event real?\n\n"
+            "Recommended next action:\n"
+            "- Build the short training plan now: end state, products, coordination matrix, eval plan,\n"
+            "  and AAR structure.\n"
+            "- Strip out anything that cannot be prepared, resourced, and assessed inside the reserve timeline."
+            f"{osint_note}"
+        )
+
+    return (
+        f"{definition.title} staff-vetting perspective.\n\n"
+        f"Scope: {definition.scope}\n\n"
+        "Primary lenses:\n"
+        f"{focus_lines}\n\n"
+        "Concerns to test:\n"
+        "- Does the idea have a clear purpose, owner, timeline, and decision point?\n"
+        "- What breaks during a reserve drill weekend with limited time and distributed personnel?\n"
+        "- What official/public source should be checked before action?\n"
+        "- What risk, admin, logistics, communications, or training dependency is being assumed?\n\n"
+        "Recommended next action:\n"
+        "- Turn the idea into a short staff estimate with assumptions, required coordination, risks, "
+        "and a human reviewer."
+        f"{osint_note}"
+    )

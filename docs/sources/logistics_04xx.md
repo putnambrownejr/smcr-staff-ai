@@ -41,10 +41,10 @@ These are public, official Marine Corps logistics and 04XX-adjacent references f
 - Title: MCTP 3-40A Health Service Support
 - Type: Marine Corps Tactical Publication
 - Category: Health service support
-- Official URL: https://www.marines.mil/news/publications/mcpel/electronic-library-
+- Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899786/mctp-3-40a/
 - Classification label: UNCLASSIFIED
 - CUI flag: false
-- Notes: MCPEL lists this as current; verify the exact article URL during ingestion.
+- Notes: Health-service-support planning reference; useful for medical-support and CASEVAC coordination context.
 
 - Title: MCTP 3-40E Maintenance Operations
 - Type: Marine Corps Tactical Publication
@@ -163,11 +163,19 @@ These are public, official Marine Corps logistics and 04XX-adjacent references f
 ## Expected Uses
 
 - Future `logo` / logistics officer agent
+- `s4-logistics`
 - `training-planner`
 - `doctrine-opord-assistant`
 - Exercise and annual training logistics planning
 - Reserve logistics continuity between drills
 - Supply, transportation, maintenance, field services, OCS, water, fuel, and deployed-force support checklists
+
+For staff-function grounding, the highest-yield sources are usually:
+
+- `MCDP 4` for logistics mindset
+- `MCTP 3-40B` for tactical logistics planning
+- `MCO 3502.8A` for logistics training expectations
+- `NAVMC 3500.64D` when supply-chain T&R detail matters
 
 ## Safety And Usage Notes
 

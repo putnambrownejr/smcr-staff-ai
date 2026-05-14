@@ -18,6 +18,7 @@ class S1AdminChiefAgent(Agent):
                 "public MCRAMM / reserve administration references",
                 "public PES / FitRep references",
                 "public DON / USMC correspondence guidance",
+                "public DTS and GTCC training references",
                 "local handoff, action, and document summaries",
             ],
             disallowed_inputs=[
@@ -29,7 +30,7 @@ class S1AdminChiefAgent(Agent):
             system_prompt=(
                 "Respond like a seasoned reserve S-1/Admin chief. Organize due-outs, routing, source checks, "
                 "and continuity. Treat DTS and GTCC support as part of the S-1 travel-admin lane. Stay advisory, "
-                "practical, and explicit about review requirements."
+                "practical, explicit about review requirements, and intolerant of vague suspense ownership."
             ),
         )
 
@@ -37,12 +38,18 @@ class S1AdminChiefAgent(Agent):
         answer = (
             "S-1 / Admin chief advisory draft.\n\n"
             "Use this to shape reserve admin execution, not to replace official admin authority.\n\n"
+            "Bottom line:\n"
+            "- If the suspense, owner, routing chain, and required reference are not explicit,\n"
+            "  then it is not under control yet.\n\n"
             "Primary S-1 lenses:\n"
             "- What is due now versus what only needs continuity tracking between drills?\n"
             "- Which package owner, routing chain, and suspense must be explicit?\n"
             "- What local references are missing: RQS, BIO, orders, DTS, GTCC issue notes,\n"
             "  FitRep support, readiness docs?\n"
             "- What must be checked against current MCRAMM, PES, or correspondence guidance before routing?\n\n"
+            "My read:\n"
+            "- Admin friction comes from drift, stale notes, and nobody owning the last 10 percent.\n"
+            "- DTS and GTCC problems should be treated as continuity fights, not one-off emergencies.\n\n"
             "Recommended S-1 battle rhythm:\n"
             "- Weekly: scan suspense items, GTCC/DTS travel-admin issues, voucher flow, and pending routing packages.\n"
             "- Pre-drill: confirm orders, roster-impacting admin items, and readiness watch points.\n"
@@ -58,40 +65,49 @@ class S1AdminChiefAgent(Agent):
             answer=answer,
             input_text=input_text,
             citations=[
-                "MCRAMM / reserve administration source stack",
-                "PES / FitRep source stack",
-                "DON / USMC correspondence guidance",
+                "MCO 1001R.1L w/ Ch-2 Marine Corps Reserve Administrative Management Manual",
+                "MCO 1610.7B Performance Evaluation System",
+                "MCO 5216.20B Marine Corps Supplement to the DON Correspondence Manual",
+                "Defense Travel System and GTCC training references",
             ],
             structured_citations=[
                 StructuredCitation(
-                    title="MCRAMM / Reserve Administration references",
+                    title="MCO 1001R.1L w/ Ch-2 Marine Corps Reserve Administrative Management Manual",
                     confidence=Confidence.low,
                     notes="Verify current public source and local command policy before acting.",
                 ),
                 StructuredCitation(
-                    title="PES / FitRep references",
+                    title="MCO 1610.7B Performance Evaluation System",
                     confidence=Confidence.low,
                     notes="Verify current MCPEL status and local reporting chain requirements.",
                 ),
                 StructuredCitation(
-                    title="DON / USMC correspondence guidance",
+                    title="MCO 5216.20B Marine Corps Supplement to the DON Correspondence Manual",
                     confidence=Confidence.low,
                     notes="Check current correspondence-formatting requirements before routing packages.",
+                ),
+                StructuredCitation(
+                    title="Defense Travel System and GTCC training references",
+                    confidence=Confidence.low,
+                    notes=(
+                        "Use for training and continuity support; confirm current travel-card "
+                        "and voucher process guidance."
+                    ),
                 ),
             ],
             source_trust=[
                 SourceTrustMarker(
-                    tracked_title="MCRAMM / Reserve Administration references",
+                    tracked_title="MCO 1001R.1L w/ Ch-2 Marine Corps Reserve Administrative Management Manual",
                     status=VerifiedSourceStatus.needs_review,
                     notes="Check latest public reserve administration guidance before routing admin packages.",
                 ),
                 SourceTrustMarker(
-                    tracked_title="PES / FitRep references",
+                    tracked_title="MCO 1610.7B Performance Evaluation System",
                     status=VerifiedSourceStatus.needs_review,
                     notes="Confirm current PES / FitRep guidance before using due-out assumptions.",
                 ),
                 SourceTrustMarker(
-                    tracked_title="DON / USMC correspondence guidance",
+                    tracked_title="MCO 5216.20B Marine Corps Supplement to the DON Correspondence Manual",
                     status=VerifiedSourceStatus.needs_review,
                     notes="Confirm current correspondence rules before final package preparation.",
                 ),

@@ -16,6 +16,7 @@ class S4LogisticsAdvisorAgent(Agent):
             intended_users=["SMCR officers", "S-4", "LogO", "S-3", "Chief of Staff / Aide"],
             allowed_sources=[
                 "public logistics doctrine",
+                "public logistics training references",
                 "public operations-planning references",
                 "training-only scenarios",
             ],
@@ -26,7 +27,8 @@ class S4LogisticsAdvisorAgent(Agent):
             ],
             system_prompt=(
                 "Respond like a practical reserve S-4/LogO. Focus on supportability, sustainment, movement, "
-                "maintenance, supply, and friction points. Stay advisory and require human review."
+                "maintenance, supply, and friction points. Call out fantasy assumptions early, identify the "
+                "longest lead-time item first, and stay advisory."
             ),
         )
 
@@ -34,11 +36,18 @@ class S4LogisticsAdvisorAgent(Agent):
         answer = (
             "S-4 / logistics advisory draft.\n\n"
             "Use this to shape reserve logistics planning, not as authoritative movement or support direction.\n\n"
+            "Bottom line:\n"
+            "- If transport, billeting, chow, ammo, comm support, medical support, or accountability is shaky,\n"
+            "  the plan is not ready no matter how good it looks on the whiteboard.\n\n"
             "Primary S-4 lenses:\n"
             "- What support must be in place for this event or plan to work at all?\n"
             "- What movement, billeting, chow, comm support, fuel, supply, maintenance, or medical assumptions exist?\n"
             "- What has the longest lead time and therefore needs the earliest decision?\n"
             "- What reserve-specific friction will show up because people, gear, and support are distributed?\n\n"
+            "My read:\n"
+            "- The hardest logistics problem usually hides in accountability, travel timing,\n"
+            "  or late support requests.\n"
+            "- Nice ideas die when nobody owns vehicles, billeting, ammo, or issue/turn-in windows.\n\n"
             "Checklist:\n"
             "- Identify critical support requirements, lead times, and approval points.\n"
             "- Separate must-have sustainment from nice-to-have convenience requests.\n"
@@ -49,24 +58,38 @@ class S4LogisticsAdvisorAgent(Agent):
         return self._response(
             answer=answer,
             input_text=input_text,
-            citations=["Marine Corps logistics doctrine", "Operations planning references"],
+            citations=[
+                "MCDP 4 Logistics",
+                "MCTP 3-40B Tactical Logistics",
+                "MCO 3502.8A Marine Corps Logistics Tactics, Training, and Education Program",
+            ],
             structured_citations=[
                 StructuredCitation(
-                    title="Marine Corps logistics doctrine",
+                    title="MCDP 4 Logistics",
                     confidence=Confidence.low,
                     notes="Verify the current public logistics reference before acting.",
                 ),
                 StructuredCitation(
-                    title="Operations planning references",
+                    title="MCTP 3-40B Tactical Logistics",
                     confidence=Confidence.low,
-                    notes="Confirm current planning references before integrating logistics assumptions.",
+                    notes="Use for practical logistics planning and support relationships.",
+                ),
+                StructuredCitation(
+                    title="MCO 3502.8A Marine Corps Logistics Tactics, Training, and Education Program",
+                    confidence=Confidence.low,
+                    notes="Useful for logistics training expectations and professional development framing.",
                 ),
             ],
             source_trust=[
                 SourceTrustMarker(
-                    tracked_title="Marine Corps logistics doctrine",
+                    tracked_title="MCDP 4 Logistics",
                     status=VerifiedSourceStatus.needs_review,
                     notes="Review the latest verified logistics reference before final planning.",
+                ),
+                SourceTrustMarker(
+                    tracked_title="MCTP 3-40B Tactical Logistics",
+                    status=VerifiedSourceStatus.needs_review,
+                    notes="Confirm current tactical logistics guidance before final support planning.",
                 )
             ],
             confidence=Confidence.low,
