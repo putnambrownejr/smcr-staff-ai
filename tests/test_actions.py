@@ -3,14 +3,22 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from app.api.routes.actions import get_admin_readiness_service, get_orchestrator, get_tracker
 from app.api.routes.actions import get_context_store as get_action_context_store
-from app.api.routes.actions import get_tracker
 from app.api.routes.actions import get_update_store as get_action_update_store
 from app.main import app
 from app.schemas.actions import ActionItemRequest, ActionUpdateRequest
+from app.schemas.session import FitrepReminder, UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate
 from app.services.actions.tracker import ActionTracker
+from app.services.admin.readiness import AdminReadinessService
+from app.services.calendar.plan_store import DrillPrepPlanStore
+from app.services.chief.orchestrator import ChiefAideOrchestrator
+from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_store import DocumentUpdateStore
+from app.services.opportunities.tracker import OpportunityTracker
+from app.services.reading.catalog import ReadingListCatalogService
+from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
 
 
@@ -183,5 +191,81 @@ def test_action_promote_route_infers_category_priority_and_links(tmp_path: Path)
         assert payload["tracked"][1]["category"] == "fitrep"
         assert payload["tracked"][1]["owner"] == "Capt Example"
         assert payload["summary_lines"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_action_bundle_routes_track_from_chief_admin_and_at(tmp_path: Path) -> None:
+    tracker = ActionTracker(tmp_path / "actions")
+    context_store = LocalContextStore(tmp_path / "context")
+    update_store = DocumentUpdateStore(tmp_path / "updates")
+    handoff_store = SessionHandoffStore(tmp_path / "handoffs")
+    handoff_store.upsert(
+        UserSessionHandoff(
+            user_key="capt-example",
+            fitreps=[FitrepReminder(occasion="Annual", due_date=date(2026, 6, 15))],
+            admin_watch_items=["DTS voucher after drill"],
+        )
+    )
+    orchestrator = ChiefAideOrchestrator(
+        handoff_store=handoff_store,
+        document_organizer=PersonalDocumentOrganizer(context_store),
+        drill_plan_store=DrillPrepPlanStore(tmp_path / "drill_plans"),
+        reading_catalog=ReadingListCatalogService.from_yaml(
+            Path("C:/smcr-staff-ai/data/seed/reading_list.example.yaml")
+        ),
+        document_update_store=update_store,
+        opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+    )
+    admin_service = AdminReadinessService(
+        handoff_store=handoff_store,
+        document_organizer=PersonalDocumentOrganizer(context_store),
+    )
+
+    def override_tracker() -> ActionTracker:
+        return tracker
+
+    def override_context_store() -> LocalContextStore:
+        return context_store
+
+    def override_update_store() -> DocumentUpdateStore:
+        return update_store
+
+    def override_orchestrator() -> ChiefAideOrchestrator:
+        return orchestrator
+
+    def override_admin_service() -> AdminReadinessService:
+        return admin_service
+
+    app.dependency_overrides[get_tracker] = override_tracker
+    app.dependency_overrides[get_action_context_store] = override_context_store
+    app.dependency_overrides[get_action_update_store] = override_update_store
+    app.dependency_overrides[get_orchestrator] = override_orchestrator
+    app.dependency_overrides[get_admin_readiness_service] = override_admin_service
+    client = TestClient(app)
+    try:
+        chief_response = client.post("/actions/from-chief-brief", json={"user_key": "capt-example"})
+        assert chief_response.status_code == 200
+        assert chief_response.json()["tracked"]
+
+        admin_response = client.post("/actions/from-admin-readiness/capt-example", json={})
+        assert admin_response.status_code == 200
+        assert admin_response.json()["tracked"]
+
+        at_response = client.post(
+            "/actions/from-annual-training-plan",
+            json={
+                "plan": {
+                    "unit_name": "Example Company",
+                    "training_objectives": ["Run AT battle drill"],
+                    "travel_required": True,
+                },
+                "options": {"user_key": "capt-example", "owner": "Capt Example"},
+            },
+        )
+        assert at_response.status_code == 200
+        payload = at_response.json()
+        assert payload["tracked"]
+        assert any(item["category"] == "training" for item in payload["tracked"])
     finally:
         app.dependency_overrides.clear()

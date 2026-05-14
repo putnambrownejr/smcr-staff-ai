@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 from datetime import UTC, date, datetime
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
+
+from app.schemas.training import AnnualTrainingPlanRequest
 
 
 class ActionStatus(StrEnum):
@@ -133,3 +137,20 @@ class ActionPromoteResponse(BaseModel):
     tracked: list[ActionRecord]
     summary_lines: list[str] = Field(default_factory=list)
     message: str
+
+
+class ActionBundleTrackRequest(BaseModel):
+    user_key: str | None = None
+    owner: str | None = None
+
+
+class ActionBundleTrackResponse(BaseModel):
+    source_title: str
+    tracked: list[ActionRecord]
+    summary_lines: list[str] = Field(default_factory=list)
+    message: str
+
+
+class AnnualTrainingActionBundleRequest(BaseModel):
+    plan: AnnualTrainingPlanRequest
+    options: ActionBundleTrackRequest = Field(default_factory=ActionBundleTrackRequest)

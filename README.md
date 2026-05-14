@@ -380,6 +380,30 @@ This route:
 - can attach shared or per-item links to local context, documentation updates, or URLs
 - gives you real tracked actions instead of leaving due-outs buried in summaries
 
+Promote a Chief brief straight into tracked actions:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/actions/from-chief-brief `
+  -H "Content-Type: application/json" `
+  -d "{\"user_key\":\"capt-example\"}"
+```
+
+Promote admin readiness items into tracked actions:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/actions/from-admin-readiness/capt-example `
+  -H "Content-Type: application/json" `
+  -d "{}"
+```
+
+Promote an annual training plan into tracked actions:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/actions/from-annual-training-plan `
+  -H "Content-Type: application/json" `
+  -d "{\"plan\":{\"unit_name\":\"Example Company\",\"training_objectives\":[\"Run AT battle drill\"],\"travel_required\":true},\"options\":{\"user_key\":\"capt-example\",\"owner\":\"Capt Example\"}}"
+```
+
 ### Vetted Social / News Trend Ingestion
 
 List allowed source categories:

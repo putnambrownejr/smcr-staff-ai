@@ -100,13 +100,11 @@ class ActionTracker:
         action_id = _action_id(action)
         existing = self.get(action_id)
         if existing is not None:
-            record = ActionRecord(
-                **existing.model_dump(),
-                **action.model_dump(),
-                action_id=action_id,
-                updated_at=datetime.now(UTC),
-            )
-            return record
+            payload = existing.model_dump()
+            payload.update(action.model_dump())
+            payload["action_id"] = action_id
+            payload["updated_at"] = datetime.now(UTC)
+            return ActionRecord(**payload)
         return ActionRecord(action_id=action_id, **action.model_dump())
 
     def _path(self, action_id: str) -> Path:

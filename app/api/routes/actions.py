@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -6,6 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.actions import (
+    ActionBundleTrackRequest,
+    ActionBundleTrackResponse,
     ActionLinkRequest,
     ActionPromoteRequest,
     ActionPromoteResponse,
@@ -14,16 +17,30 @@ from app.schemas.actions import (
     ActionTrackRequest,
     ActionTrackResponse,
     ActionUpdateRequest,
+    AnnualTrainingActionBundleRequest,
 )
+from app.schemas.chief import ChiefBriefRequest
 from app.schemas.context import LocalContextMetadata
 from app.schemas.source_updates import DocumentationUpdateCandidate
+from app.services.actions.bundle_builder import ActionBundleBuilder
 from app.services.actions.promoter import ActionPromoter
 from app.services.actions.tracker import ActionTracker
+from app.services.admin.readiness import AdminReadinessService
+from app.services.calendar.plan_store import DrillPrepPlanStore
+from app.services.chief.orchestrator import ChiefAideOrchestrator
+from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_store import DocumentUpdateStore
+from app.services.opportunities.tracker import OpportunityTracker
+from app.services.reading.catalog import ReadingListCatalogService
+from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
+from app.services.training.event_planner import AnnualTrainingPlanner
 
 router = APIRouter(prefix="/actions", tags=["action tracker"], dependencies=[LocalApiKeyDependency])
 _promoter = ActionPromoter()
+_bundle_builder = ActionBundleBuilder()
+_annual_training_planner = AnnualTrainingPlanner()
+SEED_DIR = Path("data/seed")
 
 
 def get_tracker() -> Iterator[ActionTracker]:
@@ -39,6 +56,31 @@ def get_context_store() -> Iterator[LocalContextStore]:
 def get_update_store() -> Iterator[DocumentUpdateStore]:
     settings = get_settings()
     yield DocumentUpdateStore(f"{settings.local_context_storage_dir}/document_updates")
+
+
+def get_orchestrator(
+    context_store: Annotated[LocalContextStore, Depends(get_context_store)],
+    update_store: Annotated[DocumentUpdateStore, Depends(get_update_store)],
+) -> ChiefAideOrchestrator:
+    settings = get_settings()
+    return ChiefAideOrchestrator(
+        handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
+        document_organizer=PersonalDocumentOrganizer(context_store),
+        drill_plan_store=DrillPrepPlanStore(f"{settings.local_context_storage_dir}/drill_plans"),
+        reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
+        document_update_store=update_store,
+        opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
+    )
+
+
+def get_admin_readiness_service(
+    context_store: Annotated[LocalContextStore, Depends(get_context_store)],
+) -> AdminReadinessService:
+    settings = get_settings()
+    return AdminReadinessService(
+        handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
+        document_organizer=PersonalDocumentOrganizer(context_store),
+    )
 
 
 @router.get("", response_model=list[ActionRecord])
@@ -95,6 +137,45 @@ def promote_actions(
         ],
         message="Promoted generated due-outs/checklists into local action tracking.",
     )
+
+
+@router.post("/from-chief-brief", response_model=ActionBundleTrackResponse)
+def track_actions_from_chief_brief(
+    request: ChiefBriefRequest,
+    tracker: Annotated[ActionTracker, Depends(get_tracker)],
+    orchestrator: Annotated[ChiefAideOrchestrator, Depends(get_orchestrator)],
+) -> ActionBundleTrackResponse:
+    brief = orchestrator.build_brief(request)
+    tracked = tracker.track(_bundle_builder.from_chief_brief(brief))
+    return _bundle_response(brief.title, tracked, len(brief.action_items), "chief brief")
+
+
+@router.post("/from-admin-readiness/{user_key}", response_model=ActionBundleTrackResponse)
+def track_actions_from_admin_readiness(
+    user_key: str,
+    request: ActionBundleTrackRequest,
+    tracker: Annotated[ActionTracker, Depends(get_tracker)],
+    service: Annotated[AdminReadinessService, Depends(get_admin_readiness_service)],
+) -> ActionBundleTrackResponse:
+    readiness = service.build(user_key)
+    tracked = tracker.track(_bundle_builder.from_admin_readiness(readiness))
+    return _bundle_response(readiness.title, tracked, len(readiness.items), "admin readiness")
+
+
+@router.post("/from-annual-training-plan", response_model=ActionBundleTrackResponse)
+def track_actions_from_annual_training_plan(
+    request: AnnualTrainingActionBundleRequest,
+    tracker: Annotated[ActionTracker, Depends(get_tracker)],
+) -> ActionBundleTrackResponse:
+    plan = _annual_training_planner.build(request.plan)
+    tracked = tracker.track(
+        _bundle_builder.from_annual_training_plan(
+            plan,
+            user_key=request.options.user_key,
+            owner=request.options.owner,
+        )
+    )
+    return _bundle_response(plan.title, tracked, len(tracked), "annual training plan")
 
 
 @router.patch("/{action_id}", response_model=ActionRecord)
@@ -167,3 +248,20 @@ def _validate_link_target(
     if candidate is None:
         raise HTTPException(status_code=404, detail=f"Unknown documentation update candidate: {request.target_id}")
     return candidate
+
+
+def _bundle_response(
+    source_title: str,
+    tracked: list[ActionRecord],
+    source_count: int,
+    source_kind: str,
+) -> ActionBundleTrackResponse:
+    return ActionBundleTrackResponse(
+        source_title=source_title,
+        tracked=tracked,
+        summary_lines=[
+            f"Promoted {len(tracked)} action(s) from {source_kind}.",
+            f"Source contained {source_count} item(s) considered for tracking.",
+        ],
+        message=f"Tracked actions generated from {source_kind}.",
+    )
