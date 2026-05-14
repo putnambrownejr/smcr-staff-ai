@@ -17,6 +17,7 @@ class PersonalDocumentType(StrEnum):
     dental_readiness = "dental_readiness"
     fitrep = "fitrep"
     drill_plan = "drill_plan"
+    training_media = "training_media"
     other = "other"
 
 
