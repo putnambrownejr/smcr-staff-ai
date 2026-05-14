@@ -1,7 +1,12 @@
 import hashlib
 
 from app.schemas.ingestion import MessageRecord
-from app.schemas.source_updates import DocumentationUpdateCandidate, DocumentationUpdateScanResult, UpdateConfidence
+from app.schemas.source_updates import (
+    DocumentationUpdateCandidate,
+    DocumentationUpdateScanResult,
+    UpdateConfidence,
+    UpdateReviewStatus,
+)
 
 DOCUMENT_UPDATE_KEYWORDS: tuple[str, ...] = (
     "revision",
@@ -58,6 +63,7 @@ class DocumentUpdateMonitor:
                         matched_terms=matched_terms,
                         change_signals=change_signals,
                         confidence=_confidence(change_signals, matched_terms),
+                        review_status=UpdateReviewStatus.new,
                         warnings=[
                             (
                                 "Detected update candidate only. Verify the current official source before replacing "

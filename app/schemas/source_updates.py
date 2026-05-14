@@ -17,6 +17,13 @@ class UpdateConfidence(StrEnum):
     high = "high"
 
 
+class UpdateReviewStatus(StrEnum):
+    new = "new"
+    reviewed = "reviewed"
+    accepted = "accepted"
+    ignored = "ignored"
+
+
 class DocumentationUpdateCandidate(BaseModel):
     candidate_id: str
     tracked_source_id: str | None = None
@@ -32,6 +39,9 @@ class DocumentationUpdateCandidate(BaseModel):
     old_source_hash: str | None = None
     new_source_hash: str | None = None
     confidence: UpdateConfidence = UpdateConfidence.low
+    review_status: UpdateReviewStatus = UpdateReviewStatus.new
+    reviewed_at: datetime | None = None
+    review_notes: str | None = None
     human_review_required: bool = True
     warnings: list[str] = Field(default_factory=list)
 
@@ -39,3 +49,8 @@ class DocumentationUpdateCandidate(BaseModel):
 class DocumentationUpdateScanResult(BaseModel):
     candidates: list[DocumentationUpdateCandidate]
     warnings: list[str] = Field(default_factory=list)
+
+
+class DocumentationUpdateStatusUpdate(BaseModel):
+    review_status: UpdateReviewStatus
+    review_notes: str | None = None

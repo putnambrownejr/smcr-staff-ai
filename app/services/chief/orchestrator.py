@@ -9,6 +9,7 @@ from app.schemas.source_updates import DocumentationUpdateCandidate
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_monitor import DocumentUpdateMonitor
+from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
 
@@ -20,18 +21,23 @@ class ChiefAideOrchestrator:
         document_organizer: PersonalDocumentOrganizer,
         drill_plan_store: DrillPrepPlanStore,
         reading_catalog: ReadingListCatalogService,
+        document_update_store: DocumentUpdateStore | None = None,
     ) -> None:
         self.handoff_store = handoff_store
         self.document_organizer = document_organizer
         self.drill_plan_store = drill_plan_store
         self.reading_catalog = reading_catalog
+        self.document_update_store = document_update_store or DocumentUpdateStore()
 
     def build_brief(self, request: ChiefBriefRequest) -> ChiefBriefResponse:
         handoff = self.handoff_store.get(request.user_key) if request.user_key else None
         handoff_is_stale = _handoff_is_stale(handoff)
         document_summary = self.document_organizer.list_documents() if request.include_personal_documents else None
         drill_plans = self.drill_plan_store.list() if request.include_drill_plans else []
-        updates = DocumentUpdateMonitor().scan_maradmin_records(request.maradmin_records).candidates
+        updates = self.document_update_store.list()
+        if request.maradmin_records:
+            scanned_updates = DocumentUpdateMonitor().scan_maradmin_records(request.maradmin_records).candidates
+            updates = self.document_update_store.save_many(scanned_updates)
         action_items = [
             *_handoff_actions(handoff),
             *_document_actions(document_summary, handoff),
@@ -199,13 +205,14 @@ def _drill_actions(drill_plans: list[DrillPrepPlanResponse]) -> list[ChiefAction
 def _update_actions(updates: list[DocumentationUpdateCandidate]) -> list[ChiefActionItem]:
     return [
         ChiefActionItem(
-            title=f"Possible source update: {update.tracked_title}",
+            title=f"Source update ({update.review_status}): {update.tracked_title}",
             category="source_updates",
-            priority="high" if update.confidence == "high" else "medium",
+            priority=_update_priority(update),
             source=update.trigger_url,
             recommendation="Verify the current official source before relying on stored summaries or citations.",
         )
         for update in updates
+        if update.review_status != "ignored"
     ]
 
 
@@ -239,5 +246,13 @@ def _priority(due_date: date | None) -> str:
     if days <= 14:
         return "high"
     if days <= 45:
+        return "medium"
+    return "low"
+
+
+def _update_priority(update: DocumentationUpdateCandidate) -> str:
+    if update.review_status == "new":
+        return "high" if update.confidence == "high" else "medium"
+    if update.review_status == "reviewed":
         return "medium"
     return "low"

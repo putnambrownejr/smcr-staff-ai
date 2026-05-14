@@ -5,11 +5,18 @@ from fastapi import APIRouter, HTTPException
 
 from app.schemas.documents import DocumentRead, IngestRequest, IngestResponse
 from app.schemas.ingestion import MessageRecord
-from app.schemas.source_updates import DocumentationUpdateScanResult
+from app.schemas.source_updates import (
+    DocumentationUpdateCandidate,
+    DocumentationUpdateScanResult,
+    DocumentationUpdateStatusUpdate,
+    UpdateReviewStatus,
+)
 from app.schemas.sources import validate_manifest
 from app.services.ingestion.document_update_monitor import DocumentUpdateMonitor
+from app.services.ingestion.document_update_store import DocumentUpdateStore
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+_update_store = DocumentUpdateStore()
 
 
 @router.get("", response_model=list[DocumentRead])
@@ -53,4 +60,24 @@ def ingest_documents(request: IngestRequest) -> IngestResponse:
 
 @router.post("/check-updates", response_model=DocumentationUpdateScanResult)
 def check_document_updates(records: list[MessageRecord]) -> DocumentationUpdateScanResult:
-    return DocumentUpdateMonitor().scan_maradmin_records(records)
+    result = DocumentUpdateMonitor().scan_maradmin_records(records)
+    return DocumentationUpdateScanResult(
+        candidates=_update_store.save_many(result.candidates),
+        warnings=result.warnings,
+    )
+
+
+@router.get("/updates", response_model=list[DocumentationUpdateCandidate])
+def list_document_updates(status: UpdateReviewStatus | None = None) -> list[DocumentationUpdateCandidate]:
+    return _update_store.list(status=status)
+
+
+@router.post("/updates/{candidate_id}/status", response_model=DocumentationUpdateCandidate)
+def update_document_update_status(
+    candidate_id: str,
+    update: DocumentationUpdateStatusUpdate,
+) -> DocumentationUpdateCandidate:
+    candidate = _update_store.update_status(candidate_id, update)
+    if candidate is None:
+        raise HTTPException(status_code=404, detail=f"Unknown documentation update candidate: {candidate_id}")
+    return candidate

@@ -454,6 +454,36 @@ This is a validation/stub path for now. Future ingestion should preserve source 
 
 The preferred source strategy is metadata/link/synopsis first. The repo should keep manifests, source notes, and summaries in markdown for quick reference, while large PDFs/PPTX and user-provided documents stay local or are fetched from official locations at runtime. This keeps the public repo lighter and reduces copyright, classification, and stale-document risk.
 
+Check for documentation update candidates from MARADMIN-style records:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/documents/check-updates `
+  -H "Content-Type: application/json" `
+  -d "[{\"source_id\":\"maradmin-123-26\",\"title\":\"MARADMIN 123/26 Revision of MCO 1610.7 Performance Evaluation System\",\"canonical_url\":\"https://example.test/maradmin-123-26\",\"summary\":\"This message announces an update to FitRep/PES policy published on MCPEL.\"}]"
+```
+
+List persisted update candidates:
+
+```powershell
+curl http://127.0.0.1:8000/documents/updates
+```
+
+Filter by status:
+
+```powershell
+curl "http://127.0.0.1:8000/documents/updates?status=reviewed"
+```
+
+Review or accept a candidate:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/documents/updates/{candidate_id}/status `
+  -H "Content-Type: application/json" `
+  -d "{\"review_status\":\"reviewed\",\"review_notes\":\"Verified against official source.\"}"
+```
+
+The Chief/Aide brief now uses persisted documentation update candidates and suppresses items you explicitly mark as `ignored`.
+
 ### Connector Consent And Write Plans
 
 Create a consent plan:

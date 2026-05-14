@@ -5,9 +5,11 @@ from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
 from app.schemas.chief import ChiefBriefRequest
 from app.schemas.ingestion import MessageRecord
 from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff
+from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateReviewStatus
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.chief.orchestrator import ChiefAideOrchestrator
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
+from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
@@ -50,6 +52,7 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
         document_organizer=PersonalDocumentOrganizer(context_store),
         drill_plan_store=plan_store,
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
+        document_update_store=DocumentUpdateStore(tmp_path / "updates"),
     )
 
     brief = orchestrator.build_brief(
@@ -90,6 +93,7 @@ def test_chief_brief_flags_stale_handoff_and_missing_core_docs(tmp_path: Path) -
         document_organizer=PersonalDocumentOrganizer(context_store),
         drill_plan_store=DrillPrepPlanStore(tmp_path / "plans"),
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
+        document_update_store=DocumentUpdateStore(tmp_path / "updates"),
     )
 
     brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-stale"))
@@ -100,3 +104,36 @@ def test_chief_brief_flags_stale_handoff_and_missing_core_docs(tmp_path: Path) -
     assert "Add RQS reference" in titles
     assert "Add a current BIO reference" in titles
     assert "Add current orders reference" in titles
+
+
+def test_chief_brief_uses_persisted_document_updates_and_skips_ignored(tmp_path: Path) -> None:
+    update_store = DocumentUpdateStore(tmp_path / "updates")
+    update_store.save_many(
+        [
+            DocumentationUpdateCandidate(
+                candidate_id="update-new",
+                tracked_title="PES / FitRep",
+                trigger_type="maradmin",
+                review_status=UpdateReviewStatus.new,
+            ),
+            DocumentationUpdateCandidate(
+                candidate_id="update-ignored",
+                tracked_title="Uniform Regulations",
+                trigger_type="maradmin",
+                review_status=UpdateReviewStatus.ignored,
+            ),
+        ]
+    )
+    orchestrator = ChiefAideOrchestrator(
+        handoff_store=SessionHandoffStore(tmp_path / "handoffs"),
+        document_organizer=PersonalDocumentOrganizer(LocalContextStore(tmp_path / "context")),
+        drill_plan_store=DrillPrepPlanStore(tmp_path / "plans"),
+        reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
+        document_update_store=update_store,
+    )
+
+    brief = orchestrator.build_brief(ChiefBriefRequest(user_key=None))
+
+    update_titles = [item.title for item in brief.action_items if item.category == "source_updates"]
+    assert "Source update (new): PES / FitRep" in update_titles
+    assert all("Uniform Regulations" not in title for title in update_titles)
