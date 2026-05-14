@@ -18,8 +18,10 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, and future email/calendar triage. | Working scaffold |
 | Admin readiness | Pulls FitRep reminders, admin watch items, local document gaps, readiness references, and travel/admin support into an AdminO / S-1 style view. | Working local digest |
 | S-1 / Admin chief advisor | Adds an explicit S-1/Admin chief perspective for reserve admin continuity, routing discipline, awards, orders, DTS, and suspense management. | Working advisory agent |
+| S-2 / intel advisor | Adds an explicit S-2 perspective for public-source estimates, information gaps, and confidence-weighted staff support. | Working advisory agent |
 | S-3 / OpsO advisor | Adds an explicit S-3/OpsO perspective for reserve operations planning, training synchronization, battle rhythm, and decision support. | Working advisory agent |
 | S-4 / logistics advisor | Adds an explicit S-4/LogO perspective for reserve supportability, movement, sustainment, supply, maintenance, and logistics friction. | Working advisory agent |
+| S-6 / communications advisor | Adds an explicit S-6/CommO perspective for reserve C2 support, generic PACE framing, permissions, equipment, and supportability friction. | Working advisory agent |
 | AirO advisor | Adds a generic aviation-support and air-ground coordination planning perspective for training and public staff-planning contexts. | Working advisory agent |
 | JAG / legal advisor | Adds issue-spotting and escalation prompts while clearly refusing to replace formal legal counsel. | Working advisory agent |
 | Chaplain advisor | Adds morale, welfare, ethics, and referral-minded leader prompts without claiming to replace real chaplain or care channels. | Working advisory agent |
@@ -339,6 +341,40 @@ Run the S-4 / logistics advisor:
 curl -X POST http://127.0.0.1:8000/agents/s4-logistics/run `
   -H "Content-Type: application/json" `
   -d "{\"input\":\"Help me think through supportability for an AT movement plan.\",\"context\":{\"user_role\":\"S-4\"}}"
+```
+
+### Staff Estimates And Support Plans
+
+Build an S-2 public-source estimate:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/staff/s2-estimate `
+  -H "Content-Type: application/json" `
+  -d "{\"title\":\"Exercise sentiment estimate\",\"question\":\"What does public reporting suggest about upcoming exercise sentiment?\",\"source_items\":[{\"title\":\"Official release\",\"source_type\":\"official\",\"claim\":\"The event is proceeding as planned.\",\"corroborated\":\"true\"}]}"
+```
+
+Run the S-2 advisor:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/agents/s2-intel/run `
+  -H "Content-Type: application/json" `
+  -d "{\"input\":\"Help me shape a public-source estimate for a staff question.\",\"context\":{\"user_role\":\"S-2\"}}"
+```
+
+Build an S-6 communications support draft:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/staff/s6-plan `
+  -H "Content-Type: application/json" `
+  -d "{\"title\":\"Drill comm sync\",\"supported_event\":\"Drill weekend planning event\",\"c2_objective\":\"Support leader coordination and accountability.\",\"support_requirements\":[\"Equipment issue\",\"Battery plan\"]}"
+```
+
+Run the S-6 advisor:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/agents/s6-comms/run `
+  -H "Content-Type: application/json" `
+  -d "{\"input\":\"Help me shape generic comm support for next drill.\",\"context\":{\"user_role\":\"S-6\"}}"
 ```
 
 Build a range/RSO support checklist:

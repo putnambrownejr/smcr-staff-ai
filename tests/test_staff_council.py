@@ -1,7 +1,15 @@
-from app.schemas.staff import StaffCouncilRequest, StaffEchelon, StaffRoundRobinRequest
+from app.schemas.staff import (
+    S2EstimateRequest,
+    S6PlanRequest,
+    StaffCouncilRequest,
+    StaffEchelon,
+    StaffRoundRobinRequest,
+)
 from app.services.agents.base import AgentContext
 from app.services.agents.registry import AgentRegistry
 from app.services.staff.council import StaffCouncilService
+from app.services.staff.s2_estimator import S2Estimator
+from app.services.staff.s6_planner import S6Planner
 
 
 def test_registry_includes_chief_and_staff_agents() -> None:
@@ -90,3 +98,41 @@ def test_staff_council_rejects_unknown_role() -> None:
         assert "Unknown roles" in str(exc)
     else:
         raise AssertionError("Expected invalid role to raise ValueError")
+
+
+def test_s2_estimator_returns_claims_and_gaps() -> None:
+    service = S2Estimator()
+    response = service.build(
+        request=S2EstimateRequest(
+            title="Exercise sentiment estimate",
+            question="What does public reporting suggest about upcoming exercise sentiment?",
+            source_items=[
+                {
+                    "title": "Official release",
+                    "source_type": "official",
+                    "claim": "The event is proceeding as planned.",
+                    "corroborated": "true",
+                }
+            ],
+        )
+    )
+
+    assert response.summary_assessment
+    assert response.assessed_claims
+    assert response.collection_gaps
+
+
+def test_s6_planner_returns_pace_and_support_requirements() -> None:
+    service = S6Planner()
+    response = service.build(
+        request=S6PlanRequest(
+            title="Drill comm sync",
+            supported_event="Drill weekend planning event",
+            c2_objective="Support leader coordination and accountability.",
+            support_requirements=["Equipment issue", "Battery plan"],
+        )
+    )
+
+    assert response.c2_support_estimate
+    assert response.pace_considerations
+    assert response.support_requirements

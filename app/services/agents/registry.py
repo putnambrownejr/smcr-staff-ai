@@ -21,8 +21,10 @@ from app.services.agents.orm_agent import build_orm_agent
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.pki_agent import build_pki_troubleshooter_agent
 from app.services.agents.s1_admin_chief_agent import build_s1_admin_chief_agent
+from app.services.agents.s2_intel_agent import build_s2_intel_agent
 from app.services.agents.s3_opso_agent import build_s3_opso_agent
 from app.services.agents.s4_logistics_agent import build_s4_logistics_agent
+from app.services.agents.s6_comms_agent import build_s6_comms_agent
 from app.services.agents.staff_advisor_agent import build_staff_advisor_agents
 from app.services.agents.staff_products_agent import build_staff_products_agent
 from app.services.agents.training_agent import build_training_agent
@@ -60,8 +62,10 @@ def default_agents() -> list[Agent]:
         build_airo_agent(),
         build_chaplain_agent(),
         build_s1_admin_chief_agent(),
+        build_s2_intel_agent(),
         build_s3_opso_agent(),
         build_s4_logistics_agent(),
+        build_s6_comms_agent(),
         build_chief_of_staff_agent(),
         build_correspondence_formatting_agent(),
         build_maradmin_agent(),

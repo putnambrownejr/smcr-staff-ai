@@ -9,8 +9,10 @@ def test_agent_registry_loads_expected_agents() -> None:
     assert {
         "admin-readiness-advisor",
         "s1-admin-chief",
+        "s2-intel",
         "s3-opso",
         "s4-logistics",
+        "s6-comms",
         "airo-advisor",
         "jag-legal-advisor",
         "chaplain-advisor",
@@ -90,6 +92,18 @@ def test_s1_admin_chief_agent_returns_source_trust_markers() -> None:
     assert response.source_trust
 
 
+def test_s2_intel_agent_returns_estimate_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("s2-intel")
+    assert agent is not None
+
+    response = agent.run("Help me shape a public-source estimate for a staff question.", context=AgentContext())
+
+    assert "S-2 advisory" in response.answer
+    assert response.structured_citations
+    assert response.source_trust
+
+
 def test_s3_opso_agent_returns_staff_planning_structure() -> None:
     registry = AgentRegistry()
     agent = registry.get("s3-opso")
@@ -110,6 +124,18 @@ def test_s4_logistics_agent_returns_supportability_structure() -> None:
     response = agent.run("Help me think through supportability for an AT movement plan.", context=AgentContext())
 
     assert "S-4 / logistics advisory" in response.answer
+    assert response.structured_citations
+    assert response.source_trust
+
+
+def test_s6_comms_agent_returns_c2_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("s6-comms")
+    assert agent is not None
+
+    response = agent.run("Help me shape generic comm support for next drill.", context=AgentContext())
+
+    assert "S-6 advisory" in response.answer
     assert response.structured_citations
     assert response.source_trust
 

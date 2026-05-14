@@ -64,3 +64,43 @@ class StaffRoundRobinResponse(BaseModel):
     councils: list[StaffCouncilResponse]
     synthesis: str
     warnings: list[str] = Field(default_factory=list)
+
+
+class S2EstimateRequest(BaseModel):
+    title: str
+    question: str
+    source_items: list[dict[str, str]] = Field(default_factory=list)
+    audience: str | None = None
+    timeframe: str | None = None
+    planning_only: bool = True
+
+
+class S2EstimateResponse(BaseModel):
+    title: str
+    summary_assessment: list[str] = Field(default_factory=list)
+    assessed_claims: list[str] = Field(default_factory=list)
+    collection_gaps: list[str] = Field(default_factory=list)
+    command_considerations: list[str] = Field(default_factory=list)
+    source_caveats: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class S6PlanRequest(BaseModel):
+    title: str
+    supported_event: str
+    c2_objective: str
+    audience: str | None = None
+    distributed_personnel: bool = True
+    constraints: list[str] = Field(default_factory=list)
+    support_requirements: list[str] = Field(default_factory=list)
+    training_only: bool = True
+
+
+class S6PlanResponse(BaseModel):
+    title: str
+    c2_support_estimate: list[str] = Field(default_factory=list)
+    pace_considerations: list[str] = Field(default_factory=list)
+    support_requirements: list[str] = Field(default_factory=list)
+    permissions_and_dependencies: list[str] = Field(default_factory=list)
+    reserve_friction_points: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
