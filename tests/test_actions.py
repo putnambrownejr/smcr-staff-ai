@@ -126,3 +126,62 @@ def test_action_routes_track_list_update_delete(tmp_path: Path) -> None:
         assert delete_response.status_code == 204
     finally:
         app.dependency_overrides.clear()
+
+
+def test_action_promote_route_infers_category_priority_and_links(tmp_path: Path) -> None:
+    tracker = ActionTracker(tmp_path)
+    context_store = LocalContextStore(tmp_path / "context")
+    update_store = DocumentUpdateStore(tmp_path / "updates")
+    context_item = context_store.save(
+        filename="drill_notes.txt",
+        content=b"DTS voucher due 06/10/2026. Confirm travel plan.",
+        content_type="text/plain",
+        document_type="other",
+        consent_ack=True,
+    )
+
+    def override_tracker() -> ActionTracker:
+        return tracker
+
+    def override_context_store() -> LocalContextStore:
+        return context_store
+
+    def override_update_store() -> DocumentUpdateStore:
+        return update_store
+
+    app.dependency_overrides[get_tracker] = override_tracker
+    app.dependency_overrides[get_action_context_store] = override_context_store
+    app.dependency_overrides[get_action_update_store] = override_update_store
+    client = TestClient(app)
+    try:
+        response = client.post(
+            "/actions/promote",
+            json={
+                "user_key": "capt-action",
+                "default_owner": "Capt Example",
+                "source_ref": "Drill notes",
+                "shared_links": [
+                    {
+                        "link_type": "local_context",
+                        "label": "Drill notes",
+                        "target_id": context_item.context_id,
+                    }
+                ],
+                "items": [
+                    {"text": "DTS voucher due 06/10/2026 after drill."},
+                    {"text": "Review FitRep support form this week."},
+                ],
+            },
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert len(payload["tracked"]) == 2
+        assert payload["tracked"][0]["category"] == "travel"
+        assert payload["tracked"][0]["priority"] == "high"
+        assert payload["tracked"][0]["links"]
+        assert payload["tracked"][1]["category"] == "fitrep"
+        assert payload["tracked"][1]["owner"] == "Capt Example"
+        assert payload["summary_lines"]
+    finally:
+        app.dependency_overrides.clear()

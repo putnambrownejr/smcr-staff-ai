@@ -7,6 +7,8 @@ from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.actions import (
     ActionLinkRequest,
+    ActionPromoteRequest,
+    ActionPromoteResponse,
     ActionRecord,
     ActionStatus,
     ActionTrackRequest,
@@ -15,11 +17,13 @@ from app.schemas.actions import (
 )
 from app.schemas.context import LocalContextMetadata
 from app.schemas.source_updates import DocumentationUpdateCandidate
+from app.services.actions.promoter import ActionPromoter
 from app.services.actions.tracker import ActionTracker
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.storage.local_context_store import LocalContextStore
 
 router = APIRouter(prefix="/actions", tags=["action tracker"], dependencies=[LocalApiKeyDependency])
+_promoter = ActionPromoter()
 
 
 def get_tracker() -> Iterator[ActionTracker]:
@@ -54,6 +58,43 @@ def track_actions(
 ) -> ActionTrackResponse:
     tracked = tracker.track(request.actions)
     return ActionTrackResponse(tracked=tracked, message="Tracked POAM and action items locally.")
+
+
+@router.post("/promote", response_model=ActionPromoteResponse)
+def promote_actions(
+    request: ActionPromoteRequest,
+    tracker: Annotated[ActionTracker, Depends(get_tracker)],
+    context_store: Annotated[LocalContextStore, Depends(get_context_store)],
+    update_store: Annotated[DocumentUpdateStore, Depends(get_update_store)],
+) -> ActionPromoteResponse:
+    for link in request.shared_links:
+        _validate_link_target(link, context_store, update_store)
+    for item in request.items:
+        for link in item.links:
+            _validate_link_target(link, context_store, update_store)
+
+    action_requests = _promoter.build(request)
+    tracked = tracker.track(action_requests)
+    linked_records: list[ActionRecord] = []
+    for record, item in zip(tracked, request.items, strict=False):
+        current = record
+        for link in request.shared_links:
+            updated = tracker.add_link(current.action_id, link)
+            if updated is not None:
+                current = updated
+        for link in item.links:
+            updated = tracker.add_link(current.action_id, link)
+            if updated is not None:
+                current = updated
+        linked_records.append(current)
+    return ActionPromoteResponse(
+        tracked=linked_records,
+        summary_lines=[
+            f"Promoted {len(linked_records)} generated item(s) into tracked actions.",
+            "Category, priority, and suspense may be inferred from source text and should be reviewed.",
+        ],
+        message="Promoted generated due-outs/checklists into local action tracking.",
+    )
 
 
 @router.patch("/{action_id}", response_model=ActionRecord)

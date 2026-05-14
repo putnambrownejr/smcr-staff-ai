@@ -363,6 +363,23 @@ The response includes:
 
 This route is local-only and does not store the submitted text. If the text looks operationally sensitive or includes likely PII, the service falls back to generic handling guidance instead of echoing details back.
 
+### Action Promotion
+
+Promote generated due-outs or checklist items into tracked actions:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/actions/promote `
+  -H "Content-Type: application/json" `
+  -d "{\"user_key\":\"capt-example\",\"default_owner\":\"Capt Example\",\"source_ref\":\"Drill notes\",\"items\":[{\"text\":\"DTS voucher due 06/10/2026 after drill.\"},{\"text\":\"Review FitRep support form this week.\"}]}"
+```
+
+This route:
+
+- infers category, priority, and suspense date when obvious
+- preserves a shared source reference across promoted items
+- can attach shared or per-item links to local context, documentation updates, or URLs
+- gives you real tracked actions instead of leaving due-outs buried in summaries
+
 ### Vetted Social / News Trend Ingestion
 
 List allowed source categories:

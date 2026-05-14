@@ -106,3 +106,30 @@ class ActionLinkRequest(BaseModel):
     target_id: str | None = None
     url: str | None = None
     notes: str | None = None
+
+
+class ActionPromoteItemRequest(BaseModel):
+    text: str
+    owner: str | None = None
+    category: ActionCategory | None = None
+    priority: ActionPriority | None = None
+    suspense_date: date | None = None
+    source_ref: str | None = None
+    notes: str | None = None
+    links: list[ActionLinkRequest] = Field(default_factory=list)
+
+
+class ActionPromoteRequest(BaseModel):
+    user_key: str | None = None
+    items: list[ActionPromoteItemRequest]
+    default_owner: str | None = None
+    default_category: ActionCategory = ActionCategory.poam
+    default_priority: ActionPriority = ActionPriority.medium
+    source_ref: str | None = None
+    shared_links: list[ActionLinkRequest] = Field(default_factory=list)
+
+
+class ActionPromoteResponse(BaseModel):
+    tracked: list[ActionRecord]
+    summary_lines: list[str] = Field(default_factory=list)
+    message: str
