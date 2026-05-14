@@ -1,6 +1,8 @@
 agents:
   - id: chief-of-staff-aide
     doctrine_categories: [core_marine_doctrine, reserve_administration, training_readiness, fitrep_pes]
+  - id: correspondence-formatting
+    doctrine_categories: [correspondence_formatting, admin_records_leave]
   - id: maradmin-monitor
     doctrine_categories: [uniform_regulations, fitrep_pes, training_readiness]
   - id: uniform-advisor

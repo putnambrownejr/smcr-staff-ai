@@ -5,6 +5,7 @@ import yaml
 from app.schemas.agents import AgentMetadata
 from app.services.agents.base import Agent
 from app.services.agents.chief_of_staff_agent import build_chief_of_staff_agent
+from app.services.agents.correspondence_agent import build_correspondence_formatting_agent
 from app.services.agents.drill_prep_agent import build_drill_prep_agent
 from app.services.agents.fitrep_agent import build_fitrep_agent
 from app.services.agents.leadership_agent import build_leadership_agent
@@ -47,6 +48,7 @@ class AgentRegistry:
 def default_agents() -> list[Agent]:
     return [
         build_chief_of_staff_agent(),
+        build_correspondence_formatting_agent(),
         build_maradmin_agent(),
         build_uniform_agent(),
         build_drill_prep_agent(),

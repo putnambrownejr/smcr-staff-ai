@@ -4,7 +4,10 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.documents import DocumentRead, IngestRequest, IngestResponse
+from app.schemas.ingestion import MessageRecord
+from app.schemas.source_updates import DocumentationUpdateScanResult
 from app.schemas.sources import validate_manifest
+from app.services.ingestion.document_update_monitor import DocumentUpdateMonitor
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -46,3 +49,8 @@ def ingest_documents(request: IngestRequest) -> IngestResponse:
         documents_seen=documents_seen,
         manifest_validation=manifest_validation,
     )
+
+
+@router.post("/check-updates", response_model=DocumentationUpdateScanResult)
+def check_document_updates(records: list[MessageRecord]) -> DocumentationUpdateScanResult:
+    return DocumentUpdateMonitor().scan_maradmin_records(records)

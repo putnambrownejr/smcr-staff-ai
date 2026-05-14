@@ -8,6 +8,7 @@ def test_agent_registry_loads_expected_agents() -> None:
 
     assert {
         "maradmin-monitor",
+        "correspondence-formatting",
         "uniform-advisor",
         "drill-prep-calendar",
         "doctrine-opord-assistant",
@@ -19,6 +20,18 @@ def test_agent_registry_loads_expected_agents() -> None:
         "mos-commo",
         "mos-civil-affairs",
     }.issubset(ids)
+
+
+def test_correspondence_formatting_agent_returns_source_citations() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("correspondence-formatting")
+    assert agent is not None
+
+    response = agent.run("Give me a naval letter formatting checklist.", context=AgentContext())
+
+    assert "Correspondence formatting" in response.answer
+    assert response.structured_citations
+    assert any("5216" in citation.title for citation in response.structured_citations)
 
 
 def test_agent_sensitive_input_gets_warning() -> None:
