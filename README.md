@@ -24,6 +24,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Local context storage | Lets users upload files/notes, RQS/BIO references, and drill templates as advisory local context without changing doctrine, org, exercise, agent, or canonical document structure. | Working local storage |
 | Personal document organizer | Lists local RQS/BIO/orders/travel/PME-style uploads by type and flags PII/local-retention warnings. | Working local organizer |
 | Career opportunity tracker | Stores ADOS and SMCR BIC opportunities locally, ranks them against a user profile, and surfaces them in the Chief/Aide brief. | Working local tracker |
+| Career watch | Pulls PME gaps, FitRep reminders, career trends, recommended courses/books, missing documents, and tracked opportunities into one advisory career-maintenance view. | Working local watch |
 | Drill prep planner | Turns a drill date into advisory prep tasks, can use templated local key events, persists plans locally, and exports `.ics` calendar content. | Working local planner |
 | SMCR BIC discovery | Lists official public billet source pages, parses public billet tables/cards where available, discovers Reserve Hub links, and ranks billets against user MOS/rank/location/keywords. | Working parser/recommender with live-source caveats |
 | OSINT trend aggregation | Aggregates user-supplied trusted public-source news/social trend summaries with citations, counterarguments, and confidence weighting. | Working source-evaluation agent |
@@ -57,6 +58,7 @@ app/
     analysis/          Local text summarization and checklist extraction
     billets/           SMCR billet recommendation
     calendar/          Drill-prep planner and calendar provider stubs
+    career/            Career-maintenance view for PME, FitRep, docs, and opportunities
     chief/             Chief/Aide orchestration and triage brief
     ingestion/         RSS, PDF, MCPEL, MARADMIN, and billet parsing helpers
     opportunities/     Local ADOS/BIC tracking and recommendation
@@ -374,6 +376,26 @@ curl -X POST http://127.0.0.1:8000/opportunities/recommend `
 ```
 
 The opportunity tracker is advisory only. It does not determine eligibility, orders, selection, or command approval.
+
+### Career Watch
+
+Get a consolidated career-maintenance view:
+
+```powershell
+curl http://127.0.0.1:8000/career/watch/capt-example
+```
+
+The response pulls together:
+
+- PME gaps and due dates
+- FitRep reminders
+- tracked ADOS and SMCR BIC opportunities
+- missing or stale career-supporting local documents
+- recommended books
+- recommended courses
+- stored career trends from the session handoff
+
+This view is advisory only. It helps the user stay organized and spot gaps, but it does not determine eligibility, command decisions, or official readiness status.
 
 Read a preview:
 
