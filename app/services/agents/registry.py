@@ -16,6 +16,7 @@ from app.services.agents.mos_commo_agent import build_mos_commo_agent
 from app.services.agents.opord_agent import build_opord_agent
 from app.services.agents.orm_agent import build_orm_agent
 from app.services.agents.osint_agent import build_osint_agent
+from app.services.agents.pki_agent import build_pki_troubleshooter_agent
 from app.services.agents.staff_advisor_agent import build_staff_advisor_agents
 from app.services.agents.staff_products_agent import build_staff_products_agent
 from app.services.agents.training_agent import build_training_agent
@@ -60,6 +61,7 @@ def default_agents() -> list[Agent]:
         build_training_agent(),
         build_orm_agent(),
         build_fitrep_agent(),
+        build_pki_troubleshooter_agent(),
         build_leadership_agent(),
         build_osint_agent(),
         build_mos_commo_agent(),

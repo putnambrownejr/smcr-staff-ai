@@ -17,6 +17,7 @@ def test_agent_registry_loads_expected_agents() -> None:
         "training-planner",
         "orm-risk-management",
         "fitrep-assistant",
+        "pki-cac-troubleshooter",
         "leadership-advisor",
         "osint-research-assistant",
         "mos-commo",
@@ -57,3 +58,15 @@ def test_staff_products_agent_builds_scaffold() -> None:
     assert "AAR" in response.answer
     assert response.structured_citations
     assert any("human review" in warning.lower() for warning in response.warnings)
+
+
+def test_pki_agent_returns_troubleshooting_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("pki-cac-troubleshooter")
+    assert agent is not None
+
+    response = agent.run("Chrome sees the CAC but MarineNet never prompts for a certificate.", context=AgentContext())
+
+    assert "PKI/CAC troubleshooting advisory" in response.answer
+    assert "Immediate checks" in response.answer
+    assert response.structured_citations

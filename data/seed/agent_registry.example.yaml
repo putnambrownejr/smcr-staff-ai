@@ -21,6 +21,8 @@ agents:
     doctrine_categories: [orm]
   - id: fitrep-assistant
     doctrine_categories: [fitrep_pes]
+  - id: pki-cac-troubleshooter
+    doctrine_categories: [reserve_administration]
   - id: leadership-advisor
     doctrine_categories: [core_marine_doctrine, leadership, professional_reading]
   - id: osint-research-assistant

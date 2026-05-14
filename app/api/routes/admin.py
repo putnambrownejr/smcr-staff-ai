@@ -7,6 +7,8 @@ from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.admin import AdminReadinessResponse
 from app.schemas.admin_workflows import AdminWorkflowRequest, AdminWorkflowResponse
+from app.schemas.pki import PkiTroubleshootingRequest, PkiTroubleshootingResponse
+from app.services.admin.pki_support import PkiTroubleshootingService
 from app.services.admin.readiness import AdminReadinessService
 from app.services.admin.workflow_builder import AdminWorkflowBuilder
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
@@ -15,6 +17,7 @@ from app.services.storage.local_context_store import LocalContextStore
 
 router = APIRouter(prefix="/admin", tags=["admin readiness"], dependencies=[LocalApiKeyDependency])
 _workflow_builder = AdminWorkflowBuilder()
+_pki_service = PkiTroubleshootingService()
 
 
 def get_context_store() -> Iterator[LocalContextStore]:
@@ -43,3 +46,8 @@ def get_admin_readiness(
 @router.post("/workflow", response_model=AdminWorkflowResponse)
 def build_admin_workflow(request: AdminWorkflowRequest) -> AdminWorkflowResponse:
     return _workflow_builder.build(request)
+
+
+@router.post("/pki-troubleshooting", response_model=PkiTroubleshootingResponse)
+def build_pki_troubleshooting(request: PkiTroubleshootingRequest) -> PkiTroubleshootingResponse:
+    return _pki_service.build(request)
