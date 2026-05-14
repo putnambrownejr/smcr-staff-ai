@@ -22,6 +22,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | S-3 / OpsO advisor | Adds an explicit S-3/OpsO perspective for reserve operations planning, training synchronization, battle rhythm, and decision support. | Working advisory agent |
 | S-4 / logistics advisor | Adds an explicit S-4/LogO perspective for reserve supportability, movement, sustainment, supply, maintenance, and logistics friction. | Working advisory agent |
 | S-6 / communications advisor | Adds an explicit S-6/CommO perspective for reserve C2 support, generic PACE framing, permissions, equipment, supportability friction, and PKI/CAC user-access issues as a subordinate lane. | Working advisory agent |
+| G-9 / civil-military advisor | Adds an explicit G-9 perspective for civil considerations, partner coordination, external engagement continuity, and public context framing. | Working advisory agent |
 | AirO advisor | Adds a generic aviation-support and air-ground coordination planning perspective for training and public staff-planning contexts. | Working advisory agent |
 | JAG / legal advisor | Adds issue-spotting and escalation prompts while clearly refusing to replace formal legal counsel. | Working advisory agent |
 | Chaplain advisor | Adds morale, welfare, ethics, and referral-minded leader prompts without claiming to replace real chaplain or care channels. | Working advisory agent |
@@ -412,6 +413,22 @@ curl -X POST http://127.0.0.1:8000/agents/s6-comms/run `
 ```
 
 This S-6 lane now also owns PKI/CAC troubleshooting at the staff surface, while still keeping the specialist troubleshooting workflow available on its own route.
+
+Build a G-9 civil-military planning support draft:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/staff/g9-plan `
+  -H "Content-Type: application/json" `
+  -d "{\"title\":\"Community coordination support\",\"supported_problem\":\"Prepare for a training event with local community touchpoints and external coordination.\",\"partner_types\":[\"Local authorities\",\"Community partners\"],\"civil_considerations\":[\"Limited local familiarity between drills\"],\"constraints\":[\"Keep everything public-source and advisory\"]}"
+```
+
+Run the G-9 advisor:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/agents/g9-civil-military/run `
+  -H "Content-Type: application/json" `
+  -d "{\"input\":\"Help me think through external coordination and continuity for a reserve-supported event.\",\"context\":{\"user_role\":\"G-9\"}}"
+```
 
 Build a range/RSO support checklist:
 

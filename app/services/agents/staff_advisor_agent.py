@@ -116,6 +116,14 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         ("C2", "PACE", "permissions"),
     ),
     StaffRoleDefinition(
+        StaffEchelon.battalion,
+        "s9",
+        "S-9 / Civil-Military",
+        "battalion staff",
+        "Civil considerations, partner coordination, and continuity",
+        ("stakeholders", "partner coordination", "civil considerations"),
+    ),
+    StaffRoleDefinition(
         StaffEchelon.division_group,
         "g1",
         "G-1",
@@ -163,6 +171,14 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "division/group staff",
         "Communications",
         ("networks", "C2", "information management"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "g9",
+        "G-9 / Civil-Military",
+        "division/group staff",
+        "Civil-military integration, community context, and partner coordination",
+        ("civil impact", "external coordination", "continuity"),
     ),
 )
 

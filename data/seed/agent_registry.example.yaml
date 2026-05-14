@@ -14,6 +14,9 @@ agents:
   - id: s6-comms
     doctrine_categories: [communications, operations_planning]
     linked_agent: pki-cac-troubleshooter
+  - id: g9-civil-military
+    doctrine_categories: [civil_affairs, intelligence_osint, operations_planning, humanitarian_disaster_response]
+    linked_agent: mos-civil-affairs
   - id: airo-advisor
     doctrine_categories: [aviation_support, operations_planning]
   - id: jag-legal-advisor
@@ -63,3 +66,9 @@ staff_agent_patterns:
   - id_pattern: staff-division_group-g2
     doctrine_categories: [core_marine_doctrine, intelligence_osint]
     linked_agent: osint-research-assistant
+  - id_pattern: staff-battalion-s9
+    doctrine_categories: [civil_affairs, operations_planning, humanitarian_disaster_response]
+    linked_agent: mos-civil-affairs
+  - id_pattern: staff-division_group-g9
+    doctrine_categories: [civil_affairs, operations_planning, humanitarian_disaster_response]
+    linked_agent: mos-civil-affairs

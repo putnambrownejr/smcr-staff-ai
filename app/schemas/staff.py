@@ -104,3 +104,23 @@ class S6PlanResponse(BaseModel):
     permissions_and_dependencies: list[str] = Field(default_factory=list)
     reserve_friction_points: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+
+
+class G9PlanningRequest(BaseModel):
+    title: str
+    supported_problem: str
+    audience: str | None = None
+    partner_types: list[str] = Field(default_factory=list)
+    civil_considerations: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+    training_only: bool = True
+
+
+class G9PlanningResponse(BaseModel):
+    title: str
+    civil_situation_frame: list[str] = Field(default_factory=list)
+    partner_coordination: list[str] = Field(default_factory=list)
+    information_requirements: list[str] = Field(default_factory=list)
+    engagement_considerations: list[str] = Field(default_factory=list)
+    continuity_and_transition: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)

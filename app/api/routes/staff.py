@@ -9,6 +9,8 @@ from app.schemas.admin_workflows import (
 from app.schemas.agents import AgentRunRequest, AgentRunResponse
 from app.schemas.pki import PkiTroubleshootingRequest, PkiTroubleshootingResponse
 from app.schemas.staff import (
+    G9PlanningRequest,
+    G9PlanningResponse,
     S2EstimateRequest,
     S2EstimateResponse,
     S6PlanRequest,
@@ -24,12 +26,14 @@ from app.services.admin.workflow_builder import AdminWorkflowBuilder
 from app.services.agents.base import AgentContext
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.staff.council import StaffCouncilService
+from app.services.staff.g9_planner import G9Planner
 from app.services.staff.s2_estimator import S2Estimator
 from app.services.staff.s6_planner import S6Planner
 
 router = APIRouter(prefix="/staff", tags=["staff council"])
 
 _service = StaffCouncilService()
+_g9_planner = G9Planner()
 _s2_estimator = S2Estimator()
 _s6_planner = S6Planner()
 _pki_service = PkiTroubleshootingService()
@@ -66,6 +70,11 @@ def build_s2_estimate(request: S2EstimateRequest) -> S2EstimateResponse:
 @router.post("/s6-plan", response_model=S6PlanResponse)
 def build_s6_plan(request: S6PlanRequest) -> S6PlanResponse:
     return _s6_planner.build(request)
+
+
+@router.post("/g9-plan", response_model=G9PlanningResponse)
+def build_g9_plan(request: G9PlanningRequest) -> G9PlanningResponse:
+    return _g9_planner.build(request)
 
 
 @router.post("/s6/pki-troubleshooting", response_model=PkiTroubleshootingResponse)

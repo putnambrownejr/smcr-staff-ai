@@ -22,7 +22,9 @@ def test_registry_includes_chief_and_staff_agents() -> None:
     assert "chief-of-staff-aide" in ids
     assert "staff-company-xo" in ids
     assert "staff-battalion-s2" in ids
+    assert "staff-battalion-s9" in ids
     assert "staff-division_group-g2" in ids
+    assert "staff-division_group-g9" in ids
 
 
 def test_chief_of_staff_agent_surfaces_handoff_watch_items() -> None:
@@ -139,6 +141,27 @@ def test_s6_planner_returns_pace_and_support_requirements() -> None:
     assert response.c2_support_estimate
     assert response.pace_considerations
     assert response.support_requirements
+
+
+def test_g9_planner_returns_partner_and_continuity_elements() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/staff/g9-plan",
+        json={
+            "title": "Community coordination support",
+            "supported_problem": "Prepare for a training event with local community touchpoints.",
+            "partner_types": ["Local authorities", "Community partners"],
+            "civil_considerations": ["Limited local familiarity between drills"],
+            "constraints": ["Keep everything public-source and advisory"],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["civil_situation_frame"]
+    assert payload["partner_coordination"]
+    assert payload["continuity_and_transition"]
 
 
 def test_staff_s6_pki_wrapper_route_returns_pki_playbook() -> None:
