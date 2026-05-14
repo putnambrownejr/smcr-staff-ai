@@ -16,6 +16,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | --- | --- | --- |
 | Agent registry | Lists and runs placeholder staff/MOS agents with structured responses, warnings, confidence, citations, and follow-up questions. | Working stub |
 | Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, and future email/calendar triage. | Working scaffold |
+| Admin readiness | Pulls FitRep reminders, admin watch items, local document gaps, readiness references, and travel/admin support into an AdminO / S-1 style view. | Working local digest |
 | Chief/Aide orchestration brief | Combines session handoff, local personal docs, drill plans, MARADMIN-driven source updates, and reading suggestions into one advisory triage brief. | Working local orchestrator |
 | Text summarizer / checklist API | Turns pasted text into a local summary, due-outs, action items, checklist, and follow-up questions without storing the input. | Working local analysis |
 | Staff council | Vets ideas through company, battalion, and division/group staff roles, with S-2/G-2 tied to OSINT. Includes round-robin review. | Working scaffold |
@@ -56,6 +57,7 @@ app/
   services/
     agents/            Agent interface, registry, placeholder agents
     analysis/          Local text summarization and checklist extraction
+    admin/             Admin readiness digest and AdminO / S-1 support
     billets/           SMCR billet recommendation
     calendar/          Drill-prep planner and calendar provider stubs
     career/            Career-maintenance view for PME, FitRep, docs, and opportunities
@@ -152,6 +154,22 @@ This route:
 - returns read plans, action items, and staged write ideas
 - keeps review-before-write guardrails intact
 
+### Admin Readiness
+
+Get an AdminO / S-1 style readiness digest:
+
+```powershell
+curl http://127.0.0.1:8000/admin/readiness/capt-example
+```
+
+This view combines:
+
+- FitRep reminders from the session handoff
+- admin watch items
+- missing or stale local admin-support documents
+- readiness reference gaps
+- travel/DTS support gaps
+
 ### Agents
 
 List available agents:
@@ -234,6 +252,7 @@ The response includes `osint_source_items`. Pass that array into `/agents/osint-
 
 Initial agents:
 
+- `admin-readiness-advisor`
 - `chief-of-staff-aide`
 - `maradmin-monitor`
 - `uniform-advisor`

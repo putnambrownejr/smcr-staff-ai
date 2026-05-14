@@ -29,6 +29,26 @@ The orchestration brief combines session handoff data, local personal documents,
 
 The connector digest planner is the next bridge step before live integration. It accepts consent state plus summarized calendar/email metadata and returns a consent-safe digest plan, suggested read scope, staged follow-up actions, and warnings without performing any external read or write.
 
+## AdminO / S-1 Support
+
+The AdminO / S-1 support layer is intended to reduce reserve administration drift between drills.
+
+Current implementation:
+
+- Agent id: `admin-readiness-advisor`
+- API: `/agents/admin-readiness-advisor/run`
+- Digest API: `/admin/readiness/{user_key}`
+
+The admin readiness digest combines:
+
+- FitRep reminders from the handoff
+- admin watch items
+- local orders/RQS/FitRep/DTS document gaps
+- medical and dental readiness reference gaps
+- travel and voucher support reminders
+
+This is advisory continuity support only. It is not a replacement for official S-1/AdminO processes, unit systems of record, or command review.
+
 ## Session Handoffs
 
 Session handoffs persist minimum necessary local user context, such as:

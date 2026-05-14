@@ -7,6 +7,7 @@ def test_agent_registry_loads_expected_agents() -> None:
     ids = {metadata.id for metadata in registry.list_metadata()}
 
     assert {
+        "admin-readiness-advisor",
         "maradmin-monitor",
         "correspondence-formatting",
         "uniform-advisor",

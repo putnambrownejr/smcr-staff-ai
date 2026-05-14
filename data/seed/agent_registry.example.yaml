@@ -1,4 +1,6 @@
 agents:
+  - id: admin-readiness-advisor
+    doctrine_categories: [reserve_administration, fitrep_pes, correspondence_formatting]
   - id: chief-of-staff-aide
     doctrine_categories: [core_marine_doctrine, reserve_administration, training_readiness, fitrep_pes]
   - id: correspondence-formatting
