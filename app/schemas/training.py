@@ -88,3 +88,26 @@ class RangePackageResponse(BaseModel):
     medevac_and_comm_checks: list[str] = Field(default_factory=list)
     follow_up_requirements: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+
+
+class S3PlanningRequest(BaseModel):
+    title: str
+    mission_or_training_goal: str
+    event_type: str = "drill_weekend"
+    audience: str | None = None
+    timeframe: str | None = None
+    constraints: list[str] = Field(default_factory=list)
+    coordinating_sections: list[str] = Field(default_factory=list)
+    training_only: bool = True
+
+
+class S3PlanningResponse(BaseModel):
+    title: str
+    mission_analysis: list[str] = Field(default_factory=list)
+    critical_tasks: list[str] = Field(default_factory=list)
+    coordination_matrix: list[str] = Field(default_factory=list)
+    battle_rhythm: list[str] = Field(default_factory=list)
+    command_decision_points: list[str] = Field(default_factory=list)
+    required_outputs: list[str] = Field(default_factory=list)
+    reserve_friction_points: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)

@@ -9,6 +9,7 @@ def test_agent_registry_loads_expected_agents() -> None:
     assert {
         "admin-readiness-advisor",
         "s1-admin-chief",
+        "s3-opso",
         "maradmin-monitor",
         "correspondence-formatting",
         "uniform-advisor",
@@ -81,5 +82,17 @@ def test_s1_admin_chief_agent_returns_source_trust_markers() -> None:
     response = agent.run("Help me organize awards, DTS, and FitRep due-outs.", context=AgentContext())
 
     assert "S-1 / Admin chief advisory" in response.answer
+    assert response.structured_citations
+    assert response.source_trust
+
+
+def test_s3_opso_agent_returns_staff_planning_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("s3-opso")
+    assert agent is not None
+
+    response = agent.run("Help me shape a drill weekend synchronization plan.", context=AgentContext())
+
+    assert "S-3 / OpsO advisory" in response.answer
     assert response.structured_citations
     assert response.source_trust

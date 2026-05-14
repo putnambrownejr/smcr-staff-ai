@@ -82,3 +82,25 @@ def test_range_package_planner_returns_packet_and_safety_elements() -> None:
     assert payload["packet_components"]
     assert payload["roles_and_responsibilities"]
     assert payload["medevac_and_comm_checks"]
+
+
+def test_s3_planner_returns_battle_rhythm_and_outputs() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/training/s3-plan",
+        json={
+            "title": "Battalion drill planning sync",
+            "mission_or_training_goal": "Align staff outputs and support requirements for next drill weekend.",
+            "event_type": "drill_weekend",
+            "constraints": ["Limited Saturday planning window"],
+            "coordinating_sections": ["S-1", "S-4", "S-6"],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mission_analysis"]
+    assert payload["coordination_matrix"]
+    assert payload["battle_rhythm"]
+    assert payload["required_outputs"]

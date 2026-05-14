@@ -18,6 +18,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, and future email/calendar triage. | Working scaffold |
 | Admin readiness | Pulls FitRep reminders, admin watch items, local document gaps, readiness references, and travel/admin support into an AdminO / S-1 style view. | Working local digest |
 | S-1 / Admin chief advisor | Adds an explicit S-1/Admin chief perspective for reserve admin continuity, routing discipline, awards, orders, DTS, and suspense management. | Working advisory agent |
+| S-3 / OpsO advisor | Adds an explicit S-3/OpsO perspective for reserve operations planning, training synchronization, battle rhythm, and decision support. | Working advisory agent |
 | PKI / CAC troubleshooting | Builds advisory troubleshooting playbooks for CAC detection, certificate, middleware, browser-auth, signing/encryption, and portal-access issues. | Working local support |
 | Chief/Aide orchestration brief | Combines session handoff, local personal docs, drill plans, MARADMIN-driven source updates, and reading suggestions into one advisory triage brief. | Working local orchestrator |
 | Text summarizer / checklist API | Turns pasted text into a local summary, due-outs, action items, checklist, and follow-up questions without storing the input. | Working local analysis |
@@ -302,6 +303,22 @@ Build a training scenario scaffold:
 curl -X POST http://127.0.0.1:8000/training/scenario `
   -H "Content-Type: application/json" `
   -d "{\"scenario_type\":\"staff_drill\",\"title\":\"Battalion planning drill\",\"training_objective\":\"Practice decision-making and product flow.\",\"constraints\":[\"Three-hour window\"]}"
+```
+
+Build an S-3 / OpsO planning support draft:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/training/s3-plan `
+  -H "Content-Type: application/json" `
+  -d "{\"title\":\"Battalion drill planning sync\",\"mission_or_training_goal\":\"Align staff outputs and support requirements for next drill weekend.\",\"event_type\":\"drill_weekend\",\"constraints\":[\"Limited Saturday planning window\"],\"coordinating_sections\":[\"S-1\",\"S-4\",\"S-6\"]}"
+```
+
+Run the S-3 / OpsO advisor:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/agents/s3-opso/run `
+  -H "Content-Type: application/json" `
+  -d "{\"input\":\"Help me shape a drill weekend synchronization plan.\",\"context\":{\"user_role\":\"S-3\"}}"
 ```
 
 Build a range/RSO support checklist:
