@@ -16,9 +16,11 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | --- | --- | --- |
 | Agent registry | Lists and runs placeholder staff/MOS agents with structured responses, warnings, confidence, citations, and follow-up questions. | Working stub |
 | Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, and future email/calendar triage. | Working scaffold |
+| Chief/Aide orchestration brief | Combines session handoff, local personal docs, drill plans, MARADMIN-driven source updates, and reading suggestions into one advisory triage brief. | Working local orchestrator |
 | Staff council | Vets ideas through company, battalion, and division/group staff roles, with S-2/G-2 tied to OSINT. Includes round-robin review. | Working scaffold |
 | Session handoffs | Stores minimum necessary local user context for PME, FitRep, admin, drill, and preference reminders. | Working local storage |
 | Local context storage | Lets users upload files/notes, RQS/BIO references, and drill templates as advisory local context without changing doctrine, org, exercise, agent, or canonical document structure. | Working local storage |
+| Personal document organizer | Lists local RQS/BIO/orders/travel/PME-style uploads by type and flags PII/local-retention warnings. | Working local organizer |
 | Drill prep planner | Turns a drill date into advisory prep tasks, can use templated local key events, persists plans locally, and exports `.ics` calendar content. | Working local planner |
 | SMCR BIC discovery | Lists official public billet source pages, parses public billet tables/cards where available, discovers Reserve Hub links, and ranks billets against user MOS/rank/location/keywords. | Working parser/recommender with live-source caveats |
 | OSINT trend aggregation | Aggregates user-supplied trusted public-source news/social trend summaries with citations, counterarguments, and confidence weighting. | Working source-evaluation agent |
@@ -198,6 +200,16 @@ curl -X PUT http://127.0.0.1:8000/handoffs/capt-example `
 
 Session handoffs can reference RQS/BIO uploads by `rqs_context_id` and `bio_context_id`, but those uploads remain local context records. They do not automatically update a profile or become authoritative facts without later user confirmation logic.
 
+Build an advisory Chief/Aide triage brief:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/chief/brief `
+  -H "Content-Type: application/json" `
+  -d "{\"user_key\":\"capt-example\",\"maradmin_records\":[{\"source_id\":\"maradmin-123-26\",\"title\":\"MARADMIN 123/26 Revision of MCO 1610.7 Performance Evaluation System\",\"canonical_url\":\"https://example.test/maradmin\",\"summary\":\"This message announces an update to FitRep/PES policy published on MCPEL.\"}]}"
+```
+
+The response combines local handoff data, local personal document summaries, stored drill plans, source-update candidates, reading suggestions, and action items.
+
 ### Staff Council
 
 List staff roles:
@@ -246,6 +258,18 @@ List uploaded context:
 
 ```powershell
 curl http://127.0.0.1:8000/context
+```
+
+List organized personal documents:
+
+```powershell
+curl http://127.0.0.1:8000/personal-documents
+```
+
+Filter by document type:
+
+```powershell
+curl "http://127.0.0.1:8000/personal-documents?document_type=bio"
 ```
 
 Read a preview:

@@ -19,9 +19,12 @@ Current implementation:
 
 - Agent id: `chief-of-staff-aide`
 - API: `/agents/chief-of-staff-aide/run`
+- Orchestration API: `/chief/brief`
 - Session handoff API: `/handoffs/{user_key}`
 - Calendar status: local ICS export exists; Microsoft Graph and Google Calendar are stubs.
 - Email status: provider interface exists; live mailbox access is not enabled.
+
+The orchestration brief combines session handoff data, local personal documents, stored drill plans, MARADMIN-driven documentation update candidates, and professional reading suggestions into one advisory triage object.
 
 ## Session Handoffs
 
@@ -35,6 +38,16 @@ Session handoffs persist minimum necessary local user context, such as:
 - User preferences
 
 Do not store secrets, PII beyond minimum required, CUI, classified information, or sensitive operational details.
+
+## Personal Document Organizer
+
+The personal document organizer lists local user-uploaded records such as RQS, BIO, orders, travel receipts, DTS artifacts, PME certificates, readiness references, FitRep references, and drill plans.
+
+API:
+
+- `GET /personal-documents`
+
+These files remain local context and do not become canonical doctrine or official records. PII warnings are surfaced so the user can decide whether the local record is necessary to retain.
 
 ## Staff Council
 

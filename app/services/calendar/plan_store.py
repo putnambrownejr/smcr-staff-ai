@@ -18,6 +18,13 @@ class DrillPrepPlanStore:
             return None
         return DrillPrepPlanResponse.model_validate_json(path.read_text(encoding="utf-8"))
 
+    def list(self) -> list[DrillPrepPlanResponse]:
+        plans = [
+            DrillPrepPlanResponse.model_validate_json(path.read_text(encoding="utf-8"))
+            for path in sorted(self.root_dir.glob("*.json"))
+        ]
+        return sorted(plans, key=lambda plan: plan.drill_date)
+
     def delete(self, plan_id: str) -> bool:
         path = self._path(plan_id)
         if not path.exists():

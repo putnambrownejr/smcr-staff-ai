@@ -4,12 +4,14 @@ from app.api.routes import (
     agents,
     billets,
     calendar,
+    chief,
     connectors,
     context,
     documents,
     handoffs,
     health,
     org,
+    personal_documents,
     reading,
     social,
     staff,
@@ -35,7 +37,9 @@ def create_app() -> FastAPI:
     app.include_router(documents.router)
     app.include_router(handoffs.router)
     app.include_router(calendar.router)
+    app.include_router(chief.router)
     app.include_router(org.router)
+    app.include_router(personal_documents.router)
     app.include_router(reading.router)
     app.include_router(social.router)
     app.include_router(staff.router)
