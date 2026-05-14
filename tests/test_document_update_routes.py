@@ -31,9 +31,12 @@ def test_document_update_check_route_returns_candidates() -> None:
 
 def test_document_update_routes_persist_and_update_status(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     from app.services.ingestion.document_update_store import DocumentUpdateStore
+    from app.services.ingestion.source_state_store import SourceStateStore
 
     store = DocumentUpdateStore(tmp_path)
+    state_store = SourceStateStore(tmp_path / "states")
     monkeypatch.setattr("app.api.routes.documents._update_store", store)
+    monkeypatch.setattr("app.api.routes.documents._source_state_store", state_store)
     client = TestClient(app)
 
     create_response = client.post(
@@ -66,3 +69,25 @@ def test_document_update_routes_persist_and_update_status(tmp_path: Path, monkey
     filtered_response = client.get("/documents/updates?status=reviewed")
     assert filtered_response.status_code == 200
     assert len(filtered_response.json()) == 1
+
+    accept_response = client.post(
+        f"/documents/source-states/accept/{candidate_id}",
+        json={
+            "status": "current",
+            "current_version": "2026.1",
+            "verification_source_url": "https://example.test/official-current",
+            "notes": "Verified current against official source.",
+        },
+    )
+    assert accept_response.status_code == 200
+    accept_payload = accept_response.json()
+    assert accept_payload["status"] == "current"
+    assert accept_payload["accepted_candidate_id"] == candidate_id
+
+    states_response = client.get("/documents/source-states")
+    assert states_response.status_code == 200
+    assert len(states_response.json()) == 1
+
+    accepted_filter = client.get("/documents/updates?status=accepted")
+    assert accepted_filter.status_code == 200
+    assert len(accepted_filter.json()) == 1

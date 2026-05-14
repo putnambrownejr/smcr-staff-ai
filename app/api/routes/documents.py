@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.schemas.documents import DocumentRead, IngestRequest, IngestResponse
 from app.schemas.ingestion import MessageRecord
+from app.schemas.source_state import SourceStateAcceptRequest, VerifiedSourceState
 from app.schemas.source_updates import (
     DocumentationUpdateCandidate,
     DocumentationUpdateScanResult,
@@ -15,10 +16,13 @@ from app.schemas.source_verification import SourceVerificationRequest, SourceVer
 from app.schemas.sources import validate_manifest
 from app.services.ingestion.document_update_monitor import DocumentUpdateMonitor
 from app.services.ingestion.document_update_store import DocumentUpdateStore
+from app.services.ingestion.source_state_service import SourceStateService
+from app.services.ingestion.source_state_store import SourceStateStore
 from app.services.ingestion.source_verifier import SourceVerifier
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 _update_store = DocumentUpdateStore()
+_source_state_store = SourceStateStore()
 
 
 @router.get("", response_model=list[DocumentRead])
@@ -74,6 +78,11 @@ def list_document_updates(status: UpdateReviewStatus | None = None) -> list[Docu
     return _update_store.list(status=status)
 
 
+@router.get("/source-states", response_model=list[VerifiedSourceState])
+def list_source_states() -> list[VerifiedSourceState]:
+    return _source_state_store.list()
+
+
 @router.post("/updates/{candidate_id}/status", response_model=DocumentationUpdateCandidate)
 def update_document_update_status(
     candidate_id: str,
@@ -83,6 +92,17 @@ def update_document_update_status(
     if candidate is None:
         raise HTTPException(status_code=404, detail=f"Unknown documentation update candidate: {candidate_id}")
     return candidate
+
+
+@router.post("/source-states/accept/{candidate_id}", response_model=VerifiedSourceState)
+def accept_document_update_as_source_state(
+    candidate_id: str,
+    request: SourceStateAcceptRequest,
+) -> VerifiedSourceState:
+    state = SourceStateService(_update_store, _source_state_store).accept_candidate(candidate_id, request)
+    if state is None:
+        raise HTTPException(status_code=404, detail=f"Unknown documentation update candidate: {candidate_id}")
+    return state
 
 
 @router.post("/verify-sources", response_model=SourceVerificationResponse)

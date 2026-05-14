@@ -845,6 +845,20 @@ curl -X POST http://127.0.0.1:8000/documents/updates/{candidate_id}/status `
   -d "{\"review_status\":\"reviewed\",\"review_notes\":\"Verified against official source.\"}"
 ```
 
+Accept a reviewed update into verified source state:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/documents/source-states/accept/{candidate_id} `
+  -H "Content-Type: application/json" `
+  -d "{\"status\":\"current\",\"current_version\":\"2026.1\",\"verification_source_url\":\"https://example.test/official-current\",\"notes\":\"Verified current against official source.\"}"
+```
+
+List verified source states:
+
+```powershell
+curl http://127.0.0.1:8000/documents/source-states
+```
+
 The Chief/Aide brief now uses persisted documentation update candidates and suppresses items you explicitly mark as `ignored`.
 
 ### Connector Consent And Write Plans
