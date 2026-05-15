@@ -38,3 +38,18 @@ def test_staff_products_draft_route_supports_correspondence() -> None:
     payload = response.json()
     assert payload["product_type"] == "memorandum"
     assert any("5216.5" in citation["title"] for citation in payload["structured_citations"])
+
+
+def test_staff_product_builder_creates_conop_sections() -> None:
+    response = StaffProductBuilder().build(
+        StaffProductDraftRequest(
+            product_type=StaffProductType.conop,
+            topic="Initial company concept for field training",
+            facts=["Subordinate elements must refine local concepts."],
+        )
+    )
+
+    headings = [section.heading for section in response.sections]
+    assert "1. Purpose and End State" in headings
+    assert "2. Unit and Sub-Unit Relationships" in headings
+    assert response.review_checklist

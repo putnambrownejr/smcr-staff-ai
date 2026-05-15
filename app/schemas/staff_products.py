@@ -9,6 +9,7 @@ class StaffProductType(StrEnum):
     opord = "opord"
     warno = "warno"
     frago = "frago"
+    conop = "conop"
     sitrep = "sitrep"
     aar = "aar"
     naval_letter = "naval_letter"

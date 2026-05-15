@@ -72,3 +72,97 @@ class StaffPlanningPackageResponse(BaseModel):
     xo_vet: StaffCouncilResponse
     product_package: list[StaffProductDraftResponse] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+
+
+class SubordinateUnitInput(BaseModel):
+    unit_name: str = Field(min_length=1)
+    unit_type: str | None = None
+    relationship: str = "subordinate"
+    purpose: str | None = None
+    planning_requirements: list[str] = Field(default_factory=list)
+
+
+class MetAlignmentItem(BaseModel):
+    task_name: str
+    alignment_type: str
+    why_it_matters: str
+    assessment_focus: str
+
+
+class UnitRelationshipFrame(BaseModel):
+    unit_name: str
+    relationship: str
+    task_focus: list[str] = Field(default_factory=list)
+    support_dependencies: list[str] = Field(default_factory=list)
+    required_outputs: list[str] = Field(default_factory=list)
+
+
+class FragoToConopRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "title": "Company field training refinement",
+                "higher_headquarters": "Battalion",
+                "supported_unit": "Civil affairs company",
+                "event_type": "field_training",
+                "mission_or_training_goal": "Refine a company training scenario into an initial CONOP.",
+                "higher_guidance": [
+                    "Battalion FRAGO directs one-day field event.",
+                    "Company will provide subordinate concept and support estimates."
+                ],
+                "s3_inputs": ["Need MET/METL alignment and staff synchronization."],
+                "g9_inputs": ["Civil considerations should stay generic and training-only."],
+                "subordinate_units": [
+                    {"unit_name": "Detachment A", "relationship": "subordinate", "purpose": "Primary field lane"}
+                ],
+                "met_tasks": ["Conduct mission analysis"],
+                "metl_focus": ["Plan and coordinate training"],
+                "training_only": True,
+            }
+        }
+    )
+    title: str = Field(min_length=1)
+    higher_headquarters: str | None = None
+    supported_unit: str = Field(min_length=1)
+    event_type: str = "training_event"
+    mission_or_training_goal: str = Field(min_length=1)
+    higher_guidance: list[str] = Field(default_factory=list)
+    frago_facts: list[str] = Field(default_factory=list)
+    s3_inputs: list[str] = Field(default_factory=list)
+    g9_inputs: list[str] = Field(default_factory=list)
+    source_items: list[dict[str, str]] = Field(default_factory=list)
+    intelligence_question: str | None = None
+    subordinate_units: list[SubordinateUnitInput] = Field(default_factory=list)
+    met_tasks: list[str] = Field(default_factory=list)
+    metl_focus: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+    support_requirements: list[str] = Field(default_factory=list)
+    coordinating_sections: list[str] = Field(default_factory=list)
+    partner_types: list[str] = Field(default_factory=list)
+    civil_considerations: list[str] = Field(default_factory=list)
+    medical_risk_context: list[str] = Field(default_factory=list)
+    casualty_scenarios: list[str] = Field(default_factory=list)
+    timeframe: str | None = None
+    preferred_format: str | None = None
+    training_only: bool = True
+
+
+class FragoToConopResponse(BaseModel):
+    title: str
+    guidance_summary: list[str] = Field(default_factory=list)
+    commander_focus: list[str] = Field(default_factory=list)
+    unit_relationship_framework: list[UnitRelationshipFrame] = Field(default_factory=list)
+    met_alignment: list[MetAlignmentItem] = Field(default_factory=list)
+    initial_conop: StaffProductDraftResponse
+    frago_draft: StaffProductDraftResponse
+    aar_framework: StaffProductDraftResponse
+    s2_estimate: S2EstimateResponse | None = None
+    s3_plan: S3PlanningResponse
+    s4_plan: S4PlanningResponse
+    s6_plan: S6PlanResponse
+    medical_plan: MedicalPlanningResponse
+    g9_plan: G9PlanningResponse | None = None
+    key_assumptions: list[str] = Field(default_factory=list)
+    key_risks: list[str] = Field(default_factory=list)
+    det_follow_on_questions: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)

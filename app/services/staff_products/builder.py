@@ -43,6 +43,29 @@ FRAGO_SECTIONS = [
     StaffProductSection(heading="Coordinating Instructions", prompts=["Updated timeline, control measures, reporting"]),
 ]
 
+CONOP_SECTIONS = [
+    StaffProductSection(
+        heading="1. Purpose and End State",
+        prompts=["Supported mission or training problem", "Desired end state", "Main effort"],
+    ),
+    StaffProductSection(
+        heading="2. Unit and Sub-Unit Relationships",
+        prompts=["Higher / supported / supporting relationships", "Subordinate tasks", "Coordination requirements"],
+    ),
+    StaffProductSection(
+        heading="3. Concept of Execution",
+        prompts=["Phasing", "Main supporting actions", "Decision points", "Control measures"],
+    ),
+    StaffProductSection(
+        heading="4. Support and Sustainment",
+        prompts=["Logistics concept", "Medical support", "Reporting and accountability", "Comms dependencies"],
+    ),
+    StaffProductSection(
+        heading="5. Assessment and Transition",
+        prompts=["Measures of performance", "Measures of effectiveness", "AAR capture", "Follow-on refinement"],
+    ),
+]
+
 SITREP_SECTIONS = [
     StaffProductSection(heading="Current Status", prompts=["What is true now?"]),
     StaffProductSection(heading="Significant Events", prompts=["What changed since the last report?"]),
@@ -51,10 +74,26 @@ SITREP_SECTIONS = [
 ]
 
 AAR_SECTIONS = [
-    StaffProductSection(heading="Event Overview", prompts=["Training event, date, audience, objectives"]),
-    StaffProductSection(heading="Sustains", prompts=["What should continue?"]),
-    StaffProductSection(heading="Improves", prompts=["What should change?"]),
-    StaffProductSection(heading="Action Items", prompts=["Owner, suspense, and follow-up requirement"]),
+    StaffProductSection(
+        heading="1. Event Overview",
+        prompts=["Training event, date, audience, objectives", "Supported mission or commander intent"],
+    ),
+    StaffProductSection(
+        heading="2. Standards and Task Alignment",
+        prompts=["MET/METL or task standard assessed", "What right looked like", "What was actually observed"],
+    ),
+    StaffProductSection(
+        heading="3. Sustains",
+        prompts=["What should continue", "Why it mattered", "What to preserve in the next iteration"],
+    ),
+    StaffProductSection(
+        heading="4. Improves",
+        prompts=["What should change", "What friction drove the shortfall", "What needs command attention"],
+    ),
+    StaffProductSection(
+        heading="5. Action Items",
+        prompts=["Owner", "Suspense", "Follow-up requirement", "What must be verified before next execution"],
+    ),
 ]
 
 CORRESPONDENCE_SECTIONS = [
@@ -77,7 +116,12 @@ class StaffProductBuilder:
             *detect_sensitive_input(" ".join([request.topic, *request.facts, *request.constraints])),
             "Staff products are advisory drafts and must be reviewed by the appropriate human chain.",
         ]
-        if request.product_type in {StaffProductType.opord, StaffProductType.warno, StaffProductType.frago}:
+        if request.product_type in {
+            StaffProductType.opord,
+            StaffProductType.warno,
+            StaffProductType.frago,
+            StaffProductType.conop,
+        }:
             warnings.append("Use fictional/training-only data unless working in an approved environment.")
         if request.product_type in {
             StaffProductType.naval_letter,
@@ -104,6 +148,8 @@ def _sections_for(product_type: StaffProductType) -> list[StaffProductSection]:
         return WARNO_SECTIONS
     if product_type == StaffProductType.frago:
         return FRAGO_SECTIONS
+    if product_type == StaffProductType.conop:
+        return CONOP_SECTIONS
     if product_type == StaffProductType.sitrep:
         return SITREP_SECTIONS
     if product_type == StaffProductType.aar:
@@ -140,7 +186,12 @@ def _review_checklist(request: StaffProductDraftRequest) -> list[str]:
         "Remove unnecessary PII and sensitive unit-specific details.",
         "Confirm final product with the appropriate chain before release.",
     ]
-    if request.product_type in {StaffProductType.opord, StaffProductType.warno, StaffProductType.frago}:
+    if request.product_type in {
+        StaffProductType.opord,
+        StaffProductType.warno,
+        StaffProductType.frago,
+        StaffProductType.conop,
+    }:
         checklist.append("Confirm the scenario is fictional/training-only or handled in an approved environment.")
     return checklist
 
