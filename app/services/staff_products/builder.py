@@ -38,9 +38,27 @@ WARNO_SECTIONS = [
 ]
 
 FRAGO_SECTIONS = [
-    StaffProductSection(heading="Changes", prompts=["Only what changed from the base order"]),
-    StaffProductSection(heading="Tasks", prompts=["Updated tasks by unit/staff section"]),
-    StaffProductSection(heading="Coordinating Instructions", prompts=["Updated timeline, control measures, reporting"]),
+    StaffProductSection(
+        heading="Changes",
+        prompts=[
+            "Only what changed from the base order",
+            "State the command decision, changed task, or new control measure in plain language",
+        ],
+    ),
+    StaffProductSection(
+        heading="Tasks",
+        prompts=[
+            "Updated tasks by unit/staff section",
+            "Use task, purpose, method, and no-later-than language where possible",
+        ],
+    ),
+    StaffProductSection(
+        heading="Coordinating Instructions",
+        prompts=[
+            "Updated timeline, control measures, reporting",
+            "Call out what remains fixed across all subordinate units versus what may be refined locally",
+        ],
+    ),
 ]
 
 CONOP_SECTIONS = [
@@ -50,11 +68,20 @@ CONOP_SECTIONS = [
     ),
     StaffProductSection(
         heading="2. Unit and Sub-Unit Relationships",
-        prompts=["Higher / supported / supporting relationships", "Subordinate tasks", "Coordination requirements"],
+        prompts=[
+            "Higher / supported / supporting relationships",
+            "Subordinate tasks in Marine-staff language",
+            "Coordination requirements and command relationships",
+        ],
     ),
     StaffProductSection(
         heading="3. Concept of Execution",
-        prompts=["Phasing", "Main supporting actions", "Decision points", "Control measures"],
+        prompts=[
+            "Phasing",
+            "Main effort and supporting effort",
+            "Decision points",
+            "Control measures and required reports",
+        ],
     ),
     StaffProductSection(
         heading="4. Support and Sustainment",
@@ -76,23 +103,48 @@ SITREP_SECTIONS = [
 AAR_SECTIONS = [
     StaffProductSection(
         heading="1. Event Overview",
-        prompts=["Training event, date, audience, objectives", "Supported mission or commander intent"],
+        prompts=[
+            "Training event, date, audience, objectives",
+            "Supported mission or commander's intent",
+            "Why this event mattered to the unit, not just that it occurred",
+        ],
     ),
     StaffProductSection(
         heading="2. Standards and Task Alignment",
-        prompts=["MET/METL or task standard assessed", "What right looked like", "What was actually observed"],
+        prompts=[
+            "MET/METL or task standard assessed",
+            "What right looked like",
+            "What was actually observed",
+            "Where the standard broke under friction",
+        ],
     ),
     StaffProductSection(
         heading="3. Sustains",
-        prompts=["What should continue", "Why it mattered", "What to preserve in the next iteration"],
+        prompts=[
+            "What should continue",
+            "Why it mattered",
+            "What to preserve in the next iteration",
+            "Identify deliberate good practice, not lucky improvisation",
+        ],
     ),
     StaffProductSection(
         heading="4. Improves",
-        prompts=["What should change", "What friction drove the shortfall", "What needs command attention"],
+        prompts=[
+            "What should change",
+            "What friction drove the shortfall",
+            "What needs command attention",
+            "State the first fix that changes the next event instead of writing a complaint",
+        ],
     ),
     StaffProductSection(
         heading="5. Action Items",
-        prompts=["Owner", "Suspense", "Follow-up requirement", "What must be verified before next execution"],
+        prompts=[
+            "Owner",
+            "Suspense",
+            "Follow-up requirement",
+            "What must be verified before next execution",
+            "Tie each item to the next rehearsal, drill, or execution date",
+        ],
     ),
 ]
 

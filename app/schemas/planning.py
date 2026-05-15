@@ -6,6 +6,7 @@ from app.schemas.staff import (
     S2EstimateResponse,
     S6PlanResponse,
     StaffCouncilResponse,
+    StaffEchelon,
 )
 from app.schemas.staff_products import StaffProductDraftResponse, StaffProductType
 from app.schemas.training import S3PlanningResponse, S4PlanningResponse
@@ -97,11 +98,33 @@ class UnitRelationshipFrame(BaseModel):
     required_outputs: list[str] = Field(default_factory=list)
 
 
+class GuidanceExtraction(BaseModel):
+    commander_intent: list[str] = Field(default_factory=list)
+    directed_tasks: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+    coordinating_instructions: list[str] = Field(default_factory=list)
+    command_relationship_notes: list[str] = Field(default_factory=list)
+    assumptions_to_confirm: list[str] = Field(default_factory=list)
+
+
+class SubordinateConopPacket(BaseModel):
+    unit_name: str
+    relationship: str
+    task_statement: str
+    purpose: str
+    concept_focus: list[str] = Field(default_factory=list)
+    command_and_support_relationships: list[str] = Field(default_factory=list)
+    required_reports: list[str] = Field(default_factory=list)
+    required_support_requests: list[str] = Field(default_factory=list)
+    aar_focus: list[str] = Field(default_factory=list)
+
+
 class FragoToConopRequest(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "title": "Company field training refinement",
+                "supported_echelon": "company",
                 "higher_headquarters": "Battalion",
                 "supported_unit": "Civil affairs company",
                 "event_type": "field_training",
@@ -122,10 +145,12 @@ class FragoToConopRequest(BaseModel):
         }
     )
     title: str = Field(min_length=1)
+    supported_echelon: StaffEchelon = StaffEchelon.company
     higher_headquarters: str | None = None
     supported_unit: str = Field(min_length=1)
     event_type: str = "training_event"
     mission_or_training_goal: str = Field(min_length=1)
+    raw_guidance_text: str | None = None
     higher_guidance: list[str] = Field(default_factory=list)
     frago_facts: list[str] = Field(default_factory=list)
     s3_inputs: list[str] = Field(default_factory=list)
@@ -144,6 +169,7 @@ class FragoToConopRequest(BaseModel):
     casualty_scenarios: list[str] = Field(default_factory=list)
     timeframe: str | None = None
     preferred_format: str | None = None
+    formal_event: bool = False
     training_only: bool = True
 
 
@@ -151,7 +177,9 @@ class FragoToConopResponse(BaseModel):
     title: str
     guidance_summary: list[str] = Field(default_factory=list)
     commander_focus: list[str] = Field(default_factory=list)
+    parsed_guidance: GuidanceExtraction
     unit_relationship_framework: list[UnitRelationshipFrame] = Field(default_factory=list)
+    subordinate_conop_packets: list[SubordinateConopPacket] = Field(default_factory=list)
     met_alignment: list[MetAlignmentItem] = Field(default_factory=list)
     initial_conop: StaffProductDraftResponse
     frago_draft: StaffProductDraftResponse
@@ -162,6 +190,7 @@ class FragoToConopResponse(BaseModel):
     s6_plan: S6PlanResponse
     medical_plan: MedicalPlanningResponse
     g9_plan: G9PlanningResponse | None = None
+    xo_sel_review: StaffCouncilResponse | None = None
     key_assumptions: list[str] = Field(default_factory=list)
     key_risks: list[str] = Field(default_factory=list)
     det_follow_on_questions: list[str] = Field(default_factory=list)
