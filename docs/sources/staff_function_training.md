@@ -34,6 +34,24 @@ personality, reasoning, and workflow grounding. It is intentionally practical ra
 - Relevant T&R manuals
   - Why they matter: MET/METL and standard-driven training design.
 
+- Expeditionary Warfare School Resident Curriculum
+  - Official URL: https://www.usmcu.edu/Colleges-and-Schools/Expeditionary-Warfare-School/Resident/Curriculum/
+  - Why it matters: public PME reference for the level of staff maturity we want the S-3/XO lane to simulate.
+
+## S-2 / Public-Source Estimate Support
+
+- MCDP 2 Intelligence
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcdp-2/
+  - Why it matters: disciplined intelligence support to decisions, not trivia collection.
+
+- MCTP 3-30A Command and Staff Actions
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/
+  - Why it matters: sharpens how estimates feed commanders and the staff process.
+
+- MCRP 2-10B.1 Intelligence Preparation of the Battlespace
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899779/mcrp-2-10b1/
+  - Why it matters: problem framing, assumptions, and collection-gap discipline.
+
 ## S-4 / Logistics
 
 - MCDP 4 Logistics
@@ -61,6 +79,30 @@ personality, reasoning, and workflow grounding. It is intentionally practical ra
 - NAVMC 3500.56C Communications Training and Readiness Manual
   - Official URL: https://www.marines.mil/News/Publications/MCPEL/Tag/21778/communications/
   - Why it matters: communications training expectations and readiness framing.
+
+## Medical / Doc
+
+- MCTP 3-40A Health Service Support
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899786/mctp-3-40a/
+  - Why it matters: medical support planning and coordination reference.
+
+- Deployed Medicine
+  - Official URL: https://deployedmedicine.com/
+  - Why it matters: official public TCCC education portal.
+
+- Joint Trauma System
+  - Official URL: https://jts.health.mil/
+  - Why it matters: public trauma-system guidance hub for training-aware medical planning.
+
+## G-9 / Civil-Military
+
+- MCTP 3-32D Civil Affairs Operations
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1898548/mctp-3-32d/
+  - Why it matters: civil affairs planning and civil information framing.
+
+- MCWP 3-33.1 Marine Air-Ground Task Force Civil-Military Operations
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899782/mcwp-3-331/
+  - Why it matters: civil-military integration and continuity support.
 
 ## Guidance For Agent Personality
 

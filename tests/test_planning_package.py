@@ -37,8 +37,10 @@ def test_staff_planning_package_builds_cross_staff_output() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["recommended_course_of_action"]
+    assert any("cut" in item.lower() for item in payload["recommended_course_of_action"])
     assert payload["commander_decisions_now"]
     assert payload["top_risks"]
+    assert payload["top_risks"][0].startswith("Training architecture risk:")
     assert payload["s3_plan"]["required_outputs"]
     assert payload["s4_plan"]["critical_support_requirements"]
     assert payload["s6_plan"]["pace_considerations"]

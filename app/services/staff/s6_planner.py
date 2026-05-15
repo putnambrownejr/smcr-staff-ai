@@ -17,6 +17,7 @@ class S6Planner:
             "Define primary, alternate, contingency, and emergency methods at a generic planning level.",
             "Check how comm degradation changes commander decisions, reporting flow, and accountability.",
             "Plan for local fallback methods if equipment, permissions, or support windows collapse.",
+            "Reduce reporting methods and windows until Marines can actually execute them under friction.",
         ]
 
         support_requirements = [
@@ -30,6 +31,7 @@ class S6Planner:
         permissions_and_dependencies = [
             "Confirm what support requires prior coordination, access, approval, or external assistance.",
             "Check dependencies on S-3 timing, S-4 support, and local site constraints.",
+            "Treat CAC, PKI, middleware, and portal-readiness problems as pre-drill issues, not same-day surprises.",
             "Keep COMSEC, real frequencies, and sensitive network details out of this prototype.",
         ]
         permissions_and_dependencies.extend(f"Constraint to manage: {item}" for item in request.constraints)
@@ -39,6 +41,7 @@ class S6Planner:
             "Equipment access between drills may be limited or uneven.",
             "Licensing, permissions, and training currency can quietly become the critical path.",
             "Support windows may be too short to troubleshoot everything during drill.",
+            "Too many reporting methods usually create confusion instead of redundancy.",
         ]
         if request.distributed_personnel:
             reserve_friction_points.append(

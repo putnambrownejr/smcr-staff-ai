@@ -9,6 +9,7 @@ class S2Estimator:
             f"Question: {request.question}",
             "Treat this as a public-source estimate for planning support, not authoritative intelligence.",
             "Separate corroborated public reporting from noisy social or single-source claims.",
+            "If the source picture is weak, brief the uncertainty instead of pretending it is decision-grade.",
         ]
         if request.audience:
             summary_assessment.append(f"Supported audience / consumer: {request.audience}")
@@ -37,6 +38,7 @@ class S2Estimator:
             "What claims still rest on a single source?",
             "What official public source could confirm or contradict the current picture?",
             "What assumption would change the plan most if it proves wrong?",
+            "What does the commander actually need answered now, rather than what is merely interesting?",
         ]
         if not request.source_items:
             collection_gaps.append(
@@ -45,6 +47,7 @@ class S2Estimator:
             )
 
         command_considerations = [
+            "Lead with one assessment, one key caveat, and one information gap that matters.",
             "Brief what is known, what is assumed, and what remains unknown.",
             "Flag any claim that should not drive a decision until corroborated.",
             "Treat public social-trend signals as context, not as validated facts.",

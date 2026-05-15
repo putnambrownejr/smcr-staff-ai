@@ -9,6 +9,7 @@ class S3Planner:
             f"Event type to plan around: {request.event_type}",
             "Confirm the desired end state, supported commander decision, and what success looks like at close-out.",
             "Separate what must be decided now from what can remain a follow-on action between drills.",
+            "Build the smallest event that still trains to a real standard and produces a usable output.",
         ]
         if request.audience:
             mission_analysis.append(f"Primary audience / formation: {request.audience}")
@@ -20,6 +21,7 @@ class S3Planner:
             "Identify support requests or approvals that sit on the critical path.",
             "Assign owners for tasking, tracking, and after-action capture.",
             "Translate the concept into specific drill-period tasks instead of leaving it as intent only.",
+            "Kill nice-to-have activity that burns time without increasing standards or assessment value.",
         ]
         critical_tasks.extend(f"Constraint to manage: {item}" for item in request.constraints)
 
@@ -42,12 +44,14 @@ class S3Planner:
             "What must the commander approve, prioritize, defer, or cancel?",
             "What support shortfall would force a branch or modified plan?",
             "What risk, timeline, or readiness issue needs command visibility before execution?",
+            "What should be cut now so the unit can execute the remaining plan cleanly?",
         ]
 
         required_outputs = [
             "Short mission analysis / planning note",
             "Task list with owners and suspense dates",
             "Required correspondence or routing products",
+            "Simple execution matrix or synchronization board",
             "Training/event support checklist",
             "AAR capture plan and post-event follow-up list",
         ]

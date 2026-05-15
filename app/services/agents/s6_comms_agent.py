@@ -1,6 +1,11 @@
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
-from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
+from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.source_refs import (
+    S6_REFERENCES,
+    citation_titles,
+    source_trust_markers,
+    structured_citations,
+)
 
 
 class S6CommunicationsAdvisorAgent(Agent):
@@ -52,12 +57,16 @@ class S6CommunicationsAdvisorAgent(Agent):
             "- What should remain generic until validated through proper channels?\n\n"
             "My read:\n"
             "- In reserve units, the quiet killers are access, permissions, stale gear, and lack of rehearsal.\n"
+            "- The first comm failure is usually not a radio; it is confusion about\n"
+            "  report windows, fallback, or who owns the net.\n"
             "- Keep the plan commercial/training-safe, simple enough to brief, and easy enough to rehearse.\n\n"
             "Checklist:\n"
             "- Define the supported event and essential C2 effect.\n"
             "- Build a generic PACE planning frame without real frequencies or sensitive identifiers.\n"
             "- Identify what information must move, who must receive it, and how long delay is acceptable.\n"
             "- Check equipment access, licensing, permissions, and training currency early.\n"
+            "- Reduce reporting methods before the event; too many methods usually means\n"
+            "  nobody is sure which one matters.\n"
             "- Treat CAC, certificate, middleware, and portal access issues as S-6 support problems.\n"
             "- Escalate to a local help desk or enterprise support channel when needed.\n"
             "- Identify follow-up actions with owners before leaving drill.\n"
@@ -65,41 +74,16 @@ class S6CommunicationsAdvisorAgent(Agent):
         return self._response(
             answer=answer,
             input_text=input_text,
-            citations=[
-                "MCDP 6 Command and Control",
-                "MCTP 3-30B Information Management",
-                "NAVMC 3500.56C Communications Training and Readiness Manual",
-            ],
-            structured_citations=[
-                StructuredCitation(
-                    title="MCDP 6 Command and Control",
-                    confidence=Confidence.low,
-                    notes="Grounds command-and-control thinking at the doctrinal level.",
+            citations=citation_titles(S6_REFERENCES),
+            structured_citations=structured_citations(S6_REFERENCES),
+            source_trust=source_trust_markers(
+                S6_REFERENCES,
+                notes_prefix=(
+                    "Verify current command-and-control and communications references "
+                    "before finalizing support assumptions."
                 ),
-                StructuredCitation(
-                    title="MCTP 3-30B Information Management",
-                    confidence=Confidence.low,
-                    notes="Useful for information flow, staff processes, and information-management discipline.",
-                ),
-                StructuredCitation(
-                    title="NAVMC 3500.56C Communications Training and Readiness Manual",
-                    confidence=Confidence.low,
-                    notes="Use for communications training standards and readiness framing.",
-                ),
-            ],
-            source_trust=[
-                SourceTrustMarker(
-                    tracked_title="MCDP 6 Command and Control",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Check current public communications guidance before finalizing support assumptions.",
-                ),
-                SourceTrustMarker(
-                    tracked_title="NAVMC 3500.56C Communications Training and Readiness Manual",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Confirm current communications training standards before finalizing the support plan.",
-                )
-            ],
-            confidence=Confidence.low,
+            ),
+            confidence=Confidence.medium,
             follow_up_questions=[
                 "What supported event or commander decision needs communications support?",
                 "What reserve friction matters most here: equipment, permissions, support time, or training currency?",

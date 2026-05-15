@@ -127,6 +127,11 @@ categories:
     source_policy: official_public_sources_only
     classification_label: UNCLASSIFIED
     cui_flag: false
+    source_refs:
+      - title: MCTP 3-32D Civil Affairs Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1898548/mctp-3-32d/
+      - title: MCWP 3-33.1 Marine Air-Ground Task Force Civil-Military Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899782/mcwp-3-331/
   - id: logistics
     name: Logistics doctrine
     publication_families: ["MCDP", "MCWP"]
@@ -184,6 +189,13 @@ categories:
     source_policy: official_public_sources_only
     classification_label: UNCLASSIFIED
     cui_flag: false
+    source_refs:
+      - title: MCDP 5 Planning
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899841/mcdp-5/
+      - title: MCWP 5-10 Marine Corps Planning Process
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/
+      - title: MCTP 3-30A Command and Staff Actions
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/
   - id: infantry_03xx
     name: Infantry / 03XX tactics, operations, and training
     publication_families: ["MCWP", "MCTP", "MCRP", "NAVMC"]
@@ -219,6 +231,13 @@ categories:
     source_policy: official_public_sources_only
     classification_label: UNCLASSIFIED
     cui_flag: false
+    source_refs:
+      - title: MCDP 2 Intelligence
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcdp-2/
+      - title: MCRP 2-10B.1 Intelligence Preparation of the Battlespace
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899779/mcrp-2-10b1/
+      - title: MCTP 3-30A Command and Staff Actions
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/
   - id: leadership
     name: Leadership doctrine
     publication_families: ["MCDP", "public leadership guidance"]

@@ -1,6 +1,11 @@
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
-from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
+from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.source_refs import (
+    S2_REFERENCES,
+    citation_titles,
+    source_trust_markers,
+    structured_citations,
+)
 
 
 class S2IntelAdvisorAgent(Agent):
@@ -31,7 +36,8 @@ class S2IntelAdvisorAgent(Agent):
             system_prompt=(
                 "Respond like a cautious S-2 using only public-source material. Focus on estimate quality, "
                 "confidence, information gaps, and decision support. Treat OSINT and public-source trend review as "
-                "subordinate S-2 functions. Stay advisory."
+                "subordinate S-2 functions. Stay advisory. Sound like someone who would rather brief one hard truth "
+                "and two caveats than five shaky claims."
             ),
         )
 
@@ -45,6 +51,12 @@ class S2IntelAdvisorAgent(Agent):
             "- What OSINT or public-source trend lane is useful, and what should stay clearly caveated?\n"
             "- What information gap would most change the command decision if answered?\n"
             "- What should be briefed as caveat rather than conclusion?\n\n"
+            "My read:\n"
+            "- The fastest way to mislead a commander is to sound certain before the source picture is mature.\n"
+            "- If the best source is still social noise or a single article,\n"
+            "  brief the uncertainty instead of polishing it.\n"
+            "- S-2 earns trust by killing weak assumptions early and\n"
+            "  pointing the staff at the gap that matters most.\n\n"
             "Checklist:\n"
             "- Separate facts, claims, assumptions, and unknowns.\n"
             "- Assign confidence based on source quality, corroboration, and recency.\n"
@@ -55,36 +67,13 @@ class S2IntelAdvisorAgent(Agent):
         return self._response(
             answer=answer,
             input_text=input_text,
-            citations=[
-                "Official public releases",
-                "Trusted public news sources",
-                "Vetted public social trend summaries",
-            ],
-            structured_citations=[
-                StructuredCitation(
-                    title="Official public releases",
-                    confidence=Confidence.low,
-                    notes="Highest-confidence public-source lane when current and corroborated.",
-                ),
-                StructuredCitation(
-                    title="Trusted public news sources",
-                    confidence=Confidence.low,
-                    notes="Use with corroboration and recency checks.",
-                ),
-            ],
-            source_trust=[
-                SourceTrustMarker(
-                    tracked_title="Official public releases",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Prefer official current public releases when available.",
-                ),
-                SourceTrustMarker(
-                    tracked_title="Trusted public news sources",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Corroborate news reporting before treating it as a decision driver.",
-                ),
-            ],
-            confidence=Confidence.low,
+            citations=citation_titles(S2_REFERENCES),
+            structured_citations=structured_citations(S2_REFERENCES),
+            source_trust=source_trust_markers(
+                S2_REFERENCES,
+                notes_prefix="Prefer official and doctrinally grounded public sources before news or social summaries.",
+            ),
+            confidence=Confidence.medium,
             follow_up_questions=[
                 "What commander decision or planning question does this estimate support?",
                 "Which public sources are already in hand, and which are still missing?",

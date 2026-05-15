@@ -1,6 +1,11 @@
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
-from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
+from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.source_refs import (
+    MEDICAL_REFERENCES,
+    citation_titles,
+    source_trust_markers,
+    structured_citations,
+)
 
 
 class MedicalDocAdvisorAgent(Agent):
@@ -29,7 +34,7 @@ class MedicalDocAdvisorAgent(Agent):
             system_prompt=(
                 "Respond like a practical field medical planner or doc supporting training and staff planning. "
                 "Focus on CASEVAC structure, TCCC-aware planning, and coordination. Stay advisory and require "
-                "qualified medical review."
+                "qualified medical review. Sound like the person who will stop bad optimism before somebody gets hurt."
             ),
         )
 
@@ -42,46 +47,28 @@ class MedicalDocAdvisorAgent(Agent):
             "- Who is qualified, equipped, and positioned to address immediate life threats?\n"
             "- What assumptions exist about TCCC familiarity, evacuation timing, and transport availability?\n"
             "- What needs to be rehearsed at a generic 9-line / CASEVAC level before the event starts?\n\n"
+            "My read:\n"
+            "- Medical plans fail when everyone assumes someone else owns the hard call.\n"
+            "- If evacuation timing, transport, or casualty collection is hand-waved,\n"
+            "  you do not have a medical plan yet.\n\n"
             "Checklist:\n"
             "- Define likely casualty scenarios and who owns first response actions.\n"
             "- Confirm trauma gear, casualty collection, transport, and handoff assumptions.\n"
             "- Rehearse 9-line familiarity and reporting flow at a training-safe level only.\n"
             "- Tie CASEVAC planning to terrain, distance, comm, vehicles, and command decision points.\n"
+            "- Define stop-training triggers before the event, not after the first casualty inject.\n"
             "- Pause for qualified medical review before treating the plan as final.\n"
         )
         return self._response(
             answer=answer,
             input_text=input_text,
-            citations=[
-                "Public TCCC references",
-                "Public health service support doctrine",
-                "Operations planning references",
-            ],
-            structured_citations=[
-                StructuredCitation(
-                    title="Public TCCC references",
-                    confidence=Confidence.low,
-                    notes="Use for training awareness and planning only; not a substitute for formal instruction.",
-                ),
-                StructuredCitation(
-                    title="Public health service support doctrine",
-                    confidence=Confidence.low,
-                    notes="Verify the current public health-service-support reference before acting.",
-                ),
-            ],
-            source_trust=[
-                SourceTrustMarker(
-                    tracked_title="Public TCCC references",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Confirm the latest verified training-safe TCCC reference before building event guidance.",
-                ),
-                SourceTrustMarker(
-                    tracked_title="Public health service support doctrine",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Verify the current public doctrine before relying on medical-support assumptions.",
-                ),
-            ],
-            confidence=Confidence.low,
+            citations=citation_titles(MEDICAL_REFERENCES),
+            structured_citations=structured_citations(MEDICAL_REFERENCES),
+            source_trust=source_trust_markers(
+                MEDICAL_REFERENCES,
+                notes_prefix="Verify current medical-support and TCCC training references before event execution.",
+            ),
+            confidence=Confidence.medium,
             follow_up_questions=[
                 "Is this a field event, range, convoy, or general training problem?",
                 "What casualty scenarios are most likely enough to drive planning?",

@@ -1,6 +1,11 @@
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
-from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
+from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.source_refs import (
+    S3_REFERENCES,
+    citation_titles,
+    source_trust_markers,
+    structured_citations,
+)
 
 
 class S3OpsOAdvisorAgent(Agent):
@@ -34,7 +39,7 @@ class S3OpsOAdvisorAgent(Agent):
                 "synchronization, mission analysis, battle rhythm, MET/METL alignment, training value, and "
                 "decision support. Use plain language, high standards, and a training-first tone inspired by the "
                 "public leadership style associated with General Mattis. Cut weak ideas early, name what will fail "
-                "first, and stay advisory."
+                "first, force standards and purpose into the open, and stay advisory."
             ),
         )
 
@@ -57,6 +62,7 @@ class S3OpsOAdvisorAgent(Agent):
             "- Pick the few events the unit can actually prepare, rehearse, and assess well.\n"
             "- Demand enough realism to matter, but not so much complexity that the unit learns confusion\n"
             "  instead of competence.\n"
+            "- If the event cannot survive contact with reserve timelines, the design is wrong, not the Marines.\n"
             "- Force owners and suspense dates onto every product before people leave drill.\n\n"
             "Recommended S-3 rhythm:\n"
             "- Clarify mission, commander intent, and training audience.\n"
@@ -76,57 +82,13 @@ class S3OpsOAdvisorAgent(Agent):
         return self._response(
             answer=answer,
             input_text=input_text,
-            citations=[
-                "MCWP 5-10 Marine Corps Planning Process",
-                "MCO 1553.3C Unit Training Management",
-                "Ground and occupational field training and readiness references",
-                "ORM / safety references",
-            ],
-            structured_citations=[
-                StructuredCitation(
-                    title="MCWP 5-10 Marine Corps Planning Process",
-                    confidence=Confidence.low,
-                    notes="Verify current public planning doctrine before relying on this draft.",
-                ),
-                StructuredCitation(
-                    title="MCO 1553.3C Unit Training Management",
-                    confidence=Confidence.low,
-                    notes="Use to ground unit training design, assessment, and planning rhythm.",
-                ),
-                StructuredCitation(
-                    title="Ground and occupational field training and readiness references",
-                    confidence=Confidence.low,
-                    notes="Check current training/readiness references for mission-specific standards.",
-                ),
-                StructuredCitation(
-                    title="ORM / safety references",
-                    confidence=Confidence.low,
-                    notes="Confirm current ORM and safety requirements before execution.",
-                ),
-            ],
-            source_trust=[
-                SourceTrustMarker(
-                    tracked_title="MCWP 5-10 Marine Corps Planning Process",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Review the latest verified planning reference before finalizing staff products.",
-                ),
-                SourceTrustMarker(
-                    tracked_title="MCO 1553.3C Unit Training Management",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Confirm current UTM guidance before shaping the training plan.",
-                ),
-                SourceTrustMarker(
-                    tracked_title="Ground and occupational field training and readiness references",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Check current training standards before treating a plan as final.",
-                ),
-                SourceTrustMarker(
-                    tracked_title="ORM / safety references",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Confirm current safety and ORM guidance before execution.",
-                ),
-            ],
-            confidence=Confidence.low,
+            citations=citation_titles(S3_REFERENCES),
+            structured_citations=structured_citations(S3_REFERENCES),
+            source_trust=source_trust_markers(
+                S3_REFERENCES,
+                notes_prefix="Verify current planning, training, and PME references before final event design.",
+            ),
+            confidence=Confidence.medium,
             follow_up_questions=[
                 "Is this a drill-weekend planning problem, an AT problem, or a training-event problem?",
                 "Which MET or METL task is this event supposed to improve?",

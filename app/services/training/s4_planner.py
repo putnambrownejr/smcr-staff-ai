@@ -9,6 +9,7 @@ class S4Planner:
             f"Support objective: {request.support_objective}",
             "Identify the support requirement that is most likely to fail first if not confirmed early.",
             "Separate mandatory support needs from desirable enhancements.",
+            "Decide early what support shortfall cancels the event and what merely reduces scope.",
         ]
         if request.audience:
             support_estimate.append(f"Supported audience / formation: {request.audience}")
@@ -43,6 +44,7 @@ class S4Planner:
             "Check equipment availability, issue/turn-in, and maintenance status.",
             "Check supply, ammo, and consumable support assumptions.",
             "Check support lead times and approval requirements for anything not controlled locally.",
+            "Check recovery timing, reset burden, and what support debt gets kicked into the next drill.",
             "Confirm who closes out support shortfalls and unresolved logistics actions after drill.",
         ]
 

@@ -54,10 +54,7 @@ class StaffCouncilService:
                     confidence=response.confidence.value,
                 )
             )
-        synthesis = (
-            "Use these perspectives as a staff sanity check. Resolve conflicting assumptions, assign owners, "
-            "identify official sources to verify, and route final decisions to the appropriate human chain."
-        )
+        synthesis = _build_council_synthesis(perspectives)
         return StaffCouncilResponse(
             question=request.question,
             echelon=request.echelon,
@@ -89,10 +86,7 @@ class StaffCouncilService:
             question=request.question,
             phases=["initial_estimate", "critique", "cross_staff_risks", "synthesis"],
             councils=councils,
-            synthesis=(
-                "Round robin complete. Compare role concerns, identify dissent, assign owners, and verify every "
-                "claim against official sources or user-confirmed local context before action."
-            ),
+            synthesis=_build_round_robin_synthesis(councils),
             warnings=[
                 *DEFAULT_WARNINGS,
                 "Round robin is an advisory staff simulation, not command guidance or an order.",
@@ -134,6 +128,42 @@ def _extract_section(answer: str, marker: str) -> list[str]:
     tail = answer.split(marker, maxsplit=1)[1]
     lines = [line.strip("- ").strip() for line in tail.splitlines() if line.strip().startswith("-")]
     return lines[:4]
+
+
+def _build_council_synthesis(perspectives: list[StaffPerspective]) -> str:
+    if not perspectives:
+        return "No staff perspectives ran. Confirm the right roles and restate the problem more clearly."
+
+    roles = ", ".join(p.role.upper() for p in perspectives[:4])
+    first_concern = next((item for p in perspectives for item in p.concerns if item), None)
+    first_recommendation = next((item for p in perspectives for item in p.recommendations if item), None)
+    synthesis = (
+        f"Staff view from {roles}: do not confuse a well-organized draft for an executable plan. "
+        "The next move is to resolve the first real friction point, assign the owner, and force a command decision "
+        "where assumptions are still carrying too much weight."
+    )
+    if first_concern:
+        synthesis += f" First friction to settle: {first_concern}"
+    if first_recommendation:
+        synthesis += f" Best immediate move: {first_recommendation}"
+    return synthesis
+
+
+def _build_round_robin_synthesis(councils: list[StaffCouncilResponse]) -> str:
+    concerns = [item for council in councils for perspective in council.perspectives for item in perspective.concerns]
+    recommendations = [
+        item for council in councils for perspective in council.perspectives for item in perspective.recommendations
+    ]
+    synthesis = (
+        "Round robin complete. Treat this like a real staff fight, not a stack of polite comments: identify the "
+        "assumption that will break execution first, cut what cannot be resourced, assign owners, and verify every "
+        "important claim against official sources or user-confirmed local context before action."
+    )
+    if concerns:
+        synthesis += f" First cross-staff friction: {concerns[0]}"
+    if recommendations:
+        synthesis += f" First action to drive: {recommendations[0]}"
+    return synthesis
 
 
 def _normalize_role(role: str) -> str:

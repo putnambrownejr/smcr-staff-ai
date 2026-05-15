@@ -269,11 +269,12 @@ def _recommended_coa(
     include_g9: bool,
 ) -> list[str]:
     coa = [
-        "Center the event on one primary training outcome and one supporting coordination outcome.",
+        "Approve one main effort, one supporting effort, and cut anything that dilutes them.",
         "Lock the critical-path products before drill ends: task list, short schedule, support asks, "
         "and AAR structure.",
         "Keep the execution concept simple enough to brief quickly, rehearse once, and assess honestly.",
         "Use S-4 and S-6 early so support and information flow shape the plan before the plan hardens.",
+        "Treat unresolved assumptions as named risks with owners, not as optimistic background noise.",
     ]
     if include_g9:
         coa.append(
@@ -281,7 +282,7 @@ def _recommended_coa(
             "as an afterthought."
         )
     if s3_plan.required_outputs:
-        coa.append(f"Required output focus: {s3_plan.required_outputs[0]}")
+        coa.append(f"Required output to protect first: {s3_plan.required_outputs[0]}")
     if s4_plan.critical_support_requirements:
         coa.append(f"Support reality check: {s4_plan.critical_support_requirements[0]}")
     if s6_plan.pace_considerations:
@@ -296,6 +297,7 @@ def _commander_decisions(
         "Approve the primary training objective and what will be cut to protect it.",
         "Approve the event scope the unit can actually resource inside the reserve timeline.",
         "Decide which support shortfall is acceptable and which one cancels or modifies the event.",
+        "Decide what must be complete by close of drill and what can survive as follow-on action.",
         *s3_plan.command_decision_points[:2],
         *s4_plan.coordination_points[:1],
     ]
@@ -308,10 +310,10 @@ def _top_risks(
     medical_plan: MedicalPlanningResponse,
 ) -> list[str]:
     return [
-        s3_plan.reserve_friction_points[0],
-        s4_plan.reserve_friction_points[0],
-        s6_plan.reserve_friction_points[0],
-        medical_plan.coordination_requirements[0],
+        f"Training architecture risk: {s3_plan.reserve_friction_points[0]}",
+        f"Supportability risk: {s4_plan.reserve_friction_points[0]}",
+        f"C2 risk: {s6_plan.reserve_friction_points[0]}",
+        f"Medical/CASEVAC risk: {medical_plan.coordination_requirements[0]}",
     ]
 
 
@@ -320,6 +322,7 @@ def _cuts_and_deferments(request: StaffPlanningPackageRequest) -> list[str]:
         "Cut anything that is not tied to a real training standard, required output, or command decision.",
         "Defer nice-to-have extras that add complexity without adding assessment value.",
         "Push non-critical admin follow-ups into tracked actions instead of letting them dominate execution time.",
+        "If a lane, support ask, or inject cannot be resourced and rehearsed, cut it now instead of excusing it later.",
         *[f"Constraint-driven cut candidate: {item}" for item in request.constraints[:2]],
     ]
 
@@ -331,6 +334,7 @@ def _execution_framework(
     medical_plan: MedicalPlanningResponse,
 ) -> list[str]:
     return [
+        "Design the event around one clear main effort and one simple reporting rhythm.",
         *s3_plan.battle_rhythm[:3],
         *s4_plan.movement_and_billeting[:1],
         *s6_plan.pace_considerations[:1],
@@ -348,10 +352,11 @@ def _recommended_actions(
         "Publish the short planning focus, desired end state, and critical-path suspense list.",
         "Assign owners to every required product before the close of drill.",
         "Track unresolved support, comm, and medical assumptions as named actions instead of leaving them verbal.",
+        "Write down what gets cut, who approved the cut, and what condition would justify bringing it back.",
         *s3_plan.required_outputs[:2],
     ]
     if battalion_review.perspectives:
-        actions.append(f"Staff friction to resolve: {battalion_review.perspectives[0].role}")
+        actions.append(f"Staff friction to resolve first: {battalion_review.perspectives[0].role}")
     if xo_vet.perspectives:
         actions.append("XO review standard: owner, suspense, command decision, and failure point must be explicit.")
     if include_g9:

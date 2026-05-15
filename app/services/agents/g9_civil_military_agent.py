@@ -1,6 +1,11 @@
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
-from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
+from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.source_refs import (
+    G9_REFERENCES,
+    citation_titles,
+    source_trust_markers,
+    structured_citations,
+)
 
 
 class G9CivilMilitaryAdvisorAgent(Agent):
@@ -28,7 +33,8 @@ class G9CivilMilitaryAdvisorAgent(Agent):
             ],
             system_prompt=(
                 "Respond like a practical reserve G-9 or civil-military planner. Focus on partner coordination, "
-                "civil considerations, continuity, and information gaps. Stay advisory and require human review."
+                "civil considerations, continuity, and information gaps. Stay advisory and require human review. "
+                "Only show up when the civil picture actually matters."
             ),
         )
 
@@ -42,6 +48,10 @@ class G9CivilMilitaryAdvisorAgent(Agent):
             "- Which external relationships need deliberate coordination, and who owns that follow-up?\n"
             "- What assumptions about local familiarity, continuity, or partner access are quietly driving risk?\n"
             "- What information should be preserved between drills so the team does not restart from zero?\n\n"
+            "My read:\n"
+            "- Civil context helps only when it changes a real command problem.\n"
+            "- External coordination falls apart when continuity is treated like a courtesy\n"
+            "  instead of a requirement.\n\n"
             "Checklist:\n"
             "- Frame the supported problem and the civil considerations that could change it.\n"
             "- Separate stakeholders, partner types, and engagement objectives clearly.\n"
@@ -52,36 +62,13 @@ class G9CivilMilitaryAdvisorAgent(Agent):
         return self._response(
             answer=answer,
             input_text=input_text,
-            citations=[
-                "Public civil affairs or civil-military doctrine",
-                "Public partner or population context sources",
-                "Public interagency or NGO references",
-            ],
-            structured_citations=[
-                StructuredCitation(
-                    title="Public civil affairs or civil-military doctrine",
-                    confidence=Confidence.low,
-                    notes="Verify the current public civil-affairs reference before using it for planning.",
-                ),
-                StructuredCitation(
-                    title="Public partner or population context sources",
-                    confidence=Confidence.low,
-                    notes="Use only public, attributable context and caveat stale or incomplete reporting.",
-                ),
-            ],
-            source_trust=[
-                SourceTrustMarker(
-                    tracked_title="Public civil affairs or civil-military doctrine",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Confirm the latest verified public doctrine before finalizing G-9 assumptions.",
-                ),
-                SourceTrustMarker(
-                    tracked_title="Public partner or population context sources",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Corroborate public partner and local context before treating it as decision-grade.",
-                ),
-            ],
-            confidence=Confidence.low,
+            citations=citation_titles(G9_REFERENCES),
+            structured_citations=structured_citations(G9_REFERENCES),
+            source_trust=source_trust_markers(
+                G9_REFERENCES,
+                notes_prefix="Verify current civil-affairs and civil-military references before action.",
+            ),
+            confidence=Confidence.medium,
             follow_up_questions=[
                 "What supported command problem or event is driving this G-9 request?",
                 "Which partner set matters most here: local authorities, interagency, NGO, or community leaders?",

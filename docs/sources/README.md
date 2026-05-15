@@ -23,6 +23,8 @@ When real ingestion is added, fetch from the official URL, calculate source hash
 - [Training And Readiness](training_readiness.md)
 - [MOS Manual And Billets](mos_manual_and_billets.md)
 - [Communications Sources](communications.md)
+- [Intelligence And Public-Source Grounding](intelligence_public_source.md)
+- [Medical, TCCC, And CASEVAC Grounding](medical_tccc_casevac.md)
 - [Commandant's Professional Reading List](commandants_reading_list.md)
 - [Source Inventory Integration Plan](source_inventory_integration_plan.md)
 - [Infantry / 03XX Publications](infantry_03xx.md)
@@ -33,3 +35,4 @@ When real ingestion is added, fetch from the official URL, calculate source hash
 - [MCPEL And MARADMIN Indexes](mcpel_maradmin_indexes.md)
 - [Correspondence And Document Formatting](correspondence_formatting.md)
 - [Staff Function Training References](staff_function_training.md)
+- [Staff Development And PME Grounding](staff_development.md)

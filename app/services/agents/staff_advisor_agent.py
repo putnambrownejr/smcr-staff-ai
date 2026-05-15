@@ -4,6 +4,19 @@ from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.schemas.staff import StaffEchelon, StaffRoleMetadata
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.osint_agent import build_osint_agent
+from app.services.agents.source_refs import (
+    G9_REFERENCES,
+    MEDICAL_REFERENCES,
+    S1_REFERENCES,
+    S2_REFERENCES,
+    S3_REFERENCES,
+    S4_REFERENCES,
+    S6_REFERENCES,
+    SourceRef,
+    citation_titles,
+    source_trust_markers,
+    structured_citations,
+)
 
 
 @dataclass(frozen=True)
@@ -230,6 +243,8 @@ class StaffAdvisorAgent(Agent):
         focus_lines = "\n".join(f"- {item}" for item in self.definition.focus)
         osint_note = ""
         citations: list[str] = []
+        structured = []
+        trust = []
         if self.definition.osint_enabled:
             osint_response = build_osint_agent().run(input_text, context)
             citations.extend(osint_response.citations)
@@ -238,11 +253,23 @@ class StaffAdvisorAgent(Agent):
                 "- This role should call the OSINT source-evaluation workflow for public-source claims.\n"
                 "- Treat trend/social evidence as low confidence unless corroborated.\n"
             )
+        role_refs = _role_references(self.definition.role)
+        if role_refs:
+            citations.extend(citation_titles(role_refs))
+            structured.extend(structured_citations(role_refs))
+            trust.extend(
+                source_trust_markers(
+                    role_refs,
+                    notes_prefix="Verify current doctrine, training, and local applicability before action.",
+                )
+            )
         answer = _build_staff_answer(self.definition, focus_lines, osint_note)
         return self._response(
             answer=answer,
             input_text=input_text,
             citations=citations,
+            structured_citations=structured,
+            source_trust=trust,
             confidence=Confidence.low,
             follow_up_questions=[
                 "What decision are you asking the commander or staff to make?",
@@ -320,6 +347,137 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             f"{osint_note}"
         )
 
+    if definition.role == "s4":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- If the support architecture is fuzzy, the event is still a hope, not a plan.\n"
+            "- The item with the longest lead time owns the timeline whether the staff likes it or not.\n"
+            "- Nice concepts usually die on transport, issue/turn-in, water, chow, or recovery time.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What absolutely cancels the event if unresolved?\n"
+            "- Which support ask has the earliest no-later-than decision point?\n"
+            "- What accountability or movement assumption is still doing too much work?\n"
+            "- What should be cut now to protect supportability?\n\n"
+            "Recommended next action:\n"
+            "- Publish the minimum support package, longest lead-time suspense, and recovery timeline.\n"
+            "- Force a yes, no, or not-yet from every support owner before calling the plan executable."
+            f"{osint_note}"
+        )
+
+    if definition.role == "s6":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- Most reserve comm plans fail from confusion, not from exotic technical problems.\n"
+            "- If reporting windows, fallback methods, and user access are not rehearsed,\n"
+            "  the PACE plan is decoration.\n"
+            "- Too many tools usually means nobody knows which one the commander actually cares about.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What information must move without fail, and in what time window?\n"
+            "- What dies first: access, battery, permissions, user training, or report discipline?\n"
+            "- What fallback method is simple enough to survive friction?\n"
+            "- What should stay generic until validated through proper channels?\n\n"
+            "Recommended next action:\n"
+            "- Reduce the comm plan to one essential reporting flow, one fallback, and one missed-report action.\n"
+            "- Solve CAC, PKI, access, and permissions problems before drill rather than during execution."
+            f"{osint_note}"
+        )
+
+    if definition.role == "s1":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- Admin drift kills more plans than bad intent does.\n"
+            "- If nobody owns the final route, suspense, and source check, the package is already late.\n"
+            "- Reserve continuity fails quietly, then all at once, when notes are stale and handoffs are vague.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What admin action actually matters now, and what can stay in continuity tracking?\n"
+            "- What source, routing chain, or suspense is still ambiguous?\n"
+            "- What will be forgotten between drills if it is not written down today?\n"
+            "- What travel-admin issue will hijack the next planning cycle if ignored?\n\n"
+            "Recommended next action:\n"
+            "- Publish one suspense list with owner, due date, source reference, and command touchpoint.\n"
+            "- Separate travel, orders, roster, FitRep, readiness, and awards lanes before they contaminate each other."
+            f"{osint_note}"
+        )
+
+    if definition.role in {"s2", "g2"}:
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- A weak estimate becomes dangerous the moment it starts sounding confident.\n"
+            "- The staff needs one clear assessment, one key caveat, and one information gap that matters.\n"
+            "- If the source picture is soft, brief the uncertainty instead of pretending it is settled.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What is actually known from public sources?\n"
+            "- Which claim is still single-source, stale, or noisy?\n"
+            "- What assumption would most change the commander's decision if it proves wrong?\n"
+            "- What should be caveated instead of concluded?\n\n"
+            "Recommended next action:\n"
+            "- Reduce the estimate to corroborated facts, explicit assumptions, and one collection gap for follow-up.\n"
+            "- Keep OSINT in the sourced-public lane and kill anything that looks like guesswork."
+            f"{osint_note}"
+        )
+
+    if definition.role in {"doc", "surgeon"}:
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- If casualty movement, qualified coverage, and stop-training criteria are vague,\n"
+            "  the medical plan is not real.\n"
+            "- Medical optimism is still risk, even when everyone means well.\n"
+            "- The hard question is not whether a template exists;\n"
+            "  it is whether the team can execute it under stress.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What casualty scenario is most plausible enough to drive planning?\n"
+            "- Who is qualified, equipped, and empowered to make the first hard call?\n"
+            "- What 9-line and CASEVAC elements actually need rehearsal here?\n"
+            "- What assumption about transport, terrain, comm, or time to higher care is still weak?\n\n"
+            "Recommended next action:\n"
+            "- Write the casualty scenarios, casualty collection plan,\n"
+            "  movement assumptions, and stop-training criteria now.\n"
+            "- Pause for qualified medical review before pretending the plan is executable."
+            f"{osint_note}"
+        )
+
+    if definition.role == "g9":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- External coordination fails when the staff treats continuity like a courtesy instead of a requirement.\n"
+            "- The team does not need broad theory;\n"
+            "  it needs a clean understanding of which outside relationship matters and why.\n"
+            "- Civil context helps only if it changes a real command problem, not because it sounds sophisticated.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What civil or partner factor actually changes the plan?\n"
+            "- Who owns the next external touchpoint or continuity note?\n"
+            "- What assumption about local familiarity or partner access is too casual?\n"
+            "- What should be preserved between drills so the unit does not restart from zero?\n\n"
+            "Recommended next action:\n"
+            "- Narrow the civil picture to the handful of partner and continuity issues that can affect execution.\n"
+            "- Write the revalidation point and the owner before drill ends."
+            f"{osint_note}"
+        )
+
     return (
         f"{definition.title} staff-vetting perspective.\n\n"
         f"Scope: {definition.scope}\n\n"
@@ -335,3 +493,22 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
         "and a human reviewer."
         f"{osint_note}"
     )
+
+
+def _role_references(role: str) -> tuple[SourceRef, ...]:
+    mapping = {
+        "xo": S3_REFERENCES,
+        "opso": S3_REFERENCES,
+        "s3": S3_REFERENCES,
+        "s1": S1_REFERENCES,
+        "s2": S2_REFERENCES,
+        "g2": S2_REFERENCES,
+        "s4": S4_REFERENCES,
+        "g4": S4_REFERENCES,
+        "s6": S6_REFERENCES,
+        "g6": S6_REFERENCES,
+        "doc": MEDICAL_REFERENCES,
+        "surgeon": MEDICAL_REFERENCES,
+        "g9": G9_REFERENCES,
+    }
+    return mapping.get(role, ())

@@ -78,6 +78,7 @@ def test_staff_council_battalion_s2_uses_osint_tie_in() -> None:
     assert response.perspectives[0].role == "s2"
     assert response.perspectives[0].citations
     assert "OSINT" in response.perspectives[0].answer
+    assert response.perspectives[0].structured_citations
 
 
 def test_staff_round_robin_runs_all_default_echelons() -> None:
@@ -106,6 +107,7 @@ def test_staff_round_robin_includes_g9_when_relevant() -> None:
         council for council in response.councils if council.echelon == StaffEchelon.division_group
     )
     assert "g9" in division_group_council.roles_run
+    assert "staff fight" in response.synthesis
 
 
 def test_staff_council_rejects_unknown_role() -> None:
@@ -218,6 +220,20 @@ def test_staff_council_normalizes_doc_alias() -> None:
 
     assert len(response.perspectives) == 1
     assert response.perspectives[0].role == "doc"
+
+
+def test_staff_council_synthesis_pushes_to_resolve_friction() -> None:
+    service = StaffCouncilService()
+    response = service.vet_idea(
+        StaffCouncilRequest(
+            question="Should we run a one-day field event with distributed Marines and limited vehicles?",
+            echelon=StaffEchelon.battalion,
+            roles=["s3", "s4", "s6"],
+        )
+    )
+
+    assert "executable plan" in response.synthesis
+    assert "Best immediate move" in response.synthesis
 
 
 def test_staff_s6_pki_wrapper_route_returns_pki_playbook() -> None:

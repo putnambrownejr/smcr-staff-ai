@@ -9,6 +9,7 @@ class MedicalPlanner:
             "Define the likely casualty profile, treatment capability on hand, and escalation path in plain language.",
             "Treat this as advisory planning support, not as medical direction or credentialed clinical guidance.",
             "Confirm who is actually trained, equipped, and authorized to provide care or make transport decisions.",
+            "Write stop-training triggers before the event, not after the first medical inject.",
         ]
         if request.audience:
             medical_support_estimate.append(f"Supported audience / formation: {request.audience}")
@@ -41,6 +42,7 @@ class MedicalPlanner:
             "Coordinate with the OIC/RSO or event lead on emergency-action triggers and decision authority.",
             "Coordinate with S-4 or transport support on vehicles, drivers, and movement assumptions.",
             "Coordinate with S-6 on generic comm checks and fallback methods.",
+            "Force a yes-or-no answer on casualty movement ownership before execution.",
             "Pause for qualified medical and command review before treating the plan as final.",
         ]
         if request.travel_required:
