@@ -117,25 +117,56 @@ class RangePackageResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class S3SubordinateUnitInput(BaseModel):
+    unit_name: str
+    relationship: str = "subordinate"
+    purpose: str | None = None
+    resource_bias: list[str] = Field(default_factory=list)
+
+
+class S3SubordinatePromptPacket(BaseModel):
+    unit_name: str
+    relationship: str
+    task: str
+    purpose: str
+    end_state: str
+    resource_prompts: list[str] = Field(default_factory=list)
+    planning_prompts: list[str] = Field(default_factory=list)
+    reporting_requirements: list[str] = Field(default_factory=list)
+
+
 class S3PlanningRequest(BaseModel):
     title: str
     mission_or_training_goal: str
     event_type: str = "drill_weekend"
     audience: str | None = None
     timeframe: str | None = None
+    primary_scenario_input: str | None = None
+    secondary_scenario_input: str | None = None
+    current_event_context: list[str] = Field(default_factory=list)
+    source_items: list[dict[str, str]] = Field(default_factory=list)
+    met_tasks: list[str] = Field(default_factory=list)
+    metl_focus: list[str] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
     coordinating_sections: list[str] = Field(default_factory=list)
+    subordinate_units: list[S3SubordinateUnitInput] = Field(default_factory=list)
     training_only: bool = True
 
 
 class S3PlanningResponse(BaseModel):
     title: str
     mission_analysis: list[str] = Field(default_factory=list)
+    scenario_frame: list[str] = Field(default_factory=list)
+    scenario_escalation: list[str] = Field(default_factory=list)
+    injects: list[str] = Field(default_factory=list)
+    met_alignment: list[str] = Field(default_factory=list)
     critical_tasks: list[str] = Field(default_factory=list)
     coordination_matrix: list[str] = Field(default_factory=list)
     battle_rhythm: list[str] = Field(default_factory=list)
     command_decision_points: list[str] = Field(default_factory=list)
     required_outputs: list[str] = Field(default_factory=list)
+    subordinate_prompt_packets: list[S3SubordinatePromptPacket] = Field(default_factory=list)
+    citations: list[str] = Field(default_factory=list)
     reserve_friction_points: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 

@@ -127,17 +127,50 @@ def test_s3_planner_returns_battle_rhythm_and_outputs() -> None:
             "title": "Battalion drill planning sync",
             "mission_or_training_goal": "Align staff outputs and support requirements for next drill weekend.",
             "event_type": "drill_weekend",
+            "primary_scenario_input": "Urban flooding disrupts movement and accountability.",
+            "secondary_scenario_input": "A reporting delay and support shortfall force a branch plan.",
+            "current_event_context": ["Recent heavy-rain and public-service disruption in a metro area."],
+            "source_items": [
+                {
+                    "title": "Official weather advisory",
+                    "source_type": "official",
+                    "claim": "Weather disruption affects mobility and support timing.",
+                    "corroborated": "true",
+                }
+            ],
+            "met_tasks": ["Conduct mission analysis"],
+            "metl_focus": ["Plan and coordinate training"],
             "constraints": ["Limited Saturday planning window"],
             "coordinating_sections": ["S-1", "S-4", "S-6"],
+            "subordinate_units": [
+                {
+                    "unit_name": "Detachment A",
+                    "relationship": "subordinate",
+                    "purpose": "Run the primary lane and drive initial reporting.",
+                },
+                {
+                    "unit_name": "Detachment B",
+                    "relationship": "supporting",
+                    "purpose": "Support observation and accountability tracking.",
+                    "resource_bias": ["Comms", "transportation"],
+                },
+            ],
         },
     )
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["mission_analysis"]
+    assert payload["scenario_frame"]
+    assert payload["scenario_escalation"]
+    assert payload["injects"]
+    assert payload["met_alignment"]
     assert payload["coordination_matrix"]
     assert payload["battle_rhythm"]
     assert payload["required_outputs"]
+    assert len(payload["subordinate_prompt_packets"]) == 2
+    assert any("On order" in item["task"] for item in payload["subordinate_prompt_packets"])
+    assert payload["citations"]
 
 
 def test_s4_planner_returns_support_and_sustainment_elements() -> None:
