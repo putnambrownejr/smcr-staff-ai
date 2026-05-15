@@ -32,3 +32,27 @@ class ChatGptBridgeServerStub:
 
     async def run_staff_agent_demo(self, agent_id: str, payload: dict[str, object]) -> dict[str, object]:
         return await self.adapter.run_staff_agent_demo(agent_id=agent_id, payload=payload)
+
+    async def build_staff_package(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.adapter.build_staff_package(payload)
+
+    async def draft_staff_product(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.adapter.draft_staff_product(payload)
+
+    async def list_agents(self) -> dict[str, object]:
+        return await self.adapter.list_agents()
+
+    async def run_staff_agent(self, agent_id: str, payload: dict[str, object]) -> dict[str, object]:
+        return await self.adapter.run_staff_agent(agent_id=agent_id, payload=payload)
+
+    async def build_chief_brief(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.adapter.build_chief_brief(payload)
+
+    async def get_career_watch(self, user_key: str) -> dict[str, object]:
+        return await self.adapter.get_career_watch(user_key=user_key)
+
+    async def get_admin_readiness(self, user_key: str) -> dict[str, object]:
+        return await self.adapter.get_admin_readiness(user_key=user_key)
+
+    async def build_admin_workflow(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.adapter.build_admin_workflow(payload)

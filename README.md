@@ -121,6 +121,7 @@ For GitHub/ChatGPT-friendly orientation, also see [docs/chatgpt_repo_mode.md](/C
 For the lowest-friction GitHub-plus-local workflow, see [docs/how_to_use_with_chatgpt.md](/C:/smcr-staff-ai/docs/how_to_use_with_chatgpt.md).
 For the first-pass ChatGPT-facing tool plan, see [docs/chatgpt_app_surface.md](/C:/smcr-staff-ai/docs/chatgpt_app_surface.md).
 For the current in-repo bridge scaffold, see [docs/chatgpt_app_scaffold.md](/C:/smcr-staff-ai/docs/chatgpt_app_scaffold.md).
+For the new local ChatGPT app server layer, see [chatgpt_app/README.md](/C:/smcr-staff-ai/chatgpt_app/README.md).
 For the build-vs-reuse decision matrix, see [docs/capability_reuse_audit.md](/C:/smcr-staff-ai/docs/capability_reuse_audit.md).
 
 ## Calling The API

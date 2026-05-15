@@ -1,17 +1,25 @@
 # ChatGPT App Scaffold
 
-This repository now includes a lightweight bridge scaffold under `app/chatgpt_bridge/`.
+This repository now includes both:
+
+- a lightweight bridge scaffold under `app/chatgpt_bridge/`
+- a first-pass local app server under `chatgpt_app/`
 
 ## What It Is
 
-It is not a full Apps SDK or MCP server yet.
-
-It is a dependency-light bridge layer that:
+The bridge layer is a dependency-light adapter that:
 
 - defines the first-pass ChatGPT-facing tool catalog
 - maps each tool to an existing stateless `/demo/*` route
 - provides an adapter that can call the live FastAPI app
 - provides a stub server class that can later be registered with a real MCP runtime
+
+The local app server is the next step:
+
+- it exposes a curated MCP tool surface on top of the live backend
+- it is Python-first and follows the official FastMCP example shape
+- it hides Swagger for normal use
+- it favors a few strong workflows over route-by-route exposure
 
 ## Files
 
@@ -39,4 +47,8 @@ This keeps the first integration step small and reversible:
 
 ## Next Step
 
-The next implementation step is to connect this stub to a real remote MCP / ChatGPT Apps SDK runtime and test it in ChatGPT developer mode against the stateless demo routes first.
+The next implementation step is to connect the local `chatgpt_app/` surface to ChatGPT developer mode through an HTTPS tunnel, test the tool behavior in conversation, and then decide whether the next promotion is:
+
+1. a richer local personal-use app
+2. a hosted remote MCP surface
+3. a fuller ChatGPT App with UI/widget work
