@@ -23,6 +23,7 @@ class ChatGptBridgeAdapter:
         self.local_api_key = local_api_key
         self.app = app
         self.client_factory = client_factory
+        self._discovered_base_url: str | None = None
 
     def catalog(self) -> BridgeCatalog:
         return build_bridge_catalog()
@@ -104,6 +105,9 @@ class ChatGptBridgeAdapter:
         if include_local_api_key and self.local_api_key:
             headers["X-Local-API-Key"] = self.local_api_key
 
+        if self.app is None and self.client_factory is None:
+            await self._ensure_base_url()
+
         if self.client_factory is not None:
             client = await self.client_factory()
             try:
@@ -124,3 +128,44 @@ class ChatGptBridgeAdapter:
             response = await client.request(method, path, json=json, headers=headers)
             response.raise_for_status()
             return response.json()
+
+    async def _ensure_base_url(self) -> None:
+        if self._discovered_base_url is not None:
+            self.base_url = self._discovered_base_url
+            return
+
+        if self.base_url != "http://127.0.0.1:8000":
+            self._discovered_base_url = self.base_url
+            return
+
+        discovered = await self._discover_backend_url()
+        self._discovered_base_url = discovered
+        self.base_url = discovered
+
+    async def _discover_backend_url(self) -> str:
+        candidate_ports = [8000, 8001, 8005, 8002, 8003, 8004, 8006, 8007, 8008, 8009, 8010]
+        for port in candidate_ports:
+            candidate = f"http://127.0.0.1:{port}"
+            try:
+                async with httpx.AsyncClient(base_url=candidate, timeout=2.0) as client:
+                    response = await client.get("/openapi.json")
+                    if response.status_code != 200:
+                        continue
+                    payload = response.json()
+                    paths = payload.get("paths", {})
+                    if "/planning/staff-package" not in paths or "/agents" not in paths:
+                        continue
+
+                    route_probe = await client.post(
+                        "/planning/staff-package",
+                        json={
+                            "title": "probe",
+                            "mission_or_training_goal": "probe",
+                            "training_only": True,
+                        },
+                    )
+                    if route_probe.status_code != 404:
+                        return candidate
+            except Exception:
+                continue
+        return self.base_url
