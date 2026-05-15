@@ -122,6 +122,7 @@ For the lowest-friction GitHub-plus-local workflow, see [docs/how_to_use_with_ch
 For the first-pass ChatGPT-facing tool plan, see [docs/chatgpt_app_surface.md](/C:/smcr-staff-ai/docs/chatgpt_app_surface.md).
 For the current in-repo bridge scaffold, see [docs/chatgpt_app_scaffold.md](/C:/smcr-staff-ai/docs/chatgpt_app_scaffold.md).
 For the new local ChatGPT app server layer, see [chatgpt_app/README.md](/C:/smcr-staff-ai/chatgpt_app/README.md).
+For one-command ChatGPT app startup, use [scripts/start-chatgpt-app.cmd](/C:/smcr-staff-ai/scripts/start-chatgpt-app.cmd) or [scripts/start-chatgpt-app.ps1](/C:/smcr-staff-ai/scripts/start-chatgpt-app.ps1).
 For the build-vs-reuse decision matrix, see [docs/capability_reuse_audit.md](/C:/smcr-staff-ai/docs/capability_reuse_audit.md).
 
 ## Calling The API

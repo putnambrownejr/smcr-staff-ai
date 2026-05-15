@@ -67,6 +67,23 @@ The MCP endpoint will be:
 
 - `http://127.0.0.1:8001/mcp`
 
+The easier path is to use the helper launcher from the repo root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-chatgpt-app.ps1 -Detached
+```
+
+Or just double-click:
+
+- [C:\smcr-staff-ai\scripts\start-chatgpt-app.cmd](C:/smcr-staff-ai/scripts/start-chatgpt-app.cmd)
+
+The helper will:
+
+- start from the correct repo directory
+- pick a free local port starting at `8006`
+- try to detect the live backend automatically
+- print the final local MCP URL
+
 ## Optional Local API Key
 
 If your main backend uses `LOCAL_API_KEY`, set this before running the app server:
@@ -83,6 +100,12 @@ If your main backend is on a different port:
 $env:SMCR_STAFF_AI_BACKEND_URL="http://127.0.0.1:8005"
 ```
 
+Or pass it directly:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-chatgpt-app.ps1 -BackendUrl http://127.0.0.1:8005
+```
+
 ## ChatGPT Developer Mode Flow
 
 For local testing, the typical flow is:
@@ -91,6 +114,12 @@ For local testing, the typical flow is:
 2. run this app server
 3. expose `http://127.0.0.1:8001/mcp` through an HTTPS tunnel
 4. add that tunneled MCP URL in ChatGPT developer mode
+
+To stop the app server later:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\stop-chatgpt-app.ps1
+```
 
 ## What This Is Not Yet
 
