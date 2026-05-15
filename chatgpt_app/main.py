@@ -88,6 +88,25 @@ class StaffProductToolInput(BaseModel):
     include_review_checklist: bool = Field(default=True, description="Whether to include the review checklist.")
 
 
+class CaseStudyToolInput(BaseModel):
+    title: str = Field(..., description="Short case-study title.")
+    framing_question: str = Field(..., description="What the audience should decide or learn from the case.")
+    training_objective: str = Field(..., description="The training objective the case is meant to sharpen.")
+    audience: str | None = Field(default=None, description="Intended audience for the discussion or PME.")
+    source_items: list[dict[str, str]] = Field(
+        default_factory=list,
+        description="Optional public-source items to ground the case in current events or real examples.",
+    )
+    current_event_context: list[str] = Field(
+        default_factory=list,
+        description="Optional short current-event facts or themes to shape the case.",
+    )
+    met_tasks: list[str] = Field(default_factory=list, description="Relevant MET-aligned tasks.")
+    metl_focus: list[str] = Field(default_factory=list, description="Relevant METL focus areas.")
+    constraints: list[str] = Field(default_factory=list, description="Discussion or planning constraints to preserve.")
+    training_only: bool = Field(default=True, description="Set true for training-only or fictional framing.")
+
+
 class AgentRunToolInput(BaseModel):
     agent_id: str = Field(..., description="Registered staff or specialty agent id.")
     input: str = Field(..., description="The actual user question or task for the agent.")
@@ -132,6 +151,16 @@ TOOL_SPECS: list[types.Tool] = [
         ),
         inputSchema=StaffProductToolInput.model_json_schema(),
         _meta=_tool_invocation_meta("Drafting the staff product", "Staff product draft ready", read_only=False),
+    ),
+    types.Tool(
+        name="build_training_case_study",
+        title="Build Training Case Study",
+        description=(
+            "Use this when the user wants an S-3-led training case study grounded in public-source context, "
+            "with optional S-2 framing, MET/METL alignment, CONOP implications, and AAR discussion focus."
+        ),
+        inputSchema=CaseStudyToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta("Building the case study", "Training case study ready", read_only=False),
     ),
     types.Tool(
         name="list_staff_agents",
@@ -224,6 +253,11 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             payload = StaffProductToolInput.model_validate(arguments)
             result = await adapter.draft_staff_product(payload.model_dump())
             return _ok_result("Drafted the staff product.", result)
+
+        if name == "build_training_case_study":
+            payload = CaseStudyToolInput.model_validate(arguments)
+            result = await adapter.build_training_case_study(payload.model_dump())
+            return _ok_result("Built the training case study.", result)
 
         if name == "list_staff_agents":
             result = await adapter.list_agents()

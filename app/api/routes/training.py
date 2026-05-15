@@ -12,9 +12,12 @@ from app.schemas.training import (
     S3PlanningResponse,
     S4PlanningRequest,
     S4PlanningResponse,
+    TrainingCaseStudyRequest,
+    TrainingCaseStudyResponse,
     TrainingScenarioRequest,
     TrainingScenarioResponse,
 )
+from app.services.training.case_study_builder import TrainingCaseStudyBuilder
 from app.services.training.event_planner import AnnualTrainingPlanner, RangePackagePlanner
 from app.services.training.s3_planner import S3Planner
 from app.services.training.s4_planner import S4Planner
@@ -29,6 +32,7 @@ _range_package_planner = RangePackagePlanner()
 _tdg_builder = TdgBuilder()
 _s3_planner = S3Planner()
 _s4_planner = S4Planner()
+_case_study_builder = TrainingCaseStudyBuilder()
 
 
 @router.post("/scenario", response_model=TrainingScenarioResponse)
@@ -54,6 +58,11 @@ def build_range_package(request: RangePackageRequest) -> RangePackageResponse:
 @router.post("/tdg", response_model=TdgGenerationResponse)
 def build_tdg(request: TdgGenerationRequest) -> TdgGenerationResponse:
     return _tdg_builder.build(request)
+
+
+@router.post("/case-study", response_model=TrainingCaseStudyResponse)
+def build_training_case_study(request: TrainingCaseStudyRequest) -> TrainingCaseStudyResponse:
+    return _case_study_builder.build(request)
 
 
 @router.post("/s3-plan", response_model=S3PlanningResponse)

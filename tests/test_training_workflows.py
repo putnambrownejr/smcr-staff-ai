@@ -23,6 +23,40 @@ def test_training_scenario_builder_returns_admin_and_orm_requirements() -> None:
     assert payload["aar_prompts"]
 
 
+def test_training_case_study_route_returns_s2_and_conop_implications() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/training/case-study",
+        json={
+            "title": "Urban flooding case",
+            "framing_question": "What should a reserve staff learn from a public urban-disruption event?",
+            "training_objective": "Sharpen planning judgment and AAR quality.",
+            "audience": "Company staff",
+            "source_items": [
+                {
+                    "title": "Official release",
+                    "source_type": "official",
+                    "claim": "Local flooding disrupted movement and public services.",
+                    "corroborated": "true",
+                }
+            ],
+            "met_tasks": ["Conduct mission analysis"],
+            "metl_focus": ["Plan and coordinate training"],
+            "constraints": ["Keep the discussion training-only"],
+            "training_only": True,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["situation_frame"]
+    assert payload["s2_estimate"]
+    assert payload["met_alignment"]
+    assert payload["conop_implications"]
+    assert payload["aar_focus"]
+
+
 def test_range_safety_builder_returns_roles_and_controls() -> None:
     client = TestClient(app)
 

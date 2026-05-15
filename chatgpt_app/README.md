@@ -23,6 +23,7 @@ Why:
 
 - `build_staff_package`
 - `draft_staff_product`
+- `build_training_case_study`
 - `list_staff_agents`
 - `run_staff_agent`
 - `build_chief_brief`

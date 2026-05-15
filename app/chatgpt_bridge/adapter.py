@@ -49,6 +49,9 @@ class ChatGptBridgeAdapter:
     async def draft_staff_product(self, payload: dict[str, object]) -> dict[str, object]:
         return await self._request_dict("POST", "/staff-products/draft", json=payload)
 
+    async def build_training_case_study(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self._request_dict("POST", "/training/case-study", json=payload)
+
     async def list_agents(self) -> dict[str, Any]:
         return {"agents": await self._request_list("GET", "/agents")}
 

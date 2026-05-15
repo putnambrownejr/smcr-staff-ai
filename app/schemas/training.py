@@ -12,6 +12,33 @@ class TrainingScenarioType(StrEnum):
     annual_training = "annual_training"
 
 
+class TrainingCaseStudyRequest(BaseModel):
+    title: str
+    framing_question: str
+    training_objective: str
+    audience: str | None = None
+    source_items: list[dict[str, str]] = Field(default_factory=list)
+    current_event_context: list[str] = Field(default_factory=list)
+    met_tasks: list[str] = Field(default_factory=list)
+    metl_focus: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+    training_only: bool = True
+
+
+class TrainingCaseStudyResponse(BaseModel):
+    title: str
+    situation_frame: list[str] = Field(default_factory=list)
+    case_summary: list[str] = Field(default_factory=list)
+    key_observations: list[str] = Field(default_factory=list)
+    s2_estimate: list[str] = Field(default_factory=list)
+    met_alignment: list[str] = Field(default_factory=list)
+    conop_implications: list[str] = Field(default_factory=list)
+    discussion_questions: list[str] = Field(default_factory=list)
+    aar_focus: list[str] = Field(default_factory=list)
+    citations: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
 class TrainingScenarioRequest(BaseModel):
     scenario_type: TrainingScenarioType
     title: str
