@@ -115,6 +115,7 @@ http://127.0.0.1:8000/dashboard
 ```
 
 For a cleaner local container workflow, see [docs/docker_local.md](/C:/smcr-staff-ai/docs/docker_local.md).
+For one-command local startup, use [scripts/start-local.cmd](/C:/smcr-staff-ai/scripts/start-local.cmd) or [scripts/start-local.ps1](/C:/smcr-staff-ai/scripts/start-local.ps1).
 
 For GitHub/ChatGPT-friendly orientation, also see [docs/chatgpt_repo_mode.md](/C:/smcr-staff-ai/docs/chatgpt_repo_mode.md).
 For the lowest-friction GitHub-plus-local workflow, see [docs/how_to_use_with_chatgpt.md](/C:/smcr-staff-ai/docs/how_to_use_with_chatgpt.md).

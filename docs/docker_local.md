@@ -16,10 +16,24 @@ From `C:\smcr-staff-ai`:
 docker compose up --build
 ```
 
+Or use the helper launcher:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-local.ps1 -Detached -OpenBrowser
+```
+
+If `8000` is already in use, the launcher will automatically move to the next open localhost port and print the URL.
+
+Or just double-click:
+
+- [C:\smcr-staff-ai\scripts\start-local.cmd](C:/smcr-staff-ai/scripts/start-local.cmd)
+
 Then open:
 
 - API docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 - Dashboard: [http://127.0.0.1:8000/dashboard](http://127.0.0.1:8000/dashboard)
+
+If the helper script had to pick a different port, use the URL it prints in the console.
 
 ## What The Container Does
 
@@ -52,6 +66,7 @@ You can override these with a local `.env` file if you want.
 ```powershell
 make docker-build
 make docker-up
+make docker-up-open
 make docker-logs
 make docker-down
 ```
@@ -63,6 +78,16 @@ docker compose up --build -d
 docker compose logs -f api
 docker compose down
 ```
+
+To stop with the helper:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\stop-local.ps1
+```
+
+Or double-click:
+
+- [C:\smcr-staff-ai\scripts\stop-local.cmd](C:/smcr-staff-ai/scripts/stop-local.cmd)
 
 ## Optional Postgres
 

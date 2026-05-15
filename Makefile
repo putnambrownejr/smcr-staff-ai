@@ -1,4 +1,4 @@
-.PHONY: install run test lint typecheck check init-db docker-up docker-down docker-logs docker-build
+.PHONY: install run test lint typecheck check init-db docker-up docker-down docker-logs docker-build docker-up-open
 
 install:
 	python -m pip install -e ".[dev]"
@@ -25,6 +25,9 @@ docker-build:
 
 docker-up:
 	docker compose up --build -d
+
+docker-up-open:
+	powershell -ExecutionPolicy Bypass -File .\scripts\start-local.ps1 -Detached -OpenBrowser
 
 docker-down:
 	docker compose down

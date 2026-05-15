@@ -16,7 +16,7 @@ services:
       MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-50000000}
       PUBLIC_SOURCE_ONLY: ${PUBLIC_SOURCE_ONLY:-true}
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:${LOCAL_BIND_PORT:-8000}:8000"
     volumes:
       - .:/app
       - smcr_local_context:/app/data/local_context
