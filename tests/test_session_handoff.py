@@ -1,7 +1,7 @@
 from datetime import date
 from pathlib import Path
 
-from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff
+from app.schemas.session import DrillDateRecord, FitrepReminder, PmeStatus, RecurringCheck, UserSessionHandoff
 from app.services.session.handoff_store import SessionHandoffStore
 
 
@@ -13,6 +13,8 @@ def test_session_handoff_store_round_trip(tmp_path: Path) -> None:
         mos="0602",
         pme=[PmeStatus(program="EWSDEP", status="incomplete", due_date=date(2026, 9, 30))],
         fitreps=[FitrepReminder(occasion="Annual", due_date=date(2026, 6, 30), role="MRO")],
+        drill_dates=[DrillDateRecord(drill_date=date(2026, 6, 6), label="June drill")],
+        recurring_checks=[RecurringCheck(title="Every drill review haircut and uniform.", category="readiness")],
         admin_watch_items=["DTS voucher after drill"],
     )
 
@@ -23,6 +25,8 @@ def test_session_handoff_store_round_trip(tmp_path: Path) -> None:
     assert loaded.user_key == saved.user_key
     assert loaded.pme[0].program == "EWSDEP"
     assert loaded.fitreps[0].occasion == "Annual"
+    assert loaded.drill_dates[0].label == "June drill"
+    assert loaded.recurring_checks[0].category == "readiness"
 
 
 def test_session_handoff_store_rejects_invalid_keys(tmp_path: Path) -> None:

@@ -32,6 +32,19 @@ class CareerOpportunity(BaseModel):
     notes: str | None = None
 
 
+class DrillDateRecord(BaseModel):
+    drill_date: date
+    label: str | None = None
+
+
+class RecurringCheck(BaseModel):
+    title: str
+    cadence: str = "each_drill"
+    category: str = "admin"
+    due_offset_days: int | None = None
+    notes: str | None = None
+
+
 class UserSessionHandoff(BaseModel):
     user_key: str
     display_name: str | None = None
@@ -41,7 +54,9 @@ class UserSessionHandoff(BaseModel):
     unit_id: str | None = None
     pme: list[PmeStatus] = Field(default_factory=list)
     fitreps: list[FitrepReminder] = Field(default_factory=list)
+    drill_dates: list[DrillDateRecord] = Field(default_factory=list)
     recurring_drill_notes: list[str] = Field(default_factory=list)
+    recurring_checks: list[RecurringCheck] = Field(default_factory=list)
     admin_watch_items: list[str] = Field(default_factory=list)
     rqs_context_id: str | None = None
     bio_context_id: str | None = None

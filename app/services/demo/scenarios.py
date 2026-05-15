@@ -9,7 +9,14 @@ from app.schemas.career import CareerWatchResponse
 from app.schemas.chief import ChiefBriefRequest, ChiefBriefResponse
 from app.schemas.ingestion import MessageRecord
 from app.schemas.opportunities import ManualOpportunityRequest
-from app.schemas.session import CareerTrend, FitrepReminder, PmeStatus, UserSessionHandoff
+from app.schemas.session import (
+    CareerTrend,
+    DrillDateRecord,
+    FitrepReminder,
+    PmeStatus,
+    RecurringCheck,
+    UserSessionHandoff,
+)
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.career.watch import CareerWatchService
 from app.services.chief.orchestrator import ChiefAideOrchestrator
@@ -104,8 +111,25 @@ def _seed_demo_context(
             billet="CommO",
             pme=[PmeStatus(program="EWSDEP", status="incomplete", due_date=date(2026, 6, 1))],
             fitreps=[FitrepReminder(occasion="Annual", due_date=date(2026, 6, 15), role="MRO")],
+            drill_dates=[
+                DrillDateRecord(drill_date=date(2026, 6, 6), label="June drill"),
+                DrillDateRecord(drill_date=date(2026, 7, 11), label="July drill"),
+            ],
             admin_watch_items=["DTS voucher after drill", "Confirm annual medical readiness status"],
             recurring_drill_notes=["Every drill confirm uniform, haircut, and laptop kit."],
+            recurring_checks=[
+                RecurringCheck(
+                    title="Every drill confirm haircut, uniform, and gear serviceability.",
+                    cadence="each_drill",
+                    category="readiness",
+                ),
+                RecurringCheck(
+                    title="After drill review DTS voucher and resolve anything still sitting in the queue.",
+                    cadence="post_drill",
+                    category="travel",
+                    due_offset_days=3,
+                ),
+            ],
             rqs_context_id=rqs_item.context_id,
             bio_context_id=bio_item.context_id,
             career_trends=[

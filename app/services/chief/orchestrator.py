@@ -6,7 +6,7 @@ from app.schemas.calendar import DrillPrepPlanResponse
 from app.schemas.chief import ChiefActionItem, ChiefBriefRequest, ChiefBriefResponse
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
-from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff
+from app.schemas.session import DrillDateRecord, FitrepReminder, PmeStatus, RecurringCheck, UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
@@ -47,6 +47,7 @@ class ChiefAideOrchestrator:
         action_items = _dedupe_actions(
             [
             *_handoff_actions(handoff),
+            *_personal_rhythm_actions(handoff, drill_plans),
             *_document_actions(document_summary, handoff),
             *_opportunity_actions(opportunities, handoff),
             *_career_actions(handoff),
@@ -110,6 +111,52 @@ def _handoff_actions(handoff: UserSessionHandoff | None) -> list[ChiefActionItem
                 category="admin",
                 priority="medium",
                 recommendation="Review this admin watch item and assign a next suspense if needed.",
+            )
+        )
+    if not handoff.drill_dates:
+        actions.append(
+            ChiefActionItem(
+                title="Add annual drill schedule to session handoff",
+                category="drill",
+                priority="medium",
+                recommendation=(
+                    "Store the upcoming drill dates so recurring prep reminders can anchor to a real unit rhythm."
+                ),
+            )
+        )
+    return actions
+
+
+def _personal_rhythm_actions(
+    handoff: UserSessionHandoff | None,
+    drill_plans: list[DrillPrepPlanResponse],
+) -> list[ChiefActionItem]:
+    if handoff is None:
+        return []
+    actions: list[ChiefActionItem] = []
+    anchor = _next_drill_anchor(handoff.drill_dates, drill_plans)
+    for note in handoff.recurring_drill_notes:
+        actions.append(
+            ChiefActionItem(
+                title=f"Recurring drill reminder: {note}",
+                category="drill_rhythm",
+                priority="medium" if anchor is not None else "low",
+                due_date=anchor,
+                source="session_handoff",
+                recommendation=(
+                    "Keep this in the pre-drill routine and confirm it still belongs in the standing checklist."
+                ),
+            )
+        )
+    for check in handoff.recurring_checks:
+        actions.append(
+            ChiefActionItem(
+                title=f"Recurring {check.category} check: {check.title}",
+                category=check.category,
+                priority=_recurring_priority(check, anchor),
+                due_date=_recurring_due_date(check, anchor),
+                source="session_handoff",
+                recommendation=_recurring_recommendation(check),
             )
         )
     return actions
@@ -346,6 +393,10 @@ def _summary_lines(
         lines.append("Session handoff is current enough to support drill, admin, and career reminders.")
     if drill_plans:
         lines.append(f"{len(drill_plans)} stored drill plan(s) are in view for near-term prep.")
+    elif handoff is not None and handoff.drill_dates:
+        lines.append(f"{len(handoff.drill_dates)} annual drill date(s) are stored for recurring prep reminders.")
+    if handoff is not None and handoff.recurring_checks:
+        lines.append(f"{len(handoff.recurring_checks)} recurring readiness/admin check(s) are tracked in the handoff.")
     new_updates = [update for update in updates if update.review_status == "new"]
     if new_updates:
         lines.append(f"{len(new_updates)} documentation update candidate(s) need review against official sources.")
@@ -408,3 +459,49 @@ def _dedupe_strings(items: list[str]) -> list[str]:
         seen.add(key)
         result.append(item)
     return result
+
+
+def _next_drill_anchor(
+    drill_dates: list[DrillDateRecord],
+    drill_plans: list[DrillPrepPlanResponse],
+) -> date | None:
+    today = datetime.now(UTC).date()
+    candidates = [plan.drill_date for plan in drill_plans if plan.drill_date >= today]
+    candidates.extend(item.drill_date for item in drill_dates if item.drill_date >= today)
+    return min(candidates) if candidates else None
+
+
+def _recurring_due_date(check: RecurringCheck, anchor: date | None) -> date | None:
+    if anchor is None:
+        return None
+    if check.cadence in {"each_drill", "pre_drill", "post_drill"}:
+        offset = check.due_offset_days or 0
+        return anchor + timedelta(days=offset)
+    return None
+
+
+def _recurring_priority(check: RecurringCheck, anchor: date | None) -> str:
+    if check.category in {"travel", "finance"}:
+        return "medium"
+    if anchor is not None and check.cadence in {"each_drill", "pre_drill", "post_drill"}:
+        return _priority(_recurring_due_date(check, anchor))
+    return "low"
+
+
+def _recurring_recommendation(check: RecurringCheck) -> str:
+    if check.category == "finance":
+        return "Confirm this recurring finance/admin check still has an owner and a realistic review cadence."
+    if check.category == "travel":
+        return "Anchor this travel-admin check to the next drill and verify the suspense before people disperse."
+    if check.category == "readiness":
+        return "Keep this as a standing pre-drill readiness standard, not a last-minute scramble."
+    if check.category == "training":
+        return (
+            "Tie this recurring training check to the next event and record what standard or requirement it supports."
+        )
+    if check.category == "medical":
+        return "Verify this recurring medical/readiness requirement against current local status before relying on it."
+    return (
+        "Keep this recurring check visible and attach it to a real cadence instead of letting it live as a vague "
+        "note."
+    )

@@ -22,6 +22,8 @@ def test_handoff_draft_update_extracts_patch(tmp_path: Path) -> None:
                     "- FitRep Annual for MRO due 06/15/2026\n"
                     "- DTS voucher after drill\n"
                     "- Every drill confirm uniform and haircut\n"
+                    "- Monthly review myPay and TSP allocations\n"
+                    "- Drill dates: 2026-06-06, 2026-07-11\n"
                     "- Trend: interested in broadening assignment\n"
                     "- MarineNet course: writing refresher\n"
                     "- Read: MCDP 1 Warfighting\n"
@@ -37,6 +39,10 @@ def test_handoff_draft_update_extracts_patch(tmp_path: Path) -> None:
         assert payload["patch"]["fitreps"][0]["occasion"] == "Annual"
         assert "DTS voucher after drill" in payload["patch"]["admin_watch_items"]
         assert "Every drill confirm uniform and haircut" in payload["patch"]["recurring_drill_notes"]
+        assert payload["patch"]["recurring_checks"]
+        categories = {item["category"] for item in payload["patch"]["recurring_checks"]}
+        assert {"travel", "readiness"}.issubset(categories)
+        assert len(payload["patch"]["drill_dates"]) == 2
         assert payload["patch"]["recommended_courses"]
         assert payload["patch"]["recommended_books"]
         assert payload["patch"]["preferences"]["location"] == "New Orleans"
@@ -57,6 +63,14 @@ def test_handoff_apply_update_merges_confirmed_patch(tmp_path: Path) -> None:
                 "patch": {
                     "pme": [{"program": "EWSDEP", "status": "incomplete", "due_date": "2026-06-30"}],
                     "fitreps": [{"occasion": "Annual", "due_date": "2026-06-15", "role": "MRO"}],
+                    "drill_dates": [{"drill_date": "2026-06-06", "label": "June drill"}],
+                    "recurring_checks": [
+                        {
+                            "title": "Every drill confirm haircut.",
+                            "cadence": "each_drill",
+                            "category": "readiness",
+                        }
+                    ],
                     "admin_watch_items": ["DTS voucher after drill"],
                     "recommended_courses": ["MarineNet writing refresher"],
                 }
@@ -67,6 +81,8 @@ def test_handoff_apply_update_merges_confirmed_patch(tmp_path: Path) -> None:
         payload = response.json()
         assert "pme" in payload["applied_categories"]
         assert any(item["program"] == "EWSDEP" for item in payload["handoff"]["pme"])
+        assert payload["handoff"]["drill_dates"][0]["label"] == "June drill"
+        assert payload["handoff"]["recurring_checks"][0]["category"] == "readiness"
         assert "Existing admin note" in payload["handoff"]["admin_watch_items"]
         assert "DTS voucher after drill" in payload["handoff"]["admin_watch_items"]
     finally:

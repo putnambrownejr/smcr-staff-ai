@@ -28,6 +28,7 @@ def test_agent_registry_loads_expected_agents() -> None:
         "training-planner",
         "orm-risk-management",
         "fitrep-assistant",
+        "installation-practical-advisor",
         "pki-cac-troubleshooter",
         "leadership-advisor",
         "osint-research-assistant",
@@ -222,4 +223,31 @@ def test_chaplain_agent_routes_to_real_support_channels() -> None:
     response = agent.run("Help me think through a morale and welfare concern.", context=AgentContext())
 
     assert "Chaplain advisory" in response.answer
+    assert response.source_trust
+
+
+def test_leadership_agent_returns_historical_perspective_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("leadership-advisor")
+    assert agent is not None
+
+    response = agent.run(
+        "Help me frame a PME on standards, moral courage, and command climate.",
+        context=AgentContext(),
+    )
+
+    assert "Leadership / historical perspective advisory" in response.answer
+    assert response.structured_citations
+    assert response.source_trust
+
+
+def test_installation_agent_returns_practical_access_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("installation-practical-advisor")
+    assert agent is not None
+
+    response = agent.run("Help me think through visitor access for a command-sponsored event.", context=AgentContext())
+
+    assert "Installation / base practical advisory" in response.answer
+    assert response.structured_citations
     assert response.source_trust

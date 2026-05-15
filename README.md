@@ -14,8 +14,8 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 
 | Capability | What it does now | Status |
 | --- | --- | --- |
-| Agent registry | Lists and runs placeholder staff/MOS agents with structured responses, warnings, confidence, citations, and follow-up questions. | Working stub |
-| Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, and future email/calendar triage. | Working scaffold |
+| Agent registry | Lists and runs staff/MOS agents with structured responses, warnings, confidence, citations, and follow-up questions. | Working local registry |
+| Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, yearly drill rhythm, and future email/calendar triage. | Working scaffold |
 | Admin readiness | Pulls FitRep reminders, admin watch items, local document gaps, readiness references, and travel/admin support into an AdminO / S-1 style view. | Working local digest |
 | S-1 / Admin chief advisor | Adds an explicit S-1/Admin chief perspective for reserve admin continuity, routing discipline, awards, orders, DTS, GTCC, and suspense management. | Working advisory agent |
 | S-2 / intel advisor | Adds an explicit S-2 perspective for public-source estimates, information gaps, confidence-weighted staff support, and OSINT/public-source aggregation as a subordinate lane. | Working advisory agent |
@@ -32,7 +32,8 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Text summarizer / checklist API | Turns pasted text into a local summary, due-outs, action items, checklist, and follow-up questions without storing the input. | Working local analysis |
 | Staff council | Vets ideas through company, battalion, and division/group staff roles, with S-2/G-2 tied to OSINT. Includes round-robin review. | Working scaffold |
 | Staff products | Builds advisory scaffolds for OPORDs, WARNOs, FRAGOs, SITREPs, AARs, naval letters, memos, and endorsements. | Working scaffold |
-| Session handoffs | Stores minimum necessary local user context for PME, FitRep, admin, drill, and preference reminders. | Working local storage |
+| Session handoffs | Stores minimum necessary local user context for PME, FitRep, annual drill dates, recurring checks, admin, drill, and preference reminders. | Working local storage |
+| Installation / base practical advisor | Helps with common Marine/joint-base access, sponsorship, REAL-ID, visitor-center, and command-event coordination friction while insisting on local verification. | Working advisory agent |
 | Local context storage | Lets users upload files/notes, RQS/BIO references, and drill templates as advisory local context without changing doctrine, org, exercise, agent, or canonical document structure. | Working local storage |
 | Personal document organizer | Lists local RQS/BIO/orders/travel/PME-style uploads by type and flags PII/local-retention warnings. | Working local organizer |
 | Personnel products | Builds advisory FitRep planning, FitRep bullet capture, award package, and routing package support with citations and review points. | Working local support |
@@ -46,6 +47,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | OSINT trend aggregation | Aggregates user-supplied trusted public-source news/social trend summaries with citations, counterarguments, and confidence weighting. Also exposed as an S-2 staff-support lane. | Working source-evaluation agent |
 | Vetted social ingestion | Normalizes public news/social trend records into OSINT/deep-research-ready source items without unrestricted scraping. | Working connector |
 | Professional reading catalog | Tracks Commandant's Reading List sources, archive references, open-source classics, and study summaries. | Working catalog |
+| Leadership / historical perspective advisor | Brings Marine leadership doctrine, professional reading, and historical perspective into PME, command-climate, and leader-development questions without pretending to be a historical figure. | Working advisory agent |
 | USMC history context | Provides an easy-access Marine Corps history and heritage study reference for agent context and PME prompts. | Markdown reference |
 | Org awareness | Loads example MARFORRES-style hierarchy and answers unit chain lookups. | Working example data |
 | Exercise cadence | Provides typical/advisory exercise and battle rhythm examples. | Working example data |

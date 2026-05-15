@@ -1,6 +1,14 @@
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.session import CareerTrend, FitrepReminder, HandoffUpsertResponse, PmeStatus, UserSessionHandoff
+from app.schemas.session import (
+    CareerTrend,
+    DrillDateRecord,
+    FitrepReminder,
+    HandoffUpsertResponse,
+    PmeStatus,
+    RecurringCheck,
+    UserSessionHandoff,
+)
 
 
 class HandoffUpdateDraftRequest(BaseModel):
@@ -23,7 +31,9 @@ class HandoffUpdateDraftRequest(BaseModel):
 class HandoffUpdatePatch(BaseModel):
     pme: list[PmeStatus] = Field(default_factory=list)
     fitreps: list[FitrepReminder] = Field(default_factory=list)
+    drill_dates: list[DrillDateRecord] = Field(default_factory=list)
     recurring_drill_notes: list[str] = Field(default_factory=list)
+    recurring_checks: list[RecurringCheck] = Field(default_factory=list)
     admin_watch_items: list[str] = Field(default_factory=list)
     career_trends: list[CareerTrend] = Field(default_factory=list)
     recommended_books: list[str] = Field(default_factory=list)

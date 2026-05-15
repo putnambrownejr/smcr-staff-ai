@@ -5,7 +5,14 @@ from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
 from app.schemas.chief import ChiefBriefRequest
 from app.schemas.ingestion import MessageRecord
 from app.schemas.opportunities import ManualOpportunityRequest
-from app.schemas.session import CareerTrend, FitrepReminder, PmeStatus, UserSessionHandoff
+from app.schemas.session import (
+    CareerTrend,
+    DrillDateRecord,
+    FitrepReminder,
+    PmeStatus,
+    RecurringCheck,
+    UserSessionHandoff,
+)
 from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateReviewStatus
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.chief.orchestrator import ChiefAideOrchestrator
@@ -209,3 +216,44 @@ def test_chief_brief_dedupes_and_prioritizes_digest_items(tmp_path: Path) -> Non
     assert len(brief.recommended_courses) == 2
     course_titles = [item.title for item in brief.action_items if item.title.startswith("Course recommendation:")]
     assert len(course_titles) == 1
+
+
+def test_chief_brief_surfaces_recurring_checks_and_drill_schedule(tmp_path: Path) -> None:
+    handoff_store = SessionHandoffStore(tmp_path / "handoffs")
+    handoff_store.upsert(
+        UserSessionHandoff(
+            user_key="capt-rhythm",
+            updated_at=datetime(2026, 5, 10, tzinfo=UTC),
+            drill_dates=[DrillDateRecord(drill_date=date(2026, 6, 6), label="June drill")],
+            recurring_drill_notes=["Every drill confirm uniform and haircut."],
+            recurring_checks=[
+                RecurringCheck(
+                    title="After drill review DTS voucher and close travel-admin loose ends.",
+                    cadence="post_drill",
+                    category="travel",
+                    due_offset_days=3,
+                ),
+                RecurringCheck(
+                    title="Monthly review myPay and TSP allocations.",
+                    cadence="monthly",
+                    category="finance",
+                ),
+            ],
+        )
+    )
+    orchestrator = ChiefAideOrchestrator(
+        handoff_store=handoff_store,
+        document_organizer=PersonalDocumentOrganizer(LocalContextStore(tmp_path / "context")),
+        drill_plan_store=DrillPrepPlanStore(tmp_path / "plans"),
+        reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
+        document_update_store=DocumentUpdateStore(tmp_path / "updates"),
+        opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+    )
+
+    brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-rhythm"))
+
+    titles = {item.title for item in brief.action_items}
+    assert "Recurring drill reminder: Every drill confirm uniform and haircut." in titles
+    assert "Recurring travel check: After drill review DTS voucher and close travel-admin loose ends." in titles
+    assert "Recurring finance check: Monthly review myPay and TSP allocations." in titles
+    assert any("recurring readiness/admin check" in line for line in brief.summary_lines)

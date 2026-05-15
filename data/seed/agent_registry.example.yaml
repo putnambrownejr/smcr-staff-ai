@@ -47,6 +47,8 @@ agents:
     doctrine_categories: [orm]
   - id: fitrep-assistant
     doctrine_categories: [fitrep_pes]
+  - id: installation-practical-advisor
+    doctrine_categories: [reserve_administration, uniform_regulations]
   - id: pki-cac-troubleshooter
     doctrine_categories: [communications, reserve_administration]
   - id: leadership-advisor

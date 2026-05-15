@@ -241,6 +241,54 @@ SEL_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+LEADERSHIP_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCDP 1 Warfighting",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899837/mcdp-1/",
+        publisher="United States Marine Corps",
+        notes="Baseline warfighting philosophy and decision-making mindset reference.",
+    ),
+    SourceRef(
+        title="MCRP 6-11D Sustaining the Transformation",
+        url="https://www.marines.mil/Portals/1/MCRP%206-11D.pdf",
+        publisher="United States Marine Corps",
+        notes="Leadership, standards, mentorship, and Marine development reference.",
+    ),
+    SourceRef(
+        title="Expeditionary Warfare School Mission and Curriculum",
+        url="https://www.usmcu.edu/EWS/",
+        publisher="Marine Corps University",
+        notes="Public PME reference for the level of planning maturity expected from company-grade officers.",
+    ),
+    SourceRef(
+        title="Update to the Commandant's Professional Reading List for Fiscal Year 26",
+        url="https://www.marines.mil/News/Messages/Messages-Display/Article/4351724/update-to-the-commandants-professional-reading-list-for-fiscal-year-26/",
+        publisher="United States Marine Corps",
+        notes="Current official professional reading program reference for leadership and historical study.",
+    ),
+)
+
+INSTALLATION_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="Installation Access Control Policy",
+        url="https://www.marines.mil/News/Messages/Messages-Display/Article/889956/installation-access-control-policy/",
+        publisher="United States Marine Corps",
+        notes="High-level Marine Corps installation-access framing and sponsorship expectations.",
+    ),
+    SourceRef(
+        title="MCRD Parris Island Base Access Policies",
+        url="https://www.mcrdpi.marines.mil/Visitors/Base-Access/",
+        publisher="United States Marine Corps",
+        notes="Current public example of Marine Corps visitor access, REAL ID, sponsorship, and visitor restrictions.",
+    ),
+    SourceRef(
+        title="MCAS New River Visitor Access",
+        url="https://www.newriver.marines.mil/Visitor-Access/",
+        publisher="United States Marine Corps",
+        notes="Current public example of visitor-control, DBIDS, IARA, and local access-process reality.",
+    ),
+)
+
 
 def citation_titles(refs: tuple[SourceRef, ...]) -> list[str]:
     return [ref.title for ref in refs]

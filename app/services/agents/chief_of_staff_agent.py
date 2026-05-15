@@ -37,6 +37,8 @@ class ChiefOfStaffAideAgent(Agent):
         handoff = context.extra.get("handoff", {})
         pme_lines = _format_list(handoff, "pme", "No PME watch items supplied.")
         fitrep_lines = _format_list(handoff, "fitreps", "No FitRep watch items supplied.")
+        drill_lines = _format_list(handoff, "drill_dates", "No annual drill dates supplied.")
+        recurring_lines = _format_list(handoff, "recurring_checks", "No recurring readiness/admin checks supplied.")
         admin_lines = _format_list(handoff, "admin_watch_items", "No admin watch items supplied.")
 
         answer = (
@@ -49,6 +51,8 @@ class ChiefOfStaffAideAgent(Agent):
             "- Review user-approved email search results for action items once email access is connected.\n\n"
             f"PME watch items:\n{pme_lines}\n\n"
             f"FitRep watch items:\n{fitrep_lines}\n\n"
+            f"Stored drill dates:\n{drill_lines}\n\n"
+            f"Recurring checks:\n{recurring_lines}\n\n"
             f"Admin watch items:\n{admin_lines}\n\n"
             "Recommended routing:\n"
             "- Drill/admin readiness: Chief of Staff/Aide, XO, 1stSgt/SgtMaj, S-1/G-1.\n"

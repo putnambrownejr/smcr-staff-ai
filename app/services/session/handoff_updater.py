@@ -12,7 +12,14 @@ from app.schemas.handoff_updates import (
     HandoffUpdateDraftRequest,
     HandoffUpdatePatch,
 )
-from app.schemas.session import CareerTrend, FitrepReminder, PmeStatus, UserSessionHandoff
+from app.schemas.session import (
+    CareerTrend,
+    DrillDateRecord,
+    FitrepReminder,
+    PmeStatus,
+    RecurringCheck,
+    UserSessionHandoff,
+)
 from app.services.session.handoff_store import SessionHandoffStore
 
 DATE_PATTERNS = ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y")
@@ -57,6 +64,7 @@ def _extract_patch(notes: str) -> HandoffUpdatePatch:
             continue
         lowered = line.lower()
         extracted_date = _extract_date(line)
+        extracted_dates = _extract_dates(line)
 
         if _is_pme_line(lowered):
             patch.pme.append(
@@ -94,13 +102,26 @@ def _extract_patch(notes: str) -> HandoffUpdatePatch:
                 )
             )
             continue
+        if _is_drill_schedule_line(lowered) and extracted_dates:
+            patch.drill_dates.extend(
+                DrillDateRecord(drill_date=item, label="Drill schedule") for item in extracted_dates
+            )
+            continue
         if _is_recurring_drill_line(lowered):
             patch.recurring_drill_notes.append(line)
+            patch.recurring_checks.append(_recurring_check(line))
+            if _is_admin_line(lowered):
+                patch.admin_watch_items.append(line)
             continue
         if _is_preference_line(line):
             key, value = _parse_preference(line)
             if key and value:
                 patch.preferences[key] = value
+            continue
+        if _is_recurring_check_line(lowered):
+            patch.recurring_checks.append(_recurring_check(line))
+            if _is_admin_line(lowered):
+                patch.admin_watch_items.append(line)
             continue
         if _is_admin_line(lowered):
             patch.admin_watch_items.append(line)
@@ -114,7 +135,15 @@ def _extract_patch(notes: str) -> HandoffUpdatePatch:
         patch.career_trends,
         lambda item: f"{item.label}|{item.direction}|{'|'.join(item.evidence)}",
     )
+    patch.drill_dates = _unique_models(
+        patch.drill_dates,
+        lambda item: f"{item.drill_date.isoformat()}|{item.label or ''}",
+    )
     patch.recurring_drill_notes = _dedupe_strings(patch.recurring_drill_notes)
+    patch.recurring_checks = _unique_models(
+        patch.recurring_checks,
+        lambda item: f"{item.title}|{item.cadence}|{item.category}|{item.due_offset_days}|{item.notes or ''}",
+    )
     patch.admin_watch_items = _dedupe_strings(patch.admin_watch_items)
     patch.recommended_books = _dedupe_strings(patch.recommended_books)
     patch.recommended_courses = _dedupe_strings(patch.recommended_courses)
@@ -134,7 +163,17 @@ def _merge_handoff(
         patch.fitreps,
         lambda item: f"{item.occasion}|{item.due_date}|{item.role}",
     )
+    base.drill_dates = _merge_models(
+        base.drill_dates,
+        patch.drill_dates,
+        lambda item: f"{item.drill_date.isoformat()}|{item.label or ''}",
+    )
     base.recurring_drill_notes = _merge_strings(base.recurring_drill_notes, patch.recurring_drill_notes)
+    base.recurring_checks = _merge_models(
+        base.recurring_checks,
+        patch.recurring_checks,
+        lambda item: f"{item.title}|{item.cadence}|{item.category}|{item.due_offset_days}",
+    )
     base.admin_watch_items = _merge_strings(base.admin_watch_items, patch.admin_watch_items)
     base.career_trends = _merge_models(
         base.career_trends,
@@ -153,7 +192,9 @@ def _applied_categories(patch: HandoffUpdatePatch) -> list[str]:
     for name in (
         "pme",
         "fitreps",
+        "drill_dates",
         "recurring_drill_notes",
+        "recurring_checks",
         "admin_watch_items",
         "career_trends",
         "recommended_books",
@@ -171,14 +212,21 @@ def _clean_line(line: str) -> str:
 
 
 def _extract_date(text: str) -> date | None:
+    dates = _extract_dates(text)
+    return dates[0] if dates else None
+
+
+def _extract_dates(text: str) -> list[date]:
+    results: list[date] = []
     tokens = re.findall(r"\b\d{1,4}[/-]\d{1,2}[/-]\d{1,4}\b", text)
     for token in tokens:
         for pattern in DATE_PATTERNS:
             try:
-                return datetime.strptime(token, pattern).date()
+                results.append(datetime.strptime(token, pattern).date())
+                break
             except ValueError:
                 continue
-    return None
+    return results
 
 
 def _is_pme_line(lowered: str) -> bool:
@@ -201,6 +249,16 @@ def _is_recurring_drill_line(lowered: str) -> bool:
     return "each drill" in lowered or "every drill" in lowered or "monthly drill" in lowered
 
 
+def _is_drill_schedule_line(lowered: str) -> bool:
+    return "drill schedule" in lowered or "drill dates" in lowered or "annual drill" in lowered
+
+
+def _is_recurring_check_line(lowered: str) -> bool:
+    cadence_tokens = ("monthly", "quarterly", "annually", "yearly", "before drill", "after drill")
+    reminder_tokens = ("haircut", "gear", "uniform", "mypay", "tsp", "dts", "voucher", "medical", "training")
+    return any(token in lowered for token in cadence_tokens) and any(token in lowered for token in reminder_tokens)
+
+
 def _is_preference_line(text: str) -> bool:
     prefixes = ("preference", "pref", "location", "focus")
     return ":" in text and any(text.lower().startswith(prefix) for prefix in prefixes)
@@ -211,6 +269,49 @@ def _is_admin_line(lowered: str) -> bool:
     return any(
         token in lowered
         for token in keywords
+    )
+
+
+def _recurring_check(line: str) -> RecurringCheck:
+    lowered = line.lower()
+    cadence = "each_drill"
+    if "monthly" in lowered:
+        cadence = "monthly"
+    elif "quarterly" in lowered:
+        cadence = "quarterly"
+    elif "annually" in lowered or "yearly" in lowered:
+        cadence = "yearly"
+    elif "after drill" in lowered:
+        cadence = "post_drill"
+    elif "before drill" in lowered:
+        cadence = "pre_drill"
+    elif "each drill" in lowered or "every drill" in lowered or "monthly drill" in lowered:
+        cadence = "each_drill"
+
+    category = "admin"
+    if any(token in lowered for token in ("haircut", "uniform", "gear")):
+        category = "readiness"
+    elif any(token in lowered for token in ("dts", "voucher", "gtcc", "travel")):
+        category = "travel"
+    elif any(token in lowered for token in ("mypay", "tsp", "pay")):
+        category = "finance"
+    elif any(token in lowered for token in ("marinenet", "pme", "training")):
+        category = "training"
+    elif any(token in lowered for token in ("medical", "dental")):
+        category = "medical"
+
+    due_offset_days: int | None = None
+    if cadence == "pre_drill":
+        due_offset_days = -7
+    elif cadence == "post_drill":
+        due_offset_days = 3
+
+    return RecurringCheck(
+        title=line,
+        cadence=cadence,
+        category=category,
+        due_offset_days=due_offset_days,
+        notes=line,
     )
 
 
