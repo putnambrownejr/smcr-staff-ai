@@ -36,3 +36,4 @@ When real ingestion is added, fetch from the official URL, calculate source hash
 - [Correspondence And Document Formatting](correspondence_formatting.md)
 - [Staff Function Training References](staff_function_training.md)
 - [Staff Development And PME Grounding](staff_development.md)
+- [SEL, Ceremony, And Marine Corps Process Grounding](sel_ceremony_procedure.md)

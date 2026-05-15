@@ -13,6 +13,7 @@ def test_agent_registry_loads_expected_agents() -> None:
         "s3-opso",
         "s4-logistics",
         "s6-comms",
+        "sel-enlisted-leader",
         "g9-civil-military",
         "medical-doc-advisor",
         "airo-advisor",
@@ -138,6 +139,21 @@ def test_s6_comms_agent_returns_c2_structure() -> None:
     response = agent.run("Help me shape generic comm support for next drill.", context=AgentContext())
 
     assert "S-6 advisory" in response.answer
+    assert response.structured_citations
+    assert response.source_trust
+
+
+def test_sel_agent_returns_ceremony_and_process_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("sel-enlisted-leader")
+    assert agent is not None
+
+    response = agent.run(
+        "Help me think through a retirement ceremony, sequence, standards, and accountability checks.",
+        context=AgentContext(),
+    )
+
+    assert "SEL / SgtMaj / 1stSgt advisory" in response.answer
     assert response.structured_citations
     assert response.source_trust
 

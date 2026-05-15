@@ -208,6 +208,39 @@ G9_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+SEL_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCO 5060.20 Marine Corps Drill and Ceremonies Manual",
+        url="https://www.marines.mil/Portals/1/Publications/MCO%205060.20_Enclosure%201_signed_EDD.pdf?ver=2019-06-05-105622-833",
+        publisher="United States Marine Corps",
+        notes="Primary drill, ceremonies, and military-ceremonial procedures reference.",
+    ),
+    SourceRef(
+        title="Marine Corps Manual w/ CH 1-3",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/898634/marine-corps-manual-wch-1-3/",
+        publisher="United States Marine Corps",
+        notes="Marine customs, leadership expectations, and institutional standards reference.",
+    ),
+    SourceRef(
+        title="NAVMC 3500.18D Common Skills Training and Readiness Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2158067/navmc-350018d/",
+        publisher="United States Marine Corps",
+        notes="Contains common-skills standards including customs, courtesies, and honors.",
+    ),
+    SourceRef(
+        title="MCO 1020.34H Marine Corps Uniform Regulations",
+        url="https://www.marines.mil/portals/1/Publications/MCO%201020.34H%20v2.pdf?ver=20",
+        publisher="United States Marine Corps",
+        notes="Uniform and appearance standards reference for ceremonies and formal events.",
+    ),
+    SourceRef(
+        title="MCO 5216.20B Marine Corps Supplement to the Department of the Navy Correspondence Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2795618/mco-521620b-wadmin-ch-4/",
+        publisher="United States Marine Corps",
+        notes="Correspondence and protocol-adjacent routing reference for formal packages.",
+    ),
+)
+
 
 def citation_titles(refs: tuple[SourceRef, ...]) -> list[str]:
     return [ref.title for ref in refs]

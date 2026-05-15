@@ -95,6 +95,22 @@ def test_staff_round_robin_runs_all_default_echelons() -> None:
     assert "g9" not in division_group_council.roles_run
 
 
+def test_staff_council_firstsgt_uses_sel_grounding() -> None:
+    service = StaffCouncilService()
+    response = service.vet_idea(
+        StaffCouncilRequest(
+            question="How should we tighten accountability and ceremony sequence for a formal company event?",
+            echelon=StaffEchelon.company,
+            roles=["firstsgt"],
+        )
+    )
+
+    assert len(response.perspectives) == 1
+    assert response.perspectives[0].role == "firstsgt"
+    assert "sequence control" in response.perspectives[0].answer
+    assert response.perspectives[0].structured_citations
+
+
 def test_staff_round_robin_includes_g9_when_relevant() -> None:
     service = StaffCouncilService()
     response = service.round_robin(

@@ -12,6 +12,7 @@ from app.services.agents.source_refs import (
     S3_REFERENCES,
     S4_REFERENCES,
     S6_REFERENCES,
+    SEL_REFERENCES,
     SourceRef,
     citation_titles,
     source_trust_markers,
@@ -432,6 +433,28 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             f"{osint_note}"
         )
 
+    if definition.role in {"firstsgt", "sgtmaj"}:
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- Standards events fail when the unit treats sequence and accountability like details.\n"
+            "- Marines can recover from friction faster than they can recover from looking unprepared in public.\n"
+            "- If ceremony, customs, courtesies, or formation control matter here,\n"
+            "  then rehearsal and ownership matter too.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What standard, custom, or formal process governs this event?\n"
+            "- Who owns sequence control, accountability, and release criteria?\n"
+            "- What would embarrass the unit if it went unverified?\n"
+            "- What needs rehearsal instead of a verbal assumption?\n\n"
+            "Recommended next action:\n"
+            "- Write the sequence, accountability method, uniform standard, and speaking or movement order now.\n"
+            "- Verify ceremony and protocol questions against the governing reference before execution."
+            f"{osint_note}"
+        )
+
     if definition.role in {"doc", "surgeon"}:
         return (
             f"{definition.title} staff-vetting perspective.\n\n"
@@ -507,6 +530,8 @@ def _role_references(role: str) -> tuple[SourceRef, ...]:
         "g4": S4_REFERENCES,
         "s6": S6_REFERENCES,
         "g6": S6_REFERENCES,
+        "firstsgt": SEL_REFERENCES,
+        "sgtmaj": SEL_REFERENCES,
         "doc": MEDICAL_REFERENCES,
         "surgeon": MEDICAL_REFERENCES,
         "g9": G9_REFERENCES,

@@ -14,6 +14,8 @@ agents:
   - id: s6-comms
     doctrine_categories: [communications, operations_planning]
     linked_agent: pki-cac-troubleshooter
+  - id: sel-enlisted-leader
+    doctrine_categories: [leadership, uniform_regulations, correspondence_formatting, training_readiness]
   - id: g9-civil-military
     doctrine_categories: [civil_affairs, intelligence_osint, operations_planning, humanitarian_disaster_response]
     linked_agent: mos-civil-affairs
@@ -74,6 +76,12 @@ staff_agent_patterns:
   - id_pattern: staff-company-doc
     doctrine_categories: [orm, logistics_04xx, operations_planning]
     linked_agent: medical-doc-advisor
+  - id_pattern: staff-company-firstsgt
+    doctrine_categories: [leadership, uniform_regulations, training_readiness]
+    linked_agent: sel-enlisted-leader
+  - id_pattern: staff-battalion-sgtmaj
+    doctrine_categories: [leadership, uniform_regulations, training_readiness]
+    linked_agent: sel-enlisted-leader
   - id_pattern: staff-battalion-surgeon
     doctrine_categories: [orm, logistics_04xx, operations_planning]
     linked_agent: medical-doc-advisor

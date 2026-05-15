@@ -244,6 +244,13 @@ categories:
     source_policy: official_public_sources_only
     classification_label: UNCLASSIFIED
     cui_flag: false
+    source_refs:
+      - title: Marine Corps Manual w/ CH 1-3
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/898634/marine-corps-manual-wch-1-3/
+      - title: NAVMC 3500.18D Common Skills Training and Readiness Manual
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2158067/navmc-350018d/
+      - title: MCO 5060.20 Marine Corps Drill and Ceremonies Manual
+        url: https://www.marines.mil/Portals/1/Publications/MCO%205060.20_Enclosure%201_signed_EDD.pdf?ver=2019-06-05-105622-833
   - id: professional_reading
     name: Commandant's Professional Reading List and PME classics
     publication_families: ["books", "periodicals", "podcasts", "public-domain classics", "official reading lists"]

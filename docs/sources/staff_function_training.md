@@ -21,6 +21,24 @@ personality, reasoning, and workflow grounding. It is intentionally practical ra
   - Official URL: https://www.travel.dod.mil/Programs/Government-Travel-Charge-Card/
   - Why it matters: official GTCC training and continuity reference.
 
+## SEL / SgtMaj / 1stSgt
+
+- MCO 5060.20 Marine Corps Drill and Ceremonies Manual
+  - Official URL: https://www.marines.mil/Portals/1/Publications/MCO%205060.20_Enclosure%201_signed_EDD.pdf?ver=2019-06-05-105622-833
+  - Why it matters: ceremony sequence, formations, honors, and formal-event execution.
+
+- Marine Corps Manual w/ CH 1-3
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/898634/marine-corps-manual-wch-1-3/
+  - Why it matters: customs, leadership expectations, and institutional standards.
+
+- NAVMC 3500.18D Common Skills Training and Readiness Manual
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2158067/navmc-350018d/
+  - Why it matters: common-skills standards including customs and courtesies.
+
+- MCO 1020.34H Marine Corps Uniform Regulations
+  - Official URL: https://www.marines.mil/portals/1/Publications/MCO%201020.34H%20v2.pdf?ver=20
+  - Why it matters: standards and uniform discipline for ceremonies and formal events.
+
 ## S-3 / OpsO / XO
 
 - MCWP 5-10 Marine Corps Planning Process
