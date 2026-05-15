@@ -114,6 +114,8 @@ Open the lightweight dashboard:
 http://127.0.0.1:8000/dashboard
 ```
 
+For a cleaner local container workflow, see [docs/docker_local.md](/C:/smcr-staff-ai/docs/docker_local.md).
+
 For GitHub/ChatGPT-friendly orientation, also see [docs/chatgpt_repo_mode.md](/C:/smcr-staff-ai/docs/chatgpt_repo_mode.md).
 For the lowest-friction GitHub-plus-local workflow, see [docs/how_to_use_with_chatgpt.md](/C:/smcr-staff-ai/docs/how_to_use_with_chatgpt.md).
 For the first-pass ChatGPT-facing tool plan, see [docs/chatgpt_app_surface.md](/C:/smcr-staff-ai/docs/chatgpt_app_surface.md).
