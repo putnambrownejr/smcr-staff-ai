@@ -117,6 +117,7 @@ def test_s3_opso_agent_returns_staff_planning_structure() -> None:
     response = agent.run("Help me shape a drill weekend synchronization plan.", context=AgentContext())
 
     assert "S-3 / OpsO advisory" in response.answer
+    assert "TDG" in response.answer or "wargame" in response.answer.lower()
     assert response.structured_citations
     assert response.source_trust
 
@@ -141,6 +142,7 @@ def test_s6_comms_agent_returns_c2_structure() -> None:
     response = agent.run("Help me shape generic comm support for next drill.", context=AgentContext())
 
     assert "S-6 advisory" in response.answer
+    assert "CommO" in response.answer or "operator lane" in response.answer
     assert response.structured_citations
     assert response.source_trust
 
@@ -171,8 +173,30 @@ def test_g9_agent_returns_civil_military_structure() -> None:
     )
 
     assert "G-9 / civil-military advisory" in response.answer
+    assert "civil-affairs MOS lane" in response.answer
     assert response.structured_citations
     assert response.source_trust
+
+
+def test_mos_specialty_agents_are_grounded_under_parent_staff_lanes() -> None:
+    registry = AgentRegistry()
+
+    commo = registry.get("mos-commo")
+    assert commo is not None
+    commo_response = commo.run("Help me think through reserve comm readiness and rehearsals.", context=AgentContext())
+    assert "under the S-6 lane" in commo_response.answer
+    assert commo_response.structured_citations
+    assert commo_response.source_trust
+
+    civil_affairs = registry.get("mos-civil-affairs")
+    assert civil_affairs is not None
+    ca_response = civil_affairs.run(
+        "Help me think through civil reconnaissance continuity for a reserve scenario.",
+        context=AgentContext(),
+    )
+    assert "under the G-9 lane" in ca_response.answer
+    assert ca_response.structured_citations
+    assert ca_response.source_trust
 
 
 def test_medical_doc_agent_returns_casevac_structure() -> None:

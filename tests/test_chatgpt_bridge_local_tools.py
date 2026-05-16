@@ -62,6 +62,24 @@ async def test_build_frago_to_conop_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_build_tdg_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.build_tdg(
+        {
+            "title": "Reserve convoy link-up",
+            "theme": "small-unit decision-making under time pressure",
+            "training_objective": "Practice judgment, branch plans, and risk tradeoffs.",
+            "constraints": ["Reserve audience", "45-minute session"],
+        }
+    )
+
+    assert "TDG scaffold" in cast(str, result["title"])
+    assert result["decision_points"]
+    assert result["discussion_questions"]
+
+
+@pytest.mark.anyio
 async def test_list_agents_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 

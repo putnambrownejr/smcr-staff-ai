@@ -146,6 +146,19 @@ class CaseStudyToolInput(BaseModel):
     training_only: bool = Field(default=True, description="Set true for training-only or fictional framing.")
 
 
+class TdgToolInput(BaseModel):
+    title: str = Field(..., description="Short TDG or wargaming title.")
+    theme: str = Field(..., description="Core tactical or decision-making theme.")
+    audience: str | None = Field(default=None, description="Intended audience for the TDG.")
+    training_objective: str = Field(..., description="What judgment or habit the TDG should sharpen.")
+    references: list[str] = Field(default_factory=list, description="Optional doctrinal or PME references.")
+    constraints: list[str] = Field(default_factory=list, description="Session or scenario constraints.")
+    include_sketch_map_prompt: bool = Field(
+        default=True,
+        description="Whether to include a sketch-map prompt for instructor use.",
+    )
+
+
 class AgentRunToolInput(BaseModel):
     agent_id: str = Field(..., description="Registered staff or specialty agent id.")
     input: str = Field(..., description="The actual user question or task for the agent.")
@@ -220,6 +233,16 @@ TOOL_SPECS: list[types.Tool] = [
         ),
         inputSchema=CaseStudyToolInput.model_json_schema(),
         _meta=_tool_invocation_meta("Building the case study", "Training case study ready", read_only=False),
+    ),
+    types.Tool(
+        name="build_tdg",
+        title="Build TDG Or Wargame",
+        description=(
+            "Use this when the user wants an S-3-style tactical decision game or short wargaming scaffold to "
+            "stress assumptions, decision points, and reserve-specific friction."
+        ),
+        inputSchema=TdgToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta("Building the TDG", "TDG ready", read_only=False),
     ),
     types.Tool(
         name="list_staff_agents",
@@ -346,6 +369,11 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             payload = CaseStudyToolInput.model_validate(arguments)
             result = await adapter.build_training_case_study(payload.model_dump())
             return _ok_result("Built the training case study.", result)
+
+        if name == "build_tdg":
+            payload = TdgToolInput.model_validate(arguments)
+            result = await adapter.build_tdg(payload.model_dump())
+            return _ok_result("Built the TDG or wargame.", result)
 
         if name == "list_staff_agents":
             result = await adapter.list_agents()

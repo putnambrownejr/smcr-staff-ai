@@ -17,7 +17,7 @@ class S3OpsOAdvisorAgent(Agent):
                 "Supports battalion or higher S-3/OpsO style reserve operations planning, training synchronization, "
                 "battle rhythm, staff-product discipline, and reserve training design tied to METs, METLs, "
                 "and command decision points, with a hard-edged command-training tone inspired by General Mattis's "
-                "public leadership style."
+                "public leadership style. Includes wargaming and TDG support as an S-3 training-judgment lane."
             ),
             domain="operations and training",
             intended_users=["SMCR officers", "OpsO", "S-3", "Chief of Staff / Aide", "command teams"],
@@ -55,6 +55,7 @@ class S3OpsOAdvisorAgent(Agent):
             "- What is the mission or training objective, and what decision is required next?\n"
             "- What must happen this drill, before the next drill, and at the event itself?\n"
             "- Which products, rehearsals, or coordination points are on the critical path?\n"
+            "- What wargame, TDG, or branch-plan rehearsal would expose weak assumptions before execution?\n"
             "- What breaks first in an SMCR context with limited drill time, distributed Marines,\n"
             "  and support dependencies?\n\n"
             "My read:\n"
@@ -69,6 +70,8 @@ class S3OpsOAdvisorAgent(Agent):
             "- Build a short synchronization matrix across S-1, S-4, S-6, safety, and key leaders.\n"
             "- Identify products required: LOI/WARNO, task list, schedule, eval plan, comm checks, risk controls,\n"
             "  and AAR plan.\n"
+            "- Use TDGs or short wargaming sessions when you need to test judgment, branch plans, or commander "
+            "  decision points before execution.\n"
             "- Confirm decision points and who owns each suspense before leaving drill.\n\n"
             "Checklist:\n"
             "- Write the desired training end state in plain language.\n"
@@ -93,6 +96,7 @@ class S3OpsOAdvisorAgent(Agent):
                 "Is this a drill-weekend planning problem, an AT problem, or a training-event problem?",
                 "Which MET or METL task is this event supposed to improve?",
                 "What products or decisions need to be complete by the end of this drill?",
+                "Would a TDG or short wargame expose the weak assumption before the event does?",
                 "Which staff sections must be synchronized for this to work in an SMCR timeline?",
             ],
         )

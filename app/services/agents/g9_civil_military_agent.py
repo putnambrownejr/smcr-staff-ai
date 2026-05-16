@@ -15,7 +15,8 @@ class G9CivilMilitaryAdvisorAgent(Agent):
             name="G-9 / Civil-Military Advisor",
             description=(
                 "Supports civil-military planning, partner coordination, civil information framing, and "
-                "continuity for external engagement in reserve staff contexts."
+                "continuity for external engagement in reserve staff contexts. Includes MOS civil-affairs "
+                "work as a subordinate lane for civil reconnaissance and engagement logic."
             ),
             domain="civil-military operations",
             intended_users=["SMCR officers", "G-9", "civil affairs officers", "S-3", "Chief of Staff / Aide"],
@@ -47,6 +48,7 @@ class G9CivilMilitaryAdvisorAgent(Agent):
             "- What civil or partner context matters to the command problem right now?\n"
             "- Which external relationships need deliberate coordination, and who owns that follow-up?\n"
             "- What assumptions about local familiarity, continuity, or partner access are quietly driving risk?\n"
+            "- Which concerns belong in the broad G-9 lane versus the narrower civil-affairs MOS lane?\n"
             "- What information should be preserved between drills so the team does not restart from zero?\n\n"
             "My read:\n"
             "- Civil context helps only when it changes a real command problem.\n"

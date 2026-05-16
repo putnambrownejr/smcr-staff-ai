@@ -16,7 +16,8 @@ class S6CommunicationsAdvisorAgent(Agent):
             description=(
                 "Supports reserve C2 support planning, PACE framing, supportability checks, and "
                 "communications coordination while refusing sensitive technical detail. Includes PKI/CAC "
-                "troubleshooting as an S-6 user-access support lane."
+                "troubleshooting as an S-6 user-access support lane and CommO/MOS-commo concerns as a "
+                "subordinate operator-readiness lane."
             ),
             domain="communications support",
             intended_users=["SMCR officers", "S-6", "CommO", "OpsO", "command teams"],
@@ -54,6 +55,7 @@ class S6CommunicationsAdvisorAgent(Agent):
             "- What assumptions exist about equipment, permissions, training currency, and support windows?\n"
             "- What fallback methods are available if the preferred plan degrades?\n"
             "- What user-access risks exist around CAC, PKI, middleware, browser auth, or portal readiness?\n"
+            "- Which concerns belong in the broader S-6 staff lane versus the narrower CommO/operator lane?\n"
             "- What should remain generic until validated through proper channels?\n\n"
             "My read:\n"
             "- In reserve units, the quiet killers are access, permissions, stale gear, and lack of rehearsal.\n"

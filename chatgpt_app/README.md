@@ -25,6 +25,7 @@ Why:
 - `draft_staff_product`
 - `build_frago_to_conop`
 - `build_training_case_study`
+- `build_tdg`
 - `list_staff_agents`
 - `run_staff_agent`
 - `build_chief_brief`
