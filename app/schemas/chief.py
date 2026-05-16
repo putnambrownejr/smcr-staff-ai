@@ -40,11 +40,23 @@ class ChiefActionItem(BaseModel):
     recommendation: str
 
 
+class NextDrillReadiness(BaseModel):
+    anchor_drill_date: date | None = None
+    readiness_posture: str
+    summary: list[str] = Field(default_factory=list)
+    must_do_before_drill: list[ChiefActionItem] = Field(default_factory=list)
+    likely_friction_points: list[str] = Field(default_factory=list)
+    missing_foundation: list[str] = Field(default_factory=list)
+    standing_rhythm: list[str] = Field(default_factory=list)
+    recommended_follow_on_workflows: list[str] = Field(default_factory=list)
+
+
 class ChiefBriefResponse(BaseModel):
     title: str
     user_key: str | None = None
     handoff: UserSessionHandoff | None = None
     handoff_is_stale: bool = False
+    next_drill_readiness: NextDrillReadiness
     summary_lines: list[str] = Field(default_factory=list)
     action_items: list[ChiefActionItem]
     top_priority_items: list[ChiefActionItem] = Field(default_factory=list)

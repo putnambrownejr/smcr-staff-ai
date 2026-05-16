@@ -72,6 +72,23 @@ async def test_list_agents_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_build_next_drill_readiness_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.build_next_drill_readiness(
+        {
+            "user_key": "capt-example",
+            "include_personal_documents": True,
+            "include_drill_plans": True,
+        }
+    )
+
+    assert cast(str, result["title"]) == "Chief of Staff / Aide de Camp triage brief"
+    assert "next_drill_readiness" in result
+    assert "readiness_posture" in cast(dict[str, object], result["next_drill_readiness"])
+
+
+@pytest.mark.anyio
 async def test_build_handoff_reminder_plans_via_adapter(tmp_path: Path) -> None:
     from datetime import date
 

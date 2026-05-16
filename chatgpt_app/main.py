@@ -246,6 +246,20 @@ TOOL_SPECS: list[types.Tool] = [
         _meta=_tool_invocation_meta("Building the Chief brief", "Chief brief ready", read_only=False),
     ),
     types.Tool(
+        name="build_next_drill_readiness",
+        title="Build Next Drill Readiness",
+        description=(
+            "Use this when the user wants the most practical front door for what matters before next drill: "
+            "immediate actions, friction points, missing foundation, standing rhythm, and follow-on workflows."
+        ),
+        inputSchema=ChiefBriefToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Building next-drill readiness",
+            "Next-drill readiness ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
         name="career_watch",
         title="Career Watch",
         description=(
@@ -349,6 +363,11 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             payload = ChiefBriefToolInput.model_validate(arguments)
             result = await adapter.build_chief_brief(payload.model_dump())
             return _ok_result("Built the Chief brief.", result)
+
+        if name == "build_next_drill_readiness":
+            payload = ChiefBriefToolInput.model_validate(arguments)
+            result = await adapter.build_next_drill_readiness(payload.model_dump())
+            return _ok_result("Built next-drill readiness.", result)
 
         if name == "career_watch":
             payload = UserKeyToolInput.model_validate(arguments)

@@ -28,6 +28,7 @@ Why:
 - `list_staff_agents`
 - `run_staff_agent`
 - `build_chief_brief`
+- `build_next_drill_readiness`
 - `career_watch`
 - `admin_readiness`
 - `build_admin_workflow`

@@ -3,7 +3,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from app.core.security import DEFAULT_WARNINGS
 from app.schemas.calendar import DrillPrepPlanResponse
-from app.schemas.chief import ChiefActionItem, ChiefBriefRequest, ChiefBriefResponse
+from app.schemas.chief import ChiefActionItem, ChiefBriefRequest, ChiefBriefResponse, NextDrillReadiness
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import DrillDateRecord, FitrepReminder, PmeStatus, RecurringCheck, UserSessionHandoff
@@ -56,11 +56,21 @@ class ChiefAideOrchestrator:
             ]
         )
         sorted_actions = _sort_actions(action_items)
+        next_drill_readiness = _next_drill_readiness(
+            handoff=handoff,
+            handoff_is_stale=handoff_is_stale,
+            drill_plans=drill_plans,
+            document_summary=document_summary,
+            updates=updates,
+            actions=sorted_actions,
+            user_key=request.user_key,
+        )
         return ChiefBriefResponse(
             title="Chief of Staff / Aide de Camp triage brief",
             user_key=request.user_key,
             handoff=handoff,
             handoff_is_stale=handoff_is_stale,
+            next_drill_readiness=next_drill_readiness,
             summary_lines=_summary_lines(
                 handoff=handoff,
                 handoff_is_stale=handoff_is_stale,
@@ -68,6 +78,7 @@ class ChiefAideOrchestrator:
                 updates=updates,
                 drill_plans=drill_plans,
                 document_summary=document_summary,
+                next_drill_readiness=next_drill_readiness,
             ),
             action_items=sorted_actions,
             top_priority_items=_top_priority_items(sorted_actions),
@@ -383,8 +394,10 @@ def _summary_lines(
     updates: list[DocumentationUpdateCandidate],
     drill_plans: list[DrillPrepPlanResponse],
     document_summary: PersonalDocumentSummary | None,
+    next_drill_readiness: NextDrillReadiness,
 ) -> list[str]:
     lines: list[str] = []
+    lines.append(next_drill_readiness.readiness_posture)
     if handoff is None:
         lines.append("No session handoff is stored yet, so the brief is operating with limited user context.")
     elif handoff_is_stale:
@@ -408,6 +421,127 @@ def _summary_lines(
     if high_priority:
         lines.append(f"{len(high_priority)} high-priority item(s) should be handled first.")
     return lines
+
+
+def _next_drill_readiness(
+    *,
+    handoff: UserSessionHandoff | None,
+    handoff_is_stale: bool,
+    drill_plans: list[DrillPrepPlanResponse],
+    document_summary: PersonalDocumentSummary | None,
+    updates: list[DocumentationUpdateCandidate],
+    actions: list[ChiefActionItem],
+    user_key: str | None,
+) -> NextDrillReadiness:
+    anchor = _next_drill_anchor(handoff.drill_dates if handoff is not None else [], drill_plans)
+    must_do = [
+        item
+        for item in actions
+        if item.priority == "high" or item.category in {"drill", "drill_rhythm", "travel"}
+    ][:6]
+
+    likely_friction_points: list[str] = []
+    if handoff_is_stale:
+        likely_friction_points.append(
+            "Session handoff is stale, so drill/admin continuity may be weaker than the stored notes suggest."
+        )
+    if handoff is not None and not handoff.drill_dates:
+        likely_friction_points.append("No annual drill schedule is stored, which weakens reminder timing.")
+    if not drill_plans and anchor is not None:
+        likely_friction_points.append("A drill date exists, but no saved drill-prep plan is attached to it yet.")
+    if any(item.category == "travel" for item in actions):
+        likely_friction_points.append(
+            "Travel-admin follow-through is still a likely point of friction before or after drill."
+        )
+    if any(item.category == "source_updates" for item in actions):
+        likely_friction_points.append(
+            "Some source-backed references may be stale until update candidates are reviewed."
+        )
+
+    missing_foundation: list[str] = []
+    if handoff is None:
+        missing_foundation.append("No session handoff exists yet.")
+    if document_summary is not None:
+        for item in document_summary.missing_recommended_types[:4]:
+            missing_foundation.append(f"Missing recommended local reference: {item}.")
+    if handoff is not None and handoff.rqs_context_id is None:
+        missing_foundation.append("No linked RQS reference is present in the handoff.")
+    if handoff is not None and handoff.bio_context_id is None:
+        missing_foundation.append("No linked BIO reference is present in the handoff.")
+
+    standing_rhythm: list[str] = []
+    if handoff is not None:
+        standing_rhythm.extend(f"Recurring note: {note}" for note in handoff.recurring_drill_notes[:3])
+        standing_rhythm.extend(
+            f"Recurring {check.category} check: {check.title}" for check in handoff.recurring_checks[:4]
+        )
+    if not standing_rhythm:
+        standing_rhythm = [
+            "Confirm next drill date, uniform, and travel-admin suspense.",
+            "Review readiness, training, and admin loose ends before release.",
+        ]
+
+    workflow_user = user_key or "your-user-key"
+    recommended_follow_on_workflows = [
+        f"POST /calendar/handoffs/{workflow_user}/reminder-plans",
+        f"GET /admin/readiness/{workflow_user}",
+        f"GET /career/watch/{workflow_user}",
+    ]
+    if anchor is not None or drill_plans:
+        recommended_follow_on_workflows.append("POST /planning/staff-package")
+
+    summary = []
+    if anchor is not None:
+        summary.append(f"Next drill anchor: {anchor.isoformat()}.")
+    if must_do:
+        summary.append(f"{len(must_do)} action(s) are in the immediate pre-drill lane.")
+    if missing_foundation:
+        summary.append("Foundational context is still incomplete for at least one readiness lane.")
+    if updates:
+        summary.append("Source freshness still needs human review before some references are treated as current.")
+
+    posture = _readiness_posture(
+        anchor=anchor,
+        handoff=handoff,
+        handoff_is_stale=handoff_is_stale,
+        missing_foundation=missing_foundation,
+        updates=updates,
+        must_do=must_do,
+    )
+    return NextDrillReadiness(
+        anchor_drill_date=anchor,
+        readiness_posture=posture,
+        summary=summary,
+        must_do_before_drill=must_do,
+        likely_friction_points=likely_friction_points,
+        missing_foundation=missing_foundation,
+        standing_rhythm=standing_rhythm[:6],
+        recommended_follow_on_workflows=recommended_follow_on_workflows,
+    )
+
+
+def _readiness_posture(
+    *,
+    anchor: date | None,
+    handoff: UserSessionHandoff | None,
+    handoff_is_stale: bool,
+    missing_foundation: list[str],
+    updates: list[DocumentationUpdateCandidate],
+    must_do: list[ChiefActionItem],
+) -> str:
+    if handoff is None:
+        return "Next-drill readiness posture: weak foundation. Build the handoff and rhythm before trusting the brief."
+    if handoff_is_stale:
+        return "Next-drill readiness posture: degraded by stale continuity. Refresh the handoff before relying on it."
+    if missing_foundation:
+        return "Next-drill readiness posture: partially built. Core context or documents are still missing."
+    if anchor is None:
+        return "Next-drill readiness posture: rhythm exists, but the next drill anchor is not yet explicit."
+    if any(item.priority == "high" for item in must_do):
+        return "Next-drill readiness posture: active. The rhythm is present, but several items need attention now."
+    if any(update.review_status == "new" for update in updates):
+        return "Next-drill readiness posture: mostly set, but source freshness still needs review."
+    return "Next-drill readiness posture: on track. Use the brief to maintain rhythm and close the remaining gaps."
 
 
 def _priority(due_date: date | None) -> str:

@@ -173,6 +173,7 @@ def _workspace_response(
     documentation_updates: list[DocumentationUpdateCandidate],
 ) -> DashboardWorkspaceResponse:
     summary_lines = [
+        *chief_brief.next_drill_readiness.summary[:2],
         *chief_brief.summary_lines[:2],
         *admin_readiness.summary_lines[:1],
         *career_watch.warnings[:1],
@@ -255,6 +256,8 @@ def _daily_ops_brief(
     actions = chief_brief.action_items
     must_do = [_entry_from_action(item) for item in actions if item.priority == "high"][:5]
     if not must_do:
+        must_do = [_entry_from_action(item) for item in chief_brief.next_drill_readiness.must_do_before_drill[:3]]
+    if not must_do:
         must_do = [_entry_from_action(item) for item in chief_brief.top_priority_items[:3]]
     should_do = [_entry_from_action(item) for item in actions if item.priority == "medium"][:5]
     can_defer = [_entry_from_action(item) for item in actions if item.priority == "low"][:5]
@@ -303,6 +306,7 @@ def _daily_ops_brief(
     )
 
     blockers: list[str] = []
+    blockers.extend(chief_brief.next_drill_readiness.missing_foundation[:3])
     if document_summary is not None:
         if document_summary.missing_recommended_types:
             blockers.append(
@@ -322,6 +326,8 @@ def _daily_ops_brief(
     )
 
     leverage_actions = [
+        item.title for item in chief_brief.next_drill_readiness.must_do_before_drill[:3]
+    ] or [
         item.title for item in chief_brief.top_priority_items[:3]
     ] or [
         "Refresh the session handoff.",
@@ -331,7 +337,7 @@ def _daily_ops_brief(
 
     prep_follow_ups = [task.title for plan in chief_brief.drill_plans for task in plan.tasks[:2]][:4]
     if not prep_follow_ups:
-        prep_follow_ups = [
+        prep_follow_ups = chief_brief.next_drill_readiness.recommended_follow_on_workflows[:3] or [
             "Review the next drill-prep plan.",
             "Confirm travel, uniform, and gear timelines.",
         ]

@@ -91,6 +91,9 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
     assert brief.recommended_courses
     assert brief.summary_lines
     assert brief.top_priority_items
+    assert brief.next_drill_readiness.anchor_drill_date == date(2026, 6, 6)
+    assert brief.next_drill_readiness.must_do_before_drill
+    assert brief.next_drill_readiness.recommended_follow_on_workflows
 
 
 def test_chief_brief_flags_stale_handoff_and_missing_core_docs(tmp_path: Path) -> None:
@@ -257,3 +260,4 @@ def test_chief_brief_surfaces_recurring_checks_and_drill_schedule(tmp_path: Path
     assert "Recurring travel check: After drill review DTS voucher and close travel-admin loose ends." in titles
     assert "Recurring finance check: Monthly review myPay and TSP allocations." in titles
     assert any("recurring readiness/admin check" in line for line in brief.summary_lines)
+    assert any("travel-admin" in item.lower() for item in brief.next_drill_readiness.likely_friction_points)
