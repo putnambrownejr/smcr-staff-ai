@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import cast
 
 import pytest
@@ -42,6 +43,25 @@ async def test_draft_staff_product_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_build_frago_to_conop_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.build_frago_to_conop(
+        {
+            "title": "Adapter FRAGO refinement test",
+            "supported_unit": "Civil affairs company",
+            "mission_or_training_goal": "Refine higher guidance into an initial subordinate concept.",
+            "higher_guidance": ["Battalion directs a one-day field event.", "Company will submit initial concept."],
+            "training_only": True,
+        }
+    )
+
+    assert "FRAGO to CONOP package" in cast(str, result["title"])
+    assert "initial_conop" in result
+    assert "frago_draft" in result
+
+
+@pytest.mark.anyio
 async def test_list_agents_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 
@@ -49,3 +69,49 @@ async def test_list_agents_via_adapter() -> None:
 
     assert "agents" in result
     assert any(agent["id"] == "s3-opso" for agent in result["agents"])
+
+
+@pytest.mark.anyio
+async def test_build_handoff_reminder_plans_via_adapter(tmp_path: Path) -> None:
+    from datetime import date
+
+    from app.api.routes.calendar import get_handoff_store, get_plan_store
+    from app.main import app
+    from app.schemas.session import DrillDateRecord, RecurringCheck, UserSessionHandoff
+    from app.services.calendar.plan_store import DrillPrepPlanStore
+    from app.services.session.handoff_store import SessionHandoffStore
+
+    adapter = ChatGptBridgeAdapter(app=app)
+    handoff_store = SessionHandoffStore(tmp_path / "handoffs")
+    plan_store = DrillPrepPlanStore(tmp_path / "plans")
+    handoff_store.upsert(
+        UserSessionHandoff(
+            user_key="adapter-rhythm",
+            unit_id="example-unit",
+            drill_dates=[DrillDateRecord(drill_date=date(2026, 6, 6), label="June drill")],
+            recurring_checks=[
+                RecurringCheck(
+                    title="Review DTS voucher after drill.",
+                    cadence="post_drill",
+                    category="travel",
+                    due_offset_days=2,
+                )
+            ],
+        )
+    )
+
+    def override_handoff_store() -> SessionHandoffStore:
+        return handoff_store
+
+    def override_plan_store() -> DrillPrepPlanStore:
+        return plan_store
+
+    app.dependency_overrides[get_handoff_store] = override_handoff_store
+    app.dependency_overrides[get_plan_store] = override_plan_store
+    try:
+        result = await adapter.build_handoff_reminder_plans(user_key="adapter-rhythm")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert result["generated_plan_ids"]
+    assert result["plans"]

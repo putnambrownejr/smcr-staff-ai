@@ -88,6 +88,45 @@ class StaffProductToolInput(BaseModel):
     include_review_checklist: bool = Field(default=True, description="Whether to include the review checklist.")
 
 
+class FragoToConopToolInput(BaseModel):
+    title: str = Field(..., description="Short package title.")
+    supported_echelon: str = Field(
+        default="company",
+        description="Supported echelon such as company or battalion.",
+    )
+    higher_headquarters: str | None = Field(
+        default=None,
+        description="Higher headquarters issuing or shaping guidance.",
+    )
+    supported_unit: str = Field(..., description="Unit building the initial CONOP.")
+    event_type: str = Field(default="training_event", description="Event or planning type.")
+    mission_or_training_goal: str = Field(..., description="What the event or guidance is meant to achieve.")
+    raw_guidance_text: str | None = Field(default=None, description="Optional pasted higher guidance or FRAGO text.")
+    higher_guidance: list[str] = Field(default_factory=list, description="Key higher-guidance statements.")
+    frago_facts: list[str] = Field(default_factory=list, description="Known FRAGO facts or directions to preserve.")
+    s3_inputs: list[str] = Field(default_factory=list, description="S-3 planning inputs.")
+    g9_inputs: list[str] = Field(default_factory=list, description="G-9 or civil-consideration inputs.")
+    source_items: list[dict[str, str]] = Field(default_factory=list, description="Optional public-source context.")
+    intelligence_question: str | None = Field(default=None, description="Optional S-2 question.")
+    subordinate_units: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Subordinate or supporting units.",
+    )
+    met_tasks: list[str] = Field(default_factory=list, description="Relevant MET-aligned tasks.")
+    metl_focus: list[str] = Field(default_factory=list, description="Relevant METL focus.")
+    constraints: list[str] = Field(default_factory=list, description="Key constraints.")
+    support_requirements: list[str] = Field(default_factory=list, description="Support requirements to preserve.")
+    coordinating_sections: list[str] = Field(default_factory=list, description="Coordinating staff sections.")
+    partner_types: list[str] = Field(default_factory=list, description="External partners or role players.")
+    civil_considerations: list[str] = Field(default_factory=list, description="Civil or population considerations.")
+    medical_risk_context: list[str] = Field(default_factory=list, description="Medical-risk context.")
+    casualty_scenarios: list[str] = Field(default_factory=list, description="Training-safe casualty scenarios.")
+    timeframe: str | None = Field(default=None, description="Optional timeframe.")
+    preferred_format: str | None = Field(default=None, description="Preferred format if known.")
+    formal_event: bool = Field(default=False, description="Whether to trigger XO/SEL formal-event review.")
+    training_only: bool = Field(default=True, description="Set true for training-only or fictional scenarios.")
+
+
 class CaseStudyToolInput(BaseModel):
     title: str = Field(..., description="Short case-study title.")
     framing_question: str = Field(..., description="What the audience should decide or learn from the case.")
@@ -131,6 +170,12 @@ class AdminWorkflowToolInput(BaseModel):
     constraints: list[str] = Field(default_factory=list, description="Constraints that shape the workflow.")
 
 
+class ReminderPlanToolInput(BaseModel):
+    user_key: str = Field(..., description="Stable local user profile key.")
+    include_travel_tasks: bool = Field(default=True, description="Include travel-related reminder tasks.")
+    only_future_drills: bool = Field(default=True, description="Only generate plans for current or future drill dates.")
+
+
 TOOL_SPECS: list[types.Tool] = [
     types.Tool(
         name="build_staff_package",
@@ -151,6 +196,20 @@ TOOL_SPECS: list[types.Tool] = [
         ),
         inputSchema=StaffProductToolInput.model_json_schema(),
         _meta=_tool_invocation_meta("Drafting the staff product", "Staff product draft ready", read_only=False),
+    ),
+    types.Tool(
+        name="build_frago_to_conop",
+        title="Build FRAGO To CONOP",
+        description=(
+            "Use this when the user has higher guidance or a training FRAGO and wants an initial CONOP, "
+            "unit/sub-unit task framing, MET/METL alignment, and XO/SEL-ready AAR structure."
+        ),
+        inputSchema=FragoToConopToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Building the FRAGO-to-CONOP package",
+            "FRAGO-to-CONOP package ready",
+            read_only=False,
+        ),
     ),
     types.Tool(
         name="build_training_case_study",
@@ -212,6 +271,16 @@ TOOL_SPECS: list[types.Tool] = [
         inputSchema=AdminWorkflowToolInput.model_json_schema(),
         _meta=_tool_invocation_meta("Building the admin workflow", "Admin workflow ready", read_only=False),
     ),
+    types.Tool(
+        name="build_handoff_reminder_plans",
+        title="Build Handoff Reminder Plans",
+        description=(
+            "Use this when the user wants stored drill rhythm, recurring checks, and recurring drill notes turned "
+            "into actual reminder-plan outputs."
+        ),
+        inputSchema=ReminderPlanToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta("Building reminder plans", "Reminder plans ready", read_only=False),
+    ),
 ]
 
 
@@ -254,6 +323,11 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             result = await adapter.draft_staff_product(payload.model_dump())
             return _ok_result("Drafted the staff product.", result)
 
+        if name == "build_frago_to_conop":
+            payload = FragoToConopToolInput.model_validate(arguments)
+            result = await adapter.build_frago_to_conop(payload.model_dump())
+            return _ok_result("Built the FRAGO-to-CONOP package.", result)
+
         if name == "build_training_case_study":
             payload = CaseStudyToolInput.model_validate(arguments)
             result = await adapter.build_training_case_study(payload.model_dump())
@@ -290,6 +364,17 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             payload = AdminWorkflowToolInput.model_validate(arguments)
             result = await adapter.build_admin_workflow(payload.model_dump())
             return _ok_result("Built the admin workflow.", result)
+
+        if name == "build_handoff_reminder_plans":
+            payload = ReminderPlanToolInput.model_validate(arguments)
+            result = await adapter.build_handoff_reminder_plans(
+                user_key=payload.user_key,
+                payload={
+                    "include_travel_tasks": payload.include_travel_tasks,
+                    "only_future_drills": payload.only_future_drills,
+                },
+            )
+            return _ok_result("Built the handoff reminder plans.", result)
 
         return _error_result(f"Unknown tool: {name}")
     except ValidationError as exc:

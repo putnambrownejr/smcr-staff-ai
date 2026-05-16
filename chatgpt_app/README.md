@@ -23,6 +23,7 @@ Why:
 
 - `build_staff_package`
 - `draft_staff_product`
+- `build_frago_to_conop`
 - `build_training_case_study`
 - `list_staff_agents`
 - `run_staff_agent`
@@ -30,6 +31,7 @@ Why:
 - `career_watch`
 - `admin_readiness`
 - `build_admin_workflow`
+- `build_handoff_reminder_plans`
 
 ## How It Works
 

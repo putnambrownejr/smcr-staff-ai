@@ -289,6 +289,120 @@ INSTALLATION_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+TRAINING_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCO 1553.3C Unit Training Management",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899431/mco-15533c/",
+        publisher="United States Marine Corps",
+        notes="Core event design, evaluation, and training-management reference.",
+    ),
+    SourceRef(
+        title="NAVMC 3500.18D Common Skills Training and Readiness Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2158067/navmc-350018d/",
+        publisher="United States Marine Corps",
+        notes="Training-standard and common-skills baseline for reserve events.",
+    ),
+    SourceRef(
+        title="MCWP 5-10 Marine Corps Planning Process",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/",
+        publisher="United States Marine Corps",
+        notes="Planning-process and staff-rhythm reference for training packages.",
+    ),
+)
+
+OPORD_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCDP 5 Planning",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899841/mcdp-5/",
+        publisher="United States Marine Corps",
+        notes="Planning philosophy and commander decision support reference.",
+    ),
+    SourceRef(
+        title="MCWP 5-10 Marine Corps Planning Process",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/",
+        publisher="United States Marine Corps",
+        notes="Staff-product and MCPP rhythm reference.",
+    ),
+    SourceRef(
+        title="MCTP 3-30A Command and Staff Actions",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        publisher="United States Marine Corps",
+        notes="Command-and-staff action reference for order production and follow-through.",
+    ),
+)
+
+UNIFORM_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCO 1020.34H Marine Corps Uniform Regulations",
+        url="https://www.marines.mil/portals/1/Publications/MCO%201020.34H%20v2.pdf?ver=20",
+        publisher="United States Marine Corps",
+        notes="Primary public uniform standards reference.",
+    ),
+    SourceRef(
+        title="Marine Corps Uniform Board FAQ",
+        url="https://www.hqmc.marines.mil/Agencies/Marine-Corps-Uniform-Board/Frequently-Asked-Questions/",
+        publisher="United States Marine Corps",
+        notes="Useful public clarification source for ambiguous wear and policy questions.",
+    ),
+)
+
+DRILL_PREP_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCO 1001R.1L w/ Ch-2 Marine Corps Reserve Administrative Management Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900627/mco-1001r1l-w-ch-2/index.html",
+        publisher="United States Marine Corps",
+        notes="Reserve admin and participation reality baseline for drill preparation.",
+    ),
+    SourceRef(
+        title="MCO 1553.3C Unit Training Management",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899431/mco-15533c/",
+        publisher="United States Marine Corps",
+        notes="Training-preparation and event-discipline reference.",
+    ),
+    SourceRef(
+        title="Travel Explorer Training",
+        url="https://www.travel.dod.mil/Training/Travel-Explorer/",
+        publisher="Department of Defense",
+        notes="Official DTS training and continuity aid for drill-prep reminders.",
+    ),
+)
+
+MARADMIN_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="Marine Corps Publications Electronic Library (MCPEL)",
+        url="https://www.marines.mil/News/Publications/MCPEL/",
+        publisher="United States Marine Corps",
+        notes="Primary public index for current doctrine, orders, and publication families.",
+    ),
+    SourceRef(
+        title="MARADMIN Messages",
+        url="https://www.marines.mil/News/Messages/MARADMINS/",
+        publisher="United States Marine Corps",
+        notes="Primary public index for current MARADMIN messages and message freshness checks.",
+    ),
+)
+
+ORM_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCO 5100.29C Marine Corps Safety Management System",
+        url="https://www.marines.mil/News/Publications/MCPEL/Search/5100/",
+        publisher="United States Marine Corps",
+        notes="Primary public safety-management and ORM reference family.",
+    ),
+    SourceRef(
+        title="Marine Corps Safety Management System Resources",
+        url="https://www.safety.marines.mil/Resources/Marine-Corps-Safety-Management-System/",
+        publisher="United States Marine Corps",
+        notes="Public safety resource hub for ORM framing, supervision, and command-risk acceptance.",
+    ),
+    SourceRef(
+        title="MCO 1553.3C Unit Training Management",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899431/mco-15533c/",
+        publisher="United States Marine Corps",
+        notes="Useful for tying ORM to training design and assessment discipline.",
+    ),
+)
+
 
 def citation_titles(refs: tuple[SourceRef, ...]) -> list[str]:
     return [ref.title for ref in refs]

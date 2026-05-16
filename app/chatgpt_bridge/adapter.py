@@ -46,6 +46,9 @@ class ChatGptBridgeAdapter:
     async def build_staff_package(self, payload: dict[str, object]) -> dict[str, object]:
         return await self._request_dict("POST", "/planning/staff-package", json=payload)
 
+    async def build_frago_to_conop(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self._request_dict("POST", "/planning/frago-to-conop", json=payload)
+
     async def draft_staff_product(self, payload: dict[str, object]) -> dict[str, object]:
         return await self._request_dict("POST", "/staff-products/draft", json=payload)
 
@@ -69,6 +72,16 @@ class ChatGptBridgeAdapter:
 
     async def build_admin_workflow(self, payload: dict[str, object]) -> dict[str, object]:
         return await self._request_dict("POST", "/admin/workflow", json=payload, include_local_api_key=True)
+
+    async def build_handoff_reminder_plans(
+        self, *, user_key: str, payload: dict[str, object] | None = None
+    ) -> dict[str, object]:
+        return await self._request_dict(
+            "POST",
+            f"/calendar/handoffs/{user_key}/reminder-plans",
+            json=payload or {},
+            include_local_api_key=True,
+        )
 
     async def _request_dict(
         self,
