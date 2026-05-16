@@ -83,6 +83,36 @@ S2_REFERENCES: tuple[SourceRef, ...] = (
         publisher="United States Marine Corps",
         notes="Reference for structured problem framing, assumptions, and information gaps.",
     ),
+    SourceRef(
+        title="CIA World Factbook",
+        url="https://www.cia.gov/the-world-factbook/",
+        publisher="Central Intelligence Agency",
+        notes=(
+            "Useful public baseline source for country context, demographics, geography, "
+            "economy, and infrastructure."
+        ),
+    ),
+)
+
+OSINT_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="CIA World Factbook",
+        url="https://www.cia.gov/the-world-factbook/",
+        publisher="Central Intelligence Agency",
+        notes="Use as a baseline public country-reference source before layering on current reporting.",
+    ),
+    SourceRef(
+        title="MCDP 2 Intelligence",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcdp-2/",
+        publisher="United States Marine Corps",
+        notes="Doctrine for disciplined assessment, caveats, and commander decision support.",
+    ),
+    SourceRef(
+        title="MCTP 3-30A Command and Staff Actions",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        publisher="United States Marine Corps",
+        notes="Staff-action reference for turning sourced information into usable command support.",
+    ),
 )
 
 S3_REFERENCES: tuple[SourceRef, ...] = (

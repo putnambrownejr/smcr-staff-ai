@@ -2,6 +2,12 @@ from typing import Any
 
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.source_refs import (
+    OSINT_REFERENCES,
+    citation_titles,
+    source_trust_markers,
+    structured_citations,
+)
 
 
 class OsintTrendAgent(Agent):
@@ -19,6 +25,7 @@ class OsintTrendAgent(Agent):
             "trusted public news sources",
             "public academic or NGO reports",
             "public social media trend summaries where platform terms permit use",
+            "CIA World Factbook for baseline country-reference context",
             "user-provided public URLs and local context summaries",
         ],
         disallowed_inputs=[
@@ -32,7 +39,8 @@ class OsintTrendAgent(Agent):
         system_prompt=(
             "Aggregate trusted public-source information. Always cite supplied sources, provide "
             "counterarguments, distinguish facts from claims, and weigh confidence using source quality, "
-            "corroboration, recency, and disagreement."
+            "corroboration, recency, and disagreement. Use the CIA World Factbook as a baseline public "
+            "reference for country context before layering on current reporting."
         ),
         required_human_review=True,
         citation_required=True,
@@ -41,7 +49,7 @@ class OsintTrendAgent(Agent):
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
         source_items = _extract_source_items(context.extra)
         citations = _citations_from_items(source_items)
-        structured_citations = _structured_citations_from_items(source_items)
+        item_structured_citations = _structured_citations_from_items(source_items)
 
         answer = (
             "Public-source trend and evidence aggregation draft.\n\n"
@@ -55,6 +63,8 @@ class OsintTrendAgent(Agent):
             "Trend signals:\n"
             f"{_format_trends(source_items)}\n\n"
             "Gaps and next steps:\n"
+            "- Use the CIA World Factbook as a baseline public reference when the question depends on country "
+            "background, demographics, geography, infrastructure, or economy.\n"
             "- Add more independent public sources before treating any single-source claim as reliable.\n"
             "- Separate official statements, news reporting, and social trend signals in the final product.\n"
             "- Record retrieval timestamp, publisher, URL, and source type for every item.\n"
@@ -83,8 +93,13 @@ class OsintTrendAgent(Agent):
             answer=answer,
             input_text=input_text,
             follow_up_questions=follow_ups,
-            citations=citations or ["No source URLs supplied; no factual claims are verified."],
-            structured_citations=structured_citations,
+            citations=citation_titles(OSINT_REFERENCES)
+            + (citations or ["No source URLs supplied; no factual claims are verified."]),
+            structured_citations=[*structured_citations(OSINT_REFERENCES), *item_structured_citations],
+            source_trust=source_trust_markers(
+                OSINT_REFERENCES,
+                notes_prefix="Use as baseline public-source grounding, then corroborate with current reporting.",
+            ),
             confidence=_overall_confidence(source_items),
         )
         response.warnings.extend(warnings)

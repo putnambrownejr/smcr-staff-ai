@@ -105,6 +105,7 @@ def test_s2_intel_agent_returns_estimate_structure() -> None:
 
     assert "S-2 advisory" in response.answer
     assert response.structured_citations
+    assert any(citation.title == "CIA World Factbook" for citation in response.structured_citations)
     assert response.source_trust
 
 

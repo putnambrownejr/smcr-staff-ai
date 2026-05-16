@@ -60,6 +60,8 @@ class S2IntelAdvisorAgent(Agent):
             "Checklist:\n"
             "- Separate facts, claims, assumptions, and unknowns.\n"
             "- Assign confidence based on source quality, corroboration, and recency.\n"
+            "- Use the CIA World Factbook as a baseline public reference when country background\n"
+            "  or infrastructure context matters.\n"
             "- Keep public social trends in a clearly lower-confidence lane.\n"
             "- Use the OSINT lane for sourced public aggregation, not private tracking or sensitive inference.\n"
             "- Identify what the commander should know now versus what still needs verification.\n"

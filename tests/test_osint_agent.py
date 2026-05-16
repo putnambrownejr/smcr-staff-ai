@@ -32,10 +32,12 @@ def test_osint_agent_requires_citations_and_counterarguments() -> None:
     response = agent.run("Aggregate public discussion around a training event date change.", context)
 
     assert response.citations
+    assert any("CIA World Factbook" in citation for citation in response.citations)
     assert any("https://example.test/official" in citation for citation in response.citations)
     assert "Counterarguments and alternative explanations" in response.answer
     assert "Truth" in response.answer or "Assessment:" in response.answer
     assert response.human_review_required is True
+    assert any(citation.title == "CIA World Factbook" for citation in response.structured_citations)
 
 
 def test_osint_agent_no_sources_stays_low_confidence() -> None:
@@ -43,5 +45,6 @@ def test_osint_agent_no_sources_stays_low_confidence() -> None:
     response = agent.run("What is the public trend?", AgentContext())
 
     assert response.confidence == "low"
-    assert response.citations == ["No source URLs supplied; no factual claims are verified."]
+    assert any("CIA World Factbook" in citation for citation in response.citations)
+    assert any("No source URLs supplied" in citation for citation in response.citations)
     assert "No trusted public source items supplied" in response.answer
