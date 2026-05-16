@@ -21,7 +21,7 @@ class SourceVerifier:
         findings: list[SourceVerificationFinding] = []
         warnings: list[str] = []
         if request.manifest_path:
-            manifest_path = Path(request.manifest_path)
+            manifest_path = resolve_repo_local_path(request.manifest_path)
             if not manifest_path.exists():
                 raise FileNotFoundError(f"Manifest not found: {manifest_path}")
             manifest_validation = validate_manifest(manifest_path)
@@ -32,8 +32,22 @@ class SourceVerifier:
             manifest_validation=manifest_validation,
             findings=findings,
             summary_lines=_summary_lines(manifest_validation, findings),
-            warnings=sorted(set(warnings)),
-        )
+        warnings=sorted(set(warnings)),
+    )
+
+
+def resolve_repo_local_path(path: str) -> Path:
+    candidate = Path(path)
+    if candidate.is_absolute():
+        raise FileNotFoundError("Absolute local paths are not allowed for source verification in this prototype.")
+
+    repo_root = Path(__file__).resolve().parents[3]
+    resolved = (repo_root / candidate).resolve()
+    try:
+        resolved.relative_to(repo_root)
+    except ValueError as exc:
+        raise FileNotFoundError("Local paths must stay within the repository workspace.") from exc
+    return resolved
 
 
 def _findings_for_refs(refs: list[SourceRef]) -> list[SourceVerificationFinding]:

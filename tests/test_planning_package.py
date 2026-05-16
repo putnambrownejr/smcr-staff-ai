@@ -173,3 +173,47 @@ def test_frago_to_conop_runs_xo_sel_review_for_formal_event() -> None:
     payload = response.json()
     assert payload["xo_sel_review"] is not None
     assert payload["xo_sel_review"]["roles_run"] == ["xo", "firstsgt"]
+
+
+def test_staff_planning_package_sanitizes_sensitive_request() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/planning/staff-package",
+        json={
+            "title": "Current movement plan",
+            "event_type": "convoy_support",
+            "mission_or_training_goal": "Update call sign RAVEN and frequency 305.5 for tonight's movement.",
+            "constraints": ["Use grid coordinate 18SUJ12345678"],
+            "training_only": False,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    flattened = str(payload)
+    assert "305.5" not in flattened
+    assert "RAVEN" not in flattened
+    assert any("sensitive" in warning.lower() for warning in payload["warnings"])
+
+
+def test_frago_to_conop_sanitizes_sensitive_request() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/planning/frago-to-conop",
+        json={
+            "title": "Movement FRAGO",
+            "supported_unit": "Company A",
+            "mission_or_training_goal": "Update call sign RAVEN and frequency 305.5 for convoy movement.",
+            "raw_guidance_text": "Grid coordinate 18SUJ12345678. NLT 2200. Use call sign RAVEN.",
+            "training_only": False,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    flattened = str(payload)
+    assert "305.5" not in flattened
+    assert "RAVEN" not in flattened
+    assert any("sensitive" in warning.lower() for warning in payload["warnings"])

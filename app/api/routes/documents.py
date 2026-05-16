@@ -1,5 +1,4 @@
 from datetime import datetime
-from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 
@@ -18,7 +17,7 @@ from app.services.ingestion.document_update_monitor import DocumentUpdateMonitor
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.ingestion.source_state_service import SourceStateService
 from app.services.ingestion.source_state_store import SourceStateStore
-from app.services.ingestion.source_verifier import SourceVerifier
+from app.services.ingestion.source_verifier import SourceVerifier, resolve_repo_local_path
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 _update_store = DocumentUpdateStore()
@@ -46,7 +45,7 @@ def ingest_documents(request: IngestRequest) -> IngestResponse:
     manifest_validation = None
     documents_seen = 0
     if request.source_type == "manifest":
-        local_path = Path(request.local_path or "")
+        local_path = resolve_repo_local_path(request.local_path or "")
         if not local_path.exists():
             raise HTTPException(status_code=404, detail=f"Manifest not found: {local_path}")
         manifest_validation = validate_manifest(local_path)

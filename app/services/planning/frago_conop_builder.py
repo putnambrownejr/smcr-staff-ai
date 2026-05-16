@@ -1,4 +1,4 @@
-from app.core.security import DEFAULT_WARNINGS
+from app.core.security import DEFAULT_WARNINGS, detect_sensitive_input
 from app.schemas.planning import (
     FragoToConopRequest,
     FragoToConopResponse,
@@ -43,6 +43,9 @@ class FragoToConopBuilder:
         self._products = StaffProductBuilder()
 
     def build(self, request: FragoToConopRequest) -> FragoToConopResponse:
+        boundary_warnings = detect_sensitive_input(_request_text(request))
+        if boundary_warnings:
+            request = _sanitize_frago_request(request)
         parsed_guidance = _extract_guidance(request)
         s2_estimate = self._build_s2_estimate(request)
         s3_plan = self._s3.build(
@@ -213,6 +216,7 @@ class FragoToConopBuilder:
             det_follow_on_questions=_follow_on_questions(request, relationship_framework, subordinate_conop_packets),
             warnings=[
                 *DEFAULT_WARNINGS,
+                *boundary_warnings,
                 "This FRAGO-to-CONOP package is advisory and must be reviewed by the command and staff chain.",
             ],
         )
@@ -637,5 +641,66 @@ def _needs_formal_event_review(request: FragoToConopRequest, parsed_guidance: Gu
             "parade",
             "honors",
             "protocol",
+        }
+    )
+
+
+def _request_text(request: FragoToConopRequest) -> str:
+    return " ".join(
+        [
+            request.title,
+            request.supported_unit,
+            request.event_type,
+            request.mission_or_training_goal,
+            request.raw_guidance_text or "",
+            request.intelligence_question or "",
+            request.timeframe or "",
+            *request.higher_guidance,
+            *request.frago_facts,
+            *request.s3_inputs,
+            *request.g9_inputs,
+            *request.met_tasks,
+            *request.metl_focus,
+            *request.constraints,
+            *request.support_requirements,
+            *request.coordinating_sections,
+            *request.partner_types,
+            *request.civil_considerations,
+            *request.medical_risk_context,
+            *request.casualty_scenarios,
+            *[str(item) for item in request.source_items],
+        ]
+    )
+
+
+def _sanitize_frago_request(request: FragoToConopRequest) -> FragoToConopRequest:
+    return request.model_copy(
+        update={
+            "title": "Sensitive FRAGO request withheld",
+            "supported_unit": "Supported unit withheld",
+            "mission_or_training_goal": (
+                "Provide only a generic training-only FRAGO/CONOP scaffold and route specific details through "
+                "approved channels."
+            ),
+            "raw_guidance_text": None,
+            "higher_guidance": ["Sensitive operational guidance withheld."],
+            "frago_facts": [],
+            "s3_inputs": [],
+            "g9_inputs": [],
+            "source_items": [],
+            "intelligence_question": None,
+            "subordinate_units": [],
+            "met_tasks": [],
+            "metl_focus": [],
+            "constraints": ["Sensitive operational details were withheld."],
+            "support_requirements": [],
+            "coordinating_sections": [],
+            "partner_types": [],
+            "civil_considerations": [],
+            "medical_risk_context": ["Use generic training-safe medical planning only."],
+            "casualty_scenarios": ["Generic training injury scenario only."],
+            "timeframe": None,
+            "formal_event": False,
+            "training_only": True,
         }
     )

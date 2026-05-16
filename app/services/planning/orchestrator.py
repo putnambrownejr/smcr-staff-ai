@@ -1,4 +1,4 @@
-from app.core.security import DEFAULT_WARNINGS
+from app.core.security import DEFAULT_WARNINGS, detect_sensitive_input
 from app.schemas.planning import StaffPlanningPackageRequest, StaffPlanningPackageResponse
 from app.schemas.staff import (
     G9PlanningRequest,
@@ -36,6 +36,9 @@ class StaffPlanningOrchestrator:
         self._products = StaffProductBuilder()
 
     def build(self, request: StaffPlanningPackageRequest) -> StaffPlanningPackageResponse:
+        boundary_warnings = detect_sensitive_input(_request_text(request))
+        if boundary_warnings:
+            request = _sanitize_staff_package_request(request)
         s2_estimate = self._build_s2_estimate(request)
         s3_plan = self._s3.build(
             S3PlanningRequest(
@@ -173,6 +176,7 @@ class StaffPlanningOrchestrator:
             product_package=product_package,
             warnings=[
                 *DEFAULT_WARNINGS,
+                *boundary_warnings,
                 "This package is advisory only and should be reviewed by the appropriate command and staff chain.",
             ],
         )
@@ -362,3 +366,53 @@ def _recommended_actions(
     if include_g9:
         actions.append("Capture external coordination and continuity notes in a turnover format before dismissal.")
     return actions
+
+
+def _request_text(request: StaffPlanningPackageRequest) -> str:
+    return " ".join(
+        [
+            request.title,
+            request.event_type,
+            request.mission_or_training_goal,
+            request.audience or "",
+            request.timeframe or "",
+            request.intelligence_question or "",
+            request.c2_objective or "",
+            request.support_objective or "",
+            *request.constraints,
+            *request.coordinating_sections,
+            *request.support_requirements,
+            *request.partner_types,
+            *request.civil_considerations,
+            *request.medical_risk_context,
+            *request.casualty_scenarios,
+            *[str(item) for item in request.source_items],
+        ]
+    )
+
+
+def _sanitize_staff_package_request(request: StaffPlanningPackageRequest) -> StaffPlanningPackageRequest:
+    return request.model_copy(
+        update={
+            "title": "Sensitive planning request withheld",
+            "mission_or_training_goal": (
+                "Provide only a generic training-only planning checklist and route specific details through approved "
+                "channels."
+            ),
+            "audience": None,
+            "timeframe": None,
+            "constraints": ["Sensitive operational details were withheld."],
+            "coordinating_sections": [],
+            "support_requirements": [],
+            "partner_types": [],
+            "civil_considerations": [],
+            "medical_risk_context": ["Use generic training-safe medical planning only."],
+            "casualty_scenarios": ["Generic training injury scenario only."],
+            "source_items": [],
+            "intelligence_question": None,
+            "c2_objective": None,
+            "support_objective": None,
+            "include_g9": False,
+            "training_only": True,
+        }
+    )

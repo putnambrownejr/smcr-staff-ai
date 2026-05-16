@@ -25,3 +25,8 @@ def test_ingest_request_requires_compatible_source_field() -> None:
 
     request = IngestRequest(source_type="manifest", local_path="data/seed/doctrine_manifest.example.yaml")
     assert request.local_path == "data/seed/doctrine_manifest.example.yaml"
+
+
+def test_ingest_request_allows_relative_local_paths_only_at_schema_level() -> None:
+    request = IngestRequest(source_type="manifest", local_path="..\\..\\somewhere.yaml")
+    assert request.local_path == "..\\..\\somewhere.yaml"

@@ -37,3 +37,15 @@ def test_verify_sources_flags_tag_page_only_refs() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["findings"][0]["warnings"]
+
+
+def test_verify_sources_rejects_absolute_local_paths() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/documents/verify-sources",
+        json={"manifest_path": "C:\\Windows\\win.ini"},
+    )
+
+    assert response.status_code == 404
+    assert "Absolute local paths are not allowed" in response.json()["detail"]

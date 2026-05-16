@@ -235,14 +235,19 @@ def _enrich_sections(
     sections: list[StaffProductSection],
     request: StaffProductDraftRequest,
 ) -> list[StaffProductSection]:
+    sensitivity_warnings = detect_sensitive_input(" ".join([request.topic, *request.facts, *request.constraints]))
     context_prompts = [
         f"Topic: {request.topic}",
         *([f"Audience: {request.audience}"] if request.audience else []),
         *([f"Echelon: {request.echelon}"] if request.echelon else []),
         *([f"Preferred format: {request.preferred_format}"] if request.preferred_format else []),
     ]
-    fact_prompts = [f"User fact to verify: {fact}" for fact in request.facts]
-    constraint_prompts = [f"Constraint: {constraint}" for constraint in request.constraints]
+    if sensitivity_warnings:
+        fact_prompts = ["Sensitive details were withheld. Use only generic training-safe placeholders."]
+        constraint_prompts = ["Constraint: verify all operational specifics in an approved environment."]
+    else:
+        fact_prompts = [f"User fact to verify: {fact}" for fact in request.facts]
+        constraint_prompts = [f"Constraint: {constraint}" for constraint in request.constraints]
     return [
         StaffProductSection(
             heading=section.heading,
