@@ -40,6 +40,7 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "text/html" in response.headers["content-type"]
     assert "SMCR Staff AI" in response.text
     assert "Next Drill Readiness" in response.text
+    assert "Decisive action now" in response.text
     assert "/static/dashboard/dashboard.js" in response.text
 
 
@@ -186,6 +187,9 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["mode"] == "personal"
         assert payload["chief_brief"]["user_key"] == "capt-dash"
         assert payload["chief_brief"]["next_drill_readiness"]["anchor_drill_date"] == "2026-06-06"
+        assert payload["chief_brief"]["next_drill_readiness"]["decisive_action"]
+        assert payload["chief_brief"]["next_drill_readiness"]["this_week_focus"]
+        assert payload["chief_brief"]["next_drill_readiness"]["ready_if"]
         assert payload["chief_brief"]["next_drill_readiness"]["must_do_before_drill"]
         assert payload["daily_ops_brief"]["must_do"]
         assert payload["analyst_brief"]["data_quality_notes"]

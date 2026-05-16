@@ -108,14 +108,18 @@ function renderNextDrillReadiness(payload) {
   document.getElementById("readiness-anchor").textContent = payload.anchor_drill_date
     ? `Anchored to next drill: ${payload.anchor_drill_date}`
     : "No next-drill anchor is currently stored.";
+  document.getElementById("readiness-decisive-action").textContent =
+    payload.decisive_action || "No decisive action is currently surfaced.";
   document
     .querySelector(".readiness-panel")
     ?.setAttribute("data-posture", normalizePosture(payload.readiness_posture || ""));
+  renderList("readiness-focus", payload.this_week_focus || []);
   renderEntryCards("readiness-must-do", payload.must_do_before_drill || [], "No immediate pre-drill actions yet.");
   renderList("readiness-friction", payload.likely_friction_points || []);
   renderList("readiness-foundation", payload.missing_foundation || []);
   renderList("readiness-rhythm", payload.standing_rhythm || []);
   renderList("readiness-summary", payload.summary || []);
+  renderList("readiness-ready-if", payload.ready_if || []);
   renderList("readiness-workflows", payload.recommended_follow_on_workflows || []);
 }
 

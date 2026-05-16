@@ -151,8 +151,15 @@ class TdgToolInput(BaseModel):
     theme: str = Field(..., description="Core tactical or decision-making theme.")
     audience: str | None = Field(default=None, description="Intended audience for the TDG.")
     training_objective: str = Field(..., description="What judgment or habit the TDG should sharpen.")
+    scenario_context: list[str] = Field(default_factory=list, description="Optional scenario frame inputs.")
+    opposing_factors: list[str] = Field(default_factory=list, description="Optional opposing factors or friction.")
+    friendly_forces: list[str] = Field(default_factory=list, description="Optional friendly-force realities.")
+    civil_considerations: list[str] = Field(default_factory=list, description="Optional civil considerations.")
+    reserve_friction: list[str] = Field(default_factory=list, description="Optional reserve-specific friction.")
+    decision_time: str | None = Field(default=None, description="Optional time available for the decision.")
     references: list[str] = Field(default_factory=list, description="Optional doctrinal or PME references.")
     constraints: list[str] = Field(default_factory=list, description="Session or scenario constraints.")
+    include_red_team: bool = Field(default=True, description="Whether to include red-team critique prompts.")
     include_sketch_map_prompt: bool = Field(
         default=True,
         description="Whether to include a sketch-map prompt for instructor use.",

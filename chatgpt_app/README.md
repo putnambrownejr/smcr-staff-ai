@@ -35,6 +35,9 @@ Why:
 - `build_admin_workflow`
 - `build_handoff_reminder_plans`
 
+`build_tdg` is the S-3 wargaming / tactical-decision-game lane. It is meant to pressure-test assumptions,
+force decisions early, and expose reserve-specific friction before the real event does.
+
 ## How It Works
 
 This app server does not reimplement the staff logic.

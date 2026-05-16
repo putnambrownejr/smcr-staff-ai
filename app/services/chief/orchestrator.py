@@ -508,11 +508,34 @@ def _next_drill_readiness(
         updates=updates,
         must_do=must_do,
     )
+    decisive_action = _decisive_action(
+        handoff=handoff,
+        anchor=anchor,
+        must_do=must_do,
+        missing_foundation=missing_foundation,
+        handoff_is_stale=handoff_is_stale,
+    )
+    this_week_focus = _this_week_focus(
+        must_do=must_do,
+        missing_foundation=missing_foundation,
+        likely_friction_points=likely_friction_points,
+    )
+    ready_if = _ready_if(
+        anchor=anchor,
+        handoff=handoff,
+        handoff_is_stale=handoff_is_stale,
+        missing_foundation=missing_foundation,
+        updates=updates,
+        must_do=must_do,
+    )
     return NextDrillReadiness(
         anchor_drill_date=anchor,
         readiness_posture=posture,
         summary=summary,
+        decisive_action=decisive_action,
+        this_week_focus=this_week_focus,
         must_do_before_drill=must_do,
+        ready_if=ready_if,
         likely_friction_points=likely_friction_points,
         missing_foundation=missing_foundation,
         standing_rhythm=standing_rhythm[:6],
@@ -542,6 +565,80 @@ def _readiness_posture(
     if any(update.review_status == "new" for update in updates):
         return "Next-drill readiness posture: mostly set, but source freshness still needs review."
     return "Next-drill readiness posture: on track. Use the brief to maintain rhythm and close the remaining gaps."
+
+
+def _decisive_action(
+    *,
+    handoff: UserSessionHandoff | None,
+    anchor: date | None,
+    must_do: list[ChiefActionItem],
+    missing_foundation: list[str],
+    handoff_is_stale: bool,
+) -> str:
+    if handoff is None:
+        return "Create the session handoff and anchor the next drill before trusting any downstream reminders."
+    if handoff_is_stale:
+        return "Refresh the stale handoff now so PME, admin, and drill reminders stop drifting on bad continuity."
+    if missing_foundation:
+        return "Close the missing foundation items first so the rest of the brief is operating on real context."
+    if must_do:
+        top = must_do[0]
+        return f"Handle this first: {top.title}. {top.recommendation}"
+    if anchor is None:
+        return "Store or confirm the next drill anchor so the standing rhythm has a real timeline."
+    return "Use this week to clear small friction before it hardens into a drill-weekend problem."
+
+
+def _this_week_focus(
+    *,
+    must_do: list[ChiefActionItem],
+    missing_foundation: list[str],
+    likely_friction_points: list[str],
+) -> list[str]:
+    focus = [item.title for item in must_do[:3]]
+    if not focus:
+        focus.extend(missing_foundation[:2])
+    if len(focus) < 3:
+        focus.extend(likely_friction_points[: 3 - len(focus)])
+    return focus[:3]
+
+
+def _ready_if(
+    *,
+    anchor: date | None,
+    handoff: UserSessionHandoff | None,
+    handoff_is_stale: bool,
+    missing_foundation: list[str],
+    updates: list[DocumentationUpdateCandidate],
+    must_do: list[ChiefActionItem],
+) -> list[str]:
+    checks: list[str] = []
+    checks.append(
+        "The next drill is anchored to a real date and the standing reminder rhythm is aligned to it."
+        if anchor is not None
+        else "The next drill anchor still needs to be stored or confirmed."
+    )
+    checks.append(
+        "Session continuity is current enough to trust the admin, PME, and drill watch items."
+        if handoff is not None and not handoff_is_stale
+        else "Session continuity still needs to be built or refreshed."
+    )
+    checks.append(
+        "Core local context and documents are present for the next drill cycle."
+        if not missing_foundation
+        else "Core local context or documents are still missing."
+    )
+    checks.append(
+        "High-priority pre-drill items have owners and near-term follow-through."
+        if not any(item.priority == "high" for item in must_do)
+        else "At least one high-priority pre-drill item still needs direct attention."
+    )
+    checks.append(
+        "Source-backed references are current enough for routine use."
+        if not any(update.review_status == "new" for update in updates)
+        else "Source freshness still needs human review before some references are treated as current."
+    )
+    return checks
 
 
 def _priority(due_date: date | None) -> str:

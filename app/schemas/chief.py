@@ -44,7 +44,10 @@ class NextDrillReadiness(BaseModel):
     anchor_drill_date: date | None = None
     readiness_posture: str
     summary: list[str] = Field(default_factory=list)
+    decisive_action: str | None = None
+    this_week_focus: list[str] = Field(default_factory=list)
     must_do_before_drill: list[ChiefActionItem] = Field(default_factory=list)
+    ready_if: list[str] = Field(default_factory=list)
     likely_friction_points: list[str] = Field(default_factory=list)
     missing_foundation: list[str] = Field(default_factory=list)
     standing_rhythm: list[str] = Field(default_factory=list)

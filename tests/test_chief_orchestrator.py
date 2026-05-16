@@ -93,6 +93,9 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
     assert brief.top_priority_items
     assert brief.next_drill_readiness.anchor_drill_date == date(2026, 6, 6)
     assert brief.next_drill_readiness.must_do_before_drill
+    assert brief.next_drill_readiness.decisive_action
+    assert brief.next_drill_readiness.this_week_focus
+    assert brief.next_drill_readiness.ready_if
     assert brief.next_drill_readiness.recommended_follow_on_workflows
 
 
@@ -261,3 +264,5 @@ def test_chief_brief_surfaces_recurring_checks_and_drill_schedule(tmp_path: Path
     assert "Recurring finance check: Monthly review myPay and TSP allocations." in titles
     assert any("recurring readiness/admin check" in line for line in brief.summary_lines)
     assert any("travel-admin" in item.lower() for item in brief.next_drill_readiness.likely_friction_points)
+    assert brief.next_drill_readiness.decisive_action
+    assert brief.next_drill_readiness.this_week_focus

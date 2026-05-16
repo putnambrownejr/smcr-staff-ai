@@ -198,3 +198,37 @@ def test_s4_planner_returns_support_and_sustainment_elements() -> None:
     assert payload["critical_support_requirements"]
     assert payload["movement_and_billeting"]
     assert payload["sustainment_checks"]
+
+
+def test_tdg_builder_returns_decision_forcing_wargame_package() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/training/tdg",
+        json={
+            "title": "Reserve convoy link-up",
+            "theme": "decision-making under time pressure",
+            "audience": "company-grade officers and SNCOs",
+            "training_objective": "Force an early decision, branch plan, and reserve-realistic risk tradeoff.",
+            "scenario_context": ["Two elements are trying to link up after weather disrupts movement."],
+            "opposing_factors": ["Reporting is delayed and route confidence is low."],
+            "friendly_forces": ["One element is late and communications are degraded."],
+            "reserve_friction": ["Compressed drill timeline", "Un-rehearsed handoff"],
+            "decision_time": "10 minutes",
+            "references": ["MCDP 1 Warfighting"],
+            "constraints": ["45-minute session"],
+            "include_red_team": True,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "TDG / wargaming package" in payload["title"]
+    assert payload["commander_problem"]
+    assert payload["forced_decision"]
+    assert payload["decision_points"]
+    assert payload["no_regret_actions"]
+    assert payload["branch_sequel_prompts"]
+    assert payload["failure_triggers"]
+    assert payload["red_team_points"]
+    assert payload["aar_focus"]

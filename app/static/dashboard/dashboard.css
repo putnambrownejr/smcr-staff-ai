@@ -202,6 +202,19 @@ body {
   margin-top: 12px;
 }
 
+.readiness-decisive {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(19, 32, 51, 0.12);
+}
+
+.readiness-decisive-text {
+  margin: 10px 0 0;
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
 .readiness-panel[data-posture="urgent"] {
   border-top-color: var(--critical);
 }
@@ -411,6 +424,6 @@ button.secondary {
 
 @media (min-width: 1200px) {
   .readiness-support-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }

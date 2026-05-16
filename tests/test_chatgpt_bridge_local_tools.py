@@ -74,7 +74,7 @@ async def test_build_tdg_via_adapter() -> None:
         }
     )
 
-    assert "TDG scaffold" in cast(str, result["title"])
+    assert "TDG / wargaming package" in cast(str, result["title"])
     assert result["decision_points"]
     assert result["discussion_questions"]
 
