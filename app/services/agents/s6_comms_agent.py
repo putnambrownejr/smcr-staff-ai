@@ -44,9 +44,16 @@ class S6CommunicationsAdvisorAgent(Agent):
         )
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        active_context_lines = self._active_context_lines(context)
+        active_context_block = ""
+        if active_context_lines:
+            active_context_block = "Active local operating context:\n" + "\n".join(
+                f"- {line}" for line in active_context_lines
+            ) + "\n\n"
         answer = (
             "S-6 advisory draft.\n\n"
             "Use this to shape communications support and C2 planning, not as authoritative technical direction.\n\n"
+            f"{active_context_block}"
             "Bottom line:\n"
             "- If nobody knows how the unit will pass information when the primary method fails,\n"
             "  then the comm plan is decorative, not real.\n\n"

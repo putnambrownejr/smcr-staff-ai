@@ -8,12 +8,14 @@ from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import DrillDateRecord, FitrepReminder, PmeStatus, RecurringCheck, UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate
+from app.schemas.user_context import ActiveUserContext
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_monitor import DocumentUpdateMonitor
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
+from app.services.session.active_context_store import ActiveUserContextStore
 from app.services.session.handoff_store import SessionHandoffStore
 
 
@@ -26,6 +28,7 @@ class ChiefAideOrchestrator:
         reading_catalog: ReadingListCatalogService,
         document_update_store: DocumentUpdateStore | None = None,
         opportunity_tracker: OpportunityTracker | None = None,
+        active_context_store: ActiveUserContextStore | None = None,
     ) -> None:
         self.handoff_store = handoff_store
         self.document_organizer = document_organizer
@@ -33,9 +36,13 @@ class ChiefAideOrchestrator:
         self.reading_catalog = reading_catalog
         self.document_update_store = document_update_store or DocumentUpdateStore()
         self.opportunity_tracker = opportunity_tracker or OpportunityTracker()
+        self.active_context_store = active_context_store
 
     def build_brief(self, request: ChiefBriefRequest) -> ChiefBriefResponse:
         handoff = self.handoff_store.get(request.user_key) if request.user_key else None
+        active_user_context = self.active_context_store.get(request.user_key) if (
+            request.user_key and self.active_context_store is not None
+        ) else None
         handoff_is_stale = _handoff_is_stale(handoff)
         document_summary = self.document_organizer.list_documents() if request.include_personal_documents else None
         drill_plans = self.drill_plan_store.list() if request.include_drill_plans else []
@@ -69,10 +76,12 @@ class ChiefAideOrchestrator:
             title="Chief of Staff / Aide de Camp triage brief",
             user_key=request.user_key,
             handoff=handoff,
+            active_user_context=active_user_context,
             handoff_is_stale=handoff_is_stale,
             next_drill_readiness=next_drill_readiness,
             summary_lines=_summary_lines(
                 handoff=handoff,
+                active_user_context=active_user_context,
                 handoff_is_stale=handoff_is_stale,
                 actions=sorted_actions,
                 updates=updates,
@@ -389,6 +398,7 @@ def _top_priority_items(actions: list[ChiefActionItem]) -> list[ChiefActionItem]
 
 def _summary_lines(
     handoff: UserSessionHandoff | None,
+    active_user_context: ActiveUserContext | None,
     handoff_is_stale: bool,
     actions: list[ChiefActionItem],
     updates: list[DocumentationUpdateCandidate],
@@ -398,6 +408,14 @@ def _summary_lines(
 ) -> list[str]:
     lines: list[str] = []
     lines.append(next_drill_readiness.readiness_posture)
+    if active_user_context is not None:
+        active_bits = [
+            item
+            for item in [active_user_context.unit_name, active_user_context.unit_type, active_user_context.unit_family]
+            if item
+        ]
+        if active_bits:
+            lines.append("Active local operating context: " + " / ".join(active_bits) + ".")
     if handoff is None:
         lines.append("No session handoff is stored yet, so the brief is operating with limited user context.")
     elif handoff_is_stale:

@@ -34,9 +34,15 @@ Why:
 - `admin_readiness`
 - `build_admin_workflow`
 - `build_handoff_reminder_plans`
+- `get_active_user_context`
+- `set_active_user_context`
 
 `build_tdg` is the S-3 wargaming / tactical-decision-game lane. It is meant to pressure-test assumptions,
 force decisions early, and expose reserve-specific friction before the real event does.
+
+`set_active_user_context` is the quick way to tell the app "treat me like I am at this kind of unit right now"
+without overwriting the longer-term handoff. Staff agents can pick that up automatically when the run includes
+the same `user_key`.
 
 ## How It Works
 

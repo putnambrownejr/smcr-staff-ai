@@ -304,6 +304,10 @@ def list_staff_role_metadata() -> list[StaffRoleMetadata]:
 
 
 def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint_note: str) -> str:
+    active_context_note = (
+        "\nUse the stored active local operating context if one exists to bias the answer toward the user's current "
+        "unit, billet, and short-term mission set.\n"
+    )
     if definition.role == "xo":
         return (
             f"{definition.title} staff-vetting perspective.\n\n"
@@ -322,6 +326,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "Recommended next action:\n"
             "- Reduce this to a workable plan with owners, suspense dates, and one commander decision.\n"
             "- Push unresolved friction back to the responsible staff section before calling it ready."
+            f"{active_context_note}"
             f"{osint_note}"
         )
 
@@ -345,6 +350,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "- Build the short training plan now: end state, products, coordination matrix, eval plan,\n"
             "  and AAR structure.\n"
             "- Strip out anything that cannot be prepared, resourced, and assessed inside the reserve timeline."
+            f"{active_context_note}"
             f"{osint_note}"
         )
 
@@ -366,6 +372,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "Recommended next action:\n"
             "- Publish the minimum support package, longest lead-time suspense, and recovery timeline.\n"
             "- Force a yes, no, or not-yet from every support owner before calling the plan executable."
+            f"{active_context_note}"
             f"{osint_note}"
         )
 
@@ -388,6 +395,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "Recommended next action:\n"
             "- Reduce the comm plan to one essential reporting flow, one fallback, and one missed-report action.\n"
             "- Solve CAC, PKI, access, and permissions problems before drill rather than during execution."
+            f"{active_context_note}"
             f"{osint_note}"
         )
 
@@ -409,6 +417,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "Recommended next action:\n"
             "- Publish one suspense list with owner, due date, source reference, and command touchpoint.\n"
             "- Separate travel, orders, roster, FitRep, readiness, and awards lanes before they contaminate each other."
+            f"{active_context_note}"
             f"{osint_note}"
         )
 
@@ -430,6 +439,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "Recommended next action:\n"
             "- Reduce the estimate to corroborated facts, explicit assumptions, and one collection gap for follow-up.\n"
             "- Keep OSINT in the sourced-public lane and kill anything that looks like guesswork."
+            f"{active_context_note}"
             f"{osint_note}"
         )
 
@@ -452,6 +462,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "Recommended next action:\n"
             "- Write the sequence, accountability method, uniform standard, and speaking or movement order now.\n"
             "- Verify ceremony and protocol questions against the governing reference before execution."
+            f"{active_context_note}"
             f"{osint_note}"
         )
 
@@ -476,6 +487,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "- Write the casualty scenarios, casualty collection plan,\n"
             "  movement assumptions, and stop-training criteria now.\n"
             "- Pause for qualified medical review before pretending the plan is executable."
+            f"{active_context_note}"
             f"{osint_note}"
         )
 
@@ -498,6 +510,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "Recommended next action:\n"
             "- Narrow the civil picture to the handful of partner and continuity issues that can affect execution.\n"
             "- Write the revalidation point and the owner before drill ends."
+            f"{active_context_note}"
             f"{osint_note}"
         )
 
@@ -514,6 +527,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
         "Recommended next action:\n"
         "- Turn the idea into a short staff estimate with assumptions, required coordination, risks, "
         "and a human reviewer."
+        f"{active_context_note}"
         f"{osint_note}"
     )
 

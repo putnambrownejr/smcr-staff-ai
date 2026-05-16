@@ -40,10 +40,17 @@ class G9CivilMilitaryAdvisorAgent(Agent):
         )
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        active_context_lines = self._active_context_lines(context)
+        active_context_block = ""
+        if active_context_lines:
+            active_context_block = "Active local operating context:\n" + "\n".join(
+                f"- {line}" for line in active_context_lines
+            ) + "\n\n"
         answer = (
             "G-9 / civil-military advisory draft.\n\n"
             "Use this to shape civil-military planning and partner coordination, not as authoritative engagement "
             "guidance.\n\n"
+            f"{active_context_block}"
             "Primary G-9 lenses:\n"
             "- What civil or partner context matters to the command problem right now?\n"
             "- Which external relationships need deliberate coordination, and who owns that follow-up?\n"

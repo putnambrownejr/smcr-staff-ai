@@ -44,9 +44,16 @@ class S3OpsOAdvisorAgent(Agent):
         )
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        active_context_lines = self._active_context_lines(context)
+        active_context_block = ""
+        if active_context_lines:
+            active_context_block = "Active local operating context:\n" + "\n".join(
+                f"- {line}" for line in active_context_lines
+            ) + "\n\n"
         answer = (
             "S-3 / OpsO advisory draft.\n\n"
             "Use this to shape reserve operations and training planning, not as authoritative command guidance.\n\n"
+            f"{active_context_block}"
             "Bottom line:\n"
             "- Train for war, not for comfort.\n"
             "- If it does not train to a real standard, produce a needed output, or fit the drill timeline,\n"

@@ -187,6 +187,20 @@ class UserKeyToolInput(BaseModel):
     user_key: str = Field(..., description="Stable local user profile key.")
 
 
+class ActiveUserContextToolInput(BaseModel):
+    user_key: str = Field(..., description="Stable local user profile key.")
+    unit_name: str | None = Field(default=None, description="Temporary unit name.")
+    unit_type: str | None = Field(default=None, description="Temporary unit type or formation.")
+    unit_family: str | None = Field(default=None, description="Temporary community or unit family.")
+    billet_override: str | None = Field(default=None, description="Temporary billet emphasis.")
+    mos_override: str | None = Field(default=None, description="Temporary MOS emphasis.")
+    current_focus: list[str] = Field(default_factory=list, description="Short-term focus areas.")
+    staff_bias: list[str] = Field(default_factory=list, description="Bias cues for staff-agent advice.")
+    temporary_notes: list[str] = Field(default_factory=list, description="Short-lived shaping notes.")
+    preferences: dict[str, str] = Field(default_factory=dict, description="Small temporary preferences map.")
+    expires_at: str | None = Field(default=None, description="Optional ISO timestamp for expiration.")
+
+
 class AdminWorkflowToolInput(BaseModel):
     workflow_type: str = Field(..., description="Workflow type such as gtcc, dts_authorization, or award_package.")
     title: str = Field(..., description="Short workflow title.")
@@ -329,6 +343,25 @@ TOOL_SPECS: list[types.Tool] = [
         inputSchema=ReminderPlanToolInput.model_json_schema(),
         _meta=_tool_invocation_meta("Building reminder plans", "Reminder plans ready", read_only=False),
     ),
+    types.Tool(
+        name="get_active_user_context",
+        title="Get Active User Context",
+        description=(
+            "Use this when the user wants to see the current temporary local context that biases staff or agent output."
+        ),
+        inputSchema=UserKeyToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta("Loading active context", "Active context ready", read_only=True),
+    ),
+    types.Tool(
+        name="set_active_user_context",
+        title="Set Active User Context",
+        description=(
+            "Use this when the user wants to temporarily shape advice by setting a current unit, billet, "
+            "community, or short-term focus without overwriting the longer-term handoff."
+        ),
+        inputSchema=ActiveUserContextToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta("Saving active context", "Active context saved", read_only=False),
+    ),
 ]
 
 
@@ -433,6 +466,19 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
                 },
             )
             return _ok_result("Built the handoff reminder plans.", result)
+
+        if name == "get_active_user_context":
+            payload = UserKeyToolInput.model_validate(arguments)
+            result = await adapter.get_active_user_context(user_key=payload.user_key)
+            return _ok_result("Loaded the active user context.", result)
+
+        if name == "set_active_user_context":
+            payload = ActiveUserContextToolInput.model_validate(arguments)
+            result = await adapter.set_active_user_context(
+                user_key=payload.user_key,
+                payload=payload.model_dump(),
+            )
+            return _ok_result("Saved the active user context.", result)
 
         return _error_result(f"Unknown tool: {name}")
     except ValidationError as exc:

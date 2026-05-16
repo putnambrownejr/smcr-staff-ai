@@ -731,6 +731,16 @@ curl -X PUT http://127.0.0.1:8000/handoffs/capt-example `
 
 Session handoffs can reference RQS/BIO uploads by `rqs_context_id` and `bio_context_id`, but those uploads remain local context records. They do not automatically update a profile or become authoritative facts without later user confirmation logic.
 
+Store a temporary active user context:
+
+```powershell
+curl -X PUT http://127.0.0.1:8000/user-context/capt-example `
+  -H "Content-Type: application/json" `
+  -d "{\"user_key\":\"capt-example\",\"unit_name\":\"6th Comm Battalion\",\"unit_type\":\"communications battalion\",\"billet_override\":\"CommO\",\"current_focus\":[\"Pre-drill PACE rehearsal\"],\"temporary_notes\":[\"Bias advice toward reserve comm planning this month.\"]}"
+```
+
+Use this for short-lived shaping like current unit, billet emphasis, or temporary staff bias. It stays local, can expire, and does not overwrite the longer-term session handoff.
+
 Draft a proposed handoff update from notes:
 
 ```powershell
@@ -758,6 +768,8 @@ curl -X POST http://127.0.0.1:8000/chief/brief `
 ```
 
 The response combines local handoff data, local personal document summaries, stored drill plans, source-update candidates, reading suggestions, and action items.
+
+If a temporary active user context exists for the same `user_key`, the Chief brief will surface it and use it as a short-term operating bias on top of the longer-term handoff.
 
 Fetch the current brief for a stored user key:
 

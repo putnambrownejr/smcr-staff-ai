@@ -150,3 +150,35 @@ async def test_build_handoff_reminder_plans_via_adapter(tmp_path: Path) -> None:
 
     assert result["generated_plan_ids"]
     assert result["plans"]
+
+
+@pytest.mark.anyio
+async def test_active_user_context_round_trip_via_adapter(tmp_path: Path) -> None:
+    from app.api.routes.user_context import get_active_context_store
+    from app.main import app
+    from app.services.session.active_context_store import ActiveUserContextStore
+
+    adapter = ChatGptBridgeAdapter(app=app)
+    active_context_store = ActiveUserContextStore(tmp_path / "active-context")
+
+    def override_active_context_store() -> ActiveUserContextStore:
+        return active_context_store
+
+    app.dependency_overrides[get_active_context_store] = override_active_context_store
+    try:
+        saved = await adapter.set_active_user_context(
+            user_key="capt-bridge",
+            payload={
+                "user_key": "capt-bridge",
+                "unit_name": "Civil Affairs Company",
+                "unit_type": "civil affairs",
+                "staff_bias": ["Bias planning toward civil reconnaissance and partner continuity."],
+            },
+        )
+        loaded = await adapter.get_active_user_context(user_key="capt-bridge")
+    finally:
+        app.dependency_overrides.clear()
+
+    saved_context = cast(dict[str, object], saved["active_user_context"])
+    assert saved_context["unit_name"] == "Civil Affairs Company"
+    assert loaded["unit_type"] == "civil affairs"

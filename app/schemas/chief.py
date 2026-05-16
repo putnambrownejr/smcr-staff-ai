@@ -7,6 +7,7 @@ from app.schemas.ingestion import MessageRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate
+from app.schemas.user_context import ActiveUserContext
 
 
 class ChiefBriefRequest(BaseModel):
@@ -58,6 +59,7 @@ class ChiefBriefResponse(BaseModel):
     title: str
     user_key: str | None = None
     handoff: UserSessionHandoff | None = None
+    active_user_context: ActiveUserContext | None = None
     handoff_is_stale: bool = False
     next_drill_readiness: NextDrillReadiness
     summary_lines: list[str] = Field(default_factory=list)
