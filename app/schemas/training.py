@@ -64,6 +64,8 @@ class RangeSafetyRequest(BaseModel):
     weapon_systems: list[str] = Field(default_factory=list)
     ammunition: list[str] = Field(default_factory=list)
     audience: str | None = None
+    range_type: str | None = None
+    live_fire: bool = True
     training_only: bool = True
 
 
@@ -72,6 +74,8 @@ class RangeSafetyResponse(BaseModel):
     required_roles: list[str] = Field(default_factory=list)
     required_admin: list[str] = Field(default_factory=list)
     orm_controls: list[str] = Field(default_factory=list)
+    no_go_criteria: list[str] = Field(default_factory=list)
+    leader_verification_questions: list[str] = Field(default_factory=list)
     aar_prompts: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
@@ -112,6 +116,8 @@ class RangePackageResponse(BaseModel):
     packet_components: list[str] = Field(default_factory=list)
     roles_and_responsibilities: list[str] = Field(default_factory=list)
     safety_controls: list[str] = Field(default_factory=list)
+    no_go_criteria: list[str] = Field(default_factory=list)
+    command_decision_points: list[str] = Field(default_factory=list)
     medevac_and_comm_checks: list[str] = Field(default_factory=list)
     follow_up_requirements: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

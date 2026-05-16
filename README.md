@@ -37,12 +37,12 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Local context storage | Lets users upload files/notes, RQS/BIO references, and drill templates as advisory local context without changing doctrine, org, exercise, agent, or canonical document structure. | Working local storage |
 | Personal document organizer | Lists local RQS/BIO/orders/travel/PME-style uploads by type and flags PII/local-retention warnings. | Working local organizer |
 | Personnel products | Builds advisory FitRep planning, FitRep bullet capture, award package, and routing package support with citations and review points. | Working local support |
-| Correspondence conversion | Converts rough text into NAVMAC-style naval letter, memo, endorsement, routing package, point paper, or professional email scaffolds. | Working local support |
+| Correspondence conversion | Converts rough text into NAVMAC-style naval letter, memo, endorsement, routing package, point paper, or professional email scaffolds with stronger formatting notes and routing discipline cues. | Working local support |
 | Career opportunity tracker | Stores ADOS and SMCR BIC opportunities locally, ranks them against a user profile, and surfaces them in the Chief/Aide brief. | Working local tracker |
 | Career watch | Pulls PME gaps, FitRep reminders, career trends, recommended courses/books, missing documents, and tracked opportunities into one advisory career-maintenance view. | Working local watch |
-| Drill prep planner | Turns a drill date into advisory prep tasks, can use templated local key events, persists plans locally, and exports `.ics` calendar content. | Working local planner |
+| Drill prep planner | Turns a drill date into advisory prep tasks, can use templated local key events, persists plans locally, exports `.ics` calendar content, and can generate reminder plans from stored handoff drill dates and recurring checks. | Working local planner |
 | Annual training planning | Back-plans AT admin, logistics, readiness, and coordination considerations for reserve units. | Working local planner |
-| Range / RSO package support | Builds advisory range packet, role, safety-control, and medevac/comm checklists. | Working local support |
+| Range / RSO package support | Builds advisory range packet, role, safety-control, no-go, command-decision, and medevac/comm checklists. | Working local support |
 | SMCR BIC discovery | Lists official public billet source pages, parses public billet tables/cards where available, discovers Reserve Hub links, and ranks billets against user MOS/rank/location/keywords. | Working parser/recommender with live-source caveats |
 | OSINT trend aggregation | Aggregates user-supplied trusted public-source news/social trend summaries with citations, counterarguments, and confidence weighting. Also exposed as an S-2 staff-support lane. | Working source-evaluation agent |
 | Vetted social ingestion | Normalizes public news/social trend records into OSINT/deep-research-ready source items without unrestricted scraping. | Working connector |

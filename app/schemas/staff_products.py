@@ -49,6 +49,7 @@ class StaffProductDraftResponse(BaseModel):
     product_type: StaffProductType
     title: str
     sections: list[StaffProductSection]
+    formatting_notes: list[str] = Field(default_factory=list)
     review_checklist: list[str] = Field(default_factory=list)
     citations: list[str] = Field(default_factory=list)
     structured_citations: list[StructuredCitation] = Field(default_factory=list)

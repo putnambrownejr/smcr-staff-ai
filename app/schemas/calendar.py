@@ -42,3 +42,15 @@ class DrillPrepPlanResponse(BaseModel):
     context_ids: list[str] = Field(default_factory=list)
     local_context_used: bool = False
     warnings: list[str] = Field(default_factory=list)
+
+
+class HandoffReminderPlanRequest(BaseModel):
+    include_travel_tasks: bool = True
+    only_future_drills: bool = True
+
+
+class HandoffReminderPlanResponse(BaseModel):
+    user_key: str
+    generated_plan_ids: list[str] = Field(default_factory=list)
+    plans: list[DrillPrepPlanResponse] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)

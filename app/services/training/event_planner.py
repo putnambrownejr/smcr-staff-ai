@@ -101,9 +101,23 @@ class RangePackagePlanner:
 
         safety_controls = [
             "Confirm surface danger zone, firing sequence, and local range-specific controls with qualified personnel.",
-            "Rehearse cease-fire, misfire, weapons condition, and movement procedures.",
-            "Validate weather, heat/cold, hydration, and visibility controls.",
+            "Rehearse cease-fire, misfire, weapons condition, movement, and transition procedures before execution.",
+            "Validate weather, heat/cold, hydration, visibility, and fatigue controls for the exact timeline.",
             "Assign supervision for ammo handling, weapons clearing, and accountability transitions.",
+            "Identify what gets cut first if safety supervision, medical support, or daylight degrades.",
+        ]
+        no_go_criteria = [
+            "No qualified OIC/RSO coverage confirmed.",
+            "Medical support, casualty collection, or evacuation route unresolved.",
+            "Ammo issue/turn-in accountability plan incomplete.",
+            "Range-control approval, local SOP constraints, or weather/light conditions unverified.",
+        ]
+        command_decision_points = [
+            "Approve, reduce scope, or postpone if supportability or supervision assumptions are weak.",
+            "Decide whether the event remains worth executing if travel, daylight, or medical coverage compresses "
+            "the timeline.",
+            "Confirm whether any subordinate unit needs a smaller lane, drier iteration, or additional rehearsal "
+            "before live execution.",
         ]
 
         medevac_and_comm_checks = [
@@ -130,6 +144,8 @@ class RangePackagePlanner:
             packet_components=packet_components,
             roles_and_responsibilities=roles_and_responsibilities,
             safety_controls=safety_controls,
+            no_go_criteria=no_go_criteria,
+            command_decision_points=command_decision_points,
             medevac_and_comm_checks=medevac_and_comm_checks,
             follow_up_requirements=follow_up_requirements,
             warnings=[

@@ -73,6 +73,8 @@ def test_range_safety_builder_returns_roles_and_controls() -> None:
     payload = response.json()
     assert "RSO" in payload["required_roles"]
     assert payload["orm_controls"]
+    assert payload["no_go_criteria"]
+    assert payload["leader_verification_questions"]
 
 
 def test_annual_training_planner_returns_admin_and_logistics_checks() -> None:
@@ -115,6 +117,8 @@ def test_range_package_planner_returns_packet_and_safety_elements() -> None:
     payload = response.json()
     assert payload["packet_components"]
     assert payload["roles_and_responsibilities"]
+    assert payload["no_go_criteria"]
+    assert payload["command_decision_points"]
     assert payload["medevac_and_comm_checks"]
 
 

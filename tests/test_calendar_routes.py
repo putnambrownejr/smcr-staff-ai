@@ -3,9 +3,11 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from app.api.routes.calendar import get_context_store, get_plan_store
+from app.api.routes.calendar import get_context_store, get_handoff_store, get_plan_store
 from app.main import app
+from app.schemas.session import DrillDateRecord, RecurringCheck, UserSessionHandoff
 from app.services.calendar.plan_store import DrillPrepPlanStore
+from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
 
 
@@ -76,5 +78,47 @@ def test_drill_plan_rejects_non_unclassified_key_event(tmp_path: Path) -> None:
             },
         )
         assert response.status_code == 422
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_handoff_reminder_plan_route_generates_plans_from_stored_rhythm(tmp_path: Path) -> None:
+    plan_store = DrillPrepPlanStore(tmp_path / "plans")
+    handoff_store = SessionHandoffStore(tmp_path / "handoffs")
+    handoff_store.upsert(
+        UserSessionHandoff(
+            user_key="capt-rhythm",
+            unit_id="example-unit",
+            drill_dates=[DrillDateRecord(drill_date=date(2026, 6, 6), label="June drill")],
+            recurring_drill_notes=["Every drill confirm uniform and haircut."],
+            recurring_checks=[
+                RecurringCheck(
+                    title="After drill review DTS voucher and close travel-admin loose ends.",
+                    cadence="post_drill",
+                    category="travel",
+                    due_offset_days=3,
+                )
+            ],
+        )
+    )
+
+    def override_plan_store() -> DrillPrepPlanStore:
+        return plan_store
+
+    def override_handoff_store() -> SessionHandoffStore:
+        return handoff_store
+
+    app.dependency_overrides[get_plan_store] = override_plan_store
+    app.dependency_overrides[get_handoff_store] = override_handoff_store
+    client = TestClient(app)
+    try:
+        response = client.post("/calendar/handoffs/capt-rhythm/reminder-plans", json={})
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["generated_plan_ids"]
+        assert payload["plans"]
+        task_titles = {task["title"] for task in payload["plans"][0]["tasks"]}
+        assert "Every drill confirm uniform and haircut." in task_titles
+        assert "After drill review DTS voucher and close travel-admin loose ends." in task_titles
     finally:
         app.dependency_overrides.clear()

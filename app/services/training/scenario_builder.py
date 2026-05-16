@@ -47,22 +47,45 @@ class RangeSafetyBuilder:
             "Medical / CASEVAC support confirmation",
             "Transportation and accountability plan",
         ]
+        if request.range_type:
+            required_admin.append(f"Range type to verify against local SOP: {request.range_type}")
         if request.weapon_systems:
             required_admin.append("Weapon systems in scope: " + ", ".join(request.weapon_systems))
         if request.ammunition:
             required_admin.append("Ammunition in scope: " + ", ".join(request.ammunition))
+        if not request.live_fire:
+            required_admin.append(
+                "This appears dry or simulation-focused; still verify local handling, supervision, and control "
+                "measures."
+            )
         return RangeSafetyResponse(
             title=f"Range safety support: {request.event_name}",
             required_roles=["OIC", "RSO", "corpsman / medical support", "ammo / transport support"],
             required_admin=required_admin,
             orm_controls=[
-                "Identify hazards by firing line, movement, weather, and ammo handling.",
-                "Confirm communications, cease-fire procedures, and emergency actions.",
-                "Assign supervision, residual-risk owner, and accountability checks.",
+                "Identify hazards by firing line, movement, weather, ammunition handling, and personnel inexperience.",
+                "Confirm communications, cease-fire procedures, weapons conditions, and emergency actions before "
+                "first iteration.",
+                "Assign supervision, residual-risk owner, and accountability checks for each transition, not just "
+                "the firing line.",
+                "Rehearse the step that is most likely to get rushed when the schedule slips.",
+            ],
+            no_go_criteria=[
+                "Do not execute if qualified OIC/RSO coverage is unclear or not present.",
+                "Do not execute if medical response, evacuation path, or casualty transport plan is unresolved.",
+                "Do not execute if cease-fire authority, weapons status procedures, or ammo accountability are vague.",
+                "Do not execute if local range-control restrictions, weather, or visibility conditions are unverified.",
+            ],
+            leader_verification_questions=[
+                "What condition would cause the OIC or RSO to reduce scope rather than force the event through?",
+                "Which transition is most likely to generate a negligent discharge or accountability lapse if rushed?",
+                "Who can stop training immediately, and does everyone know that by role and sequence?",
+                "Which safety assumption depends on local SOP or range-control approval instead of staff optimism?",
             ],
             aar_prompts=[
-                "What safety controls worked as planned?",
-                "What near-miss, friction, or admin issue should be captured for follow-up?",
+                "Which safety controls worked because they were rehearsed, not improvised?",
+                "Where did supervision, weapons status, or line control become ambiguous under time pressure?",
+                "What near-miss, friction, or admin issue should be fixed before the next live event?",
             ],
             warnings=[
                 *DEFAULT_WARNINGS,

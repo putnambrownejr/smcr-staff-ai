@@ -38,6 +38,7 @@ def test_staff_products_draft_route_supports_correspondence() -> None:
     payload = response.json()
     assert payload["product_type"] == "memorandum"
     assert any("5216.5" in citation["title"] for citation in payload["structured_citations"])
+    assert payload["formatting_notes"]
 
 
 def test_staff_product_builder_creates_conop_sections() -> None:
@@ -53,3 +54,16 @@ def test_staff_product_builder_creates_conop_sections() -> None:
     assert "1. Purpose and End State" in headings
     assert "2. Unit and Sub-Unit Relationships" in headings
     assert response.review_checklist
+
+
+def test_staff_product_builder_adds_navmac_style_notes_for_naval_letter() -> None:
+    response = StaffProductBuilder().build(
+        StaffProductDraftRequest(
+            product_type=StaffProductType.naval_letter,
+            topic="Training-only command package routing",
+            facts=["Use current correspondence guidance."],
+        )
+    )
+
+    assert response.formatting_notes
+    assert any("From/To/Via/Subj" in note for note in response.formatting_notes)
