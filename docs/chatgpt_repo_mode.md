@@ -40,10 +40,35 @@ That distinction matters. ChatGPT can understand the code and use demo workflows
 If ChatGPT only has the repo:
 
 1. start with `README.md`
-2. inspect `docs/architecture.md`
-3. inspect `docs/chatgpt_repo_mode.md`
-4. read `app/main.py` and `app/api/routes/`
-5. use `/demo/*` routes as canonical examples of intended behavior
+2. inspect `AGENTS.md`
+3. inspect `docs/project_purpose.md`
+4. inspect `docs/architecture.md`
+5. inspect `docs/chatgpt_repo_mode.md`
+6. search `app/services/agents/registry.py`
+7. search `chatgpt_app/main.py` and `app/chatgpt_bridge/adapter.py`
+8. read `app/main.py` and `app/api/routes/`
+9. use `/demo/*` routes and `docs/examples/` as canonical examples of intended behavior
+
+## Required Search Behavior
+
+If ChatGPT is connected to this repo and the user asks what the system can do, which tool to use, or how to solve a workflow inside the repo, it should search the repo first instead of relying on generic memory.
+
+Minimum search targets:
+
+- `app/services/agents/`
+- `app/services/agents/registry.py`
+- `chatgpt_app/main.py`
+- `app/chatgpt_bridge/adapter.py`
+- `app/api/routes/`
+- `docs/examples/`
+
+Typical search patterns:
+
+```powershell
+rg -n "build_staff_package|frago|conop|aar|agent|tool|route" C:\smcr-staff-ai
+rg -n "class .*Agent|def build_.*agent" C:\smcr-staff-ai\app\services\agents
+rg -n "@router|APIRouter" C:\smcr-staff-ai\app\api\routes
+```
 
 ## Path To A Fuller ChatGPT Integration
 

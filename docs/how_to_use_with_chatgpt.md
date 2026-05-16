@@ -12,10 +12,27 @@ That keeps costs low, avoids remote MCP hosting, and still gives you a useful pl
 ### What ChatGPT does well
 
 - Reads and understands the GitHub repo
+- Searches the repo for relevant agents, app tools, routes, schemas, and examples before answering
 - Helps choose the right route
 - Builds request payloads
 - Refines plans and products after you run them
 - Helps turn outputs into better prompts, letters, FRAGOs, or action items
+
+## Important Prompting Rule
+
+When using ChatGPT with the repo connected, explicitly tell it to search the repo first for the relevant:
+
+- agents
+- app tools
+- routes
+- schemas
+- example payloads
+
+Good starter prompt:
+
+```text
+Use my smcr-staff-ai repo as context. Before answering, search the repo for the relevant agents, app tools, routes, schemas, and examples. Then tell me the best workflow to use.
+```
 
 ### What the local API does well
 

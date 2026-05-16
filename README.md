@@ -4,6 +4,18 @@
 
 This project is unofficial, not endorsed by the Marine Corps or Department of Defense, and not authoritative. All outputs are advisory drafts requiring human review.
 
+## Project Purpose
+
+The project has a simple center of gravity:
+
+- **build awareness**
+- **hone the user's edge**
+- **reduce reserve-service friction**
+
+In plain language, `smcr-staff-ai` exists to help Marine Corps Reservists stay aware, stay sharp, and stay ahead of the friction of reserve service by turning scattered obligations, staff problems, and training demands into organized, advisory, usable outputs.
+
+For the fuller version, see [docs/project_purpose.md](/C:/smcr-staff-ai/docs/project_purpose.md).
+
 ## Safety First
 
 Do not submit classified information, CUI, secrets, credentials, COMSEC, keying material, real frequencies, call signs, current operational movement details, sensitive unit plans, or unnecessary PII.
@@ -121,6 +133,7 @@ For one-command local startup, use [scripts/start-local.cmd](/C:/smcr-staff-ai/s
 
 For GitHub/ChatGPT-friendly orientation, also see [docs/chatgpt_repo_mode.md](/C:/smcr-staff-ai/docs/chatgpt_repo_mode.md).
 For the lowest-friction GitHub-plus-local workflow, see [docs/how_to_use_with_chatgpt.md](/C:/smcr-staff-ai/docs/how_to_use_with_chatgpt.md).
+For project purpose and scope, see [docs/project_purpose.md](/C:/smcr-staff-ai/docs/project_purpose.md).
 For the first-pass ChatGPT-facing tool plan, see [docs/chatgpt_app_surface.md](/C:/smcr-staff-ai/docs/chatgpt_app_surface.md).
 For the current in-repo bridge scaffold, see [docs/chatgpt_app_scaffold.md](/C:/smcr-staff-ai/docs/chatgpt_app_scaffold.md).
 For the new local ChatGPT app server layer, see [chatgpt_app/README.md](/C:/smcr-staff-ai/chatgpt_app/README.md).
@@ -1219,3 +1232,19 @@ Read these before expanding the project:
 - `docs/roadmap.md`
 
 The short version: keep it UNCLASSIFIED, public-source-oriented, citation-friendly, OPSEC-aware, and human-reviewed.
+
+## Repo Search Guidance For Connected AI
+
+If an AI tool is connected to this repo, it should search the repo for the relevant agents, tools, routes, schemas, and examples before answering non-trivial questions about capability or usage.
+
+Start with:
+
+1. `README.md`
+2. `AGENTS.md`
+3. `docs/project_purpose.md`
+4. `docs/chatgpt_repo_mode.md`
+5. `app/services/agents/registry.py`
+6. `chatgpt_app/main.py`
+7. `app/chatgpt_bridge/adapter.py`
+8. `app/api/routes/`
+9. `docs/examples/`
