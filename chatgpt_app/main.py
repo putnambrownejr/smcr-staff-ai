@@ -124,6 +124,10 @@ class FragoToConopToolInput(BaseModel):
     timeframe: str | None = Field(default=None, description="Optional timeframe.")
     preferred_format: str | None = Field(default=None, description="Preferred format if known.")
     formal_event: bool = Field(default=False, description="Whether to trigger XO/SEL formal-event review.")
+    include_tdg: bool = Field(
+        default=True,
+        description="Whether to include the linked S-3 TDG / wargaming package in the response.",
+    )
     training_only: bool = Field(default=True, description="Set true for training-only or fictional scenarios.")
 
 

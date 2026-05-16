@@ -9,6 +9,7 @@ from app.schemas.staff import (
     StaffEchelon,
 )
 from app.schemas.staff_products import StaffProductDraftResponse, StaffProductType
+from app.schemas.tdg import TdgGenerationResponse
 from app.schemas.training import S3PlanningResponse, S4PlanningResponse
 
 
@@ -170,6 +171,7 @@ class FragoToConopRequest(BaseModel):
     timeframe: str | None = None
     preferred_format: str | None = None
     formal_event: bool = False
+    include_tdg: bool = True
     training_only: bool = True
 
 
@@ -184,6 +186,7 @@ class FragoToConopResponse(BaseModel):
     initial_conop: StaffProductDraftResponse
     frago_draft: StaffProductDraftResponse
     aar_framework: StaffProductDraftResponse
+    tdg_package: TdgGenerationResponse | None = None
     s2_estimate: S2EstimateResponse | None = None
     s3_plan: S3PlanningResponse
     s4_plan: S4PlanningResponse
@@ -193,5 +196,6 @@ class FragoToConopResponse(BaseModel):
     xo_sel_review: StaffCouncilResponse | None = None
     key_assumptions: list[str] = Field(default_factory=list)
     key_risks: list[str] = Field(default_factory=list)
+    learning_cycle: list[str] = Field(default_factory=list)
     det_follow_on_questions: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

@@ -20,6 +20,7 @@ from app.schemas.staff import (
     StaffEchelon,
 )
 from app.schemas.staff_products import StaffProductDraftRequest, StaffProductType
+from app.schemas.tdg import TdgGenerationRequest, TdgGenerationResponse
 from app.schemas.training import S3PlanningRequest, S3PlanningResponse, S4PlanningRequest, S4PlanningResponse
 from app.services.staff.council import StaffCouncilService
 from app.services.staff.g9_planner import G9Planner
@@ -29,6 +30,7 @@ from app.services.staff.s6_planner import S6Planner
 from app.services.staff_products.builder import StaffProductBuilder
 from app.services.training.s3_planner import S3Planner
 from app.services.training.s4_planner import S4Planner
+from app.services.training.tdg_builder import TdgBuilder
 
 
 class FragoToConopBuilder:
@@ -41,6 +43,7 @@ class FragoToConopBuilder:
         self._g9 = G9Planner()
         self._council = StaffCouncilService()
         self._products = StaffProductBuilder()
+        self._tdg = TdgBuilder()
 
     def build(self, request: FragoToConopRequest) -> FragoToConopResponse:
         boundary_warnings = detect_sensitive_input(_request_text(request))
@@ -174,11 +177,23 @@ class FragoToConopBuilder:
             )
         )
 
+        tdg_package = self._build_tdg_package(request, parsed_guidance, subordinate_conop_packets)
+
         aar_facts = [
             f"Supported unit: {request.supported_unit}",
             *[f"Assess against: {item.task_name}" for item in met_alignment[:4]],
             "AAR should read like a staff record of what to preserve, fix, and verify before the next event.",
             "Capture observations by unit/sub-unit, standard, friction point, and corrective action.",
+            *(
+                [f"Wargame focus: {item}" for item in tdg_package.forced_decision[:2]]
+                if tdg_package is not None
+                else []
+            ),
+            *(
+                [f"Failure trigger to observe: {item}" for item in tdg_package.failure_triggers[:2]]
+                if tdg_package is not None
+                else []
+            ),
         ]
         aar_framework = self._products.build(
             StaffProductDraftRequest(
@@ -204,6 +219,7 @@ class FragoToConopBuilder:
             initial_conop=initial_conop,
             frago_draft=frago_draft,
             aar_framework=aar_framework,
+            tdg_package=tdg_package,
             s2_estimate=s2_estimate,
             s3_plan=s3_plan,
             s4_plan=s4_plan,
@@ -213,6 +229,7 @@ class FragoToConopBuilder:
             xo_sel_review=xo_sel_review,
             key_assumptions=_key_assumptions(request, parsed_guidance, s4_plan, s6_plan, medical_plan),
             key_risks=_key_risks(s3_plan, s4_plan, s6_plan, medical_plan),
+            learning_cycle=_learning_cycle(request, tdg_package),
             det_follow_on_questions=_follow_on_questions(request, relationship_framework, subordinate_conop_packets),
             warnings=[
                 *DEFAULT_WARNINGS,
@@ -233,6 +250,55 @@ class FragoToConopBuilder:
                 audience=request.supported_unit,
                 timeframe=request.timeframe,
                 planning_only=request.training_only,
+            )
+        )
+
+    def _build_tdg_package(
+        self,
+        request: FragoToConopRequest,
+        parsed_guidance: GuidanceExtraction,
+        subordinate_conop_packets: list[SubordinateConopPacket],
+    ) -> TdgGenerationResponse | None:
+        if not request.include_tdg:
+            return None
+        return self._tdg.build(
+            TdgGenerationRequest(
+                title=f"{request.title} decision game",
+                theme="Command judgment, subordinate nesting, and reserve-friction branch planning",
+                audience=request.supported_unit,
+                training_objective=(
+                    "Force an early command decision, expose weak assumptions, and rehearse branches before "
+                    "execution starts burning time."
+                ),
+                scenario_context=[
+                    f"Supported unit: {request.supported_unit}",
+                    f"Planning problem: {request.mission_or_training_goal}",
+                    *[f"Commander intent note: {item}" for item in parsed_guidance.commander_intent[:2]],
+                ],
+                opposing_factors=[
+                    *parsed_guidance.constraints[:2],
+                    *parsed_guidance.assumptions_to_confirm[:2],
+                ],
+                friendly_forces=[
+                    *[
+                        f"{packet.unit_name}: {packet.task_statement}"
+                        for packet in subordinate_conop_packets[:3]
+                    ],
+                ],
+                civil_considerations=request.civil_considerations[:3],
+                reserve_friction=[
+                    "Compressed drill timeline",
+                    "Distributed Marines and uneven continuity between drill periods",
+                    *request.constraints[:2],
+                ],
+                decision_time="10 minutes for the initial commander decision",
+                references=["MCDP 5 Planning", "MCWP 5-10 Marine Corps Planning Process"],
+                constraints=[
+                    "Training-only framing",
+                    "Use realistic reserve friction, not fantasy resourcing.",
+                ],
+                include_red_team=True,
+                include_sketch_map_prompt=True,
             )
         )
 
@@ -444,6 +510,33 @@ def _follow_on_questions(
     for packet in subordinate_conop_packets[:2]:
         questions.append(f"What support or reporting burden will break {packet.unit_name}'s concept first?")
     return questions
+
+
+def _learning_cycle(
+    request: FragoToConopRequest,
+    tdg_package: TdgGenerationResponse | None,
+) -> list[str]:
+    cycle = [
+        "Start with higher guidance and lock the parent FRAGO to command intent, support reality, and named standards.",
+        "Push subordinate units to refine local concepts without rewriting the parent problem.",
+    ]
+    if tdg_package is not None:
+        cycle.extend(
+            [
+                (
+                    "Run the linked TDG or short wargame before execution to force the commander "
+                    "decision and expose the branch point."
+                ),
+                "Use the TDG failure triggers and forced decisions as watch items during execution and in the AAR.",
+            ]
+        )
+    cycle.append(
+        "Write the AAR against the standard, the decision made, the friction observed, and the "
+        "corrective action for the next iteration."
+    )
+    if request.formal_event:
+        cycle.append("Keep XO/SEL review tied to the same chain so standards and sequence survive into execution.")
+    return cycle
 
 
 def _has_travel_indicator(request: FragoToConopRequest) -> bool:

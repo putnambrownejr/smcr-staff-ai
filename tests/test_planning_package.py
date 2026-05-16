@@ -142,7 +142,14 @@ def test_frago_to_conop_builds_unit_relationship_framework() -> None:
     assert payload["frago_draft"]["product_type"] == "frago"
     assert payload["initial_conop"]["product_type"] == "conop"
     assert payload["aar_framework"]["product_type"] == "aar"
+    assert payload["tdg_package"] is not None
+    assert payload["tdg_package"]["forced_decision"]
+    assert payload["tdg_package"]["failure_triggers"]
+    assert payload["learning_cycle"]
     assert any("subordinate concept" in item.lower() for item in payload["det_follow_on_questions"])
+    aar_prompts = str(payload["aar_framework"]["sections"])
+    assert "Wargame focus:" in aar_prompts
+    assert "Failure trigger to observe:" in aar_prompts
 
 
 def test_frago_to_conop_runs_xo_sel_review_for_formal_event() -> None:
@@ -173,6 +180,25 @@ def test_frago_to_conop_runs_xo_sel_review_for_formal_event() -> None:
     payload = response.json()
     assert payload["xo_sel_review"] is not None
     assert payload["xo_sel_review"]["roles_run"] == ["xo", "firstsgt"]
+
+
+def test_frago_to_conop_can_skip_tdg_when_requested() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/planning/frago-to-conop",
+        json={
+            "title": "Internal drill sync",
+            "supported_unit": "Headquarters company",
+            "mission_or_training_goal": "Tighten internal reporting and support flow.",
+            "include_tdg": False,
+            "training_only": True,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["tdg_package"] is None
 
 
 def test_staff_planning_package_sanitizes_sensitive_request() -> None:
