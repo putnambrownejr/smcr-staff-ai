@@ -102,11 +102,12 @@ SITREP_SECTIONS = [
 
 AAR_SECTIONS = [
     StaffProductSection(
-        heading="1. Event Overview",
+        heading="1. Event and Command Frame",
         prompts=[
             "Training event, date, audience, objectives",
             "Supported mission or commander's intent",
             "Why this event mattered to the unit, not just that it occurred",
+            "State the event in a way the XO or S-3 can revisit later without re-learning the context",
         ],
     ),
     StaffProductSection(
@@ -116,34 +117,38 @@ AAR_SECTIONS = [
             "What right looked like",
             "What was actually observed",
             "Where the standard broke under friction",
+            "Call out whether the event measured competence, exposed a gap, or only generated activity",
         ],
     ),
     StaffProductSection(
-        heading="3. Sustains",
+        heading="3. Sustains and What Held",
         prompts=[
             "What should continue",
             "Why it mattered",
             "What to preserve in the next iteration",
             "Identify deliberate good practice, not lucky improvisation",
+            "Name which sustain should be protected even if the event gets compressed next drill",
         ],
     ),
     StaffProductSection(
-        heading="4. Improves",
+        heading="4. Improves and Where It Broke",
         prompts=[
             "What should change",
             "What friction drove the shortfall",
             "What needs command attention",
             "State the first fix that changes the next event instead of writing a complaint",
+            "Identify whether the failure was design, rehearsal, support, supervision, or execution",
         ],
     ),
     StaffProductSection(
-        heading="5. Action Items",
+        heading="5. Corrective Actions for the Next Event",
         prompts=[
             "Owner",
             "Suspense",
             "Follow-up requirement",
             "What must be verified before next execution",
             "Tie each item to the next rehearsal, drill, or execution date",
+            "Make each corrective action specific enough that someone can actually close it",
         ],
     ),
 ]
@@ -272,6 +277,23 @@ def _review_checklist(request: StaffProductDraftRequest) -> list[str]:
         StaffProductType.conop,
     }:
         checklist.append("Confirm the scenario is fictional/training-only or handled in an approved environment.")
+    if request.product_type == StaffProductType.aar:
+        checklist.extend(
+            [
+                (
+                    "Tie every improve item to a named owner, suspense, and the next drill, rehearsal, "
+                    "or execution window."
+                ),
+                (
+                    "Separate standard failure from support, rehearsal, supervision, or design failure "
+                    "before finalizing the AAR."
+                ),
+                (
+                    "Strip out complaint language and preserve only observations, friction, decisions, "
+                    "and corrective action."
+                ),
+            ]
+        )
     return checklist
 
 
@@ -315,9 +337,11 @@ def _formatting_notes_for(request: StaffProductDraftRequest) -> list[str]:
     if request.product_type == StaffProductType.aar:
         return [
             "Write the AAR like a product the XO or S-3 would keep: standards, observations, friction, and "
-            "corrective actions.",
+            "corrective actions worth revisiting later.",
             "Separate deliberate good practice from lucky improvisation so the unit knows what to preserve.",
             "Every improve item should point to the next rehearsal, drill, or execution window.",
+            "Lead with what mattered, what held, where the standard broke, and what changes before the next event.",
+            "Avoid diary language. Capture judgment, friction, and decisions that shape the next cycle.",
         ]
     return []
 
@@ -329,6 +353,13 @@ def _citations_for(product_type: StaffProductType) -> list[str]:
             [
                 "SECNAV M-5216.5 CH-1 Department of the Navy Correspondence Manual",
                 "MCO 5216.20B Marine Corps Supplement to the DON Correspondence Manual",
+            ]
+        )
+    if product_type == StaffProductType.aar:
+        citations.extend(
+            [
+                "MCO 1553.3C Unit Training Management",
+                "MCWP 5-10 Marine Corps Planning Process",
             ]
         )
     return citations
@@ -360,5 +391,24 @@ def _structured_citations_for(product_type: StaffProductType) -> list[Structured
                 confidence=Confidence.low,
                 notes="Manifest citation; exact section citation requires RAG ingestion.",
             )
+        )
+    if product_type == StaffProductType.aar:
+        citations.extend(
+            [
+                StructuredCitation(
+                    title="MCO 1553.3C Unit Training Management",
+                    url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899431/mco-15533c/",
+                    publisher="Headquarters Marine Corps",
+                    confidence=Confidence.low,
+                    notes="Manifest citation; exact section citation requires RAG ingestion.",
+                ),
+                StructuredCitation(
+                    title="MCWP 5-10 Marine Corps Planning Process",
+                    url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/",
+                    publisher="Headquarters Marine Corps",
+                    confidence=Confidence.low,
+                    notes="Manifest citation; exact section citation requires RAG ingestion.",
+                ),
+            ]
         )
     return citations

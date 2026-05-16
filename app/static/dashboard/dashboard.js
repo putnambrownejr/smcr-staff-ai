@@ -79,6 +79,7 @@ async function loadWorkspace() {
 function renderWorkspace(payload) {
   renderWorkspaceSummary(payload.summary_lines || [], payload.warnings || []);
   renderChief(payload.chief_brief);
+  renderNextDrillReadiness(payload.chief_brief?.next_drill_readiness || {});
   renderCareer(payload.career_watch);
   renderAdmin(payload.admin_readiness);
   renderDailyBrief(payload.daily_ops_brief || {});
@@ -99,6 +100,23 @@ function renderChief(payload) {
   renderList("chief-summary", payload.summary_lines || []);
   const items = payload.top_priority_items || payload.action_items || [];
   renderQueue(items);
+}
+
+function renderNextDrillReadiness(payload) {
+  document.getElementById("readiness-posture").textContent =
+    payload.readiness_posture || "No readiness posture loaded yet.";
+  document.getElementById("readiness-anchor").textContent = payload.anchor_drill_date
+    ? `Anchored to next drill: ${payload.anchor_drill_date}`
+    : "No next-drill anchor is currently stored.";
+  document
+    .querySelector(".readiness-panel")
+    ?.setAttribute("data-posture", normalizePosture(payload.readiness_posture || ""));
+  renderEntryCards("readiness-must-do", payload.must_do_before_drill || [], "No immediate pre-drill actions yet.");
+  renderList("readiness-friction", payload.likely_friction_points || []);
+  renderList("readiness-foundation", payload.missing_foundation || []);
+  renderList("readiness-rhythm", payload.standing_rhythm || []);
+  renderList("readiness-summary", payload.summary || []);
+  renderList("readiness-workflows", payload.recommended_follow_on_workflows || []);
 }
 
 function renderAdmin(payload) {
@@ -373,6 +391,20 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function normalizePosture(value) {
+  const normalized = String(value || "").toLowerCase();
+  if (normalized.includes("urgent")) {
+    return "urgent";
+  }
+  if (normalized.includes("watch")) {
+    return "watch";
+  }
+  if (normalized.includes("steady")) {
+    return "steady";
+  }
+  return "default";
 }
 
 loadWorkspace();

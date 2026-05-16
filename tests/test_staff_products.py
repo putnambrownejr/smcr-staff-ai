@@ -67,3 +67,21 @@ def test_staff_product_builder_adds_navmac_style_notes_for_naval_letter() -> Non
 
     assert response.formatting_notes
     assert any("From/To/Via/Subj" in note for note in response.formatting_notes)
+
+
+def test_staff_product_builder_strengthens_aar_sections_and_notes() -> None:
+    response = StaffProductBuilder().build(
+        StaffProductDraftRequest(
+            product_type=StaffProductType.aar,
+            topic="Training-only field exercise AAR",
+            facts=["Unit measured reporting discipline and accountability under friction."],
+        )
+    )
+
+    headings = [section.heading for section in response.sections]
+    assert "1. Event and Command Frame" in headings
+    assert "3. Sustains and What Held" in headings
+    assert "5. Corrective Actions for the Next Event" in headings
+    assert any("XO or S-3 would keep" in note for note in response.formatting_notes)
+    assert any("named owner" in item for item in response.review_checklist)
+    assert any("1553.3C" in citation.title for citation in response.structured_citations)
