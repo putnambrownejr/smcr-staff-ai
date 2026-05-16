@@ -40,7 +40,7 @@ This would make the media useful even before full transcript support exists.
 
 ### 2. Transcript Pipeline
 
-Add an optional local transcript workflow for media stored in `data/local_context`:
+Add an optional local transcript workflow for media stored in the user-scoped local-context store (outside the repo by default, or inside the Docker volume when containerized):
 
 - detect `video/*` and `audio/*`
 - extract audio track

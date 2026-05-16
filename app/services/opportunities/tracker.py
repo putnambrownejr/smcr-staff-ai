@@ -4,6 +4,7 @@ import hashlib
 from collections.abc import Sequence
 from pathlib import Path
 
+from app.core.config import default_local_context_dir
 from app.schemas.billets import BilletRecommendation, BilletUserProfile, SmcrBillet
 from app.schemas.opportunities import (
     ManualOpportunityRequest,
@@ -20,8 +21,8 @@ DEFAULT_OPPORTUNITY_WARNINGS = [
 
 
 class OpportunityTracker:
-    def __init__(self, root_dir: str | Path = "data/local_context/opportunities") -> None:
-        self.root_dir = Path(root_dir)
+    def __init__(self, root_dir: str | Path | None = None) -> None:
+        self.root_dir = Path(root_dir or (default_local_context_dir() / "opportunities"))
         self.root_dir.mkdir(parents=True, exist_ok=True)
 
     def track(self, opportunities: Sequence[ManualOpportunityRequest]) -> Sequence[OpportunityRecord]:

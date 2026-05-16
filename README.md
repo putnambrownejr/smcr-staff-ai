@@ -99,7 +99,7 @@ app/
     storage/           Local user-context storage
 data/
   seed/                Example org, doctrine, exercise, and agent manifests
-  local_context/       Ignored local upload storage
+  local_context/       Legacy repo-local path used only when explicitly configured or container-mounted
 docs/                  Architecture, governance, roadmap, source notes
 tests/                 Offline fixture-based tests
 ```
@@ -828,7 +828,7 @@ Unknown role names return a validation error instead of silently producing an in
 
 ### Local Context Uploads
 
-Local context is for user-provided working notes and files. It is stored under `data/local_context`, which is ignored by git. It does not modify doctrine manifests, org hierarchy, exercise cadence, agent registry metadata, or canonical document structure.
+Local context is for user-provided working notes and files. For normal local runs it now defaults to a user-scoped storage home outside the repo, such as `%LOCALAPPDATA%\smcr-staff-ai\local_context` on Windows. Docker keeps using its named volume path inside the container. Local context does not modify doctrine manifests, org hierarchy, exercise cadence, agent registry metadata, or canonical document structure.
 
 Upload context:
 
@@ -1163,20 +1163,24 @@ SMCR billet matching uses public Marine Corps source pages where available. Offi
 
 ## Configuration
 
-`.env.example` contains local defaults:
+`.env.example` contains local defaults and shows how to override storage paths if you want:
 
 ```text
 APP_NAME="SMCR Staff AI"
 APP_VERSION="0.1.0"
 ENVIRONMENT="local"
-DATABASE_URL="sqlite:///./smcr_staff_ai.db"
 VECTOR_STORE_BACKEND="local-stub"
-LOCAL_CONTEXT_STORAGE_DIR="data/local_context"
-SESSION_HANDOFF_STORAGE_DIR="data/local_context/session_handoffs"
 LOCAL_API_KEY=""
 MAX_UPLOAD_BYTES="50000000"
 PUBLIC_SOURCE_ONLY="true"
 ```
+
+If you leave the storage paths unset, local runs default to a user-scoped home outside the repo:
+
+- Windows: `%LOCALAPPDATA%\smcr-staff-ai`
+- Linux/macOS-style environments: `$XDG_DATA_HOME/smcr-staff-ai` or `~/.local/share/smcr-staff-ai`
+
+That means drill dates, handoffs, uploaded personal products, local documents, and reminder state do not live in the git working tree unless you explicitly point them there.
 
 If `LOCAL_API_KEY` is set, personal/local routes such as `/context`, `/handoffs`, `/calendar`, and `/connectors` require `X-Local-API-Key`. Leave it empty for quick local prototyping only.
 

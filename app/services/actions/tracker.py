@@ -4,6 +4,7 @@ import hashlib
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+from app.core.config import default_local_context_dir
 from app.schemas.actions import (
     ActionCategory,
     ActionHistoryEntry,
@@ -18,8 +19,8 @@ from app.schemas.actions import (
 
 
 class ActionTracker:
-    def __init__(self, root_dir: str | Path = "data/local_context/actions") -> None:
-        self.root_dir = Path(root_dir)
+    def __init__(self, root_dir: str | Path | None = None) -> None:
+        self.root_dir = Path(root_dir or (default_local_context_dir() / "actions"))
         self.root_dir.mkdir(parents=True, exist_ok=True)
 
     def track(self, actions: list[ActionItemRequest]) -> list[ActionRecord]:

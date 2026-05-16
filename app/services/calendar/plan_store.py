@@ -1,11 +1,12 @@
 from pathlib import Path
 
+from app.core.config import default_local_context_dir
 from app.schemas.calendar import DrillPrepPlanResponse
 
 
 class DrillPrepPlanStore:
-    def __init__(self, root_dir: str | Path = "data/local_context/drill_plans") -> None:
-        self.root_dir = Path(root_dir)
+    def __init__(self, root_dir: str | Path | None = None) -> None:
+        self.root_dir = Path(root_dir or (default_local_context_dir() / "drill_plans"))
         self.root_dir.mkdir(parents=True, exist_ok=True)
 
     def save(self, plan: DrillPrepPlanResponse) -> DrillPrepPlanResponse:

@@ -18,7 +18,7 @@ Future live connectors must document platform terms, authentication handling, ra
 
 ## Local User Context
 
-Users may upload local working context to `data/local_context` for advisory workflows. This storage is intentionally separate from canonical doctrine, organization, exercise, and document structures. Uploading context does not change manifests, seed data, registry metadata, or RAG source authority. Future RAG features must make local-context inclusion explicit per request and must label it as user-provided, unverified context.
+Users may upload local working context for advisory workflows. In normal local runs, this data defaults to a user-scoped storage home outside the repo; Docker uses its own mounted or named-volume path. This storage is intentionally separate from canonical doctrine, organization, exercise, and document structures. Uploading context does not change manifests, seed data, registry metadata, or RAG source authority. Future RAG features must make local-context inclusion explicit per request and must label it as user-provided, unverified context.
 
 RQS, BIO, and drill-plan files should be treated as user-provided local records. The prototype records `document_type`, `contains_pii`, `retention_policy`, and `consent_ack`, and redacts simple PII from previews. It does not automatically extract permanent profile facts from RQS/BIO uploads.
 

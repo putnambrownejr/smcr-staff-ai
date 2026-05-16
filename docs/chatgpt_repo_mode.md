@@ -19,7 +19,7 @@ This repository is structured so ChatGPT can understand and reason about the pro
 
 GitHub access does not provide:
 
-- ignored local context under `data/local_context/`
+- user-scoped local context stored outside the repo by default
 - user-uploaded RQS, BIO, orders, receipts, or notes
 - stored handoffs, drill plans, or tracked opportunities on the user's machine
 - future email/calendar connector data
