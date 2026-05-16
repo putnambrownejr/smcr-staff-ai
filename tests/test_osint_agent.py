@@ -34,10 +34,14 @@ def test_osint_agent_requires_citations_and_counterarguments() -> None:
     assert response.citations
     assert any("CIA World Factbook" in citation for citation in response.citations)
     assert any("https://example.test/official" in citation for citation in response.citations)
+    assert "Source tiering model" in response.answer
+    assert "official current source" in response.answer
+    assert "social/noisy indicator" in response.answer
     assert "Counterarguments and alternative explanations" in response.answer
     assert "Truth" in response.answer or "Assessment:" in response.answer
     assert response.human_review_required is True
     assert any(citation.title == "CIA World Factbook" for citation in response.structured_citations)
+    assert any("Tier:" in (citation.notes or "") for citation in response.structured_citations)
 
 
 def test_osint_agent_no_sources_stays_low_confidence() -> None:

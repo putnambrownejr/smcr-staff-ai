@@ -54,6 +54,13 @@ class OsintTrendAgent(Agent):
         answer = (
             "Public-source trend and evidence aggregation draft.\n\n"
             f"Research question:\n{input_text}\n\n"
+            "Source tiering model:\n"
+            "- Baseline reference: stable country context such as the CIA World Factbook.\n"
+            "- Official current source: government, military, embassy, host-nation, or "
+            "international-organization releases.\n"
+            "- News/reporting: reputable public reporting that may be timely but still needs corroboration.\n"
+            "- Social/noisy indicator: public social signal or trend observation that may help cue "
+            "questions but does not stand on its own.\n\n"
             "Source handling:\n"
             f"{_format_sources(source_items)}\n\n"
             "Key claims and truth weighting:\n"
@@ -66,7 +73,8 @@ class OsintTrendAgent(Agent):
             "- Use the CIA World Factbook as a baseline public reference when the question depends on country "
             "background, demographics, geography, infrastructure, or economy.\n"
             "- Add more independent public sources before treating any single-source claim as reliable.\n"
-            "- Separate official statements, news reporting, and social trend signals in the final product.\n"
+            "- Separate baseline reference, official current source, news/reporting, and social/noisy indicator "
+            "lanes in the final product.\n"
             "- Record retrieval timestamp, publisher, URL, and source type for every item.\n"
             "- Treat social media trends as noisy indicators, not validated facts.\n\n"
             "Recommended final output format:\n"
@@ -151,7 +159,7 @@ def _structured_citations_from_items(source_items: list[dict[str, str]]) -> list
                 publisher=item.get("publisher"),
                 retrieved_at=item.get("retrieved_at"),
                 confidence=_item_confidence(item),
-                notes=item.get("source_type"),
+                notes=f"{_tier_for_item(item)}. source_type={item.get('source_type', 'unknown')}",
             )
         )
     return structured
@@ -166,7 +174,7 @@ def _format_sources(source_items: list[dict[str, str]]) -> str:
         source_type = item.get("source_type", "unknown type")
         publisher = item.get("publisher", "unknown publisher")
         url = item.get("url", "missing URL")
-        lines.append(f"- {title} ({source_type}, {publisher}): {url}")
+        lines.append(f"- [{_tier_for_item(item)}] {title} ({source_type}, {publisher}): {url}")
     return "\n".join(lines)
 
 
@@ -179,7 +187,12 @@ def _format_claims(source_items: list[dict[str, str]]) -> str:
         claim = item.get("claim") or item.get("summary") or "Source requires claim extraction."
         confidence = _item_confidence(item)
         reason = _confidence_reason(item)
-        lines.append(f"- Claim: {claim}\n  Assessment: {confidence.value}\n  Basis: {reason}")
+        lines.append(
+            f"- Claim: {claim}\n"
+            f"  Assessment: {confidence.value}\n"
+            f"  Source tier: {_tier_for_item(item)}\n"
+            f"  Basis: {reason}"
+        )
     return "\n".join(lines)
 
 
@@ -205,7 +218,12 @@ def _format_trends(source_items: list[dict[str, str]]) -> str:
         source_type = item.get("source_type", "unknown").lower()
         signal = item.get("trend_signal") or item.get("summary") or item.get("claim") or "No trend signal provided."
         weight = "low" if "social" in source_type else _item_confidence(item).value
-        lines.append(f"- Signal: {signal}\n  Source type: {source_type}\n  Weight: {weight}")
+        lines.append(
+            f"- Signal: {signal}\n"
+            f"  Source type: {source_type}\n"
+            f"  Source tier: {_tier_for_item(item)}\n"
+            f"  Weight: {weight}"
+        )
     return "\n".join(lines)
 
 
@@ -232,3 +250,14 @@ def _confidence_reason(item: dict[str, Any]) -> str:
     recency = str(item.get("retrieved_at", "retrieval time not supplied"))
     corroborated = str(item.get("corroborated", "false"))
     return f"source_type={source_type}; retrieved_at={recency}; corroborated={corroborated}"
+
+
+def _tier_for_item(item: dict[str, str]) -> str:
+    source_type = item.get("source_type", "").strip().lower()
+    if source_type == "official":
+        return "official current source"
+    if source_type in {"news", "academic", "ngo"}:
+        return "news/reporting"
+    if "social" in source_type or "trend" in source_type:
+        return "social/noisy indicator"
+    return "baseline reference"

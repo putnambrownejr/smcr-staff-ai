@@ -19,7 +19,7 @@ class SourceRef:
             url=self.url,
             publisher=self.publisher,
             confidence=Confidence.medium,
-            notes=self.notes,
+            notes=f"{source_tier_for_ref(self)}. {self.notes}",
         )
 
     def trust(self, notes: str | None = None) -> SourceTrustMarker:
@@ -27,7 +27,7 @@ class SourceRef:
             tracked_title=self.title,
             status=VerifiedSourceStatus.needs_review,
             verification_source_url=self.url,
-            notes=notes or self.notes,
+            notes=notes or f"{source_tier_for_ref(self)}. {self.notes}",
         )
 
 
@@ -446,3 +446,13 @@ def source_trust_markers(
     refs: tuple[SourceRef, ...], notes_prefix: str = "Verify current public source and local applicability."
 ) -> list[SourceTrustMarker]:
     return [ref.trust(f"{notes_prefix} {ref.notes}") for ref in refs]
+
+
+def source_tier_for_ref(ref: SourceRef) -> str:
+    title = ref.title.lower()
+    publisher = ref.publisher.lower()
+    if "cia world factbook" in title:
+        return "Tier: baseline reference"
+    if "united states marine corps" in publisher or "department of defense" in publisher:
+        return "Tier: official current source"
+    return "Tier: reference source"

@@ -60,8 +60,11 @@ class S2IntelAdvisorAgent(Agent):
             "Checklist:\n"
             "- Separate facts, claims, assumptions, and unknowns.\n"
             "- Assign confidence based on source quality, corroboration, and recency.\n"
+            "- Tier sources explicitly: baseline reference, official current source, news/reporting, "
+            "and social/noisy indicator.\n"
             "- Use the CIA World Factbook as a baseline public reference when country background\n"
             "  or infrastructure context matters.\n"
+            "- Prefer official current sources over news framing when the two diverge.\n"
             "- Keep public social trends in a clearly lower-confidence lane.\n"
             "- Use the OSINT lane for sourced public aggregation, not private tracking or sensitive inference.\n"
             "- Identify what the commander should know now versus what still needs verification.\n"
@@ -79,6 +82,10 @@ class S2IntelAdvisorAgent(Agent):
             follow_up_questions=[
                 "What commander decision or planning question does this estimate support?",
                 "Which public sources are already in hand, and which are still missing?",
+                (
+                    "Which source belongs in the official current-source lane, and which only belongs "
+                    "in news or social context?"
+                ),
                 "Would a dedicated OSINT-style source aggregation pass help clarify the question?",
                 "What claim should be treated as a caveat until corroborated?",
             ],
