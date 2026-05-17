@@ -23,6 +23,7 @@ from app.api.routes import (
     personnel,
     planning,
     reading,
+    sharing,
     social,
     staff,
     staff_products,
@@ -66,6 +67,7 @@ def create_app() -> FastAPI:
     app.include_router(social.router)
     app.include_router(staff.router)
     app.include_router(staff_products.router)
+    app.include_router(sharing.router)
     app.include_router(training.router)
     app.include_router(user_context.router)
     app.mount("/static", StaticFiles(directory="app/static"), name="static")

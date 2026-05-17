@@ -2,6 +2,8 @@
 
 `smcr-staff-ai` is an UNCLASSIFIED, open-source-ready FastAPI prototype for AI-enabled Selected Marine Corps Reserve staff workflows. It is designed for SMCR officers, staff officers, and company/battalion/regimental staff who need advisory drafting support, public-source lookup, reserve administration helpers, local context storage, and future doctrine-grounded RAG.
 
+It is also now structured to be easier for Claude and other AI tools to reason about from the repo, while keeping local user context on the machine unless it is deliberately scrubbed for external sharing.
+
 This project is unofficial, not endorsed by the Marine Corps or Department of Defense, and not authoritative. All outputs are advisory drafts requiring human review.
 
 ## Project Purpose
@@ -47,6 +49,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Session handoffs | Stores minimum necessary local user context for PME, FitRep, annual drill dates, recurring checks, admin, drill, and preference reminders. | Working local storage |
 | Installation / base practical advisor | Helps with common Marine/joint-base access, sponsorship, REAL-ID, visitor-center, and command-event coordination friction while insisting on local verification. | Working advisory agent |
 | Local context storage | Lets users upload files/notes, RQS/BIO references, and drill templates as advisory local context without changing doctrine, org, exercise, agent, or canonical document structure. | Working local storage |
+| External AI share-safe packet | Builds a scrubbed local-context packet for Claude or other hosted AI tools without exposing raw local records by default. | Working local safety boundary |
 | Personal document organizer | Lists local RQS/BIO/orders/travel/PME-style uploads by type and flags PII/local-retention warnings. | Working local organizer |
 | Personnel products | Builds advisory FitRep planning, FitRep bullet capture, award package, and routing package support with citations and review points. | Working local support |
 | Correspondence conversion | Converts rough text into NAVMAC-style naval letter, memo, endorsement, routing package, point paper, or professional email scaffolds with stronger formatting notes and routing discipline cues. | Working local support |
@@ -740,6 +743,16 @@ curl -X PUT http://127.0.0.1:8000/user-context/capt-example `
 ```
 
 Use this for short-lived shaping like current unit, billet emphasis, or temporary staff bias. It stays local, can expire, and does not overwrite the longer-term session handoff.
+
+Build a share-safe packet for Claude or another hosted AI:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/sharing/external-ai-packet `
+  -H "Content-Type: application/json" `
+  -d "{\"user_key\":\"capt-example\",\"include_handoff\":true,\"include_active_user_context\":true,\"include_document_summary\":false,\"include_drill_plans\":false,\"purpose\":\"a Claude planning review\"}"
+```
+
+This route is the preferred way to take local user context to an external AI. It withholds raw local file references, context IDs, and other fields that should usually stay on the machine.
 
 Draft a proposed handoff update from notes:
 
