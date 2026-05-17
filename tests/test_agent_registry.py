@@ -32,6 +32,7 @@ def test_agent_registry_loads_expected_agents() -> None:
         "pki-cac-troubleshooter",
         "leadership-advisor",
         "osint-research-assistant",
+        "terrain-map-advisor",
         "mos-commo",
         "mos-civil-affairs",
     }.issubset(ids)
@@ -275,4 +276,19 @@ def test_installation_agent_returns_practical_access_structure() -> None:
 
     assert "Installation / base practical advisory" in response.answer
     assert response.structured_citations
+    assert response.source_trust
+
+
+def test_map_agent_returns_usgs_grounded_terrain_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("terrain-map-advisor")
+    assert agent is not None
+
+    response = agent.run(
+        "Help me figure out what public topo and terrain products to pull for a training area near Miami.",
+        context=AgentContext(),
+    )
+
+    assert "Terrain / map advisory" in response.answer
+    assert any("USGS" in citation.title for citation in response.structured_citations)
     assert response.source_trust

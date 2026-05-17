@@ -25,6 +25,7 @@ class S2IntelAdvisorAgent(Agent):
                 "trusted public news sources",
                 "public academic or NGO reports",
                 "public social trend summaries when lawfully collected",
+                "USGS public terrain and map products",
             ],
             disallowed_inputs=[
                 "classified collection",
@@ -64,6 +65,8 @@ class S2IntelAdvisorAgent(Agent):
             "and social/noisy indicator.\n"
             "- Use the CIA World Factbook as a baseline public reference when country background\n"
             "  or infrastructure context matters.\n"
+            "- Use USGS public products as a first- or second-line source when terrain, hydrography,\n"
+            "  elevation, or topographic-map context matters.\n"
             "- Prefer official current sources over news framing when the two diverge.\n"
             "- Keep public social trends in a clearly lower-confidence lane.\n"
             "- Use the OSINT lane for sourced public aggregation, not private tracking or sensitive inference.\n"

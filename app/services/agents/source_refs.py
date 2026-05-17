@@ -92,6 +92,15 @@ S2_REFERENCES: tuple[SourceRef, ...] = (
             "economy, and infrastructure."
         ),
     ),
+    SourceRef(
+        title="USGS The National Map",
+        url="https://www.usgs.gov/the-national-map",
+        publisher="United States Geological Survey",
+        notes=(
+            "Authoritative public terrain, elevation, hydrography, and topographic-map source for location-based "
+            "planning context."
+        ),
+    ),
 )
 
 OSINT_REFERENCES: tuple[SourceRef, ...] = (
@@ -100,6 +109,18 @@ OSINT_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.cia.gov/the-world-factbook/",
         publisher="Central Intelligence Agency",
         notes="Use as a baseline public country-reference source before layering on current reporting.",
+    ),
+    SourceRef(
+        title="USGS The National Map",
+        url="https://www.usgs.gov/the-national-map",
+        publisher="United States Geological Survey",
+        notes="Use as a first-line public source for terrain, elevation, hydrography, and topographic-map context.",
+    ),
+    SourceRef(
+        title="USGS topoView",
+        url="https://ngmdb.usgs.gov/topoview/",
+        publisher="United States Geological Survey",
+        notes="Use to pull historical and current public USGS topographic maps for specific areas.",
     ),
     SourceRef(
         title="MCDP 2 Intelligence",
@@ -225,6 +246,15 @@ MEDICAL_REFERENCES: tuple[SourceRef, ...] = (
 
 G9_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
+        title="NAVMC 3500.124A w/Ch-1 Information Maneuver Training and Readiness Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1630860/navmc-3500124a-wch-1/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Current public T&R source for common Civil Affairs/Civil-Military Operations events "
+            "and MOS 0530/0532 individual events."
+        ),
+    ),
+    SourceRef(
         title="MCTP 3-32D Civil Affairs Operations",
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1898548/mctp-3-32d/",
         publisher="United States Marine Corps",
@@ -333,6 +363,15 @@ TRAINING_REFERENCES: tuple[SourceRef, ...] = (
         notes="Training-standard and common-skills baseline for reserve events.",
     ),
     SourceRef(
+        title="NAVMC 3500.124A w/Ch-1 Information Maneuver Training and Readiness Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1630860/navmc-3500124a-wch-1/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Civil Affairs/Civil-Military Operations T&R standard source for G-9, civil reconnaissance, "
+            "CMOC, and MOS 0530/0532 training packages."
+        ),
+    ),
+    SourceRef(
         title="MCWP 5-10 Marine Corps Planning Process",
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/",
         publisher="United States Marine Corps",
@@ -433,6 +472,36 @@ ORM_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+MAP_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="USGS The National Map",
+        url="https://www.usgs.gov/the-national-map",
+        publisher="United States Geological Survey",
+        notes=(
+            "Primary public source for elevation, hydrography, structures, transport layers, "
+            "and topographic context."
+        ),
+    ),
+    SourceRef(
+        title="USGS topoView",
+        url="https://ngmdb.usgs.gov/topoview/",
+        publisher="United States Geological Survey",
+        notes="Public source for downloadable historical and current topographic maps by area.",
+    ),
+    SourceRef(
+        title="USGS National Map Downloader",
+        url="https://apps.nationalmap.gov/downloader/",
+        publisher="United States Geological Survey",
+        notes="Public source for specific map products and geospatial layers by location and product type.",
+    ),
+    SourceRef(
+        title="USGS EarthExplorer",
+        url="https://earthexplorer.usgs.gov/",
+        publisher="United States Geological Survey",
+        notes="Public discovery portal for imagery and geospatial products when terrain or land-use context matters.",
+    ),
+)
+
 
 def citation_titles(refs: tuple[SourceRef, ...]) -> list[str]:
     return [ref.title for ref in refs]
@@ -453,6 +522,10 @@ def source_tier_for_ref(ref: SourceRef) -> str:
     publisher = ref.publisher.lower()
     if "cia world factbook" in title:
         return "Tier: baseline reference"
-    if "united states marine corps" in publisher or "department of defense" in publisher:
+    if (
+        "united states marine corps" in publisher
+        or "department of defense" in publisher
+        or "united states geological survey" in publisher
+    ):
         return "Tier: official current source"
     return "Tier: reference source"

@@ -15,6 +15,7 @@ from app.services.agents.g9_civil_military_agent import build_g9_civil_military_
 from app.services.agents.installation_agent import build_installation_agent
 from app.services.agents.jag_agent import build_jag_agent
 from app.services.agents.leadership_agent import build_leadership_agent
+from app.services.agents.map_agent import build_map_agent
 from app.services.agents.maradmin_agent import build_maradmin_agent
 from app.services.agents.medical_doc_agent import build_medical_doc_agent
 from app.services.agents.mos_civil_affairs_agent import build_mos_civil_affairs_agent
@@ -88,6 +89,7 @@ def default_agents() -> list[Agent]:
         build_pki_troubleshooter_agent(),
         build_leadership_agent(),
         build_osint_agent(),
+        build_map_agent(),
         build_mos_commo_agent(),
         build_mos_civil_affairs_agent(),
         *build_staff_advisor_agents(),

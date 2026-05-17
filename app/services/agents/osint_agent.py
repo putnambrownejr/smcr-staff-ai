@@ -26,6 +26,7 @@ class OsintTrendAgent(Agent):
             "public academic or NGO reports",
             "public social media trend summaries where platform terms permit use",
             "CIA World Factbook for baseline country-reference context",
+            "USGS public map and terrain products for location-based context",
             "user-provided public URLs and local context summaries",
         ],
         disallowed_inputs=[
@@ -40,7 +41,8 @@ class OsintTrendAgent(Agent):
             "Aggregate trusted public-source information. Always cite supplied sources, provide "
             "counterarguments, distinguish facts from claims, and weigh confidence using source quality, "
             "corroboration, recency, and disagreement. Use the CIA World Factbook as a baseline public "
-            "reference for country context before layering on current reporting."
+            "reference for country context before layering on current reporting. Use USGS public map products as "
+            "a first-line source when the question depends on terrain, topographic, hydrographic, or area-map context."
         ),
         required_human_review=True,
         citation_required=True,
@@ -72,6 +74,8 @@ class OsintTrendAgent(Agent):
             "Gaps and next steps:\n"
             "- Use the CIA World Factbook as a baseline public reference when the question depends on country "
             "background, demographics, geography, infrastructure, or economy.\n"
+            "- Use USGS products as a first- or second-line reference when the question depends on terrain, "
+            "topographic map pulls, hydrography, elevation, or public imagery context.\n"
             "- Add more independent public sources before treating any single-source claim as reliable.\n"
             "- Separate baseline reference, official current source, news/reporting, and social/noisy indicator "
             "lanes in the final product.\n"
