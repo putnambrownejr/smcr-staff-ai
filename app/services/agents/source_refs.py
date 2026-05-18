@@ -141,19 +141,31 @@ S3_REFERENCES: tuple[SourceRef, ...] = (
         title="MCDP 5 Planning",
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899841/mcdp-5/",
         publisher="United States Marine Corps",
-        notes="Planning mindset and decision-making discipline.",
+        notes="Planning mindset, learning under uncertainty, and commander decision-making discipline.",
     ),
     SourceRef(
         title="MCWP 5-10 Marine Corps Planning Process",
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/",
         publisher="United States Marine Corps",
-        notes="Concrete MCPP rhythm, staff products, and commander decision support.",
+        notes="Concrete MCPP rhythm, R2P2 conditions, staff products, and commander decision support.",
+    ),
+    SourceRef(
+        title="MCTP 3-30A Command and Staff Actions",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        publisher="United States Marine Corps",
+        notes="Command-post rhythm, staff-action flow, and planning support to decisions.",
     ),
     SourceRef(
         title="MCO 1553.3C Unit Training Management",
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899431/mco-15533c/",
         publisher="United States Marine Corps",
         notes="Core training design, assessment, and event discipline reference.",
+    ),
+    SourceRef(
+        title="MCO 1500.55 Military Thinking and Decision Making Exercises",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/898778/mco-150055/",
+        publisher="United States Marine Corps",
+        notes="Formal grounding for TDGs, decision games, wargaming, and mental rehearsal under stress.",
     ),
     SourceRef(
         title="NAVMC 3500.18D Common Skills Training and Readiness Manual",

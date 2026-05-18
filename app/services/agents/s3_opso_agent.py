@@ -68,6 +68,9 @@ class S3OpsOAdvisorAgent(Agent):
             "My read:\n"
             "- Build around MET/METL value, not around activity for activity's sake.\n"
             "- Pick the few events the unit can actually prepare, rehearse, and assess well.\n"
+            "- Use full MCPP when the problem is new, cross-functional, or still poorly understood.\n"
+            "- Use compressed R2P2-style planning only when the mission is familiar, SOP-backed,\n"
+            "  and the real constraint is time rather than understanding.\n"
             "- Demand enough realism to matter, but not so much complexity that the unit learns confusion\n"
             "  instead of competence.\n"
             "- If the event cannot survive contact with reserve timelines, the design is wrong, not the Marines.\n"
@@ -79,10 +82,13 @@ class S3OpsOAdvisorAgent(Agent):
             "  and AAR plan.\n"
             "- Use TDGs or short wargaming sessions when you need to test judgment, branch plans, or commander "
             "  decision points before execution.\n"
+            "- Do not call a rushed update 'rapid planning' if the unit has not already built the SOPs,\n"
+            "  products, and planning-cell habits that make real compression possible.\n"
             "- Confirm decision points and who owns each suspense before leaving drill.\n\n"
             "Checklist:\n"
             "- Write the desired training end state in plain language.\n"
             "- Tie the event to METs, METLs, or named training standards before expanding it.\n"
+            "- Decide early whether this needs deliberate MCPP or a compressed refinement drill.\n"
             "- Identify assumptions, constraints, and missing information.\n"
             "- Separate admin due-outs from actual operational decision points.\n"
             "- Keep templates with S-3 ownership: schedule, execution matrix, eval structure, and AAR skeleton.\n"
@@ -103,6 +109,7 @@ class S3OpsOAdvisorAgent(Agent):
                 "Is this a drill-weekend planning problem, an AT problem, or a training-event problem?",
                 "Which MET or METL task is this event supposed to improve?",
                 "What products or decisions need to be complete by the end of this drill?",
+                "Does this problem need deliberate MCPP, or is it truly ready for compressed R2P2-style refinement?",
                 "Would a TDG or short wargame expose the weak assumption before the event does?",
                 "Which staff sections must be synchronized for this to work in an SMCR timeline?",
             ],

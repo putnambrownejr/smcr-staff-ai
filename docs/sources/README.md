@@ -30,6 +30,7 @@ When real ingestion is added, fetch from the official URL, calculate source hash
 - [Infantry / 03XX Publications](infantry_03xx.md)
 - [Logistics / 04XX Publications](logistics_04xx.md)
 - [Planning And OPORD Sources](planning_opord.md)
+- [MCPP And R2P2 Deep Dive](mcpp_r2p2.md)
 - [Tactical Handbooks And Field Guides](tactical_handbooks_and_field_guides.md)
 - [Administration Records And Leave](admin_records_leave.md)
 - [MCPEL And MARADMIN Indexes](mcpel_maradmin_indexes.md)

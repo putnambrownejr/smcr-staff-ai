@@ -196,6 +196,8 @@ categories:
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/
       - title: MCTP 3-30A Command and Staff Actions
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/
+      - title: MCO 1500.55 Military Thinking and Decision Making Exercises
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/898778/mco-150055/
   - id: infantry_03xx
     name: Infantry / 03XX tactics, operations, and training
     publication_families: ["MCWP", "MCTP", "MCRP", "NAVMC"]

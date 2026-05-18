@@ -43,11 +43,23 @@ personality, reasoning, and workflow grounding. It is intentionally practical ra
 
 - MCWP 5-10 Marine Corps Planning Process
   - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/
-  - Why it matters: MCPP structure and staff planning rhythm.
+  - Why it matters: deliberate MCPP structure, R2P2 conditions, planning-cell expectations, and staff rhythm.
+
+- MCDP 5 Planning
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899841/mcdp-5/
+  - Why it matters: planning as decision support and learning, not just order production.
+
+- MCTP 3-30A Command and Staff Actions
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/
+  - Why it matters: connects planning to the command-post rhythm, staff actions, and battle tracking.
 
 - MCO 1553.3C Unit Training Management
   - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899431/mco-15533c/
   - Why it matters: event design, training standards, assessment, and command training focus.
+
+- MCO 1500.55 Military Thinking and Decision Making Exercises
+  - Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/898778/mco-150055/
+  - Why it matters: formal grounding for TDGs, decision games, and wargaming as staff-development tools.
 
 - Relevant T&R manuals
   - Why they matter: MET/METL and standard-driven training design.
