@@ -5,6 +5,7 @@ const state = {
   activeLane: resolveInitialLane(),
   workspace: null,
   selectedDocumentId: null,
+  apiBase: resolveApiBase(),
 };
 
 for (const button of document.querySelectorAll(".lane-button")) {
@@ -547,7 +548,7 @@ async function apiFetch(path, options = {}) {
   if (options.auth && state.apiKey) {
     headers["X-Local-API-Key"] = state.apiKey;
   }
-  const response = await fetch(path, {
+  const response = await fetch(`${state.apiBase}${path}`, {
     method: options.method || "GET",
     headers,
     body: options.body,
@@ -567,6 +568,13 @@ function setWorkspaceNote(message, critical = false) {
 
 function updateModeBanner() {
   document.getElementById("mode-badge").textContent = state.mode === "demo" ? "Demo mode" : "Personal mode";
+}
+
+function resolveApiBase() {
+  if (window.location.protocol === "file:") {
+    return "http://127.0.0.1:8000";
+  }
+  return "";
 }
 
 function resolveInitialLane() {

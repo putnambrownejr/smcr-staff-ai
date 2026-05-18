@@ -41,7 +41,7 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "SMCR Staff AI" in response.text
     assert "Next Drill Readiness" in response.text
     assert "Decisive action now" in response.text
-    assert "/static/dashboard/dashboard.js" in response.text
+    assert "dashboard.js" in response.text
 
 
 def test_dashboard_assets_are_served() -> None:

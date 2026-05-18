@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SMCR Staff AI Dashboard</title>
-    <link rel="stylesheet" href="/static/dashboard/dashboard.css" />
+    <link id="dashboard-style" rel="stylesheet" href="" />
   </head>
   <body>
     <div class="app-shell">
@@ -404,6 +404,16 @@
       </main>
     </div>
 
-    <script src="/static/dashboard/dashboard.js"></script>
+    <script>
+      (function loadDashboardAssets() {
+        const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
+        const stylesheet = document.getElementById("dashboard-style");
+        stylesheet.href = `${staticBase}/dashboard.css`;
+
+        const script = document.createElement("script");
+        script.src = `${staticBase}/dashboard.js`;
+        document.body.appendChild(script);
+      })();
+    </script>
   </body>
 </html>
