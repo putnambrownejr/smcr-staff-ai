@@ -48,6 +48,7 @@ def test_connector_workflow_adapter_returns_handoff_and_action_shapes(tmp_path: 
                         "subject": "DTS voucher reminder",
                         "received_at": "2026-06-07T14:30:00Z",
                         "action_hint": "Voucher due this week",
+                        "body_preview": "Post-travel voucher should be submitted with required receipts.",
                     }
                 ],
             },
@@ -56,6 +57,7 @@ def test_connector_workflow_adapter_returns_handoff_and_action_shapes(tmp_path: 
         assert response.status_code == 200
         payload = response.json()
         assert payload["digest"]["action_items"]
+        assert "travel_cases" in payload["digest"]
         assert payload["handoff_draft_request"]["notes"]
         assert any("DTS voucher" in line for line in payload["handoff_note_lines"])
         assert payload["action_promote_request"]["items"]

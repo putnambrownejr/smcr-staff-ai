@@ -10,9 +10,11 @@ from app.schemas.connector_digest import (
     ConnectorEventSummary,
     ConnectorMessageSummary,
     ConnectorReadPlan,
+    TravelEmailCaseSummary,
 )
 from app.schemas.connectors import ConnectorProvider, ConnectorWriteAction
 from app.schemas.session import UserSessionHandoff
+from app.services.connectors.travel_email_interpreter import action_items_from_travel_cases, build_travel_cases
 from app.services.session.handoff_store import SessionHandoffStore
 
 
@@ -22,6 +24,7 @@ class ChiefConnectorDigestPlanner:
 
     def build(self, request: ChiefConnectorDigestRequest) -> ChiefConnectorDigestResponse:
         handoff = self.handoff_store.get(request.user_key)
+        travel_cases = build_travel_cases(request.email_messages)
         read_plans = [
             _build_read_plan(consent.provider, consent.enabled, consent.access_mode.value)
             for consent in request.consents
@@ -30,14 +33,16 @@ class ChiefConnectorDigestPlanner:
             [
                 *_calendar_actions(request.calendar_events),
                 *_email_actions(request.email_messages),
+                *action_items_from_travel_cases(travel_cases),
                 *_handoff_actions(handoff),
             ]
         )
         return ChiefConnectorDigestResponse(
             title="Chief/Aide connector digest plan",
             user_key=request.user_key,
-            summary_lines=_summary_lines(request, handoff, action_items),
+            summary_lines=_summary_lines(request, handoff, action_items, travel_cases),
             read_plans=read_plans,
+            travel_cases=travel_cases,
             action_items=action_items,
             staged_write_actions=_staged_writes(request),
             warnings=[
@@ -164,6 +169,7 @@ def _summary_lines(
     request: ChiefConnectorDigestRequest,
     handoff: UserSessionHandoff | None,
     actions: list[ChiefActionItem],
+    travel_cases: list[TravelEmailCaseSummary],
 ) -> list[str]:
     lines = [
         (
@@ -180,6 +186,13 @@ def _summary_lines(
         lines.append(
             "No stored handoff was found, so connector signals cannot yet be tailored "
             "to the user's full watch list."
+        )
+    if travel_cases:
+        lines.append(
+            
+                f"{len(travel_cases)} travel-related email case(s) were interpreted "
+                "for voucher, receipt, or rental follow-up."
+            
         )
     high_priority = sum(1 for item in actions if item.priority == "high")
     if high_priority:

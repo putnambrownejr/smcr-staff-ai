@@ -17,6 +17,7 @@ from app.schemas.connector_digest import (
 )
 from app.schemas.handoff_updates import HandoffUpdateDraftRequest
 from app.services.connectors.digest_planner import ChiefConnectorDigestPlanner
+from app.services.connectors.travel_email_interpreter import handoff_lines_from_travel_cases
 
 
 class ConnectorWorkflowAdapter:
@@ -34,6 +35,7 @@ class ConnectorWorkflowAdapter:
         handoff_note_lines = [
             *_calendar_handoff_lines(request.calendar_events),
             *_email_handoff_lines(request.email_messages),
+            *handoff_lines_from_travel_cases(digest.travel_cases),
         ]
         action_items = _action_items_from_digest(digest)
         action_promote_request = ActionPromoteRequest(
@@ -61,6 +63,7 @@ class ConnectorWorkflowAdapter:
                 f"{len(action_items)} connector-driven action candidate(s) are ready for promotion if approved.",
             ],
             digest=digest,
+            travel_cases=digest.travel_cases,
             handoff_draft_request=HandoffUpdateDraftRequest(
                 title="Connector-derived handoff update",
                 notes="\n".join(handoff_note_lines) or "No connector-derived handoff notes were generated.",

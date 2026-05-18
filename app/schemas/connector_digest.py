@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -26,6 +26,22 @@ class ConnectorMessageSummary(BaseModel):
     category: str = "email"
     action_hint: str | None = None
     notes: str | None = None
+    body_preview: str | None = None
+    labels: list[str] = Field(default_factory=list)
+
+
+class TravelEmailCaseSummary(BaseModel):
+    title: str
+    source_subject: str
+    sender: str | None = None
+    travel_status: str = "watch"
+    travel_start: date | None = None
+    travel_end: date | None = None
+    voucher_due_date: date | None = None
+    rental_car_expected: bool = False
+    receipts_to_collect: list[str] = Field(default_factory=list)
+    confidence_notes: list[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
 
 
 class ChiefConnectorDigestRequest(BaseModel):
@@ -79,6 +95,7 @@ class ChiefConnectorDigestResponse(BaseModel):
     user_key: str
     summary_lines: list[str] = Field(default_factory=list)
     read_plans: list[ConnectorReadPlan] = Field(default_factory=list)
+    travel_cases: list[TravelEmailCaseSummary] = Field(default_factory=list)
     action_items: list[ChiefActionItem] = Field(default_factory=list)
     staged_write_actions: list[ConnectorWriteAction] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
@@ -138,6 +155,7 @@ class ConnectorWorkflowAdapterResponse(BaseModel):
     user_key: str
     summary_lines: list[str] = Field(default_factory=list)
     digest: ChiefConnectorDigestResponse
+    travel_cases: list[TravelEmailCaseSummary] = Field(default_factory=list)
     handoff_draft_request: HandoffUpdateDraftRequest
     handoff_note_lines: list[str] = Field(default_factory=list)
     action_items: list[ConnectorWorkflowActionItem] = Field(default_factory=list)
