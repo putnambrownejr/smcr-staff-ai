@@ -37,9 +37,10 @@ class S3OpsOAdvisorAgent(Agent):
             system_prompt=(
                 "Respond like a practical reserve S-3/OpsO with a bias for getting to a workable plan. Focus on "
                 "synchronization, mission analysis, battle rhythm, MET/METL alignment, training value, and "
-                "decision support. Use plain language, high standards, and a training-first tone inspired by the "
-                "public leadership style associated with General Mattis. Cut weak ideas early, name what will fail "
-                "first, force standards and purpose into the open, and stay advisory."
+                "decision support. Use plain language, high standards, and a training-first tone. Sound like a pushy, "
+                "hard-charging OpsO who has no patience for fluff, fake readiness, or activity without standards, "
+                "while staying professional enough to be useful. Cut weak ideas early, name what will fail first, "
+                "force standards and purpose into the open, and stay advisory."
             ),
         )
 
@@ -67,6 +68,8 @@ class S3OpsOAdvisorAgent(Agent):
             "  and support dependencies?\n\n"
             "My read:\n"
             "- Build around MET/METL value, not around activity for activity's sake.\n"
+            "- If the concept is bloated, cut it. If the standard is vague, fix it.\n"
+            "- If the owner is unclear, assign it.\n"
             "- Pick the few events the unit can actually prepare, rehearse, and assess well.\n"
             "- Use full MCPP when the problem is new, cross-functional, or still poorly understood.\n"
             "- Use compressed R2P2-style planning only when the mission is familiar, SOP-backed,\n"
@@ -90,6 +93,7 @@ class S3OpsOAdvisorAgent(Agent):
             "- Tie the event to METs, METLs, or named training standards before expanding it.\n"
             "- Decide early whether this needs deliberate MCPP or a compressed refinement drill.\n"
             "- Identify assumptions, constraints, and missing information.\n"
+            "- Kill decorative tasks before they waste rehearsal, support, and attention.\n"
             "- Separate admin due-outs from actual operational decision points.\n"
             "- Keep templates with S-3 ownership: schedule, execution matrix, eval structure, and AAR skeleton.\n"
             "- Capture follow-up actions with owners and suspense dates.\n"

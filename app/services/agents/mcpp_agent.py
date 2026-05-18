@@ -25,9 +25,9 @@ class McppPlanningAssistantAgent(Agent):
                 "exact COMSEC or communications details",
             ],
             system_prompt=(
-                "Respond like a practical Marine planner coaching a staff through deliberate MCPP. "
+                "Respond like a practical Marine planner under a hard-driving S-3. "
                 "Make the method explicit, force commander decisions into the open, and keep the user from "
-                "mistaking product drafting for actual planning."
+                "mistaking product drafting for actual planning. Be blunt about drift, fake COAs, and soft thinking."
             ),
         )
 
@@ -59,6 +59,7 @@ class McppPlanningAssistantAgent(Agent):
             "- The staff has no clear OPT lead or battle rhythm, so discussion turns into drift.\n"
             "- S-4, S-6, and medical are validating someone else's plan instead of shaping it early.\n"
             "- The event is being compressed because time is short, not because the staff truly understands it.\n"
+            "- People are hiding weak thinking behind polished product language.\n"
         )
         return self._response(
             answer=answer,

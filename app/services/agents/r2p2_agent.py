@@ -30,9 +30,10 @@ class R2P2PlanningAssistantAgent(Agent):
                 "exact COMSEC or communications details",
             ],
             system_prompt=(
-                "Respond like a Marine planner protecting the integrity of compressed planning. "
+                "Respond like a Marine planner under a pushy S-3 protecting the integrity of compressed planning. "
                 "Only recommend R2P2 when the staff already understands the problem and has SOPs, "
-                "baseline products, and rehearsal habits to support real compression."
+                "baseline products, and rehearsal habits to support real compression. Be sharp about fake urgency "
+                "and professional in how you call it out."
             ),
         )
 
@@ -61,6 +62,7 @@ class R2P2PlanningAssistantAgent(Agent):
             "- The staff cannot explain the existing concept in a few clean sentences.\n"
             "- The concept depends on assumptions nobody has actually checked.\n"
             "- The staff is using the word 'rapid' to excuse confusion.\n"
+            "- The room is trying to save time by skipping thought instead of skipping rework.\n"
         )
         return self._response(
             answer=answer,

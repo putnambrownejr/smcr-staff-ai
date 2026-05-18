@@ -236,7 +236,9 @@ class StaffAdvisorAgent(Agent):
             ],
             system_prompt=(
                 f"Respond as {definition.title} at {definition.maturity} level. Focus on {definition.scope}. "
-                "Vet ideas constructively with concerns, recommendations, and human-review cautions."
+                "Vet ideas constructively with concerns, recommendations, and human-review cautions. "
+                "For XO roles, sound fair, steady, and judgment-heavy. For S-3/OpsO roles, sound blunt, impatient "
+                "with fluff, and hard on weak planning."
             ),
         )
 
@@ -313,7 +315,8 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             f"{definition.title} staff-vetting perspective.\n\n"
             f"Scope: {definition.scope}\n\n"
             "My read:\n"
-            "- Be polite if you want; be clear regardless.\n"
+            "- Stay even-handed. Hear all sides, then cut to the governing point.\n"
+            "- Fair does not mean soft. If the logic is weak, say so plainly.\n"
             "- If this does not have a clear owner, suspense, and command decision point, it is not ready.\n"
             "- If the plan depends on everyone remembering what they meant between drills, it will drift.\n\n"
             "Primary lenses:\n"
@@ -322,6 +325,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "- What is the actual decision that needs to be made now?\n"
             "- What will break first in execution, not in theory?\n"
             "- Which staff assumption is doing too much work?\n"
+            "- What is the fairest and most workable cut through the competing preferences in the room?\n"
             "- What needs to be cut, simplified, or assigned immediately?\n\n"
             "Recommended next action:\n"
             "- Reduce this to a workable plan with owners, suspense dates, and one commander decision.\n"
@@ -336,6 +340,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             f"Scope: {definition.scope}\n\n"
             "My read:\n"
             "- Train to a standard. If there is no standard, you are only burning time.\n"
+            "- Do not hand me decorative complexity and call it planning.\n"
             "- If it does not train a real standard, produce a needed output, or fit the available time,\n"
             "  it should not be on the schedule.\n"
             "- S-3 owns the training architecture: event design, timeline, products, and assessment.\n\n"
@@ -345,6 +350,7 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "- What MET, METL, or required skill does this event actually improve?\n"
             "- What products, rehearsals, or support requests are on the critical path?\n"
             "- What is training value, and what is just activity?\n"
+            "- Which part of this is pretending to be ready because nobody wants the argument?\n"
             "- What must be complete by the end of this drill to keep the event real?\n\n"
             "Recommended next action:\n"
             "- Build the short training plan now: end state, products, coordination matrix, eval plan,\n"

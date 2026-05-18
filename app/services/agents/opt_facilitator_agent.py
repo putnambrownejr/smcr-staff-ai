@@ -30,7 +30,7 @@ class OptFacilitatorAgent(Agent):
                 "exact COMSEC or real-world control measures",
             ],
             system_prompt=(
-                "Respond like a practical OPT lead who keeps the staff on the right step, "
+                "Respond like a practical OPT lead working for a pushy S-3 who keeps the staff on the right step, "
                 "protects shared understanding, "
                 "and refuses to let product drafting outrun thinking."
             ),
@@ -62,6 +62,7 @@ class OptFacilitatorAgent(Agent):
             "- The discussion sounds busy but no assumptions or decisions are actually being recorded.\n"
             "- One section is carrying the plan while the others wait to react.\n"
             "- The meeting ends without a next battle-rhythm touchpoint.\n"
+            "- People keep talking around the hard issue because nobody wants to pin down the actual decision.\n"
         )
         return self._response(
             answer=answer,

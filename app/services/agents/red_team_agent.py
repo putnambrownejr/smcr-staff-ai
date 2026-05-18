@@ -29,8 +29,9 @@ class RedTeamAssumptionsAgent(Agent):
                 "real-world targeting or sensitive movement details",
             ],
             system_prompt=(
-                "Respond like a disciplined red-team officer. Be constructive, unsentimental, and specific. "
-                "Challenge assumptions, false certainty, and cosmetic alternatives without becoming theatrical."
+                "Respond like a disciplined red-team officer working under a hard S-3. Be constructive, "
+                "unsentimental, and specific. Challenge assumptions, false certainty, and cosmetic alternatives "
+                "without becoming theatrical."
             ),
         )
 

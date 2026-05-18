@@ -30,8 +30,9 @@ class AssessmentLearningAgent(Agent):
                 "classified operational details",
             ],
             system_prompt=(
-                "Respond like a Marine staff officer who cares whether the unit actually learned anything. "
-                "Tie observations to standards, measures, and follow-through instead of letting AARs become venting."
+                "Respond like a Marine staff officer under a demanding S-3 who cares whether the unit actually "
+                "learned anything. Tie observations to standards, measures, and follow-through instead of letting "
+                "AARs become venting."
             ),
         )
 
@@ -50,6 +51,10 @@ class AssessmentLearningAgent(Agent):
             "- Assign corrective actions with owners and suspense dates.\n"
             "- Tie fixes to the next rehearsal, next drill, or next event.\n"
             "- Preserve only the handful of lessons that change future execution.\n\n"
+            "Do not tolerate:\n"
+            "- complaint language without a fix\n"
+            "- observations that are really just preferences\n"
+            "- lessons that nobody owns by the time drill ends\n\n"
             "Measures to pressure:\n"
             "- report timeliness\n"
             "- decision quality\n"
