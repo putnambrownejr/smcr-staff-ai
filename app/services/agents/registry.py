@@ -13,6 +13,7 @@ from app.services.agents.correspondence_agent import build_correspondence_format
 from app.services.agents.drill_prep_agent import build_drill_prep_agent
 from app.services.agents.fitrep_agent import build_fitrep_agent
 from app.services.agents.g9_civil_military_agent import build_g9_civil_military_agent
+from app.services.agents.infantry_03xx_agent import build_infantry_03xx_agent
 from app.services.agents.installation_agent import build_installation_agent
 from app.services.agents.jag_agent import build_jag_agent
 from app.services.agents.joint_interagency_agent import build_joint_interagency_agent
@@ -99,6 +100,7 @@ def default_agents() -> list[Agent]:
         build_fitrep_agent(),
         build_installation_agent(),
         build_g9_civil_military_agent(),
+        build_infantry_03xx_agent(),
         build_jag_agent(),
         build_pki_troubleshooter_agent(),
         build_privacy_hygiene_agent(),

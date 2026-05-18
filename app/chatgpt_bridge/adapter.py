@@ -79,6 +79,43 @@ class ChatGptBridgeAdapter:
     async def run_joint_interagency_frame_advisor(self, payload: dict[str, object]) -> dict[str, object]:
         return await self.run_staff_agent(agent_id="joint-interagency-frame-advisor", payload=payload)
 
+    async def run_infantry_03xx_advisor(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.run_staff_agent(agent_id="infantry-03xx-advisor", payload=payload)
+
+    async def run_patrolling_refresher(self, payload: dict[str, object]) -> dict[str, object]:
+        patrolling_payload = {
+            "input": (
+                "Use a patrolling refresher lane. Focus on simple patrol fundamentals, control measures, "
+                "reporting, leader checks, dry repetitions, and training-safe assessment for the stated audience.\n\n"
+                f"User prompt: {payload.get('input', '')}"
+            ),
+            "context": payload.get("context", {}),
+        }
+        return await self.run_staff_agent(agent_id="infantry-03xx-advisor", payload=patrolling_payload)
+
+    async def run_blank_fire_urban_lane(self, payload: dict[str, object]) -> dict[str, object]:
+        urban_payload = {
+            "input": (
+                "Use a blank-fire urban lane lens. Focus on scope control, leader supervision, sectors, "
+                "reporting, casualty actions, blank-fire safety discipline, and what should be dry-run first.\n\n"
+                f"User prompt: {payload.get('input', '')}"
+            ),
+            "context": payload.get("context", {}),
+        }
+        return await self.run_staff_agent(agent_id="infantry-03xx-advisor", payload=urban_payload)
+
+    async def run_leader_rehearsal_oic_worksheet(self, payload: dict[str, object]) -> dict[str, object]:
+        worksheet_payload = {
+            "input": (
+                "Use a leader rehearsal / OIC worksheet structure. Focus on commander intent, lane purpose, "
+                "roles, control measures, stop-training criteria, safety checks, medical checks, AAR plan, and "
+                "what the OIC must verify before go-time.\n\n"
+                f"User prompt: {payload.get('input', '')}"
+            ),
+            "context": payload.get("context", {}),
+        }
+        return await self.run_staff_agent(agent_id="infantry-03xx-advisor", payload=worksheet_payload)
+
     async def run_sja_military_justice_advisor(self, payload: dict[str, object]) -> dict[str, object]:
         return await self.run_staff_agent(agent_id="jag-legal-advisor", payload=payload)
 

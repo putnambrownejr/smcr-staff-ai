@@ -28,6 +28,10 @@ Why:
 - `build_tdg`
 - `build_infantry_training_package`
 - `build_staff_update_cycle`
+- `run_infantry_03xx_advisor`
+- `run_patrolling_refresher`
+- `run_blank_fire_urban_lane`
+- `run_leader_rehearsal_oic_worksheet`
 - `run_opt_facilitator`
 - `run_sja_military_justice_advisor`
 - `run_njp_issue_spotting_worksheet`
@@ -58,6 +62,18 @@ control, leader rehearsals, and AAR discipline without pretending it is advanced
 `build_staff_update_cycle` is the recurring staff-rhythm lane. It takes section updates and turns them into
 a linked running estimate, CUB, and CPB so the user can move from “what changed?” to “what does the commander
 need to hear or decide?” without rebuilding the frame every time.
+
+`run_infantry_03xx_advisor` is the S-3-family infantry thinking lane. Use it when the user wants infantry-
+flavored training help without pretending every event is a formal 03xx qualification package.
+
+`run_patrolling_refresher` is the simple patrolling lane. Use it for fundamentals, control measures, leader
+checks, reporting, and training-safe repetition.
+
+`run_blank_fire_urban_lane` is the controlled urban lane. Use it for blanks, MOUT sites, sectors, reports,
+casualty actions, supervision, and what should stay dry until the leaders prove control.
+
+`run_leader_rehearsal_oic_worksheet` is the execution-control lane. Use it when the user needs a compact OIC
+worksheet around intent, roles, control measures, stop-training criteria, safety, medical checks, and AAR setup.
 
 `run_sja_military_justice_advisor` is the clean front door for command legal issue-spotting. Use it when the
 user needs SJA-shaped help on NJP, UCMJ, courts-martial process awareness, Reserve-status jurisdiction questions,

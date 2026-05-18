@@ -402,6 +402,62 @@ TOOL_SPECS: list[types.Tool] = [
         ),
     ),
     types.Tool(
+        name="run_infantry_03xx_advisor",
+        title="Run Infantry 03XX Advisor",
+        description=(
+            "Use this when the user wants S-3-family infantry training help, including familiarization, "
+            "basic tactical framing, patrolling refreshers, urban training scope control, and leader rehearsal."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the infantry advisor",
+            "Infantry 03XX advisor ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="run_patrolling_refresher",
+        title="Run Patrolling Refresher",
+        description=(
+            "Use this when the user wants a compact patrolling refresher focused on simple fundamentals, "
+            "control measures, reporting, leader checks, and training-safe repetition."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the patrolling refresher",
+            "Patrolling refresher ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="run_blank_fire_urban_lane",
+        title="Run Blank-Fire Urban Lane",
+        description=(
+            "Use this when the user wants a training-safe blank-fire urban lane focused on scope control, "
+            "leader supervision, sectors, reporting, casualty actions, and blank-fire discipline."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the blank-fire urban lane",
+            "Blank-fire urban lane ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="run_leader_rehearsal_oic_worksheet",
+        title="Run Leader Rehearsal OIC Worksheet",
+        description=(
+            "Use this when the user wants an OIC-style worksheet for leader rehearsals, control measures, "
+            "stop-training criteria, safety, medical checks, and AAR setup."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the OIC worksheet",
+            "Leader rehearsal OIC worksheet ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
         name="run_njp_issue_spotting_worksheet",
         title="Run NJP Issue Spotting Worksheet",
         description=(
@@ -656,8 +712,8 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             return _ok_result("Built the TDG or wargame.", result)
 
         if name == "build_infantry_training_package":
-            infantry_payload = InfantryTrainingPackageToolInput.model_validate(arguments)
-            result = await adapter.build_infantry_training_package(infantry_payload.model_dump())
+            infantry_package_payload = InfantryTrainingPackageToolInput.model_validate(arguments)
+            result = await adapter.build_infantry_training_package(infantry_package_payload.model_dump())
             return _ok_result("Built the infantry training package.", result)
 
         if name == "build_staff_update_cycle":
@@ -678,6 +734,34 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
                 {"input": sja_payload.input, "context": sja_payload.context}
             )
             return _ok_result("Ran the SJA military justice advisor.", result)
+
+        if name == "run_infantry_03xx_advisor":
+            infantry_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_infantry_03xx_advisor(
+                {"input": infantry_payload.input, "context": infantry_payload.context}
+            )
+            return _ok_result("Ran the infantry 03XX advisor.", result)
+
+        if name == "run_patrolling_refresher":
+            patrolling_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_patrolling_refresher(
+                {"input": patrolling_payload.input, "context": patrolling_payload.context}
+            )
+            return _ok_result("Ran the patrolling refresher.", result)
+
+        if name == "run_blank_fire_urban_lane":
+            urban_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_blank_fire_urban_lane(
+                {"input": urban_payload.input, "context": urban_payload.context}
+            )
+            return _ok_result("Ran the blank-fire urban lane.", result)
+
+        if name == "run_leader_rehearsal_oic_worksheet":
+            worksheet_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_leader_rehearsal_oic_worksheet(
+                {"input": worksheet_payload.input, "context": worksheet_payload.context}
+            )
+            return _ok_result("Ran the leader rehearsal OIC worksheet.", result)
 
         if name == "run_njp_issue_spotting_worksheet":
             njp_payload = StaffAgentAssistToolInput.model_validate(arguments)

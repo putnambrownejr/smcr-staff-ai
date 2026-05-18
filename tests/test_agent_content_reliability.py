@@ -25,6 +25,7 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "assessment-learning-advisor": "Help me connect this AAR to the next drill's actual fixes.",
     "writing-briefing-coach": "Help me sharpen a command brief so the decision is clear.",
     "joint-interagency-frame-advisor": "Help me think through command relationships and outside stakeholders.",
+    "infantry-03xx-advisor": "Help me shape a training-safe infantry familiarization event for support Marines.",
     "installation-practical-advisor": "Help me think through visitor access for a base event.",
     "maradmin-monitor": "Help me triage a new MARADMIN for reserve staff relevance.",
     "uniform-advisor": "Help me think through the uniform and grooming prep for next drill.",

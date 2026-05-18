@@ -37,6 +37,7 @@ def test_agent_registry_loads_expected_agents() -> None:
         "assessment-learning-advisor",
         "writing-briefing-coach",
         "joint-interagency-frame-advisor",
+        "infantry-03xx-advisor",
         "osint-research-assistant",
         "terrain-map-advisor",
         "mos-commo",
@@ -292,6 +293,22 @@ def test_mos_specialty_agents_are_grounded_under_parent_staff_lanes() -> None:
     assert "under the G-9 lane" in ca_response.answer
     assert ca_response.structured_citations
     assert ca_response.source_trust
+
+
+def test_infantry_03xx_agent_returns_s3_family_training_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("infantry-03xx-advisor")
+    assert agent is not None
+
+    response = agent.run(
+        "Help me shape a basic blank-fire urban familiarization lane for support Marines.",
+        context=AgentContext(),
+    )
+
+    assert "Infantry / 03XX advisory draft under the S-3 family." in response.answer
+    assert "familiarization" in response.answer.lower()
+    assert response.structured_citations
+    assert response.source_trust
 
 
 def test_medical_doc_agent_returns_casevac_structure() -> None:

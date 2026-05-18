@@ -164,6 +164,70 @@ async def test_run_sja_military_justice_advisor_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_run_infantry_03xx_advisor_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_infantry_03xx_advisor(
+        {
+            "input": "Help me shape infantry-flavored training for support Marines at AT.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "infantry-03xx-advisor"
+    assert "Infantry / 03XX advisory draft under the S-3 family." in cast(str, result["answer"])
+
+
+@pytest.mark.anyio
+async def test_run_patrolling_refresher_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_patrolling_refresher(
+        {
+            "input": "Refresh the basics for a simple training patrol lane.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "infantry-03xx-advisor"
+    assert "patrolling" in cast(str, result["answer"]).lower()
+
+
+@pytest.mark.anyio
+async def test_run_blank_fire_urban_lane_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_blank_fire_urban_lane(
+        {
+            "input": "Help me control a blank-fire MOUT lane for non-03 Marines.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "infantry-03xx-advisor"
+    answer = cast(str, result["answer"]).lower()
+    assert "blank" in answer
+    assert "urban" in answer
+
+
+@pytest.mark.anyio
+async def test_run_leader_rehearsal_oic_worksheet_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_leader_rehearsal_oic_worksheet(
+        {
+            "input": "Build me an OIC worksheet for a modified urban training lane.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "infantry-03xx-advisor"
+    answer = cast(str, result["answer"]).lower()
+    assert "oic" in answer or "leader" in answer
+    assert "safety" in answer
+
+
+@pytest.mark.anyio
 async def test_run_njp_issue_spotting_worksheet_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 
