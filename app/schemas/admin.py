@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import UserSessionHandoff
 from app.schemas.source_state import SourceTrustMarker
+from app.schemas.travel_cases import TravelCaseRecord
 
 
 class AdminReadinessItem(BaseModel):
@@ -24,5 +25,6 @@ class AdminReadinessResponse(BaseModel):
     summary_lines: list[str] = Field(default_factory=list)
     items: list[AdminReadinessItem] = Field(default_factory=list)
     document_summary: PersonalDocumentSummary | None = None
+    travel_cases: list[TravelCaseRecord] = Field(default_factory=list)
     source_trust: list[SourceTrustMarker] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

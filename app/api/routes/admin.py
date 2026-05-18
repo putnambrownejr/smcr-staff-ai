@@ -11,6 +11,7 @@ from app.schemas.pki import PkiTroubleshootingRequest, PkiTroubleshootingRespons
 from app.services.admin.pki_support import PkiTroubleshootingService
 from app.services.admin.readiness import AdminReadinessService
 from app.services.admin.workflow_builder import AdminWorkflowBuilder
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
@@ -32,6 +33,7 @@ def get_admin_readiness_service(
     return AdminReadinessService(
         handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
         document_organizer=PersonalDocumentOrganizer(context_store),
+        travel_case_store=TravelCaseStore(settings.travel_case_storage_dir),
     )
 
 

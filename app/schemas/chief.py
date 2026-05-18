@@ -7,6 +7,7 @@ from app.schemas.ingestion import MessageRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate
+from app.schemas.travel_cases import TravelCaseRecord
 from app.schemas.user_context import ActiveUserContext
 
 
@@ -67,6 +68,7 @@ class ChiefBriefResponse(BaseModel):
     top_priority_items: list[ChiefActionItem] = Field(default_factory=list)
     document_summary: PersonalDocumentSummary | None = None
     drill_plans: list[DrillPrepPlanResponse] = Field(default_factory=list)
+    travel_cases: list[TravelCaseRecord] = Field(default_factory=list)
     documentation_updates: list[DocumentationUpdateCandidate] = Field(default_factory=list)
     reading_recommendations: list[str] = Field(default_factory=list)
     recommended_courses: list[str] = Field(default_factory=list)

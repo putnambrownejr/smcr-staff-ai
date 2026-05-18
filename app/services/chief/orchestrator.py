@@ -8,8 +8,10 @@ from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import DrillDateRecord, FitrepReminder, PmeStatus, RecurringCheck, UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate
+from app.schemas.travel_cases import TravelCaseRecord
 from app.schemas.user_context import ActiveUserContext
 from app.services.calendar.plan_store import DrillPrepPlanStore
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_monitor import DocumentUpdateMonitor
 from app.services.ingestion.document_update_store import DocumentUpdateStore
@@ -29,6 +31,7 @@ class ChiefAideOrchestrator:
         document_update_store: DocumentUpdateStore | None = None,
         opportunity_tracker: OpportunityTracker | None = None,
         active_context_store: ActiveUserContextStore | None = None,
+        travel_case_store: TravelCaseStore | None = None,
     ) -> None:
         self.handoff_store = handoff_store
         self.document_organizer = document_organizer
@@ -37,6 +40,7 @@ class ChiefAideOrchestrator:
         self.document_update_store = document_update_store or DocumentUpdateStore()
         self.opportunity_tracker = opportunity_tracker or OpportunityTracker()
         self.active_context_store = active_context_store
+        self.travel_case_store = travel_case_store or TravelCaseStore()
 
     def build_brief(self, request: ChiefBriefRequest) -> ChiefBriefResponse:
         handoff = self.handoff_store.get(request.user_key) if request.user_key else None
@@ -46,6 +50,7 @@ class ChiefAideOrchestrator:
         handoff_is_stale = _handoff_is_stale(handoff)
         document_summary = self.document_organizer.list_documents() if request.include_personal_documents else None
         drill_plans = self.drill_plan_store.list() if request.include_drill_plans else []
+        travel_cases = self.travel_case_store.list_cases(request.user_key) if request.user_key else []
         opportunities = self.opportunity_tracker.list()
         updates = self.document_update_store.list()
         if request.maradmin_records:
@@ -56,6 +61,7 @@ class ChiefAideOrchestrator:
             *_handoff_actions(handoff),
             *_personal_rhythm_actions(handoff, drill_plans),
             *_document_actions(document_summary, handoff),
+            *_travel_case_actions(travel_cases),
             *_opportunity_actions(opportunities, handoff),
             *_career_actions(handoff),
             *_drill_actions(drill_plans),
@@ -85,14 +91,16 @@ class ChiefAideOrchestrator:
                 handoff_is_stale=handoff_is_stale,
                 actions=sorted_actions,
                 updates=updates,
-                drill_plans=drill_plans,
-                document_summary=document_summary,
-                next_drill_readiness=next_drill_readiness,
-            ),
+            drill_plans=drill_plans,
+            travel_cases=travel_cases,
+            document_summary=document_summary,
+            next_drill_readiness=next_drill_readiness,
+        ),
             action_items=sorted_actions,
             top_priority_items=_top_priority_items(sorted_actions),
             document_summary=document_summary,
             drill_plans=drill_plans,
+            travel_cases=travel_cases,
             documentation_updates=updates,
             reading_recommendations=_reading_recommendations(self.reading_catalog),
             recommended_courses=_recommended_courses(handoff),
@@ -290,6 +298,40 @@ def _drill_actions(drill_plans: list[DrillPrepPlanResponse]) -> list[ChiefAction
     ]
 
 
+def _travel_case_actions(travel_cases: list[TravelCaseRecord]) -> list[ChiefActionItem]:
+    items: list[ChiefActionItem] = []
+    for case in travel_cases[:6]:
+        if case.voucher_due_date is not None:
+            items.append(
+                ChiefActionItem(
+                    title=f"Stored travel case: voucher due for {case.title}",
+                    category="travel",
+                    priority=_priority(case.voucher_due_date),
+                    due_date=case.voucher_due_date,
+                    source=case.trip_id,
+                    recommendation=(
+                        "Review the accumulated trip record, confirm receipts are complete, "
+                        "and close the DTS voucher before the suspense slips."
+                    ),
+                )
+            )
+        elif case.travel_start is not None:
+            items.append(
+                ChiefActionItem(
+                    title=f"Stored travel case: confirm upcoming trip support for {case.title}",
+                    category="travel",
+                    priority=_priority(case.travel_start),
+                    due_date=case.travel_start,
+                    source=case.trip_id,
+                    recommendation=(
+                        "Review the stored travel case for itinerary, rental-car, and receipt expectations "
+                        "before movement."
+                    ),
+                )
+            )
+    return items
+
+
 def _opportunity_actions(
     opportunities: Sequence[OpportunityRecord],
     handoff: UserSessionHandoff | None,
@@ -403,6 +445,7 @@ def _summary_lines(
     actions: list[ChiefActionItem],
     updates: list[DocumentationUpdateCandidate],
     drill_plans: list[DrillPrepPlanResponse],
+    travel_cases: list[TravelCaseRecord],
     document_summary: PersonalDocumentSummary | None,
     next_drill_readiness: NextDrillReadiness,
 ) -> list[str]:
@@ -428,6 +471,8 @@ def _summary_lines(
         lines.append(f"{len(handoff.drill_dates)} annual drill date(s) are stored for recurring prep reminders.")
     if handoff is not None and handoff.recurring_checks:
         lines.append(f"{len(handoff.recurring_checks)} recurring readiness/admin check(s) are tracked in the handoff.")
+    if travel_cases:
+        lines.append(f"{len(travel_cases)} stored travel case(s) are available for voucher and receipt follow-through.")
     new_updates = [update for update in updates if update.review_status == "new"]
     if new_updates:
         lines.append(f"{len(new_updates)} documentation update candidate(s) need review against official sources.")

@@ -127,6 +127,7 @@ def _case_from_message(message: ConnectorMessageSummary) -> TravelEmailCaseSumma
         title=_case_title(message.subject),
         source_subject=message.subject,
         sender=message.sender,
+        message_received_at=message.received_at,
         travel_status=status,
         travel_start=travel_start,
         travel_end=travel_end,

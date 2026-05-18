@@ -14,17 +14,21 @@ from app.schemas.connector_digest import (
 )
 from app.schemas.connectors import ConnectorProvider, ConnectorWriteAction
 from app.schemas.session import UserSessionHandoff
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.connectors.travel_email_interpreter import action_items_from_travel_cases, build_travel_cases
 from app.services.session.handoff_store import SessionHandoffStore
 
 
 class ChiefConnectorDigestPlanner:
-    def __init__(self, handoff_store: SessionHandoffStore) -> None:
+    def __init__(self, handoff_store: SessionHandoffStore, travel_case_store: TravelCaseStore | None = None) -> None:
         self.handoff_store = handoff_store
+        self.travel_case_store = travel_case_store or TravelCaseStore()
 
     def build(self, request: ChiefConnectorDigestRequest) -> ChiefConnectorDigestResponse:
         handoff = self.handoff_store.get(request.user_key)
         travel_cases = build_travel_cases(request.email_messages)
+        if travel_cases:
+            self.travel_case_store.upsert_many(request.user_key, travel_cases)
         read_plans = [
             _build_read_plan(consent.provider, consent.enabled, consent.access_mode.value)
             for consent in request.consents
@@ -189,10 +193,8 @@ def _summary_lines(
         )
     if travel_cases:
         lines.append(
-            
-                f"{len(travel_cases)} travel-related email case(s) were interpreted "
-                "for voucher, receipt, or rental follow-up."
-            
+            f"{len(travel_cases)} travel-related email case(s) were interpreted "
+            "for voucher, receipt, or rental follow-up."
         )
     high_priority = sum(1 for item in actions if item.priority == "high")
     if high_priority:

@@ -34,6 +34,7 @@ class TravelEmailCaseSummary(BaseModel):
     title: str
     source_subject: str
     sender: str | None = None
+    message_received_at: datetime | None = None
     travel_status: str = "watch"
     travel_start: date | None = None
     travel_end: date | None = None

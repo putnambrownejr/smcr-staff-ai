@@ -20,6 +20,7 @@ from app.services.admin.readiness import AdminReadinessService
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.career.watch import CareerWatchService
 from app.services.chief.orchestrator import ChiefAideOrchestrator
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.demo.scenarios import DEMO_USER_KEY, build_demo_career_watch, build_demo_chief_brief
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_store import DocumentUpdateStore
@@ -60,6 +61,7 @@ def get_chief_orchestrator(
         reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
         document_update_store=DocumentUpdateStore(f"{settings.local_context_storage_dir}/document_updates"),
         opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
+        travel_case_store=TravelCaseStore(settings.travel_case_storage_dir),
     )
 
 
@@ -70,6 +72,7 @@ def get_admin_service(
     return AdminReadinessService(
         handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
         document_organizer=PersonalDocumentOrganizer(store),
+        travel_case_store=TravelCaseStore(settings.travel_case_storage_dir),
     )
 
 

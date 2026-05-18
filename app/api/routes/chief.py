@@ -9,6 +9,7 @@ from app.core.config import get_settings
 from app.schemas.chief import ChiefBriefRequest, ChiefBriefResponse
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.chief.orchestrator import ChiefAideOrchestrator
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
@@ -36,6 +37,7 @@ def get_orchestrator(
         reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
         opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
         active_context_store=ActiveUserContextStore(f"{settings.local_context_storage_dir}/active_user_context"),
+        travel_case_store=TravelCaseStore(settings.travel_case_storage_dir),
     )
 
 

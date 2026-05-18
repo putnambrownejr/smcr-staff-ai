@@ -3,6 +3,7 @@ from pathlib import Path
 
 from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
 from app.schemas.chief import ChiefBriefRequest
+from app.schemas.connector_digest import TravelEmailCaseSummary
 from app.schemas.ingestion import MessageRecord
 from app.schemas.opportunities import ManualOpportunityRequest
 from app.schemas.session import (
@@ -16,6 +17,7 @@ from app.schemas.session import (
 from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateReviewStatus
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.chief.orchestrator import ChiefAideOrchestrator
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.opportunities.tracker import OpportunityTracker
@@ -266,3 +268,41 @@ def test_chief_brief_surfaces_recurring_checks_and_drill_schedule(tmp_path: Path
     assert any("travel-admin" in item.lower() for item in brief.next_drill_readiness.likely_friction_points)
     assert brief.next_drill_readiness.decisive_action
     assert brief.next_drill_readiness.this_week_focus
+
+
+def test_chief_brief_reads_stored_travel_cases(tmp_path: Path) -> None:
+    handoff_store = SessionHandoffStore(tmp_path / "handoffs")
+    handoff_store.upsert(UserSessionHandoff(user_key="capt-travel-watch"))
+    travel_case_store = TravelCaseStore(tmp_path / "travel-cases")
+    travel_case_store.upsert_many(
+        "capt-travel-watch",
+        [
+            TravelEmailCaseSummary(
+                title="CI Travel itinerary",
+                source_subject="CI Travel itinerary",
+                sender="noreply@citravel.example",
+                message_received_at=datetime(2026, 6, 1, 14, 30, tzinfo=UTC),
+                travel_status="post_travel",
+                travel_start=date(2026, 6, 6),
+                travel_end=date(2026, 6, 8),
+                voucher_due_date=date(2026, 6, 13),
+                rental_car_expected=True,
+                receipts_to_collect=["lodging", "rental car"],
+            )
+        ],
+    )
+    orchestrator = ChiefAideOrchestrator(
+        handoff_store=handoff_store,
+        document_organizer=PersonalDocumentOrganizer(LocalContextStore(tmp_path / "context")),
+        drill_plan_store=DrillPrepPlanStore(tmp_path / "plans"),
+        reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
+        document_update_store=DocumentUpdateStore(tmp_path / "updates"),
+        opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+        travel_case_store=travel_case_store,
+    )
+
+    brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-travel-watch"))
+
+    assert brief.travel_cases
+    assert any(item.category == "travel" for item in brief.action_items)
+    assert any("stored travel case" in line.lower() for line in brief.summary_lines)

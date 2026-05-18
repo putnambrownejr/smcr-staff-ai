@@ -13,6 +13,7 @@ from app.schemas.connector_digest import (
 )
 from app.schemas.connectors import ConnectorConsent, ConnectorConsentResponse, ConnectorWriteAction
 from app.services.connectors.digest_planner import ChiefConnectorDigestPlanner
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.connectors.workflow_adapter import ConnectorWorkflowAdapter
 from app.services.session.handoff_store import SessionHandoffStore
 
@@ -21,6 +22,10 @@ router = APIRouter(prefix="/connectors", tags=["connectors"], dependencies=[Loca
 
 def get_handoff_store() -> Iterator[SessionHandoffStore]:
     yield SessionHandoffStore(get_settings().session_handoff_storage_dir)
+
+
+def get_travel_case_store() -> Iterator[TravelCaseStore]:
+    yield TravelCaseStore(get_settings().travel_case_storage_dir)
 
 
 @router.post("/consent-plan", response_model=ConnectorConsentResponse)
@@ -53,8 +58,9 @@ def stage_write_action(action: ConnectorWriteAction) -> ConnectorWriteAction:
 def build_chief_connector_digest(
     request: ChiefConnectorDigestRequest,
     store: Annotated[SessionHandoffStore, Depends(get_handoff_store)],
+    travel_case_store: Annotated[TravelCaseStore, Depends(get_travel_case_store)],
 ) -> ChiefConnectorDigestResponse:
-    planner = ChiefConnectorDigestPlanner(store)
+    planner = ChiefConnectorDigestPlanner(store, travel_case_store=travel_case_store)
     return planner.build(request)
 
 
@@ -62,7 +68,8 @@ def build_chief_connector_digest(
 def build_connector_workflow_adapter(
     request: ConnectorWorkflowAdapterRequest,
     store: Annotated[SessionHandoffStore, Depends(get_handoff_store)],
+    travel_case_store: Annotated[TravelCaseStore, Depends(get_travel_case_store)],
 ) -> ConnectorWorkflowAdapterResponse:
-    planner = ChiefConnectorDigestPlanner(store)
+    planner = ChiefConnectorDigestPlanner(store, travel_case_store=travel_case_store)
     adapter = ConnectorWorkflowAdapter(planner)
     return adapter.build(request)

@@ -7,6 +7,8 @@ from app.schemas.admin import AdminReadinessItem, AdminReadinessResponse
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import FitrepReminder, UserSessionHandoff
 from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
+from app.schemas.travel_cases import TravelCaseRecord
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.session.handoff_store import SessionHandoffStore
 
@@ -16,29 +18,33 @@ class AdminReadinessService:
         self,
         handoff_store: SessionHandoffStore,
         document_organizer: PersonalDocumentOrganizer,
+        travel_case_store: TravelCaseStore | None = None,
     ) -> None:
         self.handoff_store = handoff_store
         self.document_organizer = document_organizer
+        self.travel_case_store = travel_case_store or TravelCaseStore()
 
     def build(self, user_key: str) -> AdminReadinessResponse:
         handoff = self.handoff_store.get(user_key)
         document_summary = self.document_organizer.list_documents()
+        travel_cases = self.travel_case_store.list_cases(user_key)
         items = _sort_items(
             [
                 *_fitrep_items(handoff),
                 *_admin_watch_items(handoff),
                 *_document_items(document_summary),
                 *_readiness_items(document_summary),
-                *_travel_items(document_summary),
+                *_travel_items(document_summary, travel_cases),
             ]
         )
         return AdminReadinessResponse(
             title="Admin readiness",
             user_key=user_key,
             handoff=handoff,
-            summary_lines=_summary_lines(handoff, document_summary, items),
+            summary_lines=_summary_lines(handoff, document_summary, items, travel_cases),
             items=items,
             document_summary=document_summary,
+            travel_cases=travel_cases,
             source_trust=_admin_source_trust(),
             warnings=[
                 *DEFAULT_WARNINGS,
@@ -169,39 +175,74 @@ def _readiness_items(document_summary: PersonalDocumentSummary | None) -> list[A
     return items
 
 
-def _travel_items(document_summary: PersonalDocumentSummary | None) -> list[AdminReadinessItem]:
+def _travel_items(
+    document_summary: PersonalDocumentSummary | None,
+    travel_cases: list[TravelCaseRecord],
+) -> list[AdminReadinessItem]:
     if document_summary is None:
-        return []
-    present = {record.document_type.value for record in document_summary.records}
-    items: list[AdminReadinessItem] = []
-    if "travel_receipt" not in present:
-        items.append(
-            AdminReadinessItem(
-                title="Track travel receipts locally",
-                category="travel",
-                priority="low",
-                recommendation=(
-                    "Store receipts or references locally if DTS voucher support is needed "
-                    "after drill or travel."
-                ),
+        document_items: list[AdminReadinessItem] = []
+    else:
+        present = {record.document_type.value for record in document_summary.records}
+        document_items = []
+        if "travel_receipt" not in present:
+            document_items.append(
+                AdminReadinessItem(
+                    title="Track travel receipts locally",
+                    category="travel",
+                    priority="low",
+                    recommendation=(
+                        "Store receipts or references locally if DTS voucher support is needed "
+                        "after drill or travel."
+                    ),
+                )
             )
-        )
-    if "dts" not in present:
-        items.append(
-            AdminReadinessItem(
-                title="Track DTS support locally",
-                category="travel",
-                priority="medium",
-                recommendation="Store a local DTS reference or note if travel claims or authorizations are active.",
+        if "dts" not in present:
+            document_items.append(
+                AdminReadinessItem(
+                    title="Track DTS support locally",
+                    category="travel",
+                    priority="medium",
+                    recommendation="Store a local DTS reference or note if travel claims or authorizations are active.",
+                )
             )
-        )
-    return items
+    case_items: list[AdminReadinessItem] = []
+    for case in travel_cases[:6]:
+        if case.voucher_due_date is not None:
+            case_items.append(
+                AdminReadinessItem(
+                    title=f"Voucher due for stored trip: {case.title}",
+                    category="travel",
+                    priority=_priority(case.voucher_due_date),
+                    due_date=case.voucher_due_date,
+                    recommendation=(
+                        "Use the stored trip record to confirm receipts, rental-car follow-through, "
+                        "and voucher completion."
+                    ),
+                    source=case.trip_id,
+                )
+            )
+        elif case.travel_start is not None:
+            case_items.append(
+                AdminReadinessItem(
+                    title=f"Upcoming stored trip: {case.title}",
+                    category="travel",
+                    priority=_priority(case.travel_start),
+                    due_date=case.travel_start,
+                    recommendation=(
+                        "Use the stored trip record to confirm itinerary, rental-car timing, "
+                        "and required receipt capture before travel."
+                    ),
+                    source=case.trip_id,
+                )
+            )
+    return [*case_items, *document_items]
 
 
 def _summary_lines(
     handoff: UserSessionHandoff | None,
     document_summary: PersonalDocumentSummary | None,
     items: list[AdminReadinessItem],
+    travel_cases: list[TravelCaseRecord],
 ) -> list[str]:
     lines: list[str] = []
     if handoff is None:
@@ -213,6 +254,8 @@ def _summary_lines(
         )
     if document_summary is not None and document_summary.total_documents:
         lines.append(f"{document_summary.total_documents} local document reference(s) are available for admin support.")
+    if travel_cases:
+        lines.append(f"{len(travel_cases)} stored travel case(s) are available for voucher and receipt follow-through.")
     high_priority = sum(1 for item in items if item.priority == "high")
     if high_priority:
         lines.append(f"{high_priority} high-priority admin item(s) should be handled first.")

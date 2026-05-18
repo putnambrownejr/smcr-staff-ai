@@ -1,18 +1,22 @@
+from datetime import date
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from app.api.routes.connectors import get_handoff_store
+from app.api.routes.connectors import get_handoff_store, get_travel_case_store
 from app.main import app
 from app.schemas.session import UserSessionHandoff
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.session.handoff_store import SessionHandoffStore
 
 
 def test_connector_workflow_adapter_extracts_travel_case_details(tmp_path: Path) -> None:
     store = SessionHandoffStore(tmp_path)
+    travel_case_store = TravelCaseStore(tmp_path / "travel-cases")
     store.upsert(UserSessionHandoff(user_key="capt-travel"))
 
     app.dependency_overrides[get_handoff_store] = lambda: store
+    app.dependency_overrides[get_travel_case_store] = lambda: travel_case_store
     client = TestClient(app)
     try:
         response = client.post(
@@ -52,5 +56,8 @@ def test_connector_workflow_adapter_extracts_travel_case_details(tmp_path: Path)
         assert "rental car" in {item.lower() for item in case["receipts_to_collect"]}
         assert any("voucher due" in line.lower() for line in payload["handoff_note_lines"])
         assert any(item["category"] == "travel" for item in payload["action_items"])
+        stored_cases = travel_case_store.list_cases("capt-travel")
+        assert len(stored_cases) == 1
+        assert stored_cases[0].voucher_due_date == date(2026, 6, 13)
     finally:
         app.dependency_overrides.clear()

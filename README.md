@@ -30,6 +30,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | --- | --- | --- |
 | Agent registry | Lists and runs staff/MOS agents with structured responses, warnings, confidence, citations, and follow-up questions. | Working local registry |
 | Chief of Staff / Aide de Camp | Coordinates drill prep, MARADMIN/news awareness, session handoffs, yearly drill rhythm, and future email/calendar triage. | Working scaffold |
+| Local travel case store | Accumulates CI Travel / DTS-style connector summaries into local trip records so voucher, receipt, and rental-car follow-through survive more than one email. | Working local storage |
 | Admin readiness | Pulls FitRep reminders, admin watch items, local document gaps, readiness references, and travel/admin support into an AdminO / S-1 style view. | Working local digest |
 | S-1 / Admin chief advisor | Adds an explicit S-1/Admin chief perspective for reserve admin continuity, routing discipline, awards, orders, DTS, GTCC, and suspense management. | Working advisory agent |
 | S-2 / intel advisor | Adds an explicit S-2 perspective for public-source estimates, information gaps, confidence-weighted staff support, and OSINT/public-source aggregation as a subordinate lane. | Working advisory agent |
@@ -102,6 +103,7 @@ app/
     rag/               Chunking, embeddings, vector store, retriever stubs
     storage/           Local user-context storage
     templates/         Local-only reusable product template repository
+    connectors/        Connector digest planning, travel-case interpretation, and local trip persistence
 data/
   seed/                Example org, doctrine, exercise, and agent manifests
   local_context/       Legacy repo-local path used only when explicitly configured or container-mounted
@@ -221,6 +223,8 @@ This route:
   - a `handoff_draft_request` ready for `/handoffs/{user_key}/draft-update`
   - an `action_promote_request` ready for `/actions/promote`
 - keeps the repo focused on reserve-specific interpretation instead of connector plumbing
+
+Connector-fed CI Travel / DTS summaries now also accumulate into a local-only travel case store under the user-scoped storage home, so voucher due dates, rental-car expectations, and receipt prompts can survive across multiple emails and later appear in Chief/Aide and Admin Readiness views.
 
 ### Local Product Templates
 
