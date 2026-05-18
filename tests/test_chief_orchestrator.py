@@ -288,6 +288,9 @@ def test_chief_brief_reads_stored_travel_cases(tmp_path: Path) -> None:
                 voucher_due_date=date(2026, 6, 13),
                 rental_car_expected=True,
                 receipts_to_collect=["lodging", "rental car"],
+                attached_receipt_categories=["lodging"],
+                attachment_names=["Hilton_folio.pdf"],
+                attachment_follow_up_prompts=["Still collect or upload locally: rental car."],
             )
         ],
     )
@@ -305,4 +308,5 @@ def test_chief_brief_reads_stored_travel_cases(tmp_path: Path) -> None:
 
     assert brief.travel_cases
     assert any(item.category == "travel" for item in brief.action_items)
+    assert any("attachments" in item.title.lower() for item in brief.action_items)
     assert any("stored travel case" in line.lower() for line in brief.summary_lines)

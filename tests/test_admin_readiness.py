@@ -36,6 +36,9 @@ def test_admin_readiness_route_surfaces_due_outs_and_document_gaps(tmp_path: Pat
                 travel_end=date(2026, 6, 8),
                 voucher_due_date=date(2026, 6, 13),
                 receipts_to_collect=["lodging", "rental car"],
+                attached_receipt_categories=["lodging"],
+                attachment_names=["Hilton_folio.pdf"],
+                attachment_follow_up_prompts=["Still collect or upload locally: rental car."],
             )
         ],
     )
@@ -66,5 +69,6 @@ def test_admin_readiness_route_surfaces_due_outs_and_document_gaps(tmp_path: Pat
         categories = {item["category"] for item in payload["items"]}
         assert {"fitrep", "admin", "documents", "travel"}.issubset(categories)
         assert any("voucher due for stored trip" in item["title"].lower() for item in payload["items"])
+        assert any("attached travel receipts" in item["title"].lower() for item in payload["items"])
     finally:
         app.dependency_overrides.clear()

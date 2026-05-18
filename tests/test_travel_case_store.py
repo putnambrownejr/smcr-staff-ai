@@ -23,6 +23,9 @@ def test_travel_case_store_merges_same_trip_across_messages(tmp_path: Path) -> N
                 voucher_due_date=date(2026, 6, 13),
                 rental_car_expected=True,
                 receipts_to_collect=["lodging", "rental car"],
+                attached_receipt_categories=["lodging"],
+                attachment_names=["Hilton_folio.pdf"],
+                attachment_follow_up_prompts=["Still collect or upload locally: rental car."],
             )
         ],
     )
@@ -39,6 +42,11 @@ def test_travel_case_store_merges_same_trip_across_messages(tmp_path: Path) -> N
                 travel_end=date(2026, 6, 8),
                 voucher_due_date=date(2026, 6, 13),
                 receipts_to_collect=["lodging", "airfare or ticketed itinerary"],
+                attached_receipt_categories=["airfare or ticketed itinerary", "rental car"],
+                attachment_names=["Enterprise_receipt.pdf", "flight_itinerary.pdf"],
+                attachment_follow_up_prompts=[
+                    "Attached receipt evidence appears to cover: airfare or ticketed itinerary, rental car."
+                ],
             )
         ],
     )
@@ -51,3 +59,6 @@ def test_travel_case_store_merges_same_trip_across_messages(tmp_path: Path) -> N
     assert "CI Travel itinerary" in record.source_subjects
     assert "DTS voucher reminder" in record.source_subjects
     assert "rental car" in {item.lower() for item in record.receipts_to_collect}
+    assert "Hilton_folio.pdf" in record.attachment_names
+    assert "Enterprise_receipt.pdf" in record.attachment_names
+    assert "airfare or ticketed itinerary" in {item.lower() for item in record.attached_receipt_categories}

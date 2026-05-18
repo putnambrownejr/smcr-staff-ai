@@ -60,6 +60,9 @@ class TravelCaseStore:
                 voucher_due_date=case.voucher_due_date,
                 rental_car_expected=case.rental_car_expected,
                 receipts_to_collect=_dedupe(case.receipts_to_collect),
+                attached_receipt_categories=_dedupe(case.attached_receipt_categories),
+                attachment_names=_dedupe(case.attachment_names),
+                attachment_follow_up_prompts=_dedupe(case.attachment_follow_up_prompts),
                 source_subjects=_dedupe([case.source_subject]),
                 source_senders=_dedupe([case.sender] if case.sender else []),
                 last_message_at=case.message_received_at,
@@ -78,6 +81,13 @@ class TravelCaseStore:
                 voucher_due_date=case.voucher_due_date or existing.voucher_due_date,
                 rental_car_expected=existing.rental_car_expected or case.rental_car_expected,
                 receipts_to_collect=_dedupe([*existing.receipts_to_collect, *case.receipts_to_collect]),
+                attached_receipt_categories=_dedupe(
+                    [*existing.attached_receipt_categories, *case.attached_receipt_categories]
+                ),
+                attachment_names=_dedupe([*existing.attachment_names, *case.attachment_names]),
+                attachment_follow_up_prompts=_dedupe(
+                    [*existing.attachment_follow_up_prompts, *case.attachment_follow_up_prompts]
+                ),
                 source_subjects=_dedupe([*existing.source_subjects, case.source_subject]),
                 source_senders=_dedupe([*existing.source_senders, *([case.sender] if case.sender else [])]),
                 last_message_at=_latest(existing.last_message_at, case.message_received_at),

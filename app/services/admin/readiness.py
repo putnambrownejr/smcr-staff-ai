@@ -221,6 +221,17 @@ def _travel_items(
                     source=case.trip_id,
                 )
             )
+            if case.attachment_follow_up_prompts:
+                case_items.append(
+                    AdminReadinessItem(
+                        title=f"Review attached travel receipts: {case.title}",
+                        category="travel",
+                        priority="medium",
+                        due_date=case.voucher_due_date,
+                        recommendation=" ".join(case.attachment_follow_up_prompts[:2]),
+                        source=case.trip_id,
+                    )
+                )
         elif case.travel_start is not None:
             case_items.append(
                 AdminReadinessItem(

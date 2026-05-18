@@ -13,6 +13,9 @@ class TravelCaseRecord(BaseModel):
     voucher_due_date: date | None = None
     rental_car_expected: bool = False
     receipts_to_collect: list[str] = Field(default_factory=list)
+    attached_receipt_categories: list[str] = Field(default_factory=list)
+    attachment_names: list[str] = Field(default_factory=list)
+    attachment_follow_up_prompts: list[str] = Field(default_factory=list)
     source_subjects: list[str] = Field(default_factory=list)
     source_senders: list[str] = Field(default_factory=list)
     last_message_at: datetime | None = None
@@ -20,4 +23,3 @@ class TravelCaseRecord(BaseModel):
     confidence_notes: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     local_only: bool = True
-

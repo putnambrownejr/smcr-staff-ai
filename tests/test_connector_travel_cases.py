@@ -40,6 +40,7 @@ def test_connector_workflow_adapter_extracts_travel_case_details(tmp_path: Path)
                         "action_hint": "Travel scheduled 06/06/2026 to 06/08/2026.",
                         "notes": "Rental car reserved. Collect receipts after return.",
                         "body_preview": "Depart 06/06/2026 return 06/08/2026. Rental car pickup confirmed.",
+                        "attachment_names": ["Hilton_folio.pdf", "Enterprise_receipt.pdf"],
                     }
                 ],
             },
@@ -53,11 +54,16 @@ def test_connector_workflow_adapter_extracts_travel_case_details(tmp_path: Path)
         assert case["travel_end"] == "2026-06-08"
         assert case["voucher_due_date"] == "2026-06-13"
         assert case["rental_car_expected"] is True
+        assert "lodging" in {item.lower() for item in case["attached_receipt_categories"]}
+        assert "rental car" in {item.lower() for item in case["attached_receipt_categories"]}
+        assert case["attachment_follow_up_prompts"]
         assert "rental car" in {item.lower() for item in case["receipts_to_collect"]}
         assert any("voucher due" in line.lower() for line in payload["handoff_note_lines"])
+        assert any("review travel attachments" in item["text"].lower() for item in payload["action_items"])
         assert any(item["category"] == "travel" for item in payload["action_items"])
         stored_cases = travel_case_store.list_cases("capt-travel")
         assert len(stored_cases) == 1
         assert stored_cases[0].voucher_due_date == date(2026, 6, 13)
+        assert "Enterprise_receipt.pdf" in stored_cases[0].attachment_names
     finally:
         app.dependency_overrides.clear()

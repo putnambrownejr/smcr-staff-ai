@@ -15,3 +15,11 @@ data/processed/*
 !data/processed/.gitkeep
 data/local_context/*
 !data/local_context/.gitkeep
+
+# Local-only user notes, generated outputs, and scratch work.
+docs/offline_notes.md
+docs/deep_research/*_pull.md
+docs/scenarios/
+docs/sources/civil_affairs.md
+outputs/
+scripts/scratch_*/

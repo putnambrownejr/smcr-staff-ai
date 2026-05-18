@@ -27,6 +27,7 @@ class ConnectorMessageSummary(BaseModel):
     action_hint: str | None = None
     notes: str | None = None
     body_preview: str | None = None
+    attachment_names: list[str] = Field(default_factory=list)
     labels: list[str] = Field(default_factory=list)
 
 
@@ -41,6 +42,9 @@ class TravelEmailCaseSummary(BaseModel):
     voucher_due_date: date | None = None
     rental_car_expected: bool = False
     receipts_to_collect: list[str] = Field(default_factory=list)
+    attached_receipt_categories: list[str] = Field(default_factory=list)
+    attachment_names: list[str] = Field(default_factory=list)
+    attachment_follow_up_prompts: list[str] = Field(default_factory=list)
     confidence_notes: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
 

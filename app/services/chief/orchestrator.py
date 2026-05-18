@@ -315,6 +315,17 @@ def _travel_case_actions(travel_cases: list[TravelCaseRecord]) -> list[ChiefActi
                     ),
                 )
             )
+        if case.attachment_follow_up_prompts:
+            items.append(
+                ChiefActionItem(
+                    title=f"Stored travel attachments: review receipt coverage for {case.title}",
+                    category="travel",
+                    priority="medium",
+                    due_date=case.travel_end or case.voucher_due_date,
+                    source=case.trip_id,
+                    recommendation=" ".join(case.attachment_follow_up_prompts[:2]),
+                )
+            )
         elif case.travel_start is not None:
             items.append(
                 ChiefActionItem(

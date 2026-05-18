@@ -147,6 +147,7 @@ For the current in-repo bridge scaffold, see [docs/chatgpt_app_scaffold.md](/C:/
 For the new local ChatGPT app server layer, see [chatgpt_app/README.md](/C:/smcr-staff-ai/chatgpt_app/README.md).
 For one-command ChatGPT app startup, use [scripts/start-chatgpt-app.cmd](/C:/smcr-staff-ai/scripts/start-chatgpt-app.cmd) or [scripts/start-chatgpt-app.ps1](/C:/smcr-staff-ai/scripts/start-chatgpt-app.ps1).
 For the build-vs-reuse decision matrix, see [docs/capability_reuse_audit.md](/C:/smcr-staff-ai/docs/capability_reuse_audit.md).
+For a local-only offline note template, see [docs/offline_notes.example.md](/C:/smcr-staff-ai/docs/offline_notes.example.md); keep the real `docs/offline_notes.md` untracked.
 
 ## Calling The API
 
