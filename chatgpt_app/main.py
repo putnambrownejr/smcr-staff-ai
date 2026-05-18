@@ -209,6 +209,11 @@ class AgentRunToolInput(BaseModel):
     context: dict[str, Any] = Field(default_factory=dict, description="Optional agent context.")
 
 
+class StaffAgentAssistToolInput(BaseModel):
+    input: str = Field(..., description="The actual user question or staff problem for this lane.")
+    context: dict[str, Any] = Field(default_factory=dict, description="Optional agent context.")
+
+
 class ChiefBriefToolInput(BaseModel):
     user_key: str = Field(..., description="Stable local user profile key.")
     include_personal_documents: bool = Field(default=True, description="Include local document summary.")
@@ -346,6 +351,40 @@ TOOL_SPECS: list[types.Tool] = [
         _meta=_tool_invocation_meta(
             "Building the staff update cycle",
             "Staff update cycle ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="run_opt_facilitator",
+        title="Run OPT Facilitator",
+        description=(
+            "Use this when the user wants help running mission analysis or an OPT with visible assumptions, "
+            "decisions, questions, and due-outs."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta("Running the OPT facilitator", "OPT facilitator ready", read_only=False),
+    ),
+    types.Tool(
+        name="run_red_team_assumptions_challenge",
+        title="Run Red Team Challenge",
+        description=(
+            "Use this when the user wants a plan, brief, or COA pressure-tested for weak assumptions, "
+            "fake alternatives, and polite groupthink."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta("Running the red-team challenge", "Red-team challenge ready", read_only=False),
+    ),
+    types.Tool(
+        name="run_assessment_learning_advisor",
+        title="Run Assessment Learning Advisor",
+        description=(
+            "Use this when the user wants to connect MET/METL, AAR observations, corrective actions, "
+            "and next-drill follow-through."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the assessment advisor",
+            "Assessment learning advisor ready",
             read_only=False,
         ),
     ),
@@ -517,6 +556,27 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             update_cycle_payload = StaffUpdateCycleToolInput.model_validate(arguments)
             result = await adapter.build_staff_update_cycle(update_cycle_payload.model_dump())
             return _ok_result("Built the staff update cycle.", result)
+
+        if name == "run_opt_facilitator":
+            opt_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_opt_facilitator(
+                {"input": opt_payload.input, "context": opt_payload.context}
+            )
+            return _ok_result("Ran the OPT facilitator.", result)
+
+        if name == "run_red_team_assumptions_challenge":
+            red_team_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_red_team_assumptions_challenge(
+                {"input": red_team_payload.input, "context": red_team_payload.context}
+            )
+            return _ok_result("Ran the red-team assumptions challenge.", result)
+
+        if name == "run_assessment_learning_advisor":
+            assessment_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_assessment_learning_advisor(
+                {"input": assessment_payload.input, "context": assessment_payload.context}
+            )
+            return _ok_result("Ran the assessment learning advisor.", result)
 
         if name == "list_staff_agents":
             result = await adapter.list_agents()

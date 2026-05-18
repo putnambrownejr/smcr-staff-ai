@@ -113,6 +113,51 @@ async def test_build_staff_update_cycle_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_run_opt_facilitator_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_opt_facilitator(
+        {
+            "input": "Help me run mission analysis with assumptions and due-outs visible.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "opt-facilitator"
+    assert "OPT facilitator advisory" in cast(str, result["answer"])
+
+
+@pytest.mark.anyio
+async def test_run_red_team_assumptions_challenge_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_red_team_assumptions_challenge(
+        {
+            "input": "Pressure-test this concept before the commander brief.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "red-team-assumptions-challenge"
+    assert "Red-team / assumptions challenge advisory" in cast(str, result["answer"])
+
+
+@pytest.mark.anyio
+async def test_run_assessment_learning_advisor_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_assessment_learning_advisor(
+        {
+            "input": "Help me turn this AAR into real next-drill follow-through.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "assessment-learning-advisor"
+    assert "Assessment / learning advisory" in cast(str, result["answer"])
+
+
+@pytest.mark.anyio
 async def test_list_agents_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 

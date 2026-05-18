@@ -27,6 +27,9 @@ Why:
 - `build_training_case_study`
 - `build_tdg`
 - `build_staff_update_cycle`
+- `run_opt_facilitator`
+- `run_red_team_assumptions_challenge`
+- `run_assessment_learning_advisor`
 - `list_staff_agents`
 - `run_staff_agent`
 - `build_chief_brief`
@@ -45,6 +48,16 @@ force decisions early, and expose reserve-specific friction before the real even
 `build_staff_update_cycle` is the recurring staff-rhythm lane. It takes section updates and turns them into
 a linked running estimate, CUB, and CPB so the user can move from “what changed?” to “what does the commander
 need to hear or decide?” without rebuilding the frame every time.
+
+`run_opt_facilitator` is the cleaner front door for mission analysis and OPT conduct. Use it when the staff
+needs to keep a visible assumption log, decision log, question log, and due-out tracker instead of jumping
+straight to slides or orders.
+
+`run_red_team_assumptions_challenge` is the fast pressure-test lane for COAs, plans, and briefs. Use it to
+challenge weak assumptions, fake alternatives, and quiet groupthink before the commander sees the product.
+
+`run_assessment_learning_advisor` is the learning-loop lane. Use it when you want to tie an event, AAR,
+corrective actions, and next-drill follow-through together instead of letting lessons die after the brief.
 
 `draft_staff_product` is now also the right lane for briefing content when you want a deck outline that behaves
 like a real staff brief instead of a generic AI slide dump. Use `decision_brief` or `command_update_brief`
