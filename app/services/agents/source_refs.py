@@ -609,6 +609,61 @@ ORM_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+LEGAL_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="Military Justice References",
+        url="https://www.sja.marines.mil/Branches/Military-Justice-Branch/Military-Justice-References/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Official Marine Corps SJA public reference hub for military justice, NJP, courts-martial, "
+            "post-trial processing, and related command legal resources."
+        ),
+    ),
+    SourceRef(
+        title="Manual for Courts-Martial (2024 ed.)",
+        url="https://jsc.defense.gov/Portals/99/2024%20MCM%20files/MCM%20%282024%20ed%29%20%282024_01_02%29%20%28adjusted%20bookmarks%29.pdf",
+        publisher="Joint Service Committee on Military Justice",
+        notes=(
+            "Primary current source for courts-martial procedure and Article 15 nonjudicial punishment under Part V."
+        ),
+    ),
+    SourceRef(
+        title="Joint Service Committee Sources of Military Law",
+        url="https://jsc.defense.gov/Military-Law/Sources-of-Military-Law/",
+        publisher="Joint Service Committee on Military Justice",
+        notes=(
+            "Useful public source map tying the UCMJ, presidential authority, and the MCM together."
+        ),
+    ),
+    SourceRef(
+        title="JAGINST 5800.7G CH-2 - JAGMAN 2023",
+        url="https://stjececmsdusgva001.blob.core.usgovcloudapi.net/public/documents/Encl_JAGINST_5800.7G_CH-2_Under_Revision.pdf",
+        publisher="Department of the Navy",
+        notes=(
+            "Department of the Navy regulation implementing and supplementing the MCM, including NJP, "
+            "Reserve-component jurisdiction points, appeals, records, and courts-martial authorities."
+        ),
+    ),
+    SourceRef(
+        title="MCO 5800.16-V14 Enlisted Nonjudicial Punishment Matters and Preparation of the Unit Punishment Book",
+        url="https://www.marines.mil/Portals/1/Publications/MCO%205800.16%20Vol14.pdf?ver=GiRsIU5b8B1FOhzJlbyB2Q%3D%3D",
+        publisher="United States Marine Corps",
+        notes=(
+            "Marine Corps legal-support manual volume for enlisted NJP matters, advice to accused, UPB preparation, "
+            "appeals, judge advocate review, and Reserve-specific NJP concerns."
+        ),
+    ),
+    SourceRef(
+        title="MCO 5800.16-V16 Military Justice",
+        url="https://www.marines.mil/Portals/1/Publications/MCO%205800.16%20Vol%2016.pdf?ver=Kw6Bv7bjXXFICy5ujnlk1Q%3D%3D",
+        publisher="United States Marine Corps",
+        notes=(
+            "Marine Corps legal-support manual volume covering military justice organization, pretrial matters, "
+            "Article 32, courts-martial, discovery, and post-trial processing."
+        ),
+    ),
+)
+
 MAP_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="USGS The National Map",

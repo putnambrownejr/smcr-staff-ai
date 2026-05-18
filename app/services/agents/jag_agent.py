@@ -1,76 +1,120 @@
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
-from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
+from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.source_refs import (
+    LEGAL_REFERENCES,
+    citation_titles,
+    source_trust_markers,
+    structured_citations,
+)
 
 
-class JagLegalAdvisorAgent(Agent):
+class SjaLegalAdvisorAgent(Agent):
     def __init__(self) -> None:
         self.metadata = AgentMetadata(
             id="jag-legal-advisor",
-            name="JAG / Legal Advisor",
+            name="SJA / Military Justice Advisor",
             description=(
-                "Supports issue-spotting, routing questions, and legal-review prompts for staff work while "
-                "clearly refusing to provide legal advice or replace a licensed attorney."
+                "Supports command legal issue-spotting for NJP, military justice, UCMJ, and command-routing "
+                "questions while clearly refusing case-specific legal advice or replacement of the SJA, defense "
+                "counsel, victims' legal counsel, or trial counsel."
             ),
             domain="legal support",
-            intended_users=["command teams", "staff officers", "Chief of Staff / Aide"],
+            intended_users=["command teams", "staff officers", "Chief of Staff / Aide", "commanders", "XOs"],
             allowed_sources=[
-                "public policy references",
-                "public administrative-law references",
+                "official Marine Corps SJA references",
+                "official Manual for Courts-Martial references",
+                "official Department of the Navy legal-administration references",
                 "training-only staff scenarios",
             ],
             disallowed_inputs=[
                 "attorney-client privileged content",
+                "requests for case-specific legal advice",
                 "ongoing investigations with protected details",
-                "requests for authoritative legal advice",
+                "victim-sensitive information beyond minimum issue-spotting need",
                 "classified or CUI legal matters in public tooling",
             ],
             system_prompt=(
-                "Provide advisory issue-spotting and escalation guidance only. Do not give legal advice. "
-                "Direct the user to the proper judge advocate or legal office for authoritative counsel."
+                "Respond like a practical staff judge advocate issue-spotter supporting command decision-making. "
+                "Be strong on NJP, courts-martial process awareness, UCMJ framing, routing, rights warnings, "
+                "and record discipline. Do not give legal advice, do not predict case outcomes, and do not "
+                "substitute for the SJA, trial counsel, defense counsel, VLC, or other authorized legal channels."
             ),
         )
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        context_lines = self._active_context_lines(context)
+        context_block = ""
+        if context_lines:
+            context_block = "\n".join(context_lines) + "\n\n"
+
         answer = (
-            "JAG / legal advisory draft.\n\n"
-            "This is not legal advice and does not replace a judge advocate, attorney, or official legal review.\n\n"
-            "Use this for issue spotting only:\n"
-            "- Clarify what decision, action, or command question is driving the legal concern.\n"
-            "- Identify whether the matter sounds administrative, fiscal, ethics-related,\n"
-            "  investigative, or operational.\n"
-            "- Separate public-policy questions from case-specific facts that should go directly to legal counsel.\n"
-            "- Preserve only minimum needed context and route protected details through proper channels.\n\n"
-            "Recommended next step:\n"
-            "- Write a short issue statement, identify the decision deadline, list relevant public references, "
-            "and send the matter to the proper legal office for review.\n"
+            "SJA / military justice advisory draft.\n\n"
+            "Use this for command issue-spotting and routing only. It is not legal advice, does not create an "
+            "attorney-client relationship, and does not replace the SJA, defense counsel, victims' legal counsel, "
+            "trial counsel, or formal legal review.\n\n"
+            "Terminology note:\n"
+            "- For Marine command support, 'SJA' is the better lane name here.\n"
+            "- The repo keeps the legacy agent ID `jag-legal-advisor` only for compatibility.\n\n"
+            f"{context_block}"
+            "First cut questions:\n"
+            "- Is this really an NJP, military justice, administrative-separation, ethics, investigation, or "
+            "command-authority question?\n"
+            "- Who is the decision-maker, what action is being considered, and what deadline is driving it?\n"
+            "- Are there accused, victim, witness, Reserve-component, or concurrent-civilian-jurisdiction facts "
+            "that change routing immediately?\n\n"
+            "NJP / Article 15 issue-spotting:\n"
+            "- Confirm authority to impose NJP, jurisdiction over the accused, and whether Reserve status changes "
+            "what can be imposed or when.\n"
+            "- Confirm the accused is properly advised, understands any right to refuse NJP when applicable, and "
+            "knows appeal and record implications.\n"
+            "- Keep the record discipline straight: evidence, UPB preparation, endorsements, and any required judge "
+            "advocate review.\n"
+            "- If the disposition, available punishment, or procedural path feels uncertain, stop pretending this "
+            "is routine and get real SJA review.\n\n"
+            "Courts-martial / military justice issue-spotting:\n"
+            "- Ask whether the matter is beyond NJP or administrative correction and needs formal military justice "
+            "routing.\n"
+            "- Protect evidence, preserve notes carefully, and do not turn command curiosity into witness coaching "
+            "or unlawful influence.\n"
+            "- Watch for pretrial confinement, search and seizure, Article 32, victim-rights, discovery, or "
+            "concurrent civilian-jurisdiction issues that require immediate legal coordination.\n"
+            "- If the fact pattern touches an actual accused, victim, or real contemplated disposition, move the "
+            "case details into the proper legal channel instead of fleshing them out here.\n\n"
+            "What the command team should usually produce next:\n"
+            "- A short issue statement.\n"
+            "- The contemplated action or decision point.\n"
+            "- The status of the member: active, Reserve, attached, transferred, or pending separation.\n"
+            "- The timing problem: upcoming travel, drill status, EAS/RECC, appeal deadline, or hearing timeline.\n"
+            "- The proper legal handoff lane: SJA, defense, VLC, trial services, or other designated office.\n\n"
+            "My read:\n"
+            "- Legal staff work gets dangerous when commands confuse 'I roughly know the rule' with 'we are ready "
+            "to act.'\n"
+            "- The value of this lane is to make the right questions and routing obvious early, not to replace the "
+            "lawyer."
         )
         return self._response(
             answer=answer,
             input_text=input_text,
-            citations=["Public legal/policy references", "Administrative policy references"],
-            structured_citations=[
-                StructuredCitation(
-                    title="Public legal/policy references",
-                    confidence=Confidence.low,
-                    notes="Use only as a prompt for issue spotting; obtain real legal review.",
-                )
-            ],
-            source_trust=[
-                SourceTrustMarker(
-                    tracked_title="Public legal/policy references",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="Public references do not replace formal legal review.",
-                )
-            ],
-            confidence=Confidence.low,
+            citations=citation_titles(LEGAL_REFERENCES),
+            structured_citations=structured_citations(LEGAL_REFERENCES),
+            source_trust=source_trust_markers(
+                LEGAL_REFERENCES,
+                notes_prefix="Verify current military justice, NJP, and SJA routing authorities before acting.",
+            ),
+            confidence=Confidence.medium,
             follow_up_questions=[
-                "What decision or action deadline is driving the question?",
-                "Is this a public-policy question or a case-specific legal matter?",
-                "What proper legal office should review this before action?",
+                (
+                    "Is this an NJP issue, a courts-martial issue, an investigation issue, "
+                    "or an administrative action question?"
+                ),
+                "What status is the member in right now, especially if Reserve status or pending transfer matters?",
+                (
+                    "Which real legal channel should receive the next clean issue statement: "
+                    "SJA, defense, VLC, or trial services?"
+                ),
             ],
         )
 
 
-def build_jag_agent() -> JagLegalAdvisorAgent:
-    return JagLegalAdvisorAgent()
+def build_jag_agent() -> SjaLegalAdvisorAgent:
+    return SjaLegalAdvisorAgent()

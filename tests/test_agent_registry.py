@@ -332,6 +332,9 @@ def test_jag_agent_is_explicitly_non_authoritative() -> None:
     response = agent.run("What legal issue should I spot before routing this matter?", context=AgentContext())
 
     assert "not legal advice" in response.answer.lower()
+    assert "SJA / military justice advisory" in response.answer
+    assert any("Manual for Courts-Martial" in citation.title for citation in response.structured_citations)
+    assert any("5800.16" in citation.title for citation in response.structured_citations)
     assert response.source_trust
 
 
