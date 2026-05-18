@@ -423,6 +423,24 @@ TRAINING_REFERENCES: tuple[SourceRef, ...] = (
 
 INFANTRY_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
+        title="Training Command Mission",
+        url="https://www.trngcmd.marines.mil/Unit-Home/About/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Useful public framing for standards-based MOS skill training, evaluation, and delivery of "
+            "combat-capable Marines to the operating forces."
+        ),
+    ),
+    SourceRef(
+        title="The Basic School Mission",
+        url="https://www.trngcmd.marines.mil/TBS/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Useful officer-development baseline for provisional rifle-platoon leadership, warfighting skills, "
+            "and common tactical vocabulary."
+        ),
+    ),
+    SourceRef(
         title="MCWP 3-10 MAGTF Ground Operations",
         url="https://www.marines.mil/Portals/1/Publications/MCWP%203-10.pdf",
         publisher="United States Marine Corps",
@@ -457,6 +475,23 @@ INFANTRY_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1464473/mctp-12-10b/",
         publisher="United States Marine Corps",
         notes="Urban-operations planning and training reference for commanders, staffs, and Marines.",
+    ),
+    SourceRef(
+        title="School of Infantry-East Combat Instructor School Mission",
+        url="https://www.tecom.marines.mil/soieast/Units/CombatInstructorSchool.aspx",
+        publisher="United States Marine Corps",
+        notes=(
+            "Useful source for the teach-mentor-lead model behind entry-level and advanced infantry training."
+        ),
+    ),
+    SourceRef(
+        title="School of Infantry-East Infantry Training Battalion MOS Description",
+        url="https://www.trngcmd.marines.mil/Units/School-of-Infantry-East/Units/Infantry-Training-Battalion/MOS-Description/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Useful public description of SOI infantry training as field craft and MOS-task evaluation producing "
+            "basically qualified infantry Marines for the operating forces."
+        ),
     ),
     SourceRef(
         title="NAVMC 3500.44D Infantry Training and Readiness Manual",

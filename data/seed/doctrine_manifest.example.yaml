@@ -205,6 +205,10 @@ categories:
     classification_label: UNCLASSIFIED
     cui_flag: false
     source_refs:
+      - title: Training Command Mission
+        url: https://www.trngcmd.marines.mil/Unit-Home/About/
+      - title: The Basic School Mission
+        url: https://www.trngcmd.marines.mil/TBS/
       - title: MCWP 3-10 MAGTF Ground Operations
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899778/mcwp-3-10/
       - title: MCWP 3-01 Offensive and Defensive Tactics
@@ -219,6 +223,12 @@ categories:
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2472229/mcrp-3-10a4/
       - title: MCTP 3-01A Scouting and Patrolling
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899780/mctp-3-01a/
+      - title: MCTP 12-10B Urban Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1464473/mctp-12-10b/
+      - title: School of Infantry-East Combat Instructor School Mission
+        url: https://www.tecom.marines.mil/soieast/Units/CombatInstructorSchool.aspx
+      - title: School of Infantry-East Infantry Training Battalion MOS Description
+        url: https://www.trngcmd.marines.mil/Units/School-of-Infantry-East/Units/Infantry-Training-Battalion/MOS-Description/
       - title: NAVMC 3500.44D Infantry Training and Readiness Manual
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2187958/navmc-350044d/
   - id: aviation_support

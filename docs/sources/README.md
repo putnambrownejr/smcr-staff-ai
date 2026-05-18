@@ -28,6 +28,7 @@ When real ingestion is added, fetch from the official URL, calculate source hash
 - [Commandant's Professional Reading List](commandants_reading_list.md)
 - [Source Inventory Integration Plan](source_inventory_integration_plan.md)
 - [Infantry / 03XX Publications](infantry_03xx.md)
+- [TBS And SOI Training Grounding](tbs_soi_training.md)
 - [Logistics / 04XX Publications](logistics_04xx.md)
 - [Planning And OPORD Sources](planning_opord.md)
 - [MCPP And R2P2 Deep Dive](mcpp_r2p2.md)

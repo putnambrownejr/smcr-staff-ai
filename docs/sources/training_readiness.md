@@ -49,3 +49,9 @@ For staff-function grounding, the strongest pairing is usually:
 - `MCO 1553.3C` for unit training management
 - `MCWP 5-10` for planning structure
 - the relevant T&R manual for the unit or functional lane being trained
+
+For infantry-flavored familiarization or officer-baseline warfighting framing, it also helps to pair:
+
+- `The Basic School Mission` for the provisional rifle-platoon leadership baseline
+- `School of Infantry` mission/overview material for the teach-mentor-qualify model
+- `NAVMC 3500.44D` plus the relevant infantry references for standards and scope
