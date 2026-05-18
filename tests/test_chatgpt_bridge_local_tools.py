@@ -182,3 +182,80 @@ async def test_active_user_context_round_trip_via_adapter(tmp_path: Path) -> Non
     saved_context = cast(dict[str, object], saved["active_user_context"])
     assert saved_context["unit_name"] == "Civil Affairs Company"
     assert loaded["unit_type"] == "civil affairs"
+
+
+@pytest.mark.anyio
+async def test_build_external_ai_packet_via_adapter(tmp_path: Path) -> None:
+    from datetime import UTC, datetime
+
+    from app.api.routes.sharing import (
+        get_active_context_store,
+        get_context_store,
+        get_handoff_store,
+        get_opportunity_tracker,
+        get_plan_store,
+    )
+    from app.main import app
+    from app.schemas.session import UserSessionHandoff
+    from app.schemas.user_context import ActiveUserContext
+    from app.services.calendar.plan_store import DrillPrepPlanStore
+    from app.services.opportunities.tracker import OpportunityTracker
+    from app.services.session.active_context_store import ActiveUserContextStore
+    from app.services.session.handoff_store import SessionHandoffStore
+    from app.services.storage.local_context_store import LocalContextStore
+
+    adapter = ChatGptBridgeAdapter(app=app)
+    handoff_store = SessionHandoffStore(tmp_path / "handoffs")
+    active_context_store = ActiveUserContextStore(tmp_path / "active-context")
+    context_store = LocalContextStore(tmp_path / "context")
+    plan_store = DrillPrepPlanStore(tmp_path / "plans")
+    opportunity_tracker = OpportunityTracker(tmp_path / "opportunities")
+
+    handoff_store.upsert(
+        UserSessionHandoff(
+            user_key="capt-external",
+            display_name="Capt Example",
+            rank="Capt",
+            mos="1702",
+            billet="Plans Officer",
+            updated_at=datetime.now(UTC),
+        )
+    )
+    active_context_store.upsert(
+        ActiveUserContext(
+            user_key="capt-external",
+            unit_name="Civil Affairs Company",
+            unit_type="civil affairs",
+        )
+    )
+    context_store.save(
+        filename="bio.txt",
+        content=b"BIO draft with phone: 555-123-4567",
+        content_type="text/plain",
+        document_type="bio",
+    )
+
+    app.dependency_overrides[get_handoff_store] = lambda: handoff_store
+    app.dependency_overrides[get_active_context_store] = lambda: active_context_store
+    app.dependency_overrides[get_context_store] = lambda: context_store
+    app.dependency_overrides[get_plan_store] = lambda: plan_store
+    app.dependency_overrides[get_opportunity_tracker] = lambda: opportunity_tracker
+    try:
+        result = await adapter.build_external_ai_packet(
+            {
+                "user_key": "capt-external",
+                "target_platform": "genai",
+                "include_document_summary": True,
+                "purpose": "an advisory training review",
+            }
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert result["target_platform"] == "genai"
+    handoff = cast(dict[str, object], result["handoff"])
+    document_summary = cast(dict[str, object], result["document_summary"])
+    assert handoff["mos"] == "1702"
+    assert document_summary["total_documents"] == 1
+    assert result["recommended_share_format"] == "json-plus-brief"
+    assert "UNCLASSIFIED" in cast(str, result["recommended_share_prompt"])

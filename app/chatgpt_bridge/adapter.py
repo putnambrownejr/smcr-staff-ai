@@ -89,6 +89,14 @@ class ChatGptBridgeAdapter:
             include_local_api_key=True,
         )
 
+    async def build_external_ai_packet(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self._request_dict(
+            "POST",
+            "/sharing/external-ai-packet",
+            json=payload,
+            include_local_api_key=True,
+        )
+
     async def get_active_user_context(self, *, user_key: str) -> dict[str, object]:
         return await self._request_dict("GET", f"/user-context/{user_key}", include_local_api_key=True)
 

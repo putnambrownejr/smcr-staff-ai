@@ -214,6 +214,39 @@ class ReminderPlanToolInput(BaseModel):
     only_future_drills: bool = Field(default=True, description="Only generate plans for current or future drill dates.")
 
 
+class ExternalAiPacketToolInput(BaseModel):
+    user_key: str = Field(..., description="Stable local user profile key.")
+    target_platform: str = Field(
+        default="generic",
+        description="Hosted AI target: generic, claude, gemini, grok, copilot, or genai.",
+    )
+    include_handoff: bool = Field(default=True, description="Include the scrubbed long-term handoff.")
+    include_active_user_context: bool = Field(
+        default=True,
+        description="Include the scrubbed temporary active user context.",
+    )
+    include_document_summary: bool = Field(
+        default=False,
+        description="Include only aggregate local document counts and warnings.",
+    )
+    include_drill_plans: bool = Field(
+        default=False,
+        description="Include scrubbed drill-plan task summaries.",
+    )
+    include_opportunities: bool = Field(
+        default=False,
+        description="Include scrubbed opportunity summaries.",
+    )
+    include_recommendations: bool = Field(
+        default=True,
+        description="Include recommended share framing and warnings.",
+    )
+    purpose: str | None = Field(
+        default=None,
+        description="What the outside model is being asked to help with.",
+    )
+
+
 TOOL_SPECS: list[types.Tool] = [
     types.Tool(
         name="build_staff_package",
@@ -344,6 +377,20 @@ TOOL_SPECS: list[types.Tool] = [
         _meta=_tool_invocation_meta("Building reminder plans", "Reminder plans ready", read_only=False),
     ),
     types.Tool(
+        name="build_external_ai_packet",
+        title="Build External AI Packet",
+        description=(
+            "Use this when the user wants a share-safe packet for Claude, Gemini, Grok, Copilot, GENAI, "
+            "or another hosted model without exposing raw local records by default."
+        ),
+        inputSchema=ExternalAiPacketToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Preparing the external AI packet",
+            "External AI packet ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
         name="get_active_user_context",
         title="Get Active User Context",
         description=(
@@ -466,6 +513,11 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
                 },
             )
             return _ok_result("Built the handoff reminder plans.", result)
+
+        if name == "build_external_ai_packet":
+            payload = ExternalAiPacketToolInput.model_validate(arguments)
+            result = await adapter.build_external_ai_packet(payload.model_dump())
+            return _ok_result("Built the external AI packet.", result)
 
         if name == "get_active_user_context":
             payload = UserKeyToolInput.model_validate(arguments)

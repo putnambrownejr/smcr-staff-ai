@@ -34,6 +34,7 @@ Why:
 - `admin_readiness`
 - `build_admin_workflow`
 - `build_handoff_reminder_plans`
+- `build_external_ai_packet`
 - `get_active_user_context`
 - `set_active_user_context`
 
@@ -43,6 +44,10 @@ force decisions early, and expose reserve-specific friction before the real even
 `set_active_user_context` is the quick way to tell the app "treat me like I am at this kind of unit right now"
 without overwriting the longer-term handoff. Staff agents can pick that up automatically when the run includes
 the same `user_key`.
+
+`build_external_ai_packet` is the safe way to prepare local context for an external model such as Claude,
+Gemini, Grok, Copilot, or a generic government-hosted environment. It returns a scrubbed packet, warnings,
+redacted fields, and a provider-shaped recommended share prompt.
 
 ## How It Works
 
