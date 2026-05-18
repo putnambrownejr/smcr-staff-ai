@@ -29,6 +29,38 @@ templates:
     local_only: false
     warnings:
       - "System template only. Validate against current commander preference."
+  - template_id: "sys-opord"
+    template_name: "System OPORD"
+    template_type: "opord"
+    description: "Baseline five-paragraph operations order structure for training-safe planning and execution framing."
+    tags: ["system", "opord", "orders", "planning"]
+    audience_hint: "Subordinate leaders and staff"
+    preferred_format: "order"
+    reusable_headings:
+      ["Situation", "Mission", "Execution", "Administration and logistics", "Command and signal"]
+    reusable_guidance:
+      - "Lead with mission, command relationships, and the concept for execution."
+      - "State support relationships and coordinating instructions before they become friction in execution."
+    example_excerpt: "Situation / mission / execution / administration and logistics / command and signal."
+    local_only: false
+    warnings:
+      - "System template only. Keep it training-safe and scrub all operationally sensitive details."
+  - template_id: "sys-warno"
+    template_name: "System WARNO"
+    template_type: "warno"
+    description: "A lean warning-order scaffold for early direction, task organization, and immediate staff action."
+    tags: ["system", "warno", "orders"]
+    audience_hint: "Subordinate leaders and staff"
+    preferred_format: "order"
+    reusable_headings:
+      ["Situation", "Mission", "Initial tasks", "Coordinating instructions", "Immediate staff actions"]
+    reusable_guidance:
+      - "Use to start movement, preparation, coordination, and parallel planning early."
+      - "Do not overbuild. Push only what subordinates need now to begin useful action."
+    example_excerpt: "Situation / mission / initial tasks / coordinating instructions / immediate staff actions."
+    local_only: false
+    warnings:
+      - "System template only. Update quickly as assumptions change."
   - template_id: "sys-frago"
     template_name: "System FRAGO"
     template_type: "frago"
@@ -44,3 +76,131 @@ templates:
     local_only: false
     warnings:
       - "System template only. Review for local order style and routing."
+  - template_id: "sys-conop"
+    template_name: "System CONOP"
+    template_type: "conop"
+    description: "An initial concept of operations scaffold that helps translate higher guidance into sub-unit relationships and execution logic."
+    tags: ["system", "conop", "planning"]
+    audience_hint: "Commander, XO, and operations planners"
+    preferred_format: "paper"
+    reusable_headings:
+      ["Purpose and end state", "Unit and sub-unit relationships", "Concept of operations", "Decision points", "Support framework"]
+    reusable_guidance:
+      - "Keep the concept tied to purpose, task, and end state rather than activities alone."
+      - "Name the commander's decisions, branches, and support assumptions explicitly."
+    example_excerpt: "Purpose and end state / unit and sub-unit relationships / concept of operations / decision points / support framework."
+    local_only: false
+    warnings:
+      - "System template only. Refine with subordinate feedback before treating it as stable."
+  - template_id: "sys-sitrep"
+    template_name: "System SITREP"
+    template_type: "sitrep"
+    description: "A concise status report template for accountability, mission progress, support friction, and commander awareness."
+    tags: ["system", "sitrep", "reporting"]
+    audience_hint: "Higher headquarters and command group"
+    preferred_format: "report"
+    reusable_headings:
+      ["Current situation", "Mission progress", "Personnel and accountability", "Support status", "Issues and requests"]
+    reusable_guidance:
+      - "Report only what changes decisions or support requirements."
+      - "Separate facts, assessed issues, and requests clearly."
+    example_excerpt: "Current situation / mission progress / personnel and accountability / support status / issues and requests."
+    local_only: false
+    warnings:
+      - "System template only. Keep reporting generic in unapproved environments."
+  - template_id: "sys-aar"
+    template_name: "System AAR"
+    template_type: "aar"
+    description: "A command-useful after action review scaffold focused on standards, friction, and next-event corrective actions."
+    tags: ["system", "aar", "assessment"]
+    audience_hint: "Commander, XO, S-3, and primary staff"
+    preferred_format: "paper"
+    reusable_headings:
+      ["Event and command frame", "Standards and objectives assessed", "Sustains and what held", "Friction and what broke", "Corrective actions for the next event"]
+    reusable_guidance:
+      - "Distinguish deliberate performance from lucky improvisation."
+      - "Every corrective action should have an owner and a next execution window."
+    example_excerpt: "Event and command frame / standards and objectives assessed / sustains / friction / corrective actions."
+    local_only: false
+    warnings:
+      - "System template only. Keep it honest enough for the XO or S-3 to use."
+  - template_id: "sys-decision-brief"
+    template_name: "System Decision Brief"
+    template_type: "decision_brief"
+    description: "A short commander decision brief structure for one problem, a few options, and a clear recommendation."
+    tags: ["system", "decision_brief", "briefing"]
+    audience_hint: "Commander or decision authority"
+    preferred_format: "briefing"
+    reusable_headings:
+      ["Commander problem and decision required", "Why it matters now", "Facts and assumptions", "Options or COAs", "Recommendation and immediate actions"]
+    reusable_guidance:
+      - "One brief should solve one decision problem."
+      - "Push backup material to annex or follow-on slides instead of bloating the core brief."
+    example_excerpt: "Commander problem / why it matters now / facts and assumptions / options / recommendation."
+    local_only: false
+    warnings:
+      - "System template only. Cut filler fast."
+  - template_id: "sys-command-update"
+    template_name: "System Command Update Brief"
+    template_type: "command_update_brief"
+    description: "A compact command-update structure for readiness, friction, decisions, and the next battle-rhythm window."
+    tags: ["system", "command_update_brief", "briefing"]
+    audience_hint: "Commander, XO, SEL, and principal staff"
+    preferred_format: "briefing"
+    reusable_headings:
+      ["Executive snapshot", "Readiness and posture", "Critical friction", "Decisions and suspense", "Next window"]
+    reusable_guidance:
+      - "Make the update useful for immediate command attention, not archival status reporting."
+      - "Lead with what changed, what hurts, and what the command must decide."
+    example_excerpt: "Executive snapshot / readiness and posture / critical friction / decisions and suspense / next window."
+    local_only: false
+    warnings:
+      - "System template only. Tailor to the commander's preferred update rhythm."
+  - template_id: "sys-naval-letter"
+    template_name: "System Naval Letter"
+    template_type: "naval_letter"
+    description: "A formal naval-letter structure for routing official-style training products and staff correspondence."
+    tags: ["system", "naval_letter", "correspondence"]
+    audience_hint: "Command chain and staff"
+    preferred_format: "naval_letter"
+    reusable_headings:
+      ["From", "To", "Via", "Subj", "Ref", "Encl", "Body", "Signature"]
+    reusable_guidance:
+      - "Keep the subject tight and action-oriented."
+      - "Use references and enclosures only when they genuinely help the reader act."
+    example_excerpt: "From / To / Via / Subj / Ref / Encl / body / signature."
+    local_only: false
+    warnings:
+      - "System template only. Verify against current correspondence guidance before release."
+  - template_id: "sys-memorandum"
+    template_name: "System Memorandum"
+    template_type: "memorandum"
+    description: "A simple memorandum format for internal command notes, coordination, and staff coordination packages."
+    tags: ["system", "memorandum", "correspondence"]
+    audience_hint: "Internal staff and commanders"
+    preferred_format: "memorandum"
+    reusable_headings:
+      ["Memorandum for", "From", "Subj", "Purpose", "Discussion", "Recommendation or action"]
+    reusable_guidance:
+      - "Use plain, direct prose and keep the ask easy to find."
+      - "Memorandums should reduce confusion, not add routing drama."
+    example_excerpt: "Memorandum for / from / subject / purpose / discussion / recommendation."
+    local_only: false
+    warnings:
+      - "System template only. Confirm local format preference before routing."
+  - template_id: "sys-endorsement"
+    template_name: "System Endorsement"
+    template_type: "endorsement"
+    description: "A basic endorsement structure for routing packages up the chain with recommendation, concurrence, or qualification."
+    tags: ["system", "endorsement", "correspondence"]
+    audience_hint: "Reviewing chain and approving authority"
+    preferred_format: "endorsement"
+    reusable_headings:
+      ["Endorsement line", "Position", "Recommendation", "Concerns or amplifying remarks"]
+    reusable_guidance:
+      - "State concurrence, non-concurrence, or recommendation plainly."
+      - "Add only the amplifying remarks that matter to the next decision-maker."
+    example_excerpt: "Nth endorsement / position / recommendation / remarks."
+    local_only: false
+    warnings:
+      - "System template only. Review endorsement numbering and routing locally."
