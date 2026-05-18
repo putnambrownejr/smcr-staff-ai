@@ -51,6 +51,8 @@ agents:
     doctrine_categories: [reserve_administration, uniform_regulations]
   - id: pki-cac-troubleshooter
     doctrine_categories: [communications, reserve_administration]
+  - id: repo-privacy-sweeper
+    doctrine_categories: [reserve_administration]
   - id: leadership-advisor
     doctrine_categories: [core_marine_doctrine, leadership, professional_reading]
   - id: osint-research-assistant

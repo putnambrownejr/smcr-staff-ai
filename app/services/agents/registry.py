@@ -24,6 +24,7 @@ from app.services.agents.opord_agent import build_opord_agent
 from app.services.agents.orm_agent import build_orm_agent
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.pki_agent import build_pki_troubleshooter_agent
+from app.services.agents.privacy_hygiene_agent import build_privacy_hygiene_agent
 from app.services.agents.s1_admin_chief_agent import build_s1_admin_chief_agent
 from app.services.agents.s2_intel_agent import build_s2_intel_agent
 from app.services.agents.s3_opso_agent import build_s3_opso_agent
@@ -87,6 +88,7 @@ def default_agents() -> list[Agent]:
         build_g9_civil_military_agent(),
         build_jag_agent(),
         build_pki_troubleshooter_agent(),
+        build_privacy_hygiene_agent(),
         build_leadership_agent(),
         build_osint_agent(),
         build_map_agent(),

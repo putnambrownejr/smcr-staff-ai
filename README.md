@@ -43,6 +43,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | JAG / legal advisor | Adds issue-spotting and escalation prompts while clearly refusing to replace formal legal counsel. | Working advisory agent |
 | Chaplain advisor | Adds morale, welfare, ethics, and referral-minded leader prompts without claiming to replace real chaplain or care channels. | Working advisory agent |
 | PKI / CAC troubleshooting | Builds advisory troubleshooting playbooks for CAC detection, certificate, middleware, browser-auth, signing/encryption, and portal-access issues. Also exposed as an S-6 staff-support lane. | Working local support |
+| Repo privacy sweep | Reviews tracked paths, staged diffs, ignored local-only files, and likely PII/OPSEC backflow before push. | Working local review |
 | Chief/Aide orchestration brief | Combines session handoff, local personal docs, drill plans, MARADMIN-driven source updates, and reading suggestions into one advisory triage brief. | Working local orchestrator |
 | Text summarizer / checklist API | Turns pasted text into a local summary, due-outs, action items, checklist, and follow-up questions without storing the input. | Working local analysis |
 | Staff council | Vets ideas through company, battalion, and division/group staff roles, with S-2/G-2 tied to OSINT. Includes round-robin review. | Working scaffold |
@@ -246,6 +247,32 @@ curl -X POST http://127.0.0.1:8000/staff-products/draft `
 ```
 
 This keeps the example and template local to the user-scoped storage path outside the repo while still making the reusable structure available to draft workflows.
+
+### Pre-Push Privacy Review
+
+Run a local pre-push privacy sweep:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/privacy/pre-push-review `
+  -H "Content-Type: application/json" `
+  -d "{}"
+```
+
+Or point it at a specific local repo root:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/privacy/pre-push-review `
+  -H "Content-Type: application/json" `
+  -d "{\"repo_root\":\"C:/smcr-staff-ai\"}"
+```
+
+This review checks:
+
+- tracked files that match local-only or personal-data path patterns
+- staged and unstaged diffs for likely PII or sensitive operational text
+- whether high-risk local files are ignored instead of tracked
+
+It is advisory only. It reduces accidental backflow, but a user can still bypass ignore rules with a force-add.
 
 ### Admin Readiness
 

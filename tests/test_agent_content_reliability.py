@@ -33,6 +33,7 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "fitrep-assistant": "Help me organize FitRep support inputs and suspense items.",
     "osint-research-assistant": "Help me summarize public-source trends for a training scenario.",
     "terrain-map-advisor": "Help me find the right public terrain and topo references for a training area.",
+    "repo-privacy-sweeper": "Review this repo before I push and look for personal data backflow.",
 }
 
 
