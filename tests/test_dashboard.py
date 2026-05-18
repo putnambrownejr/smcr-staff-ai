@@ -52,6 +52,8 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Decisive action now" in response.text
     assert "Staff update cycle" in response.text
     assert "Planning Cell" in response.text
+    assert "Time watch" in response.text
+    assert "Time zones" in response.text
     assert "Build planning cell package" in response.text
     assert "Refresh MARADMIN feed" in response.text
     assert "Second-tier awareness" in response.text

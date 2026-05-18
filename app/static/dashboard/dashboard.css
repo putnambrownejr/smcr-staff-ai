@@ -36,6 +36,7 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 24px;
+  align-items: flex-start;
   padding: 24px 28px 18px;
   border-bottom: 1px solid var(--line);
   background: linear-gradient(180deg, #f7f8f4 0%, #eef1ea 100%);
@@ -70,6 +71,108 @@ body {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.timezone-cluster {
+  min-width: min(100%, 460px);
+}
+
+.timezone-panel {
+  display: grid;
+  gap: 10px;
+  width: min(100%, 460px);
+}
+
+.timezone-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.timezone-toggle {
+  min-height: 32px;
+  padding: 0 10px;
+}
+
+.timezone-display {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.timezone-card {
+  display: grid;
+  gap: 4px;
+  min-height: 76px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(251, 251, 248, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.timezone-card-label {
+  color: var(--muted);
+  font-size: 0.77rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.timezone-card-time {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.timezone-card-meta {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.timezone-controls {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(251, 251, 248, 0.96);
+}
+
+.timezone-option-list {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.timezone-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.timezone-option input {
+  width: auto;
+  margin-top: 2px;
+}
+
+.timezone-option-text {
+  display: grid;
+  gap: 2px;
+}
+
+.timezone-option-text strong {
+  font-size: 0.9rem;
+}
+
+.timezone-option-text span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .status-chip,
@@ -487,5 +590,11 @@ textarea {
   .panel-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .timezone-cluster,
+  .timezone-panel {
+    width: 100%;
+    min-width: 0;
   }
 }

@@ -6,6 +6,10 @@ const state = {
   workspace: null,
   selectedDocumentId: null,
   apiBase: resolveApiBase(),
+  timezoneOptions: buildTimezoneOptions(),
+  selectedTimezoneIds: loadTimezoneSelection(),
+  timezonePanelOpen: false,
+  clockTimer: null,
 };
 
 for (const button of document.querySelectorAll(".lane-button")) {
@@ -116,6 +120,7 @@ document
 document
   .getElementById("thin-staff-open-admin")
   .addEventListener("click", () => launchThinStaffWorkflow("admin"));
+document.getElementById("toggle-timezone-panel").addEventListener("click", toggleTimezonePanel);
 
 document.addEventListener("click", async (event) => {
   const documentButton = event.target.closest("[data-document-id]");
@@ -140,6 +145,11 @@ document.addEventListener("click", async (event) => {
   const saveButton = event.target.closest("[data-reading-save]");
   if (saveButton) {
     await saveReadingProgress(saveButton.dataset.readingSave);
+  }
+
+  const timezoneToggle = event.target.closest("[data-timezone-option]");
+  if (timezoneToggle) {
+    updateTimezoneSelection(timezoneToggle.dataset.timezoneOption, timezoneToggle.checked);
   }
 });
 
@@ -1016,6 +1026,163 @@ function updateModeBanner() {
   }
 }
 
+function toggleTimezonePanel() {
+  state.timezonePanelOpen = !state.timezonePanelOpen;
+  renderTimezoneControls();
+}
+
+function renderTimezoneStrip() {
+  const target = document.getElementById("timezone-display");
+  if (!target) {
+    return;
+  }
+  const selected = getSelectedTimezoneOptions();
+  const now = new Date();
+  target.innerHTML = selected
+    .map((option) => {
+      const snapshot = formatTimezoneSnapshot(option, now);
+      return `
+        <article class="timezone-card">
+          <span class="timezone-card-label">${escapeHtml(snapshot.label)}</span>
+          <strong class="timezone-card-time">${escapeHtml(snapshot.time)}</strong>
+          <span class="timezone-card-meta">${escapeHtml(snapshot.meta)}</span>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function renderTimezoneControls() {
+  const panel = document.getElementById("timezone-controls");
+  const target = document.getElementById("timezone-option-list");
+  if (!panel || !target) {
+    return;
+  }
+  panel.classList.toggle("is-hidden", !state.timezonePanelOpen);
+  target.innerHTML = state.timezoneOptions
+    .map(
+      (option) => `
+        <label class="timezone-option">
+          <input
+            type="checkbox"
+            data-timezone-option="${escapeHtml(option.id)}"
+            ${state.selectedTimezoneIds.includes(option.id) ? "checked" : ""}
+          />
+          <span class="timezone-option-text">
+            <strong>${escapeHtml(option.label)}</strong>
+            <span>${escapeHtml(option.description)}</span>
+          </span>
+        </label>
+      `,
+    )
+    .join("");
+}
+
+function updateTimezoneSelection(optionId, checked) {
+  const next = checked
+    ? [...new Set([...state.selectedTimezoneIds, optionId])]
+    : state.selectedTimezoneIds.filter((id) => id !== optionId);
+  state.selectedTimezoneIds = next.length ? next : ["local", "zulu", "quantico"];
+  try {
+    window.localStorage.setItem("smcr.dashboard.timezones", JSON.stringify(state.selectedTimezoneIds));
+  } catch (_error) {
+    // Keep the current in-memory preference if browser storage is unavailable.
+  }
+  renderTimezoneStrip();
+  renderTimezoneControls();
+}
+
+function buildTimezoneOptions() {
+  return [
+    {
+      id: "local",
+      label: "Local",
+      description: "Your browser's current local time zone.",
+      timeZone: null,
+    },
+    {
+      id: "zulu",
+      label: "Zulu",
+      description: "UTC / Z time for common planning reference.",
+      timeZone: "UTC",
+    },
+    {
+      id: "quantico",
+      label: "Quantico",
+      description: "Eastern Time reference for Quantico-area working hours.",
+      timeZone: "America/New_York",
+    },
+    {
+      id: "central",
+      label: "Central",
+      description: "Useful if your local browser is not already on Central.",
+      timeZone: "America/Chicago",
+    },
+    {
+      id: "pacific",
+      label: "Pacific",
+      description: "West Coast coordination reference.",
+      timeZone: "America/Los_Angeles",
+    },
+    {
+      id: "okinawa",
+      label: "Okinawa",
+      description: "Japan Standard Time reference.",
+      timeZone: "Asia/Tokyo",
+    },
+  ];
+}
+
+function loadTimezoneSelection() {
+  try {
+    const raw = window.localStorage.getItem("smcr.dashboard.timezones");
+    if (!raw) {
+      return ["local", "zulu", "quantico"];
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length ? parsed : ["local", "zulu", "quantico"];
+  } catch (_error) {
+    return ["local", "zulu", "quantico"];
+  }
+}
+
+function getSelectedTimezoneOptions() {
+  const selected = state.timezoneOptions.filter((option) => state.selectedTimezoneIds.includes(option.id));
+  return selected.length ? selected : state.timezoneOptions.filter((option) => ["local", "zulu", "quantico"].includes(option.id));
+}
+
+function formatTimezoneSnapshot(option, now) {
+  const resolvedLocalZone = new Intl.DateTimeFormat().resolvedOptions().timeZone || "Local";
+  const zone = option.timeZone || resolvedLocalZone;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: zone,
+    timeZoneName: "short",
+  }).formatToParts(now);
+  const time = `${findDatePart(parts, "hour")}:${findDatePart(parts, "minute")}`;
+  const zoneName = findDatePart(parts, "timeZoneName") || zone;
+  return {
+    label: option.label,
+    time,
+    meta: option.id === "local" ? `${zoneName} | ${resolvedLocalZone}` : `${zoneName} | ${zone}`,
+  };
+}
+
+function findDatePart(parts, type) {
+  return parts.find((part) => part.type === type)?.value || "";
+}
+
+function startTimezoneClock() {
+  renderTimezoneStrip();
+  renderTimezoneControls();
+  if (state.clockTimer) {
+    window.clearInterval(state.clockTimer);
+  }
+  state.clockTimer = window.setInterval(renderTimezoneStrip, 30000);
+}
+
 function resolveApiBase() {
   if (window.location.protocol === "file:") {
     return "http://127.0.0.1:8000";
@@ -1104,3 +1271,4 @@ function normalizePosture(value) {
 
 loadWorkspace();
 applyLaneVisibility();
+startTimezoneClock();

@@ -14,6 +14,19 @@
           <h1>SMCR Staff AI Dashboard</h1>
           <p class="subhead">Readiness, continuity, staff products, and local context in one working board.</p>
         </div>
+        <div class="status-cluster timezone-cluster">
+          <div class="timezone-panel">
+            <div class="timezone-panel-head">
+              <span class="strip-label">Time watch</span>
+              <button type="button" class="secondary timezone-toggle" id="toggle-timezone-panel">Time zones</button>
+            </div>
+            <div id="timezone-display" class="timezone-display" aria-live="polite"></div>
+            <div id="timezone-controls" class="timezone-controls is-hidden">
+              <p class="helper-text">Choose which clocks stay visible in this browser.</p>
+              <div id="timezone-option-list" class="timezone-option-list"></div>
+            </div>
+          </div>
+        </div>
       </header>
 
       <main class="layout">
