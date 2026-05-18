@@ -36,6 +36,10 @@ def default_travel_case_dir() -> Path:
     return default_local_context_dir() / "travel_cases"
 
 
+def default_reading_state_dir() -> Path:
+    return default_local_context_dir() / "reading_state"
+
+
 def default_database_url() -> str:
     database_path = default_local_state_root() / "smcr_staff_ai.db"
     return f"sqlite:///{database_path.as_posix()}"
@@ -51,6 +55,7 @@ class Settings(BaseSettings):
     session_handoff_storage_dir: str = str(default_session_handoff_dir())
     product_template_storage_dir: str = str(default_product_template_dir())
     travel_case_storage_dir: str = str(default_travel_case_dir())
+    reading_state_storage_dir: str = str(default_reading_state_dir())
     local_api_key: str | None = None
     max_upload_bytes: int = 50_000_000
     public_source_only: bool = True

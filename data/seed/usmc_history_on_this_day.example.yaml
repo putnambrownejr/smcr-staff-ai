@@ -1,0 +1,45 @@
+items:
+  - slug: "fmf-activation"
+    title: "Fleet Marine Force activated"
+    month: 12
+    day: 7
+    year_label: "1933"
+    summary: "The Fleet Marine Force was established as the standing, expeditionary operating force of the Marine Corps for service with the fleet."
+    significance:
+      - "Anchors the modern expeditionary relationship between Marines and the naval force."
+      - "Useful PME hook for readiness, naval integration, and why reserves support an operating force rather than a paper headquarters."
+    references:
+      - "https://www.usmcu.edu/Research/Marine-Corps-History-Division/"
+  - slug: "marine-corps-birthday"
+    title: "Marine Corps Birthday"
+    month: 11
+    day: 10
+    year_label: "1775"
+    summary: "The Continental Congress resolved to raise two battalions of Marines, marking the origin point celebrated as the Marine Corps Birthday."
+    significance:
+      - "Useful for command climate, ceremony, heritage, and PME tie-ins."
+      - "Fits naturally with birthday-message, cake-cutting, and history discussion workflows."
+    references:
+      - "https://www.usmcu.edu/Research/Marine-Corps-History-Division/"
+  - slug: "belleau-wood"
+    title: "Belleau Wood phase"
+    month: 6
+    day: 6
+    year_label: "1918"
+    summary: "Marines entered one of the iconic phases of the Battle of Belleau Wood during the Aisne-Marne campaign."
+    significance:
+      - "Good tie-in for small-unit aggression, sustainment under friction, and the difference between heritage and mythology."
+      - "Useful for PME, standards talks, and reserve identity without drifting into chest-thumping."
+    references:
+      - "https://www.usmcu.edu/Research/Marine-Corps-History-Division/"
+  - slug: "guadalcanal-landing"
+    title: "Guadalcanal landings begin"
+    month: 8
+    day: 7
+    year_label: "1942"
+    summary: "The 1st Marine Division landed on Guadalcanal, opening a campaign that stressed endurance, logistics, and joint naval integration."
+    significance:
+      - "Good lens for sustainment, command relationships, and why logistics is never a side issue."
+      - "Useful for S-3, S-4, and command-team discussions."
+    references:
+      - "https://www.usmcu.edu/Research/Marine-Corps-History-Division/"

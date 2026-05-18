@@ -3,6 +3,8 @@ const state = {
   userKey: "",
   apiKey: "",
   activeLane: resolveInitialLane(),
+  workspace: null,
+  selectedDocumentId: null,
 };
 
 for (const button of document.querySelectorAll(".lane-button")) {
@@ -55,21 +57,34 @@ document.getElementById("staff-form").addEventListener("submit", async (event) =
   renderToolOutput("staff-output", data, ["review_checklist", "citations", "warnings"]);
 });
 
+document.addEventListener("click", async (event) => {
+  const documentButton = event.target.closest("[data-document-id]");
+  if (documentButton) {
+    state.selectedDocumentId = documentButton.dataset.documentId;
+    renderDocumentLibrary(state.workspace?.document_details || []);
+    return;
+  }
+
+  const saveButton = event.target.closest("[data-reading-save]");
+  if (saveButton) {
+    await saveReadingProgress(saveButton.dataset.readingSave);
+  }
+});
+
 async function loadWorkspace() {
   updateModeBanner();
   try {
     if (state.mode === "demo") {
-      const workspace = await apiFetch("/demo/dashboard/data");
-      renderWorkspace(workspace);
+      state.workspace = await apiFetch("/demo/dashboard/data");
     } else {
       const userKey = state.userKey;
       if (!userKey) {
         setWorkspaceNote("Add a user key to load personal views.");
         return;
       }
-      const workspace = await apiFetch(`/dashboard/data/${encodeURIComponent(userKey)}`, { auth: true });
-      renderWorkspace(workspace);
+      state.workspace = await apiFetch(`/dashboard/data/${encodeURIComponent(userKey)}`, { auth: true });
     }
+    renderWorkspace(state.workspace);
     setWorkspaceNote("Workspace refreshed.");
   } catch (error) {
     setWorkspaceNote(error.message, true);
@@ -84,10 +99,15 @@ function renderWorkspace(payload) {
   renderAdmin(payload.admin_readiness);
   renderDailyBrief(payload.daily_ops_brief || {});
   renderAnalystBrief(payload.analyst_brief || {});
-  renderDocuments(payload.document_summary || payload.chief_brief.document_summary || { records: [] });
+  renderDocumentsWatch(payload.document_summary || payload.chief_brief?.document_summary || { records: [] });
+  renderDocumentLibrary(payload.document_details || []);
+  renderTemplateLibrary(payload.template_library || []);
+  renderMaradminTicker(payload.maradmin_ticker || []);
+  renderHistory(payload.today_in_history || []);
+  renderReadingBooks(payload.reading_books || []);
   renderTrackedActions(payload.tracked_actions || []);
-  renderOpportunities(payload.tracked_opportunities || payload.career_watch.tracked_opportunities || []);
-  renderSourceUpdates(payload.documentation_updates || payload.chief_brief.documentation_updates || []);
+  renderOpportunities(payload.tracked_opportunities || payload.career_watch?.tracked_opportunities || []);
+  renderSourceUpdates(payload.documentation_updates || payload.chief_brief?.documentation_updates || []);
 }
 
 function renderWorkspaceSummary(summaryLines, warnings) {
@@ -114,7 +134,7 @@ function renderNextDrillReadiness(payload) {
     .querySelector(".readiness-panel")
     ?.setAttribute("data-posture", normalizePosture(payload.readiness_posture || ""));
   renderList("readiness-focus", payload.this_week_focus || []);
-  renderEntryCards("readiness-must-do", payload.must_do_before_drill || [], "No immediate pre-drill actions yet.");
+  renderEntryRows("readiness-must-do", payload.must_do_before_drill || [], "No immediate pre-drill actions yet.");
   renderList("readiness-friction", payload.likely_friction_points || []);
   renderList("readiness-foundation", payload.missing_foundation || []);
   renderList("readiness-rhythm", payload.standing_rhythm || []);
@@ -137,7 +157,7 @@ function renderCareer(payload) {
   );
 }
 
-function renderDocuments(payload) {
+function renderDocumentsWatch(payload) {
   const records = payload.records || [];
   const missing = payload.missing_recommended_types || [];
   const lines = [
@@ -148,11 +168,171 @@ function renderDocuments(payload) {
   setDocumentWatch(lines, records);
 }
 
+function renderDocumentLibrary(items) {
+  const target = document.getElementById("document-library");
+  if (!items.length) {
+    target.className = "document-library empty-state";
+    target.textContent = "No local document previews loaded yet.";
+    return;
+  }
+  if (!state.selectedDocumentId || !items.some((item) => item.context_id === state.selectedDocumentId)) {
+    state.selectedDocumentId = items[0].context_id;
+  }
+  const selected = items.find((item) => item.context_id === state.selectedDocumentId) || items[0];
+  target.className = "document-library";
+  target.innerHTML = `
+    <div class="document-list">
+      ${items
+        .map(
+          (item) => `
+            <button
+              type="button"
+              class="document-row ${item.context_id === state.selectedDocumentId ? "active" : ""}"
+              data-document-id="${escapeHtml(item.context_id)}"
+            >
+              <span class="document-row-title">${escapeHtml(item.filename)}</span>
+              <span class="document-row-meta">${escapeHtml(item.document_type)}${item.contains_pii ? " | PII" : ""}</span>
+            </button>
+          `,
+        )
+        .join("")}
+    </div>
+    <div class="document-preview">
+      <div class="preview-meta">
+        <span class="strip-label">${escapeHtml(selected.document_type)}</span>
+        <h3>${escapeHtml(selected.filename)}</h3>
+        <p>${escapeHtml(formatDocumentMeta(selected))}</p>
+      </div>
+      <pre>${escapeHtml(selected.text_preview || "No preview available.")}</pre>
+    </div>
+  `;
+}
+
+function renderTemplateLibrary(items) {
+  const target = document.getElementById("template-library");
+  if (!items.length) {
+    target.className = "row-stack empty-state";
+    target.textContent = "No templates are loaded yet.";
+    return;
+  }
+  target.className = "row-stack";
+  target.innerHTML = items
+    .map(
+      (item) => `
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.template_source)}</span>
+            <strong>${escapeHtml(item.template_name)}</strong>
+            <span class="meta-inline">${escapeHtml(item.template_type)}</span>
+          </div>
+          <p>${escapeHtml(item.description || "Reusable structure and tone reference.")}</p>
+          <p class="meta-inline">${escapeHtml((item.reusable_headings || []).slice(0, 4).join(" | ") || "No reusable headings stored.")}</p>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderMaradminTicker(items) {
+  const target = document.getElementById("maradmin-ticker");
+  if (!items.length) {
+    target.className = "row-stack empty-state";
+    target.textContent = "No source-watch items loaded yet.";
+    return;
+  }
+  target.className = "row-stack";
+  target.innerHTML = items
+    .map(
+      (item) => `
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.status)}</span>
+            <strong>${escapeHtml(item.title)}</strong>
+          </div>
+          <p>${escapeHtml(item.summary)}</p>
+          ${item.source_url ? `<p class="meta-inline">${escapeHtml(item.source_url)}</p>` : ""}
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderHistory(items) {
+  const target = document.getElementById("history-feed");
+  if (!items.length) {
+    target.className = "row-stack empty-state";
+    target.textContent = "No history entry is loaded for today.";
+    return;
+  }
+  target.className = "row-stack";
+  target.innerHTML = items
+    .map(
+      (item) => `
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.year_label)}</span>
+            <strong>${escapeHtml(item.title)}</strong>
+          </div>
+          <p>${escapeHtml(item.summary)}</p>
+          <ul>${(item.significance || []).map((entry) => `<li>${escapeHtml(entry)}</li>`).join("")}</ul>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderReadingBooks(items) {
+  const target = document.getElementById("reading-library");
+  if (!items.length) {
+    target.className = "reading-grid empty-state";
+    target.textContent = "No reading-list entries loaded yet.";
+    return;
+  }
+  target.className = "reading-grid";
+  target.innerHTML = items
+    .map((item) => {
+      const progress = item.progress || {};
+      const notes = Array.isArray(progress.notes) ? progress.notes.join("\n") : "";
+      const status = progress.status || "not_started";
+      const disabled = state.mode !== "personal" ? "disabled" : "";
+      return `
+        <article class="reading-item">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(status.replaceAll("_", " "))}</span>
+            <strong>${escapeHtml(item.title)}</strong>
+          </div>
+          <p class="meta-inline">${escapeHtml(item.author)} | ${escapeHtml((item.categories || []).slice(0, 3).join(", "))}</p>
+          <p>${escapeHtml(item.summary)}</p>
+          <p class="meta-inline">${escapeHtml((item.key_themes || []).slice(0, 4).join(" | "))}</p>
+          <label>
+            <span>Status</span>
+            <select data-reading-status="${escapeHtml(item.slug)}" ${disabled}>
+              ${["not_started", "in_progress", "completed"]
+                .map(
+                  (value) =>
+                    `<option value="${value}" ${value === status ? "selected" : ""}>${value.replaceAll("_", " ")}</option>`,
+                )
+                .join("")}
+            </select>
+          </label>
+          <label>
+            <span>Notes</span>
+            <textarea data-reading-notes="${escapeHtml(item.slug)}" rows="4" ${disabled} placeholder="Thoughts, PME takeaways, or why this matters to your lane.">${escapeHtml(notes)}</textarea>
+          </label>
+          <div class="button-row">
+            <button type="button" class="secondary" data-reading-save="${escapeHtml(item.slug)}" ${disabled}>Save reading state</button>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
 function renderDailyBrief(payload) {
   renderList("daily-executive", payload.executive_snapshot || []);
-  renderEntryCards("daily-must-do", payload.must_do || [], "No must-do items.");
-  renderEntryCards("daily-should-do", payload.should_do || [], "No should-do items.");
-  renderEntryCards("daily-can-defer", payload.can_defer || [], "No defer candidates.");
+  renderEntryRows("daily-must-do", payload.must_do || [], "No must-do items.");
+  renderEntryRows("daily-should-do", payload.should_do || [], "No should-do items.");
+  renderEntryRows("daily-can-defer", payload.can_defer || [], "No defer candidates.");
   renderList("daily-waiting", payload.waiting_on || []);
   renderList("daily-blockers", payload.blockers || []);
   renderList("daily-leverage", payload.leverage_actions || []);
@@ -172,20 +352,22 @@ function renderAnalystBrief(payload) {
 function renderOpportunities(items) {
   const target = document.getElementById("opportunity-watch");
   if (!items.length) {
-    target.className = "stack-list empty-state";
+    target.className = "row-stack empty-state";
     target.textContent = "No tracked opportunities available yet.";
     return;
   }
-  target.className = "stack-list";
+  target.className = "row-stack";
   target.innerHTML = items
     .map(
       (item) => `
-        <div class="info-card">
-          <span class="callout">${escapeHtml(item.opportunity_type || "opportunity")}</span>
-          <h3>${escapeHtml(item.title)}</h3>
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.opportunity_type || "opportunity")}</span>
+            <strong>${escapeHtml(item.title)}</strong>
+          </div>
           <p>${escapeHtml([item.unit, item.location, item.rank, item.mos].filter(Boolean).join(" | ") || "Local tracked opportunity")}</p>
           <p>${escapeHtml(item.description || item.notes || "Review fit, eligibility, and suspense.")}</p>
-        </div>
+        </article>
       `,
     )
     .join("");
@@ -194,21 +376,23 @@ function renderOpportunities(items) {
 function renderTrackedActions(items) {
   const target = document.getElementById("action-watch");
   if (!items.length) {
-    target.className = "stack-list empty-state";
+    target.className = "row-stack empty-state";
     target.textContent = "No tracked POAM items available yet.";
     return;
   }
-  target.className = "stack-list";
+  target.className = "row-stack";
   target.innerHTML = items
     .map(
       (item) => `
-        <div class="info-card">
-          <span class="callout">${escapeHtml(item.status || "open")}</span>
-          <h3>${escapeHtml(item.title)}</h3>
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.status || "open")}</span>
+            <strong>${escapeHtml(item.title)}</strong>
+          </div>
           <p>${escapeHtml(item.owner ? `Owner: ${item.owner}` : "Owner not assigned")}</p>
-          <p>${escapeHtml([item.category, item.priority, item.suspense_date ? `Due ${item.suspense_date}` : ""].filter(Boolean).join(" | "))}</p>
+          <p class="meta-inline">${escapeHtml([item.category, item.priority, item.suspense_date ? `Due ${item.suspense_date}` : ""].filter(Boolean).join(" | "))}</p>
           <p>${escapeHtml(item.description || item.notes || "No additional notes yet.")}</p>
-        </div>
+        </article>
       `,
     )
     .join("");
@@ -217,20 +401,22 @@ function renderTrackedActions(items) {
 function renderSourceUpdates(items) {
   const target = document.getElementById("source-updates");
   if (!items.length) {
-    target.className = "stack-list empty-state";
+    target.className = "row-stack empty-state";
     target.textContent = "No source updates are currently stored.";
     return;
   }
-  target.className = "stack-list";
+  target.className = "row-stack";
   target.innerHTML = items
     .map(
       (item) => `
-        <div class="info-card">
-          <span class="callout">${escapeHtml(item.review_status || "new")}</span>
-          <h3>${escapeHtml(item.tracked_title)}</h3>
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.review_status || "new")}</span>
+            <strong>${escapeHtml(item.tracked_title)}</strong>
+          </div>
           <p>${escapeHtml((item.change_signals || []).join(", ") || "Potential source update detected.")}</p>
-          <p>${escapeHtml((item.matched_terms || []).join(", ") || "No matched terms recorded.")}</p>
-        </div>
+          <p class="meta-inline">${escapeHtml((item.matched_terms || []).join(", ") || "No matched terms recorded.")}</p>
+        </article>
       `,
     )
     .join("");
@@ -239,41 +425,45 @@ function renderSourceUpdates(items) {
 function renderQueue(items) {
   const target = document.getElementById("priority-queue");
   if (!items.length) {
-    target.className = "stack-list empty-state";
+    target.className = "row-stack empty-state";
     target.textContent = "No priority items returned yet.";
     return;
   }
-  target.className = "stack-list";
+  target.className = "row-stack";
   target.innerHTML = items
     .map(
       (item) => `
-        <div class="queue-item">
-          <span class="callout">${escapeHtml(item.category || "watch")}</span>
-          <h3>${escapeHtml(item.title || "Untitled item")}</h3>
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.category || "watch")}</span>
+            <strong>${escapeHtml(item.title || "Untitled item")}</strong>
+          </div>
           <p>${escapeHtml(item.recommendation || item.notes || "")}</p>
-        </div>
+        </article>
       `,
     )
     .join("");
 }
 
-function renderEntryCards(targetId, items, emptyText) {
+function renderEntryRows(targetId, items, emptyText) {
   const target = document.getElementById(targetId);
   if (!items.length) {
-    target.className = "stack-list empty-state";
+    target.className = "row-stack empty-state";
     target.textContent = emptyText;
     return;
   }
-  target.className = "stack-list";
+  target.className = "row-stack";
   target.innerHTML = items
     .map(
       (item) => `
-        <div class="info-card">
-          <span class="callout">${escapeHtml(item.category || item.priority || "watch")}</span>
-          <h3>${escapeHtml(item.title || "Untitled item")}</h3>
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.category || item.priority || "watch")}</span>
+            <strong>${escapeHtml(item.title || "Untitled item")}</strong>
+            ${item.due_date ? `<span class="meta-inline">${escapeHtml(`Due ${item.due_date}`)}</span>` : ""}
+          </div>
           <p>${escapeHtml(item.detail || "")}</p>
-          ${item.due_date ? `<p>${escapeHtml(`Due: ${item.due_date}`)}</p>` : ""}
-        </div>
+        </article>
       `,
     )
     .join("");
@@ -282,14 +472,14 @@ function renderEntryCards(targetId, items, emptyText) {
 function setDocumentWatch(lines, records = []) {
   const target = document.getElementById("document-watch");
   const bullets = Array.isArray(lines) ? lines : [lines];
-  const recordMarkup = records.length
+  const recordsMarkup = records.length
     ? `<ul>${records
         .slice(0, 6)
-        .map((record) => `<li>${escapeHtml(record.filename)} <span class="callout">${escapeHtml(record.document_type)}</span></li>`)
+        .map((record) => `<li>${escapeHtml(record.filename)} <span class="meta-inline">${escapeHtml(record.document_type)}</span></li>`)
         .join("")}</ul>`
     : "";
-  target.className = "stack-list";
-  target.innerHTML = `<ul>${bullets.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>${recordMarkup}`;
+  target.className = "row-stack";
+  target.innerHTML = `<ul>${bullets.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>${recordsMarkup}`;
 }
 
 function renderToolOutput(targetId, payload, listKeys) {
@@ -298,7 +488,7 @@ function renderToolOutput(targetId, payload, listKeys) {
   if (payload.sections?.length) {
     sectionMarkup.push(`
       <section>
-        <span class="callout">Sections</span>
+        <span class="strip-label">Sections</span>
         ${payload.sections
           .map(
             (section) => `
@@ -319,7 +509,7 @@ function renderToolOutput(targetId, payload, listKeys) {
     const label = key.replaceAll("_", " ");
     sectionMarkup.push(`
       <section>
-        <span class="callout">${escapeHtml(label)}</span>
+        <span class="strip-label">${escapeHtml(label)}</span>
         <ul>${payload[key].map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
       </section>
     `);
@@ -331,6 +521,25 @@ function renderToolOutput(targetId, payload, listKeys) {
 function renderList(targetId, items) {
   const target = document.getElementById(targetId);
   target.innerHTML = items.length ? items.map((item) => `<li>${escapeHtml(item)}</li>`).join("") : "<li>No items.</li>";
+}
+
+async function saveReadingProgress(slug) {
+  if (state.mode !== "personal" || !state.userKey) {
+    setWorkspaceNote("Switch to personal mode to save reading state.", true);
+    return;
+  }
+  const status = document.querySelector(`[data-reading-status="${CSS.escape(slug)}"]`)?.value || "not_started";
+  const notesValue = document.querySelector(`[data-reading-notes="${CSS.escape(slug)}"]`)?.value || "";
+  await apiFetch(`/reading-list/state/${encodeURIComponent(state.userKey)}/${encodeURIComponent(slug)}`, {
+    method: "PUT",
+    auth: true,
+    body: JSON.stringify({
+      status,
+      notes: splitLines(notesValue),
+    }),
+  });
+  setWorkspaceNote("Reading state saved.");
+  await loadWorkspace();
 }
 
 async function apiFetch(path, options = {}) {
@@ -376,9 +585,6 @@ function applyLaneVisibility() {
     section.classList.toggle("is-hidden", !show);
   }
   window.location.hash = active === "overview" ? "" : active;
-  if (active === "configure") {
-    document.getElementById("workspace-note").textContent ||= "Configure local access and reload the workspace.";
-  }
 }
 
 function splitLines(value) {
@@ -386,6 +592,20 @@ function splitLines(value) {
     .split(/\r?\n/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function formatDocumentMeta(item) {
+  const parts = [];
+  if (item.review_date) {
+    parts.push(`Review ${item.review_date}`);
+  }
+  if (item.expiration_date) {
+    parts.push(`Expires ${item.expiration_date}`);
+  }
+  if (item.contains_pii) {
+    parts.push("PII flagged");
+  }
+  return parts.join(" | ") || "Local advisory reference.";
 }
 
 function escapeHtml(value) {
@@ -399,13 +619,13 @@ function escapeHtml(value) {
 
 function normalizePosture(value) {
   const normalized = String(value || "").toLowerCase();
-  if (normalized.includes("urgent")) {
-    return "urgent";
+  if (normalized.includes("weak") || normalized.includes("degraded")) {
+    return "critical";
   }
-  if (normalized.includes("watch")) {
+  if (normalized.includes("active") || normalized.includes("partially")) {
     return "watch";
   }
-  if (normalized.includes("steady")) {
+  if (normalized.includes("track")) {
     return "steady";
   }
   return "default";

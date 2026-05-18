@@ -4,8 +4,10 @@ from app.schemas.actions import ActionRecord
 from app.schemas.admin import AdminReadinessResponse
 from app.schemas.career import CareerWatchResponse
 from app.schemas.chief import ChiefBriefResponse
+from app.schemas.history import TodayInMarineHistoryItem
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
+from app.schemas.reading_state import ReadingProgressRecord
 from app.schemas.source_updates import DocumentationUpdateCandidate
 
 
@@ -38,6 +40,48 @@ class AnalystBrief(BaseModel):
     follow_up_checks: list[str] = Field(default_factory=list)
 
 
+class DashboardDocumentDetail(BaseModel):
+    context_id: str
+    filename: str
+    document_type: str
+    contains_pii: bool
+    review_date: str | None = None
+    expiration_date: str | None = None
+    text_preview: str
+
+
+class DashboardTemplateReference(BaseModel):
+    template_id: str
+    template_name: str
+    template_type: str
+    template_source: str
+    description: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    preferred_format: str | None = None
+    reusable_headings: list[str] = Field(default_factory=list)
+    reusable_guidance: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class DashboardReadingBook(BaseModel):
+    slug: str
+    title: str
+    author: str
+    categories: list[str] = Field(default_factory=list)
+    open_source_available: bool = False
+    summary: str
+    key_themes: list[str] = Field(default_factory=list)
+    source_urls: list[str] = Field(default_factory=list)
+    progress: ReadingProgressRecord | None = None
+
+
+class DashboardTickerItem(BaseModel):
+    title: str
+    status: str
+    summary: str
+    source_url: str | None = None
+
+
 class DashboardWorkspaceResponse(BaseModel):
     mode: str
     user_key: str | None = None
@@ -51,4 +95,9 @@ class DashboardWorkspaceResponse(BaseModel):
     tracked_actions: list[ActionRecord] = Field(default_factory=list)
     tracked_opportunities: list[OpportunityRecord] = Field(default_factory=list)
     documentation_updates: list[DocumentationUpdateCandidate] = Field(default_factory=list)
+    document_details: list[DashboardDocumentDetail] = Field(default_factory=list)
+    template_library: list[DashboardTemplateReference] = Field(default_factory=list)
+    maradmin_ticker: list[DashboardTickerItem] = Field(default_factory=list)
+    today_in_history: list[TodayInMarineHistoryItem] = Field(default_factory=list)
+    reading_books: list[DashboardReadingBook] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

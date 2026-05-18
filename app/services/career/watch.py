@@ -6,10 +6,12 @@ from app.core.security import DEFAULT_WARNINGS
 from app.schemas.career import CareerWatchItem, CareerWatchResponse
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
+from app.schemas.reading_state import ReadingProgressRecord, ReadingProgressStatus
 from app.schemas.session import UserSessionHandoff
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
+from app.services.reading.state_store import ReadingProgressStore
 from app.services.session.handoff_store import SessionHandoffStore
 
 
@@ -20,16 +22,19 @@ class CareerWatchService:
         document_organizer: PersonalDocumentOrganizer,
         opportunity_tracker: OpportunityTracker,
         reading_catalog: ReadingListCatalogService,
+        reading_state_store: ReadingProgressStore | None = None,
     ) -> None:
         self.handoff_store = handoff_store
         self.document_organizer = document_organizer
         self.opportunity_tracker = opportunity_tracker
         self.reading_catalog = reading_catalog
+        self.reading_state_store = reading_state_store or ReadingProgressStore("reading_state")
 
     def build_watch(self, user_key: str) -> CareerWatchResponse:
         handoff = self.handoff_store.get(user_key)
         document_summary = self.document_organizer.list_documents()
         tracked_opportunities = list(self.opportunity_tracker.list())[:5]
+        reading_progress = self.reading_state_store.list(user_key).records
         watch_items = _sort_items(
             [
                 *_pme_items(handoff),
@@ -48,7 +53,7 @@ class CareerWatchService:
             watch_items=watch_items,
             tracked_opportunities=tracked_opportunities,
             document_summary=document_summary,
-            recommended_books=_recommended_books(self.reading_catalog, handoff),
+            recommended_books=_recommended_books(self.reading_catalog, handoff, reading_progress),
             recommended_courses=_recommended_courses(handoff),
             career_trends=handoff.career_trends if handoff is not None else [],
             warnings=_warnings(handoff),
@@ -191,7 +196,14 @@ def _course_items(handoff: UserSessionHandoff | None) -> list[CareerWatchItem]:
     ]
 
 
-def _recommended_books(catalog: ReadingListCatalogService, handoff: UserSessionHandoff | None) -> list[str]:
+def _recommended_books(
+    catalog: ReadingListCatalogService,
+    handoff: UserSessionHandoff | None,
+    reading_progress: list[ReadingProgressRecord],
+) -> list[str]:
+    progress_by_slug = {record.slug: record for record in reading_progress}
+    in_progress = [record for record in reading_progress if record.status == ReadingProgressStatus.in_progress]
+    suggestions: list[str] = [f"Continue reading: {record.title}" for record in in_progress[:2]]
     preferred_category = None
     if handoff is not None and handoff.mos:
         if handoff.mos.startswith("06"):
@@ -203,7 +215,14 @@ def _recommended_books(catalog: ReadingListCatalogService, handoff: UserSessionH
     books = catalog.list_books(category=preferred_category, open_source_only=True) if preferred_category else []
     if not books:
         books = catalog.list_books(open_source_only=True)
-    return [book.title for book in books[:3]]
+    for book in books:
+        progress = progress_by_slug.get(book.slug)
+        if progress is not None and progress.status == ReadingProgressStatus.completed:
+            continue
+        suggestions.append(book.title)
+        if len(suggestions) >= 3:
+            break
+    return _dedupe(suggestions)[:3]
 
 
 def _recommended_courses(handoff: UserSessionHandoff | None) -> list[str]:

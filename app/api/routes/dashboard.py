@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -11,9 +12,20 @@ from app.schemas.actions import ActionRecord, ActionStatus
 from app.schemas.admin import AdminReadinessResponse
 from app.schemas.career import CareerWatchResponse
 from app.schemas.chief import ChiefActionItem, ChiefBriefRequest, ChiefBriefResponse
-from app.schemas.dashboard import AnalystBrief, DailyOpsBrief, DailyOpsEntry, DashboardWorkspaceResponse
+from app.schemas.dashboard import (
+    AnalystBrief,
+    DailyOpsBrief,
+    DailyOpsEntry,
+    DashboardDocumentDetail,
+    DashboardReadingBook,
+    DashboardTemplateReference,
+    DashboardTickerItem,
+    DashboardWorkspaceResponse,
+)
+from app.schemas.history import TodayInMarineHistoryItem
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
+from app.schemas.reading_state import ReadingProgressRecord
 from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateReviewStatus
 from app.services.actions.tracker import ActionTracker
 from app.services.admin.readiness import AdminReadinessService
@@ -23,11 +35,15 @@ from app.services.chief.orchestrator import ChiefAideOrchestrator
 from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.demo.scenarios import DEMO_USER_KEY, build_demo_career_watch, build_demo_chief_brief
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
+from app.services.history.today_in_history import TodayInMarineHistoryService
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
+from app.services.reading.state_store import ReadingProgressStore
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
+from app.services.templates.product_template_repository import ProductTemplateRepository
+from app.services.templates.system_template_catalog import SystemTemplateCatalog
 
 router = APIRouter(tags=["dashboard"])
 _DASHBOARD_HTML = Path(__file__).resolve().parents[2] / "static" / "dashboard" / "index.html"
@@ -85,6 +101,7 @@ def get_career_service(
         document_organizer=PersonalDocumentOrganizer(store),
         opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
         reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
+        reading_state_store=ReadingProgressStore(settings.reading_state_storage_dir),
     )
 
 
@@ -103,6 +120,24 @@ def get_action_tracker() -> Iterator[ActionTracker]:
     yield ActionTracker(f"{settings.local_context_storage_dir}/actions")
 
 
+def get_template_repository() -> Iterator[ProductTemplateRepository]:
+    settings = get_settings()
+    yield ProductTemplateRepository(settings.product_template_storage_dir)
+
+
+def get_system_template_catalog() -> SystemTemplateCatalog:
+    return SystemTemplateCatalog.from_yaml(SEED_DIR / "system_templates.example.yaml")
+
+
+def get_reading_state_store() -> Iterator[ReadingProgressStore]:
+    settings = get_settings()
+    yield ReadingProgressStore(settings.reading_state_storage_dir)
+
+
+def get_history_service() -> TodayInMarineHistoryService:
+    return TodayInMarineHistoryService.from_yaml(SEED_DIR / "usmc_history_on_this_day.example.yaml")
+
+
 @router.get(
     "/dashboard/data/{user_key}",
     response_model=DashboardWorkspaceResponse,
@@ -118,6 +153,10 @@ def get_dashboard_data(
     action_tracker: Annotated[ActionTracker, Depends(get_action_tracker)],
     opportunity_tracker: Annotated[OpportunityTracker, Depends(get_opportunity_tracker)],
     update_store: Annotated[DocumentUpdateStore, Depends(get_update_store)],
+    template_repository: Annotated[ProductTemplateRepository, Depends(get_template_repository)],
+    system_template_catalog: Annotated[SystemTemplateCatalog, Depends(get_system_template_catalog)],
+    reading_state_store: Annotated[ReadingProgressStore, Depends(get_reading_state_store)],
+    history_service: Annotated[TodayInMarineHistoryService, Depends(get_history_service)],
 ) -> DashboardWorkspaceResponse:
     chief_brief = orchestrator.build_brief(ChiefBriefRequest(user_key=user_key))
     admin_readiness = admin_service.build(user_key)
@@ -128,6 +167,7 @@ def get_dashboard_data(
     documentation_updates = [
         item for item in update_store.list() if item.review_status != UpdateReviewStatus.ignored
     ][:8]
+    reading_progress = {item.slug: item for item in reading_state_store.list(user_key).records}
     return _workspace_response(
         mode="personal",
         user_key=user_key,
@@ -138,6 +178,17 @@ def get_dashboard_data(
         tracked_actions=tracked_actions,
         tracked_opportunities=tracked_opportunities,
         documentation_updates=documentation_updates,
+        document_details=_document_details(organizer),
+        template_library=_template_library(
+            system_template_catalog=system_template_catalog,
+            template_repository=template_repository,
+        ),
+        maradmin_ticker=_maradmin_ticker(documentation_updates),
+        today_in_history=history_service.get_for_date(datetime.now(UTC).date()),
+        reading_books=_reading_books(
+            reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
+            reading_progress=reading_progress,
+        ),
     )
 
 
@@ -160,6 +211,19 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
         tracked_actions=[],
         tracked_opportunities=career_watch.tracked_opportunities,
         documentation_updates=chief_brief.documentation_updates,
+        document_details=[],
+        template_library=_template_library(
+            system_template_catalog=SystemTemplateCatalog.from_yaml(SEED_DIR / "system_templates.example.yaml"),
+            template_repository=None,
+        ),
+        maradmin_ticker=_maradmin_ticker(chief_brief.documentation_updates),
+        today_in_history=TodayInMarineHistoryService.from_yaml(
+            SEED_DIR / "usmc_history_on_this_day.example.yaml"
+        ).get_for_date(datetime.now(UTC).date()),
+        reading_books=_reading_books(
+            reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
+            reading_progress={},
+        ),
     )
 
 
@@ -174,6 +238,11 @@ def _workspace_response(
     tracked_actions: list[ActionRecord],
     tracked_opportunities: list[OpportunityRecord],
     documentation_updates: list[DocumentationUpdateCandidate],
+    document_details: list[DashboardDocumentDetail],
+    template_library: list[DashboardTemplateReference],
+    maradmin_ticker: list[DashboardTickerItem],
+    today_in_history: list[TodayInMarineHistoryItem],
+    reading_books: list[DashboardReadingBook],
 ) -> DashboardWorkspaceResponse:
     summary_lines = [
         *chief_brief.next_drill_readiness.summary[:2],
@@ -214,8 +283,110 @@ def _workspace_response(
         tracked_actions=tracked_actions,
         tracked_opportunities=tracked_opportunities,
         documentation_updates=documentation_updates,
+        document_details=document_details,
+        template_library=template_library,
+        maradmin_ticker=maradmin_ticker,
+        today_in_history=today_in_history,
+        reading_books=reading_books,
         warnings=warnings,
     )
+
+
+def _document_details(organizer: PersonalDocumentOrganizer) -> list[DashboardDocumentDetail]:
+    return [
+        DashboardDocumentDetail(
+            context_id=detail.record.context_id,
+            filename=detail.record.filename,
+            document_type=detail.record.document_type.value,
+            contains_pii=detail.record.contains_pii,
+            review_date=detail.record.review_date.isoformat() if detail.record.review_date else None,
+            expiration_date=detail.record.expiration_date.isoformat() if detail.record.expiration_date else None,
+            text_preview=detail.text_preview,
+        )
+        for detail in (
+            organizer.get_document(record.context_id)
+            for record in organizer.list_documents().records[:8]
+        )
+        if detail is not None
+    ]
+
+
+def _template_library(
+    *,
+    system_template_catalog: SystemTemplateCatalog,
+    template_repository: ProductTemplateRepository | None,
+) -> list[DashboardTemplateReference]:
+    system_templates = [
+        DashboardTemplateReference(
+            template_id=record.template_id,
+            template_name=record.template_name,
+            template_type=record.template_type.value,
+            template_source="system",
+            description=record.description,
+            tags=record.tags,
+            preferred_format=record.preferred_format,
+            reusable_headings=record.reusable_headings,
+            reusable_guidance=record.reusable_guidance,
+            warnings=record.warnings,
+        )
+        for record in system_template_catalog.list()
+    ]
+    local_templates: list[DashboardTemplateReference] = []
+    if template_repository is not None:
+        local_templates = [
+            DashboardTemplateReference(
+                template_id=record.template_id,
+                template_name=record.template_name,
+                template_type=record.template_type.value,
+                template_source="user",
+                description=record.description,
+                tags=record.tags,
+                preferred_format=record.preferred_format,
+                reusable_headings=record.reusable_headings,
+                reusable_guidance=record.reusable_guidance,
+                warnings=record.warnings,
+            )
+            for record in template_repository.list()[:10]
+        ]
+    return [*local_templates, *system_templates]
+
+
+def _maradmin_ticker(updates: list[DocumentationUpdateCandidate]) -> list[DashboardTickerItem]:
+    return [
+        DashboardTickerItem(
+            title=item.tracked_title,
+            status=item.review_status.value,
+            summary=(
+                ", ".join(item.change_signals[:3])
+                or ", ".join(item.matched_terms[:3])
+                or "Potential source change needs review."
+            )[:220],
+            source_url=item.trigger_url,
+        )
+        for item in updates[:8]
+    ]
+
+
+def _reading_books(
+    *,
+    reading_catalog: ReadingListCatalogService,
+    reading_progress: dict[str, ReadingProgressRecord],
+) -> list[DashboardReadingBook]:
+    books = reading_catalog.list_books()[:12]
+    return [
+        DashboardReadingBook(
+            slug=book.slug,
+            title=book.title,
+            author=book.author,
+            categories=book.categories,
+            open_source_available=book.open_source_available,
+            summary=book.summary,
+            key_themes=book.key_themes,
+            source_urls=book.source_urls,
+            progress=reading_progress.get(book.slug),
+        )
+        for book in books
+    ]
 
 
 def _admin_from_demo_brief(chief_brief: ChiefBriefResponse) -> AdminReadinessResponse:

@@ -9,41 +9,42 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <div>
-          <p class="eyebrow">UNCLASSIFIED advisory workspace</p>
-          <h1>SMCR Staff AI</h1>
-          <p class="subhead">
-            One local operations board for drill, admin, career maintenance, and drafting support.
-          </p>
+        <div class="title-stack">
+          <p class="service-mark">UNCLASSIFIED advisory workspace</p>
+          <h1>SMCR Staff AI Dashboard</h1>
+          <p class="subhead">Readiness, continuity, staff products, and local context in one working board.</p>
         </div>
-        <div class="status-stack">
-          <span class="status-pill" id="mode-badge">Demo mode</span>
-          <span class="status-pill muted">Human review required</span>
+        <div class="status-cluster">
+          <span class="status-chip" id="mode-badge">Demo mode</span>
+          <span class="status-chip muted">Human review required</span>
         </div>
       </header>
 
       <main class="layout">
-        <section class="panel focus-panel" data-section-group="global">
+        <section class="panel command-panel" data-section-group="global">
           <div class="panel-header">
-            <h2>What matters now</h2>
-            <p>Use the lanes below to move between briefing, watchstanding, drafting, and workspace setup.</p>
+            <div>
+              <h2>Command Post</h2>
+              <p>Move between readiness, watchstanding, local references, and drafting support.</p>
+            </div>
           </div>
-          <div class="focus-toolbar" role="tablist" aria-label="Dashboard lanes">
+          <div class="command-toolbar" role="tablist" aria-label="Dashboard lanes">
             <button type="button" class="lane-button active" data-lane="overview">Overview</button>
             <button type="button" class="lane-button" data-lane="watch">Watch floor</button>
+            <button type="button" class="lane-button" data-lane="library">Library</button>
             <button type="button" class="lane-button" data-lane="draft">Drafting</button>
             <button type="button" class="lane-button" data-lane="configure">Workspace</button>
             <button type="button" class="lane-button secondary" data-lane="all">Show all</button>
           </div>
-          <div class="focus-grid">
-            <article class="focus-card">
-              <span class="callout">Mission focus</span>
+          <div class="command-grid">
+            <section class="strip">
+              <span class="strip-label">Mission focus</span>
               <ul id="workspace-summary" class="bullet-list"></ul>
-            </article>
-            <article class="focus-card">
-              <span class="callout">Guardrails</span>
+            </section>
+            <section class="strip">
+              <span class="strip-label">Guardrails</span>
               <ul id="workspace-warnings" class="bullet-list"></ul>
-            </article>
+            </section>
           </div>
         </section>
 
@@ -72,76 +73,77 @@
         </section>
 
         <section class="summary-grid" data-section-group="overview">
-          <article class="panel readiness-panel full-span-panel">
+          <article class="panel readiness-panel full-span">
             <div class="panel-header">
               <h2>Next Drill Readiness</h2>
-              <p>The front door for what needs attention before the next drill cycle really starts moving.</p>
+              <p>The front door for what needs attention before the next drill cycle starts to slip.</p>
             </div>
-            <div class="readiness-hero">
-              <div class="readiness-posture-card">
-                <span class="callout">Readiness posture</span>
+            <div class="readiness-shell">
+              <section class="readiness-primary">
+                <span class="strip-label">Readiness posture</span>
                 <h3 id="readiness-posture">No readiness posture loaded yet.</h3>
                 <p id="readiness-anchor" class="helper-text">Load the workspace to anchor this to the next drill.</p>
-                <div class="readiness-decisive">
-                  <span class="callout">Decisive action now</span>
-                  <p id="readiness-decisive-action" class="readiness-decisive-text">
-                    Load the workspace to surface the one move that matters most.
-                  </p>
+                <div class="decisive-box">
+                  <span class="strip-label">Decisive action now</span>
+                  <p id="readiness-decisive-action">Load the workspace to surface the one move that matters most.</p>
                 </div>
-              </div>
-              <div class="readiness-support-grid">
-                <section class="brief-section">
+              </section>
+              <section class="readiness-columns">
+                <div class="brief-block">
                   <h3>This week focus</h3>
                   <ul id="readiness-focus" class="bullet-list"></ul>
-                </section>
-                <section class="brief-section">
+                </div>
+                <div class="brief-block">
                   <h3>Immediate must-do</h3>
-                  <div id="readiness-must-do" class="stack-list empty-state">No immediate pre-drill actions yet.</div>
-                </section>
-                <section class="brief-section">
+                  <div id="readiness-must-do" class="row-stack empty-state">No immediate pre-drill actions yet.</div>
+                </div>
+                <div class="brief-block">
                   <h3>Likely friction</h3>
                   <ul id="readiness-friction" class="bullet-list"></ul>
-                </section>
-                <section class="brief-section">
+                </div>
+                <div class="brief-block">
                   <h3>Missing foundation</h3>
                   <ul id="readiness-foundation" class="bullet-list"></ul>
-                </section>
-                <section class="brief-section">
+                </div>
+                <div class="brief-block">
                   <h3>Standing rhythm</h3>
                   <ul id="readiness-rhythm" class="bullet-list"></ul>
-                </section>
-              </div>
+                </div>
+              </section>
             </div>
             <div class="readiness-footer">
-              <section class="brief-section">
+              <div class="brief-block">
                 <h3>Summary</h3>
                 <ul id="readiness-summary" class="bullet-list"></ul>
-              </section>
-              <section class="brief-section">
+              </div>
+              <div class="brief-block">
                 <h3>Ready if...</h3>
                 <ul id="readiness-ready-if" class="bullet-list"></ul>
-              </section>
-              <section class="brief-section">
-                <h3>Recommended follow-on workflows</h3>
+              </div>
+              <div class="brief-block">
+                <h3>Follow-on workflows</h3>
                 <ul id="readiness-workflows" class="bullet-list"></ul>
-              </section>
+              </div>
             </div>
           </article>
-          <article class="panel metric-panel">
+
+          <article class="panel stat-panel">
             <div class="panel-header compact">
               <h2>Chief brief</h2>
               <span id="chief-count" class="metric">0</span>
             </div>
             <ul id="chief-summary" class="bullet-list"></ul>
           </article>
-          <article class="panel metric-panel">
+
+          <article class="panel stat-panel">
             <div class="panel-header compact">
               <h2>Admin readiness</h2>
               <span id="admin-count" class="metric">0</span>
             </div>
             <ul id="admin-summary" class="bullet-list"></ul>
           </article>
-          <article class="panel metric-panel">
+
+          <article class="panel stat-panel">
             <div class="panel-header compact">
               <h2>Career watch</h2>
               <span id="career-count" class="metric">0</span>
@@ -153,39 +155,57 @@
         <section class="two-column" data-section-group="overview">
           <article class="panel">
             <div class="panel-header">
+              <h2>MARADMIN / Source Watch</h2>
+              <p>Source-change ticker for items that may alter local products or assumptions.</p>
+            </div>
+            <div id="maradmin-ticker" class="row-stack empty-state">No source-watch items loaded yet.</div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Today in Marine Corps History</h2>
+              <p>Short heritage context that can feed PME, ceremony framing, and command climate conversations.</p>
+            </div>
+            <div id="history-feed" class="row-stack empty-state">No history entry is loaded for today.</div>
+          </article>
+        </section>
+
+        <section class="two-column" data-section-group="overview">
+          <article class="panel">
+            <div class="panel-header">
               <h2>Daily Brief</h2>
               <p>Operational triage shaped around must-do work, blockers, leverage actions, and follow-ups.</p>
             </div>
             <div class="brief-grid">
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Executive snapshot</h3>
                 <ul id="daily-executive" class="bullet-list"></ul>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Must-do</h3>
-                <div id="daily-must-do" class="stack-list empty-state">No must-do items yet.</div>
+                <div id="daily-must-do" class="row-stack empty-state">No must-do items yet.</div>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Should-do</h3>
-                <div id="daily-should-do" class="stack-list empty-state">No should-do items yet.</div>
+                <div id="daily-should-do" class="row-stack empty-state">No should-do items yet.</div>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Can-defer</h3>
-                <div id="daily-can-defer" class="stack-list empty-state">No defer candidates yet.</div>
+                <div id="daily-can-defer" class="row-stack empty-state">No defer candidates yet.</div>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Waiting-on</h3>
                 <ul id="daily-waiting" class="bullet-list"></ul>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Blockers</h3>
                 <ul id="daily-blockers" class="bullet-list"></ul>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Top leverage actions</h3>
                 <ul id="daily-leverage" class="bullet-list"></ul>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Prep and follow-up</h3>
                 <ul id="daily-followups" class="bullet-list"></ul>
               </section>
@@ -198,31 +218,31 @@
               <p>Data quality first, then signal health, anomalies, assumptions, and follow-up checks.</p>
             </div>
             <div class="brief-grid">
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Executive summary</h3>
                 <ul id="analyst-executive" class="bullet-list"></ul>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Data quality notes</h3>
                 <ul id="analyst-data-quality" class="bullet-list"></ul>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>KPI summary</h3>
                 <ul id="analyst-kpis" class="bullet-list"></ul>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Anomalies</h3>
                 <ul id="analyst-anomalies" class="bullet-list"></ul>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Likely causes</h3>
                 <ul id="analyst-causes" class="bullet-list"></ul>
               </section>
-              <section class="brief-section">
+              <section class="brief-block">
                 <h3>Assumptions</h3>
                 <ul id="analyst-assumptions" class="bullet-list"></ul>
               </section>
-              <section class="brief-section full-span">
+              <section class="brief-block full-span">
                 <h3>Follow-up checks</h3>
                 <ul id="analyst-followups" class="bullet-list"></ul>
               </section>
@@ -236,7 +256,7 @@
               <h2>Priority queue</h2>
               <p>What matters now from the Chief/Aide and admin digest.</p>
             </div>
-            <div id="priority-queue" class="stack-list empty-state">Load the workspace to see current priorities.</div>
+            <div id="priority-queue" class="row-stack empty-state">Load the workspace to see current priorities.</div>
           </article>
 
           <article class="panel">
@@ -244,33 +264,61 @@
               <h2>Local document watch</h2>
               <p>Quick inventory of personal support docs that live only on this machine.</p>
             </div>
-            <div id="document-watch" class="stack-list empty-state">Personal mode can show RQS, BIO, orders, PME, and other local references.</div>
+            <div id="document-watch" class="row-stack empty-state">
+              Personal mode can show RQS, BIO, orders, PME, and other local references.
+            </div>
           </article>
         </section>
 
-        <section class="two-column is-hidden" data-section-group="watch">
+        <section class="three-column is-hidden" data-section-group="watch">
           <article class="panel">
             <div class="panel-header">
               <h2>Action Tracker</h2>
-              <p>Tracked POAM items with owner, status, and suspense for the daily working picture.</p>
+              <p>Tracked POAM items with owner, status, and suspense.</p>
             </div>
-            <div id="action-watch" class="stack-list empty-state">Tracked action items will appear here.</div>
+            <div id="action-watch" class="row-stack empty-state">Tracked action items will appear here.</div>
           </article>
 
           <article class="panel">
             <div class="panel-header">
               <h2>Opportunity watch</h2>
-              <p>Tracked ADOS and SMCR opportunities surfaced from the local career stack.</p>
+              <p>Tracked ADOS and SMCR opportunities from the local career stack.</p>
             </div>
-            <div id="opportunity-watch" class="stack-list empty-state">Personal mode can show tracked opportunities here.</div>
+            <div id="opportunity-watch" class="row-stack empty-state">Personal mode can show tracked opportunities here.</div>
           </article>
 
           <article class="panel">
             <div class="panel-header">
               <h2>Source updates</h2>
-              <p>Potential doctrine or admin-source changes that still need review.</p>
+              <p>Potential doctrine or admin-source changes still waiting for human review.</p>
             </div>
-            <div id="source-updates" class="stack-list empty-state">Potential source updates will appear here after scans are run.</div>
+            <div id="source-updates" class="row-stack empty-state">Potential source updates will appear here after scans are run.</div>
+          </article>
+        </section>
+
+        <section class="library-grid is-hidden" data-section-group="library">
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Personal files</h2>
+              <p>Stored local references with quick preview for orders, BIO, RQS, receipts, and support docs.</p>
+            </div>
+            <div id="document-library" class="document-library empty-state">No local document previews loaded yet.</div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Template library</h2>
+              <p>User-stored and system templates for FRAGOs, CPBs, briefs, and reusable staff structure.</p>
+            </div>
+            <div id="template-library" class="row-stack empty-state">No templates are loaded yet.</div>
+          </article>
+
+          <article class="panel full-span">
+            <div class="panel-header">
+              <h2>Commandant's Reading List</h2>
+              <p>Track what you’ve read, keep notes, and let future recommendations key off your reading history.</p>
+            </div>
+            <div id="reading-library" class="reading-grid empty-state">No reading-list entries loaded yet.</div>
           </article>
         </section>
 

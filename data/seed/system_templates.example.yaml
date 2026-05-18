@@ -1,0 +1,46 @@
+templates:
+  - template_id: "sys-cub-brief"
+    template_name: "System CUB Brief"
+    template_type: "cub_brief"
+    description: "A concise current-operations update format for commander and staff battle rhythm."
+    tags: ["system", "brief", "ops"]
+    audience_hint: "Commander, XO, and primary staff"
+    preferred_format: "briefing"
+    reusable_headings: ["Current situation", "Priority issues", "Decision points", "Way ahead"]
+    reusable_guidance:
+      - "Keep each slide or section decision-oriented rather than status-heavy."
+      - "Use only the minimum context needed to frame commander action."
+    example_excerpt: "Current situation / priority issues / decisions / way ahead."
+    local_only: false
+    warnings:
+      - "System template only. Adapt to local unit battle rhythm."
+  - template_id: "sys-cpb"
+    template_name: "System CPB"
+    template_type: "cpb"
+    description: "Commander's planning/briefing rhythm template for near-term operations and support synchronization."
+    tags: ["system", "cpb", "planning"]
+    audience_hint: "Commander and principal staff"
+    preferred_format: "briefing"
+    reusable_headings: ["Mission", "Intent", "Decisions", "Supportability", "Risk", "Next 72 hours"]
+    reusable_guidance:
+      - "Lead with decisions, not staff updates."
+      - "Make support shortfalls and friction visible early."
+    example_excerpt: "Mission / intent / decisions / supportability / risk / next 72 hours."
+    local_only: false
+    warnings:
+      - "System template only. Validate against current commander preference."
+  - template_id: "sys-frago"
+    template_name: "System FRAGO"
+    template_type: "frago"
+    description: "A disciplined FRAGO skeleton for training-safe reserve planning adjustments."
+    tags: ["system", "frago", "orders"]
+    audience_hint: "Subordinate leaders and staff"
+    preferred_format: "naval_letter"
+    reusable_headings: ["Situation", "Mission", "Execution", "Admin and logistics", "Command and signal"]
+    reusable_guidance:
+      - "Only include changes and critical directed tasks."
+      - "Preserve command relationships and support relationships explicitly."
+    example_excerpt: "Situation / mission / execution / admin and logistics / command and signal."
+    local_only: false
+    warnings:
+      - "System template only. Review for local order style and routing."

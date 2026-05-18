@@ -25,6 +25,7 @@ from app.api.routes import (
     privacy,
     product_templates,
     reading,
+    reading_state,
     sharing,
     social,
     staff,
@@ -69,6 +70,7 @@ def create_app() -> FastAPI:
     app.include_router(product_templates.router)
     app.include_router(privacy.router)
     app.include_router(reading.router)
+    app.include_router(reading_state.router)
     app.include_router(social.router)
     app.include_router(staff.router)
     app.include_router(staff_products.router)
