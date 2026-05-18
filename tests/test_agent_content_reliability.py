@@ -3,8 +3,6 @@ import pytest
 from app.services.agents.base import AgentContext
 from app.services.agents.registry import AgentRegistry
 
-PROTOTYPE_AGENT_IDS = {"mos-commo", "mos-civil-affairs"}
-
 DEFAULT_PROMPTS: dict[str, str] = {
     "chief-of-staff-aide": "Help me triage a reserve drill weekend and upcoming admin suspense.",
     "s1-admin-chief": "Help me organize DTS, orders, and FitRep due-outs.",
@@ -67,9 +65,8 @@ def test_each_registered_agent_returns_a_usable_response(agent_id: str) -> None:
     assert response.answer.strip()
     assert response.human_review_required is True
     assert response.follow_up_questions
-    if agent_id not in PROTOTYPE_AGENT_IDS:
-        assert "placeholder response" not in response.answer.lower()
-    if agent.metadata.citation_required and agent_id not in PROTOTYPE_AGENT_IDS:
+    assert "placeholder response" not in response.answer.lower()
+    if agent.metadata.citation_required:
         assert response.structured_citations or response.source_trust
 
 

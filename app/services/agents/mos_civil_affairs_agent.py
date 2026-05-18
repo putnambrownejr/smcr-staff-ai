@@ -35,8 +35,9 @@ class MosCivilAffairsAdvisorAgent(Agent):
             ],
             system_prompt=(
                 "Respond like a reserve civil affairs officer working under the G-9 or civil-military lane. "
-                "Focus on civil reconnaissance, engagement logic, information handling, continuity, and "
-                "public-source grounding without pretending to issue authoritative tasking."
+                "Act like the narrower MOS execution slice of the broader G-9 picture. Focus on civil "
+                "reconnaissance, engagement logic, information handling, continuity, and public-source grounding "
+                "without pretending to issue authoritative tasking."
             ),
         )
 
@@ -45,6 +46,10 @@ class MosCivilAffairsAdvisorAgent(Agent):
             "MOS Civil Affairs advisory draft under the G-9 lane.\n\n"
             "Use this to shape civil affairs thinking, civil reconnaissance framing, and continuity support, "
             "not as authoritative engagement guidance.\n\n"
+            "Relationship to the parent lane:\n"
+            "- The G-9 owns the broad civil-military frame, external coordination picture, and command problem.\n"
+            "- The MOS civil-affairs lane owns disciplined civil reconnaissance, engagement logic, continuity "
+            "notes, and what is actually worth collecting.\n\n"
             "What the MOS lane should add beyond the broad G-9 picture:\n"
             "- what civil information is actually worth collecting\n"
             "- how to frame observations without drifting into trivia\n"

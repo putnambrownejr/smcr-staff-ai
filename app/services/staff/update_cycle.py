@@ -3,12 +3,15 @@ from app.schemas.staff_products import StaffProductDraftRequest, StaffProductTyp
 from app.schemas.staff_updates import (
     CpbResponse,
     CubResponse,
+    MissionAnalysisResponse,
+    PlanningCellResponse,
     RunningEstimateItem,
     RunningEstimateRequest,
     RunningEstimateResponse,
     StaffSectionUpdate,
     StaffUpdateCycleResponse,
 )
+from app.services.planning.approach import assess_planning_approach
 from app.services.staff_products.builder import StaffProductBuilder
 
 
@@ -24,6 +27,55 @@ class StaffUpdateCycleBuilder:
             supported_unit=request.supported_unit,
             running_estimates=estimates,
             command_summary=_command_summary(request, estimates),
+            warnings=warnings,
+        )
+
+    def build_mission_analysis(self, request: RunningEstimateRequest) -> MissionAnalysisResponse:
+        warnings = _warnings_for(request)
+        assumptions = _unique_ordered(
+            [item for update in request.section_updates for item in update.assumptions]
+            + [
+                "Subordinate and adjacent sections can execute their named due-outs inside the stated planning window."
+            ]
+        )
+        specified_tasks = _specified_tasks(request)
+        implied_tasks = _implied_tasks(request)
+        essential_tasks = _unique_ordered(
+            [
+                *specified_tasks[:3],
+                *[
+                    item for item in implied_tasks
+                    if "publish" in item.lower() or "confirm" in item.lower() or "synchronize" in item.lower()
+                ][:3],
+            ]
+        )
+        information_requirements = _information_requirements(request)
+        staff_estimate_requirements = _staff_estimate_requirements(request)
+        commander_decisions = _unique_ordered(
+            [item for update in request.section_updates for item in update.decisions_needed]
+        )
+        command_frame = _unique_ordered(
+            [
+                f"Purpose: {request.mission_or_training_goal}",
+                *([f"Time available: {request.time_available}"] if request.time_available else []),
+                *([f"Planning horizon: {request.timeframe}"] if request.timeframe else []),
+                *[f"Commander priority: {item}" for item in request.commander_priorities[:4]],
+                *[f"Higher guidance: {item}" for item in request.higher_guidance[:3]],
+            ]
+        )
+        return MissionAnalysisResponse(
+            title=f"Mission analysis: {request.title}",
+            supported_unit=request.supported_unit,
+            mission_statement=_mission_statement(request),
+            command_frame=command_frame,
+            specified_tasks=specified_tasks,
+            implied_tasks=implied_tasks,
+            essential_tasks=essential_tasks,
+            constraints=_unique_ordered(request.constraints),
+            assumptions=assumptions,
+            information_requirements=information_requirements,
+            staff_estimate_requirements=staff_estimate_requirements,
+            commander_decisions=commander_decisions,
             warnings=warnings,
         )
 
@@ -114,6 +166,56 @@ class StaffUpdateCycleBuilder:
             cub=cub,
             cpb=cpb,
             warnings=running_estimate.warnings,
+        )
+
+    def build_planning_cell(self, request: RunningEstimateRequest) -> PlanningCellResponse:
+        mission_analysis = self.build_mission_analysis(request)
+        update_cycle = self.build_update_cycle(request)
+        planning_approach = assess_planning_approach(
+            title=request.title,
+            mission_or_training_goal=request.mission_or_training_goal,
+            event_type=request.event_type,
+            timeframe=request.time_available or request.timeframe,
+            constraints=request.constraints,
+            higher_guidance=request.higher_guidance,
+            coordinating_sections=request.coordinating_sections,
+            support_requirements=request.support_requirements,
+            partner_types=request.partner_types,
+            civil_considerations=request.civil_considerations,
+            subordinate_unit_count=0,
+            source_items_present=False,
+            formal_event=False,
+            raw_guidance_text=None,
+        )
+        assumption_log = mission_analysis.assumptions
+        commander_decision_log = mission_analysis.commander_decisions
+        due_out_board = update_cycle.cub.due_outs
+        red_team_focus = _unique_ordered(
+            [
+                *[f"Challenge assumption: {item}" for item in assumption_log[:4]],
+                *[f"Stress decision point: {item}" for item in commander_decision_log[:4]],
+                *[f"Probe friction: {item}" for item in update_cycle.cub.cross_staff_friction[:4]],
+            ]
+        )
+        next_opt_actions = _unique_ordered(
+            [
+                "Restate the mission and confirm the commander's planning priority before sliding into product work.",
+                "Keep one visible assumption log, one visible decision log, and one due-out board for the staff.",
+                *[f"Get a section estimate from: {item}" for item in mission_analysis.staff_estimate_requirements[:4]],
+                "Run a red-team check before the commander brief if assumptions or branches are still soft.",
+            ]
+        )
+        return PlanningCellResponse(
+            title=f"Planning cell package: {request.title}",
+            planning_approach=planning_approach,
+            mission_analysis=mission_analysis,
+            update_cycle=update_cycle,
+            assumption_log=assumption_log,
+            commander_decision_log=commander_decision_log,
+            due_out_board=due_out_board,
+            red_team_focus=red_team_focus,
+            next_opt_actions=next_opt_actions,
+            warnings=mission_analysis.warnings,
         )
 
 
@@ -238,7 +340,10 @@ def _warnings_for(request: RunningEstimateRequest) -> list[str]:
             request.title,
             request.supported_unit,
             request.mission_or_training_goal,
+            request.event_type,
+            request.time_available or "",
             *request.higher_guidance,
+            *request.constraints,
             *request.commander_priorities,
             *[update.summary for update in request.section_updates],
         ]
@@ -265,3 +370,60 @@ def _unique_ordered(items: list[str]) -> list[str]:
         seen.add(item)
         ordered.append(item)
     return ordered
+
+
+def _mission_statement(request: RunningEstimateRequest) -> str:
+    supported = request.supported_unit
+    purpose = request.mission_or_training_goal.rstrip(".")
+    return (
+        f"{supported} conducts planning for {request.title} in order to {purpose.lower()} "
+        "while preserving supportability, standards, and an assessable output."
+    )
+
+
+def _specified_tasks(request: RunningEstimateRequest) -> list[str]:
+    tasks = []
+    for item in request.higher_guidance:
+        tasks.append(item)
+    for item in request.commander_priorities[:2]:
+        tasks.append(f"Protect this commander priority: {item}")
+    if request.met_tasks:
+        tasks.extend(f"Keep this MET-aligned task visible: {item}" for item in request.met_tasks[:2])
+    if not tasks:
+        tasks.append("Clarify the supported event and the commander's required output.")
+    return _unique_ordered(tasks)
+
+
+def _implied_tasks(request: RunningEstimateRequest) -> list[str]:
+    tasks = [
+        "Publish a shared mission-analysis frame before the staff starts polishing products.",
+        "Name section owners, due-outs, and adjacent-section asks before the next sync.",
+    ]
+    if request.coordinating_sections:
+        tasks.extend(f"Pull a usable estimate from {section}." for section in request.coordinating_sections[:5])
+    if request.support_requirements:
+        tasks.extend(f"Confirm support requirement: {item}" for item in request.support_requirements[:4])
+    if request.section_updates:
+        tasks.append("Capture what changed since the last update instead of re-briefing stable detail.")
+    return _unique_ordered(tasks)
+
+
+def _information_requirements(request: RunningEstimateRequest) -> list[str]:
+    items = [
+        "What assumption, if wrong, will break the concept first?",
+        "What support or timing fact still needs confirmation before execution?",
+    ]
+    if request.partner_types or request.civil_considerations:
+        items.append("What outside actor or civil consideration could change the plan?")
+    if request.metl_focus:
+        items.append("What standard or MET/METL lens is this plan supposed to sharpen?")
+    items.extend(f"Need from staff: {item}" for item in request.coordinating_sections[:4])
+    return _unique_ordered(items)
+
+
+def _staff_estimate_requirements(request: RunningEstimateRequest) -> list[str]:
+    requirements = [update.section for update in request.section_updates]
+    requirements.extend(request.coordinating_sections)
+    if "XO" not in {item.upper() for item in requirements}:
+        requirements.append("XO")
+    return _unique_ordered(requirements)

@@ -34,9 +34,10 @@ class MosCommoAdvisorAgent(Agent):
                 "live cyber-defense procedures in unapproved environments",
             ],
             system_prompt=(
-                "Respond like a reserve CommO working under the S-6. Focus on supportability, training "
-                "readiness, permissions, operator currency, rehearsals, reporting discipline, and what fails "
-                "first in a reserve comm plan. Stay generic on sensitive technical details."
+                "Respond like a reserve CommO/operator lane working under the S-6. Act like the narrower MOS "
+                "execution slice of the broader S-6 staff picture. Focus on supportability, training readiness, "
+                "permissions, operator currency, rehearsals, reporting discipline, and what fails first in a "
+                "reserve comm plan. Stay generic on sensitive technical details."
             ),
         )
 
@@ -45,6 +46,10 @@ class MosCommoAdvisorAgent(Agent):
             "MOS CommO advisory draft under the S-6 lane.\n\n"
             "Use this to shape communications planning, operator readiness, and training support, not as "
             "authoritative technical direction.\n\n"
+            "Relationship to the parent lane:\n"
+            "- The S-6 owns the broader C2, permissions, access, and support picture.\n"
+            "- The MOS CommO lane owns operator reality, section readiness, rehearsals, and what the section can "
+            "actually execute on drill weekend.\n\n"
             "What the MOS lane should add beyond the broad S-6 picture:\n"
             "- operator currency and who can actually execute the plan\n"
             "- equipment familiarity versus equipment ownership on paper\n"

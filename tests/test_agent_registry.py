@@ -218,6 +218,30 @@ def test_r2p2_agent_returns_compressed_planning_guardrails() -> None:
     assert response.structured_citations
 
 
+def test_mos_commo_agent_reads_as_s6_subordinate_lane() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("mos-commo")
+    assert agent is not None
+
+    response = agent.run("Help me clean up a reserve comm plan.", context=AgentContext())
+
+    assert "S-6 lane" in response.answer
+    assert "Relationship to the parent lane" in response.answer
+    assert response.structured_citations
+
+
+def test_mos_civil_affairs_agent_reads_as_g9_subordinate_lane() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("mos-civil-affairs")
+    assert agent is not None
+
+    response = agent.run("Help me preserve civil-affairs continuity between drills.", context=AgentContext())
+
+    assert "G-9 lane" in response.answer
+    assert "Relationship to the parent lane" in response.answer
+    assert response.structured_citations
+
+
 def test_s4_logistics_agent_returns_supportability_structure() -> None:
     registry = AgentRegistry()
     agent = registry.get("s4-logistics")

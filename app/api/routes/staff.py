@@ -26,6 +26,8 @@ from app.schemas.staff import (
 from app.schemas.staff_updates import (
     CpbResponse,
     CubResponse,
+    MissionAnalysisResponse,
+    PlanningCellResponse,
     RunningEstimateRequest,
     RunningEstimateResponse,
     StaffUpdateCycleResponse,
@@ -144,6 +146,11 @@ def build_running_estimate(request: RunningEstimateRequest) -> RunningEstimateRe
     return _update_cycle.build_running_estimate(request)
 
 
+@router.post("/mission-analysis", response_model=MissionAnalysisResponse)
+def build_mission_analysis(request: RunningEstimateRequest) -> MissionAnalysisResponse:
+    return _update_cycle.build_mission_analysis(request)
+
+
 @router.post("/cub", response_model=CubResponse)
 def build_cub(request: RunningEstimateRequest) -> CubResponse:
     return _update_cycle.build_cub(request)
@@ -157,3 +164,8 @@ def build_cpb(request: RunningEstimateRequest) -> CpbResponse:
 @router.post("/update-cycle", response_model=StaffUpdateCycleResponse)
 def build_staff_update_cycle(request: RunningEstimateRequest) -> StaffUpdateCycleResponse:
     return _update_cycle.build_update_cycle(request)
+
+
+@router.post("/planning-cell", response_model=PlanningCellResponse)
+def build_planning_cell(request: RunningEstimateRequest) -> PlanningCellResponse:
+    return _update_cycle.build_planning_cell(request)

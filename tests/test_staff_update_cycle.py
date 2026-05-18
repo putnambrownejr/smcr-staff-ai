@@ -97,3 +97,32 @@ def test_staff_update_cycle_links_running_estimate_cub_and_cpb() -> None:
     assert payload["running_estimate"]["running_estimates"]
     assert payload["cub"]["update_brief"]["product_type"] == "command_update_brief"
     assert payload["cpb"]["command_brief"]["product_type"] == "decision_brief"
+
+
+def test_staff_mission_analysis_builds_task_and_assumption_structure() -> None:
+    client = TestClient(app)
+
+    response = client.post("/staff/mission-analysis", json=_sample_request())
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mission_statement"]
+    assert payload["specified_tasks"]
+    assert payload["implied_tasks"]
+    assert payload["assumptions"]
+    assert payload["staff_estimate_requirements"]
+
+
+def test_staff_planning_cell_builds_linked_package() -> None:
+    client = TestClient(app)
+
+    response = client.post("/staff/planning-cell", json=_sample_request())
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["planning_approach"]["recommended_method"] in {"mcpp", "r2p2"}
+    assert payload["mission_analysis"]["mission_statement"]
+    assert payload["update_cycle"]["cub"]["update_brief"]["product_type"] == "command_update_brief"
+    assert payload["assumption_log"]
+    assert payload["commander_decision_log"]
+    assert payload["due_out_board"]

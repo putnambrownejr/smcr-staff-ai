@@ -27,6 +27,8 @@ Why:
 - `build_training_case_study`
 - `build_tdg`
 - `build_infantry_training_package`
+- `build_mission_analysis`
+- `build_planning_cell`
 - `build_staff_update_cycle`
 - `run_infantry_03xx_advisor`
 - `run_patrolling_refresher`
@@ -58,6 +60,14 @@ force decisions early, and expose reserve-specific friction before the real even
 `build_infantry_training_package` is the training-safe 03 familiarization lane. Use it when the user wants a
 modified urban or infantry-flavored package for non-03 Marines, especially around blanks, MOUT sites, scope
 control, leader rehearsals, and AAR discipline without pretending it is advanced CQB instruction.
+
+`build_mission_analysis` is the mission-analysis worksheet lane. Use it when the user needs specified tasks,
+implied tasks, essential tasks, assumptions, information requirements, and staff-estimate due-outs before the
+staff starts polishing products.
+
+`build_planning_cell` is the fuller planning-rhythm lane. Use it when the user wants mission analysis, a
+deliberate-vs-compressed planning recommendation, an assumption log, a commander decision log, due-outs,
+red-team focus, and the linked running estimate/CUB/CPB package together.
 
 `build_staff_update_cycle` is the recurring staff-rhythm lane. It takes section updates and turns them into
 a linked running estimate, CUB, and CPB so the user can move from “what changed?” to “what does the commander

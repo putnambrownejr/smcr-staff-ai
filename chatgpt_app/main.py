@@ -209,10 +209,17 @@ class StaffUpdateCycleToolInput(BaseModel):
     title: str = Field(..., description="Short update-cycle title.")
     supported_unit: str = Field(..., description="Unit receiving the update cycle.")
     supported_echelon: str = Field(default="company", description="Supported echelon such as company or battalion.")
+    event_type: str = Field(default="training_event", description="Planning or event type.")
     mission_or_training_goal: str = Field(..., description="What the unit is trying to accomplish.")
     timeframe: str | None = Field(default=None, description="Optional update horizon.")
+    time_available: str | None = Field(default=None, description="Optional time available for planning.")
     commander_priorities: list[str] = Field(default_factory=list, description="Commander priorities for this cycle.")
     higher_guidance: list[str] = Field(default_factory=list, description="Higher guidance to preserve.")
+    constraints: list[str] = Field(default_factory=list, description="Key planning constraints.")
+    coordinating_sections: list[str] = Field(default_factory=list, description="Staff sections that owe estimates.")
+    support_requirements: list[str] = Field(default_factory=list, description="Support dependencies to verify.")
+    partner_types: list[str] = Field(default_factory=list, description="Relevant external partners.")
+    civil_considerations: list[str] = Field(default_factory=list, description="Relevant civil considerations.")
     met_tasks: list[str] = Field(default_factory=list, description="Relevant MET-aligned tasks.")
     metl_focus: list[str] = Field(default_factory=list, description="Relevant METL focus.")
     section_updates: list[StaffSectionUpdateToolInput] = Field(
@@ -370,6 +377,34 @@ TOOL_SPECS: list[types.Tool] = [
         _meta=_tool_invocation_meta(
             "Building the infantry training package",
             "Infantry training package ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="build_mission_analysis",
+        title="Build Mission Analysis",
+        description=(
+            "Use this when the user wants a mission-analysis worksheet with specified and implied tasks, "
+            "constraints, assumptions, information requirements, and staff-estimate due-outs."
+        ),
+        inputSchema=StaffUpdateCycleToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Building mission analysis",
+            "Mission analysis ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="build_planning_cell",
+        title="Build Planning Cell",
+        description=(
+            "Use this when the user wants a planning-cell package that ties mission analysis, planning approach, "
+            "assumption and decision logs, and the running estimate/CUB/CPB cycle together."
+        ),
+        inputSchema=StaffUpdateCycleToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Building the planning cell package",
+            "Planning cell package ready",
             read_only=False,
         ),
     ),
@@ -715,6 +750,16 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             infantry_package_payload = InfantryTrainingPackageToolInput.model_validate(arguments)
             result = await adapter.build_infantry_training_package(infantry_package_payload.model_dump())
             return _ok_result("Built the infantry training package.", result)
+
+        if name == "build_mission_analysis":
+            mission_analysis_payload = StaffUpdateCycleToolInput.model_validate(arguments)
+            result = await adapter.build_mission_analysis(mission_analysis_payload.model_dump())
+            return _ok_result("Built mission analysis.", result)
+
+        if name == "build_planning_cell":
+            planning_cell_payload = StaffUpdateCycleToolInput.model_validate(arguments)
+            result = await adapter.build_planning_cell(planning_cell_payload.model_dump())
+            return _ok_result("Built the planning cell package.", result)
 
         if name == "build_staff_update_cycle":
             update_cycle_payload = StaffUpdateCycleToolInput.model_validate(arguments)

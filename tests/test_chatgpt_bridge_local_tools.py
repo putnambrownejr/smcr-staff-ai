@@ -134,6 +134,68 @@ async def test_build_staff_update_cycle_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_build_mission_analysis_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.build_mission_analysis(
+        {
+            "title": "Adapter mission analysis test",
+            "supported_unit": "Civil affairs company",
+            "mission_or_training_goal": "Refine the next drill training plan.",
+            "higher_guidance": ["Battalion wants a concise mission analysis before the next sync."],
+            "coordinating_sections": ["S-3", "S-4", "S-6"],
+            "section_updates": [
+                {
+                    "section": "S-3",
+                    "summary": "The event is supportable if the company cuts to one primary lane.",
+                    "assumptions": ["Subordinate elements can rehearse locally."],
+                    "decisions_needed": ["Commander decides whether to keep one lane."],
+                }
+            ],
+            "training_only": True,
+        }
+    )
+
+    assert "mission_statement" in result
+    assert result["specified_tasks"]
+    assert result["staff_estimate_requirements"]
+
+
+@pytest.mark.anyio
+async def test_build_planning_cell_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.build_planning_cell(
+        {
+            "title": "Adapter planning cell test",
+            "supported_unit": "Civil affairs company",
+            "mission_or_training_goal": "Refine the next drill training plan.",
+            "coordinating_sections": ["S-3", "S-4", "S-6"],
+            "support_requirements": ["Transport", "Water"],
+            "section_updates": [
+                {
+                    "section": "S-3",
+                    "summary": "The event is supportable if the company cuts to one primary lane.",
+                    "assumptions": ["Subordinate elements can rehearse locally."],
+                    "decisions_needed": ["Commander decides whether to keep one lane."],
+                },
+                {
+                    "section": "S-4",
+                    "summary": "Transport support exists, but issue timing is still tight.",
+                    "risks": ["Late issue will compress movement time."],
+                },
+            ],
+            "training_only": True,
+        }
+    )
+
+    assert "planning_approach" in result
+    assert "mission_analysis" in result
+    assert "update_cycle" in result
+    assert result["assumption_log"]
+
+
+@pytest.mark.anyio
 async def test_run_opt_facilitator_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 

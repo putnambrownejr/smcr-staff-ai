@@ -64,6 +64,12 @@ class ChatGptBridgeAdapter:
     async def build_staff_update_cycle(self, payload: dict[str, object]) -> dict[str, object]:
         return await self._request_dict("POST", "/staff/update-cycle", json=payload)
 
+    async def build_mission_analysis(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self._request_dict("POST", "/staff/mission-analysis", json=payload)
+
+    async def build_planning_cell(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self._request_dict("POST", "/staff/planning-cell", json=payload)
+
     async def run_opt_facilitator(self, payload: dict[str, object]) -> dict[str, object]:
         return await self.run_staff_agent(agent_id="opt-facilitator", payload=payload)
 
