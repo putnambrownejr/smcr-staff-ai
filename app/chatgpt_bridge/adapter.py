@@ -70,6 +70,12 @@ class ChatGptBridgeAdapter:
     async def run_assessment_learning_advisor(self, payload: dict[str, object]) -> dict[str, object]:
         return await self.run_staff_agent(agent_id="assessment-learning-advisor", payload=payload)
 
+    async def run_writing_briefing_coach(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.run_staff_agent(agent_id="writing-briefing-coach", payload=payload)
+
+    async def run_joint_interagency_frame_advisor(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.run_staff_agent(agent_id="joint-interagency-frame-advisor", payload=payload)
+
     async def list_agents(self) -> dict[str, Any]:
         return {"agents": await self._request_list("GET", "/agents")}
 

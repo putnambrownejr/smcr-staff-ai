@@ -30,6 +30,8 @@ Why:
 - `run_opt_facilitator`
 - `run_red_team_assumptions_challenge`
 - `run_assessment_learning_advisor`
+- `run_writing_briefing_coach`
+- `run_joint_interagency_frame_advisor`
 - `list_staff_agents`
 - `run_staff_agent`
 - `build_chief_brief`
@@ -58,6 +60,13 @@ challenge weak assumptions, fake alternatives, and quiet groupthink before the c
 
 `run_assessment_learning_advisor` is the learning-loop lane. Use it when you want to tie an event, AAR,
 corrective actions, and next-drill follow-through together instead of letting lessons die after the brief.
+
+`run_writing_briefing_coach` is the quick discipline lane for briefs and products. Use it when a CPB, CUB,
+decision brief, or draft product needs to be cleaner about audience, decision, evidence, and what belongs in
+backup.
+
+`run_joint_interagency_frame_advisor` is the external-frame lane. Use it when the Marine-only view is too
+narrow and the staff needs help with command relationships, outside actors, and coordination assumptions.
 
 `draft_staff_product` is now also the right lane for briefing content when you want a deck outline that behaves
 like a real staff brief instead of a generic AI slide dump. Use `decision_brief` or `command_update_brief`

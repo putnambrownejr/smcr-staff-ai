@@ -158,6 +158,36 @@ async def test_run_assessment_learning_advisor_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_run_writing_briefing_coach_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_writing_briefing_coach(
+        {
+            "input": "Help me tighten this decision brief before the commander sees it.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "writing-briefing-coach"
+    assert "Writing / briefing coach advisory" in cast(str, result["answer"])
+
+
+@pytest.mark.anyio
+async def test_run_joint_interagency_frame_advisor_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_joint_interagency_frame_advisor(
+        {
+            "input": "Help me think through command relationships and outside stakeholders for this problem.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "joint-interagency-frame-advisor"
+    assert "Joint / interagency frame advisory" in cast(str, result["answer"])
+
+
+@pytest.mark.anyio
 async def test_list_agents_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 

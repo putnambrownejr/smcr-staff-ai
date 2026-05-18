@@ -389,6 +389,34 @@ TOOL_SPECS: list[types.Tool] = [
         ),
     ),
     types.Tool(
+        name="run_writing_briefing_coach",
+        title="Run Writing Briefing Coach",
+        description=(
+            "Use this when the user wants a brief or staff product tightened around audience, decision, "
+            "structure, evidence, and brevity."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the writing coach",
+            "Writing briefing coach ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="run_joint_interagency_frame_advisor",
+        title="Run Joint Interagency Frame Advisor",
+        description=(
+            "Use this when the user wants help widening the frame around command relationships, outside actors, "
+            "and coordination assumptions."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the joint interagency advisor",
+            "Joint interagency advisor ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
         name="list_staff_agents",
         title="List Staff Agents",
         description="Use this when the user wants to see which staff and specialty agents are available.",
@@ -577,6 +605,20 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
                 {"input": assessment_payload.input, "context": assessment_payload.context}
             )
             return _ok_result("Ran the assessment learning advisor.", result)
+
+        if name == "run_writing_briefing_coach":
+            writing_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_writing_briefing_coach(
+                {"input": writing_payload.input, "context": writing_payload.context}
+            )
+            return _ok_result("Ran the writing briefing coach.", result)
+
+        if name == "run_joint_interagency_frame_advisor":
+            joint_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_joint_interagency_frame_advisor(
+                {"input": joint_payload.input, "context": joint_payload.context}
+            )
+            return _ok_result("Ran the joint interagency frame advisor.", result)
 
         if name == "list_staff_agents":
             result = await adapter.list_agents()
