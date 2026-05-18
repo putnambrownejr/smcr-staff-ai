@@ -49,6 +49,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Session handoffs | Stores minimum necessary local user context for PME, FitRep, annual drill dates, recurring checks, admin, drill, and preference reminders. | Working local storage |
 | Installation / base practical advisor | Helps with common Marine/joint-base access, sponsorship, REAL-ID, visitor-center, and command-event coordination friction while insisting on local verification. | Working advisory agent |
 | Local context storage | Lets users upload files/notes, RQS/BIO references, and drill templates as advisory local context without changing doctrine, org, exercise, agent, or canonical document structure. | Working local storage |
+| Local product template repository | Promotes uploaded local examples like FRAGOs, CUBs, CPBs, and briefs into reusable local-only templates that can shape future staff-product drafts without being committed to the repo. | Working local storage |
 | External AI share-safe packet | Builds a scrubbed local-context packet for Claude, Gemini, Grok, Copilot, or other hosted AI tools without exposing raw local records by default. | Working local safety boundary |
 | Personal document organizer | Lists local RQS/BIO/orders/travel/PME-style uploads by type and flags PII/local-retention warnings. | Working local organizer |
 | Personnel products | Builds advisory FitRep planning, FitRep bullet capture, award package, and routing package support with citations and review points. | Working local support |
@@ -100,6 +101,7 @@ app/
     org_awareness/     Example hierarchy and exercise cadence services
     rag/               Chunking, embeddings, vector store, retriever stubs
     storage/           Local user-context storage
+    templates/         Local-only reusable product template repository
 data/
   seed/                Example org, doctrine, exercise, and agent manifests
   local_context/       Legacy repo-local path used only when explicitly configured or container-mounted
@@ -219,6 +221,26 @@ This route:
   - a `handoff_draft_request` ready for `/handoffs/{user_key}/draft-update`
   - an `action_promote_request` ready for `/actions/promote`
 - keeps the repo focused on reserve-specific interpretation instead of connector plumbing
+
+### Local Product Templates
+
+Promote an uploaded local example into a reusable local-only product template:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/product-templates/from-context `
+  -H "Content-Type: application/json" `
+  -d "{\"context_id\":\"<context_id>\",\"template_name\":\"Battalion CPB Example\",\"template_type\":\"cpb\",\"tags\":[\"intel\",\"briefing\"]}"
+```
+
+Then apply it while drafting a related staff product:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/staff-products/draft `
+  -H "Content-Type: application/json" `
+  -d "{\"product_type\":\"frago\",\"topic\":\"Training-only adjustment for field-lane timeline\",\"template_ids\":[\"<template_id>\"]}"
+```
+
+This keeps the example and template local to the user-scoped storage path outside the repo while still making the reusable structure available to draft workflows.
 
 ### Admin Readiness
 

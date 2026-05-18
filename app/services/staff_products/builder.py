@@ -1,5 +1,6 @@
 from app.core.security import DEFAULT_WARNINGS, detect_sensitive_input
 from app.schemas.agents import Confidence, StructuredCitation
+from app.schemas.product_templates import ProductTemplateRecord
 from app.schemas.staff_products import (
     StaffProductDraftRequest,
     StaffProductDraftResponse,
@@ -280,7 +281,12 @@ CORRESPONDENCE_SECTIONS = [
 
 
 class StaffProductBuilder:
-    def build(self, request: StaffProductDraftRequest) -> StaffProductDraftResponse:
+    def build(
+        self,
+        request: StaffProductDraftRequest,
+        templates: list[ProductTemplateRecord] | None = None,
+    ) -> StaffProductDraftResponse:
+        applied_templates = templates or []
         sections = _sections_for(request.product_type)
         title = f"{request.product_type.value.upper()} draft scaffold: {request.topic}"
         warnings = [
@@ -288,6 +294,11 @@ class StaffProductBuilder:
             *detect_sensitive_input(" ".join([request.topic, *request.facts, *request.constraints])),
             "Staff products are advisory drafts and must be reviewed by the appropriate human chain.",
         ]
+        if applied_templates:
+            warnings.append(
+                "Local templates are reusable examples only. Scrub stale names, "
+                "routing, dates, and unit-specific details."
+            )
         if request.product_type in {
             StaffProductType.opord,
             StaffProductType.warno,
@@ -304,9 +315,10 @@ class StaffProductBuilder:
         return StaffProductDraftResponse(
             product_type=request.product_type,
             title=title,
-            sections=_enrich_sections(sections, request),
-            formatting_notes=_formatting_notes_for(request),
-            review_checklist=_review_checklist(request) if request.include_review_checklist else [],
+            sections=_enrich_sections(sections, request, applied_templates),
+            applied_templates=[template.template_name for template in applied_templates],
+            formatting_notes=_formatting_notes_for(request, applied_templates),
+            review_checklist=_review_checklist(request, applied_templates) if request.include_review_checklist else [],
             citations=_citations_for(request.product_type),
             structured_citations=_structured_citations_for(request.product_type),
             warnings=sorted(set(warnings)),
@@ -337,6 +349,7 @@ def _sections_for(product_type: StaffProductType) -> list[StaffProductSection]:
 def _enrich_sections(
     sections: list[StaffProductSection],
     request: StaffProductDraftRequest,
+    templates: list[ProductTemplateRecord],
 ) -> list[StaffProductSection]:
     sensitivity_warnings = detect_sensitive_input(" ".join([request.topic, *request.facts, *request.constraints]))
     context_prompts = [
@@ -345,6 +358,20 @@ def _enrich_sections(
         *([f"Echelon: {request.echelon}"] if request.echelon else []),
         *([f"Preferred format: {request.preferred_format}"] if request.preferred_format else []),
     ]
+    template_prompts: list[str] = []
+    for template in templates:
+        template_prompts.append(
+            f"Local template reference: {template.template_name} "
+            f"({template.template_type.value}). Use as structure only."
+        )
+        if template.audience_hint:
+            template_prompts.append(f"Template audience hint: {template.audience_hint}")
+        if template.preferred_format:
+            template_prompts.append(f"Template preferred format: {template.preferred_format}")
+        template_prompts.extend(
+            f"Template heading to consider: {heading}" for heading in template.reusable_headings[:6]
+        )
+        template_prompts.extend(f"Template reuse note: {note}" for note in template.reusable_guidance[:4])
     if sensitivity_warnings:
         fact_prompts = ["Sensitive details were withheld. Use only generic training-safe placeholders."]
         constraint_prompts = ["Constraint: verify all operational specifics in an approved environment."]
@@ -354,13 +381,13 @@ def _enrich_sections(
     return [
         StaffProductSection(
             heading=section.heading,
-            prompts=[*context_prompts, *section.prompts, *fact_prompts, *constraint_prompts],
+            prompts=[*context_prompts, *template_prompts, *section.prompts, *fact_prompts, *constraint_prompts],
         )
         for section in sections
     ]
 
 
-def _review_checklist(request: StaffProductDraftRequest) -> list[str]:
+def _review_checklist(request: StaffProductDraftRequest, templates: list[ProductTemplateRecord]) -> list[str]:
     checklist = [
         "Confirm the product is UNCLASSIFIED and appropriate for this prototype.",
         "Verify every factual claim against official/public sources or user-confirmed local context.",
@@ -368,6 +395,11 @@ def _review_checklist(request: StaffProductDraftRequest) -> list[str]:
         "Remove unnecessary PII and sensitive unit-specific details.",
         "Confirm final product with the appropriate chain before release.",
     ]
+    if templates:
+        checklist.append(
+            "Check every borrowed template element for stale names, dates, "
+            "routing, attachments, and unit-specific assumptions."
+        )
     if request.product_type in {
         StaffProductType.opord,
         StaffProductType.warno,
@@ -404,9 +436,23 @@ def _review_checklist(request: StaffProductDraftRequest) -> list[str]:
     return checklist
 
 
-def _formatting_notes_for(request: StaffProductDraftRequest) -> list[str]:
+def _formatting_notes_for(
+    request: StaffProductDraftRequest,
+    templates: list[ProductTemplateRecord],
+) -> list[str]:
+    shared_notes = (
+        [
+            (
+                "A local example template was applied. Preserve useful structure and tone, "
+                "but rewrite stale specifics before release."
+            )
+        ]
+        if templates
+        else []
+    )
     if request.product_type == StaffProductType.naval_letter:
         return [
+            *shared_notes,
             "Use From/To/Via/Subj/Ref/Encl in the header and keep the subject line short and literal.",
             "Write numbered paragraphs that can survive routing edits and endorsements.",
             "Keep the opening paragraph action-oriented: what is being requested, directed, or provided for decision.",
@@ -415,12 +461,14 @@ def _formatting_notes_for(request: StaffProductDraftRequest) -> list[str]:
         ]
     if request.product_type == StaffProductType.memorandum:
         return [
+            *shared_notes,
             "Use memorandum format when the product is internal and does not need full naval-letter routing.",
             "Keep the subject plain and administrative, then move quickly to the purpose and required action.",
             "Use short numbered paragraphs and avoid burying the suspense or decision in the discussion section.",
         ]
     if request.product_type == StaffProductType.endorsement:
         return [
+            *shared_notes,
             "Anchor the endorsement to the forwarded package and state whether it recommends, concurs, or elevates "
             "an issue.",
             "Keep the endorsement short; do not rewrite the base package unless the deficiency is the point.",
@@ -428,6 +476,7 @@ def _formatting_notes_for(request: StaffProductDraftRequest) -> list[str]:
         ]
     if request.product_type == StaffProductType.frago:
         return [
+            *shared_notes,
             "A FRAGO should only state what changed from the base order, not restate the whole order out of habit.",
             "Task subordinate elements in plain Marine-staff language with task, purpose, and no-later-than "
             "discipline where possible.",
@@ -436,6 +485,7 @@ def _formatting_notes_for(request: StaffProductDraftRequest) -> list[str]:
         ]
     if request.product_type == StaffProductType.conop:
         return [
+            *shared_notes,
             "A CONOP should explain how the unit intends to execute, not pretend to be a full OPORD.",
             "State supported/supporting relationships clearly so subordinate units can draft their own local concepts.",
             "Tie assessment language to task standards, decision points, and AAR capture rather than generic "
@@ -443,6 +493,7 @@ def _formatting_notes_for(request: StaffProductDraftRequest) -> list[str]:
         ]
     if request.product_type == StaffProductType.decision_brief:
         return [
+            *shared_notes,
             "Treat each section like a slide, not a memo paragraph.",
             "Put one decision problem on the screen at a time; background belongs only where it changes the decision.",
             "Use short bullets, not prose blocks. If it cannot be briefed aloud in a few seconds, it is too dense.",
@@ -451,6 +502,7 @@ def _formatting_notes_for(request: StaffProductDraftRequest) -> list[str]:
         ]
     if request.product_type == StaffProductType.command_update_brief:
         return [
+            *shared_notes,
             "This brief should update command understanding, not restate the whole plan from scratch.",
             "Lead with posture, changes, and blockers before detail.",
             "Use one idea per slide and cut decorative language, slogans, and filler transitions.",
@@ -461,6 +513,7 @@ def _formatting_notes_for(request: StaffProductDraftRequest) -> list[str]:
         ]
     if request.product_type == StaffProductType.aar:
         return [
+            *shared_notes,
             "Write the AAR like a product the XO or S-3 would keep: standards, observations, friction, and "
             "corrective actions worth revisiting later.",
             "Separate deliberate good practice from lucky improvisation so the unit knows what to preserve.",
@@ -468,7 +521,7 @@ def _formatting_notes_for(request: StaffProductDraftRequest) -> list[str]:
             "Lead with what mattered, what held, where the standard broke, and what changes before the next event.",
             "Avoid diary language. Capture judgment, friction, and decisions that shape the next cycle.",
         ]
-    return []
+    return shared_notes
 
 
 def _citations_for(product_type: StaffProductType) -> list[str]:

@@ -38,6 +38,7 @@ class StaffProductDraftRequest(BaseModel):
     preferred_format: str | None = None
     facts: list[str] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
+    template_ids: list[str] = Field(default_factory=list)
     training_or_fictional: bool = True
     include_review_checklist: bool = True
 
@@ -51,6 +52,7 @@ class StaffProductDraftResponse(BaseModel):
     product_type: StaffProductType
     title: str
     sections: list[StaffProductSection]
+    applied_templates: list[str] = Field(default_factory=list)
     formatting_notes: list[str] = Field(default_factory=list)
     review_checklist: list[str] = Field(default_factory=list)
     citations: list[str] = Field(default_factory=list)

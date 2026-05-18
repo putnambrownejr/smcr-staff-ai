@@ -10,6 +10,8 @@ class PersonalDocumentType(StrEnum):
     rqs = "rqs"
     bio = "bio"
     orders = "orders"
+    product_example = "product_example"
+    product_template = "product_template"
     travel_receipt = "travel_receipt"
     dts = "dts"
     pme_certificate = "pme_certificate"

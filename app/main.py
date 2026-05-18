@@ -22,6 +22,7 @@ from app.api.routes import (
     personal_documents,
     personnel,
     planning,
+    product_templates,
     reading,
     sharing,
     social,
@@ -63,6 +64,7 @@ def create_app() -> FastAPI:
     app.include_router(planning.router)
     app.include_router(personal_documents.router)
     app.include_router(personnel.router)
+    app.include_router(product_templates.router)
     app.include_router(reading.router)
     app.include_router(social.router)
     app.include_router(staff.router)

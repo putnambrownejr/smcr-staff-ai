@@ -28,6 +28,10 @@ def default_session_handoff_dir() -> Path:
     return default_local_context_dir() / "session_handoffs"
 
 
+def default_product_template_dir() -> Path:
+    return default_local_context_dir() / "product_templates"
+
+
 def default_database_url() -> str:
     database_path = default_local_state_root() / "smcr_staff_ai.db"
     return f"sqlite:///{database_path.as_posix()}"
@@ -41,6 +45,7 @@ class Settings(BaseSettings):
     vector_store_backend: str = "local-stub"
     local_context_storage_dir: str = str(default_local_context_dir())
     session_handoff_storage_dir: str = str(default_session_handoff_dir())
+    product_template_storage_dir: str = str(default_product_template_dir())
     local_api_key: str | None = None
     max_upload_bytes: int = 50_000_000
     public_source_only: bool = True

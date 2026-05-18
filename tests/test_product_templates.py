@@ -1,0 +1,89 @@
+from pathlib import Path
+
+from fastapi.testclient import TestClient
+
+from app.api.routes.product_templates import get_context_store
+from app.api.routes.product_templates import get_template_repository as get_product_template_repository
+from app.api.routes.staff_products import get_template_repository as get_staff_product_template_repository
+from app.main import app
+from app.schemas.product_templates import CreateProductTemplateFromContextRequest, ProductTemplateType
+from app.services.storage.local_context_store import LocalContextStore
+from app.services.templates.product_template_repository import ProductTemplateRepository
+
+
+def test_product_template_repository_promotes_local_example(tmp_path: Path) -> None:
+    context_store = LocalContextStore(tmp_path / "context")
+    source = context_store.save(
+        filename="cpb-example.md",
+        content=(
+            b"# CPB\n\n## Enemy Situation\n- Placeholder\n\n"
+            b"## Friendly Situation\n- Placeholder\n\n"
+            b"## Decision Support Matrix\n"
+        ),
+        content_type="text/markdown",
+        document_type="product_example",
+        tags=["intel", "briefing"],
+    )
+    repository = ProductTemplateRepository(tmp_path / "templates")
+
+    record = repository.create_from_context(
+        request=CreateProductTemplateFromContextRequest(
+            context_id=source.context_id,
+            template_name="Battalion CPB Example",
+            template_type=ProductTemplateType.cpb,
+        ),
+        context_store=context_store,
+    )
+
+    assert record.source_context_id == source.context_id
+    assert record.template_type.value == "cpb"
+    assert record.reusable_headings
+    assert record.local_only is True
+
+
+def test_product_template_routes_create_list_and_reuse(tmp_path: Path) -> None:
+    context_store = LocalContextStore(tmp_path / "context")
+    repository = ProductTemplateRepository(tmp_path / "templates")
+    source = context_store.save(
+        filename="frago-example.md",
+        content=b"CHANGES:\nTask 1\n\nTASKS:\nTask 2\n\nCOORDINATING INSTRUCTIONS:\nTask 3\n",
+        content_type="text/markdown",
+        document_type="product_example",
+    )
+
+    app.dependency_overrides[get_context_store] = lambda: context_store
+    app.dependency_overrides[get_product_template_repository] = lambda: repository
+    app.dependency_overrides[get_staff_product_template_repository] = lambda: repository
+    client = TestClient(app)
+    try:
+        create_response = client.post(
+            "/product-templates/from-context",
+            json={
+                "context_id": source.context_id,
+                "template_name": "Company FRAGO Example",
+                "template_type": "frago",
+                "tags": ["ops"],
+            },
+        )
+        assert create_response.status_code == 200
+        template_id = create_response.json()["template_id"]
+
+        list_response = client.get("/product-templates")
+        assert list_response.status_code == 200
+        assert list_response.json()["total_templates"] == 1
+
+        draft_response = client.post(
+            "/staff-products/draft",
+            json={
+                "product_type": "frago",
+                "topic": "Training-only adjustment for field-lane timeline",
+                "template_ids": [template_id],
+            },
+        )
+        assert draft_response.status_code == 200
+        payload = draft_response.json()
+        assert payload["applied_templates"] == ["Company FRAGO Example"]
+        first_section_prompts = payload["sections"][0]["prompts"]
+        assert any("Local template reference" in prompt for prompt in first_section_prompts)
+    finally:
+        app.dependency_overrides.clear()

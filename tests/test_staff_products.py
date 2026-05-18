@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.schemas.product_templates import ProductTemplateRecord, ProductTemplateType
 from app.schemas.staff_products import StaffProductDraftRequest, StaffProductType
 from app.services.staff_products.builder import StaffProductBuilder
 
@@ -101,6 +102,30 @@ def test_staff_product_builder_creates_decision_brief_slide_structure() -> None:
     assert "Slide 4. Options or COAs" in headings
     assert any("one decision problem" in note for note in response.formatting_notes)
     assert any("Cut any slide" in item for item in response.review_checklist)
+
+
+def test_staff_product_builder_applies_local_template_guidance() -> None:
+    template = ProductTemplateRecord(
+        template_id="abc12345def67890",
+        template_name="Example CUB",
+        template_type=ProductTemplateType.cub_brief,
+        reusable_headings=["Executive Snapshot", "Friction", "Decision Required"],
+        reusable_guidance=["Keep the brief to five slides and lead with friction."],
+        audience_hint="Battalion commander",
+    )
+
+    response = StaffProductBuilder().build(
+        StaffProductDraftRequest(
+            product_type=StaffProductType.command_update_brief,
+            topic="Weekly reserve readiness update",
+        ),
+        templates=[template],
+    )
+
+    assert response.applied_templates == ["Example CUB"]
+    assert any("local example template was applied" in note.lower() for note in response.formatting_notes)
+    assert any("stale names" in item for item in response.review_checklist)
+    assert any("Local template reference" in prompt for prompt in response.sections[0].prompts)
 
 
 def test_staff_products_agent_defaults_slide_requests_to_decision_brief() -> None:
