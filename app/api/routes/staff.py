@@ -23,6 +23,13 @@ from app.schemas.staff import (
     StaffRoundRobinRequest,
     StaffRoundRobinResponse,
 )
+from app.schemas.staff_updates import (
+    CpbResponse,
+    CubResponse,
+    RunningEstimateRequest,
+    RunningEstimateResponse,
+    StaffUpdateCycleResponse,
+)
 from app.services.admin.pki_support import PkiTroubleshootingService
 from app.services.admin.workflow_builder import AdminWorkflowBuilder
 from app.services.agents.base import AgentContext
@@ -32,6 +39,7 @@ from app.services.staff.g9_planner import G9Planner
 from app.services.staff.medical_planner import MedicalPlanner
 from app.services.staff.s2_estimator import S2Estimator
 from app.services.staff.s6_planner import S6Planner
+from app.services.staff.update_cycle import StaffUpdateCycleBuilder
 
 router = APIRouter(prefix="/staff", tags=["staff council"])
 
@@ -43,6 +51,7 @@ _s6_planner = S6Planner()
 _pki_service = PkiTroubleshootingService()
 _admin_workflow_builder = AdminWorkflowBuilder()
 _osint_agent = build_osint_agent()
+_update_cycle = StaffUpdateCycleBuilder()
 
 
 @router.get("/roles", response_model=list[StaffRoleMetadata])
@@ -128,3 +137,23 @@ def build_s1_gtcc_helper(request: AdminWorkflowDraftRequest) -> AdminWorkflowRes
             constraints=request.constraints,
         )
     )
+
+
+@router.post("/running-estimate", response_model=RunningEstimateResponse)
+def build_running_estimate(request: RunningEstimateRequest) -> RunningEstimateResponse:
+    return _update_cycle.build_running_estimate(request)
+
+
+@router.post("/cub", response_model=CubResponse)
+def build_cub(request: RunningEstimateRequest) -> CubResponse:
+    return _update_cycle.build_cub(request)
+
+
+@router.post("/cpb", response_model=CpbResponse)
+def build_cpb(request: RunningEstimateRequest) -> CpbResponse:
+    return _update_cycle.build_cpb(request)
+
+
+@router.post("/update-cycle", response_model=StaffUpdateCycleResponse)
+def build_staff_update_cycle(request: RunningEstimateRequest) -> StaffUpdateCycleResponse:
+    return _update_cycle.build_update_cycle(request)
