@@ -74,6 +74,13 @@ document.getElementById("staff-cycle-form").addEventListener("submit", async (ev
   renderStaffUpdateCycleOutput("staff-cycle-output", data);
 });
 
+document.getElementById("refresh-maradmins").addEventListener("click", () => refreshSourceLane("maradmins"));
+document.getElementById("refresh-reading").addEventListener("click", () => refreshSourceLane("reading"));
+document.getElementById("refresh-navadmins").addEventListener("click", () => refreshSourceLane("navadmins"));
+document.getElementById("refresh-alnavs").addEventListener("click", () => refreshSourceLane("alnavs"));
+document.getElementById("refresh-dod-watch").addEventListener("click", () => refreshSourceLane("dod"));
+document.getElementById("refresh-source-watch").addEventListener("click", () => refreshSourceLane("all"));
+
 document.addEventListener("click", async (event) => {
   const documentButton = event.target.closest("[data-document-id]");
   if (documentButton) {
@@ -132,6 +139,9 @@ function renderWorkspace(payload) {
   renderDocumentLibrary(payload.document_details || []);
   renderTemplateLibrary(payload.template_library || []);
   renderMaradminTicker(payload.maradmin_ticker || []);
+  renderTickerStack("navadmin-ticker", payload.navadmin_ticker || [], "No NAVADMIN items loaded yet.");
+  renderTickerStack("alnav-ticker", payload.alnav_ticker || [], "No ALNAV items loaded yet.");
+  renderTickerStack("dod-ticker", payload.dod_ticker || [], "No DoD watch items loaded yet.");
   renderCustomWatchFeeds(payload.custom_watch_feeds || []);
   renderHistory(payload.today_in_history || []);
   renderReadingBooks(payload.reading_books || []);
@@ -264,27 +274,7 @@ function renderTemplateLibrary(items) {
 }
 
 function renderMaradminTicker(items) {
-  const target = document.getElementById("maradmin-ticker");
-  if (!items.length) {
-    target.className = "row-stack empty-state";
-    target.textContent = "No source-watch items loaded yet.";
-    return;
-  }
-  target.className = "row-stack";
-  target.innerHTML = items
-    .map(
-      (item) => `
-        <article class="data-row">
-          <div class="data-row-head">
-            <span class="strip-label">${escapeHtml(item.status)}</span>
-            <strong>${escapeHtml(item.title)}</strong>
-          </div>
-          <p>${escapeHtml(item.summary)}</p>
-          ${item.source_url ? `<p class="meta-inline">${escapeHtml(item.source_url)}</p>` : ""}
-        </article>
-      `,
-    )
-    .join("");
+  renderTickerStack("maradmin-ticker", items, "No source-watch items loaded yet.");
 }
 
 function renderCustomWatchFeeds(items) {
@@ -479,6 +469,30 @@ function renderTrackedActions(items) {
           <p>${escapeHtml(item.owner ? `Owner: ${item.owner}` : "Owner not assigned")}</p>
           <p class="meta-inline">${escapeHtml([item.category, item.priority, item.suspense_date ? `Due ${item.suspense_date}` : ""].filter(Boolean).join(" | "))}</p>
           <p>${escapeHtml(item.description || item.notes || "No additional notes yet.")}</p>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderTickerStack(targetId, items, emptyText) {
+  const target = document.getElementById(targetId);
+  if (!items.length) {
+    target.className = "row-stack empty-state";
+    target.textContent = emptyText;
+    return;
+  }
+  target.className = "row-stack";
+  target.innerHTML = items
+    .map(
+      (item) => `
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.status)}</span>
+            <strong>${escapeHtml(item.title)}</strong>
+          </div>
+          <p>${escapeHtml(item.summary)}</p>
+          ${item.source_url ? `<p class="meta-inline">${escapeHtml(item.source_url)}</p>` : ""}
         </article>
       `,
     )
@@ -696,6 +710,39 @@ async function refreshCustomFeed(feedId) {
   });
   setWorkspaceNote("Custom feed refreshed.");
   await loadWorkspace();
+}
+
+async function refreshSourceLane(lane) {
+  if (state.mode !== "personal") {
+    setWorkspaceNote("Open your personal workspace to refresh local source watches.", true);
+    return;
+  }
+  const refreshers = {
+    maradmins: [["/maradmins/refresh", "POST"]],
+    reading: [["/reading-list/refresh", "POST"]],
+    navadmins: [["/message-watch/navadmins/refresh", "POST"]],
+    alnavs: [["/message-watch/alnavs/refresh", "POST"]],
+    dod: [["/message-watch/dod/refresh", "POST"]],
+    all: [
+      ["/maradmins/refresh", "POST"],
+      ["/reading-list/refresh", "POST"],
+      ["/message-watch/navadmins/refresh", "POST"],
+      ["/message-watch/alnavs/refresh", "POST"],
+      ["/message-watch/dod/refresh", "POST"],
+    ],
+  };
+  const sequence = refreshers[lane] || [];
+  try {
+    for (const [path, method] of sequence) {
+      await apiFetch(path, { method, auth: true });
+    }
+    setWorkspaceNote(
+      lane === "all" ? "Source-watch stack refreshed." : `${lane.replaceAll("-", " ")} refreshed.`,
+    );
+    await loadWorkspace();
+  } catch (error) {
+    setWorkspaceNote(error.message, true);
+  }
 }
 
 async function apiFetch(path, options = {}) {

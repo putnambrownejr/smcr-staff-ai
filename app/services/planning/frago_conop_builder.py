@@ -4,6 +4,7 @@ from app.schemas.planning import (
     FragoToConopResponse,
     GuidanceExtraction,
     MetAlignmentItem,
+    PlanningApproachAssessment,
     SubordinateConopPacket,
     UnitRelationshipFrame,
 )
@@ -22,6 +23,7 @@ from app.schemas.staff import (
 from app.schemas.staff_products import StaffProductDraftRequest, StaffProductType
 from app.schemas.tdg import TdgGenerationRequest, TdgGenerationResponse
 from app.schemas.training import S3PlanningRequest, S3PlanningResponse, S4PlanningRequest, S4PlanningResponse
+from app.services.planning.approach import assess_planning_approach
 from app.services.staff.council import StaffCouncilService
 from app.services.staff.g9_planner import G9Planner
 from app.services.staff.medical_planner import MedicalPlanner
@@ -50,6 +52,7 @@ class FragoToConopBuilder:
         if boundary_warnings:
             request = _sanitize_frago_request(request)
         parsed_guidance = _extract_guidance(request)
+        planning_approach = self._planning_approach(request, parsed_guidance)
         s2_estimate = self._build_s2_estimate(request)
         s3_plan = self._s3.build(
             S3PlanningRequest(
@@ -130,6 +133,8 @@ class FragoToConopBuilder:
             f"Supported unit: {request.supported_unit}",
             f"Mission/training goal: {request.mission_or_training_goal}",
             *[f"Commander's intent note: {item}" for item in parsed_guidance.commander_intent[:2]],
+            f"Recommended planning method: {planning_approach.recommended_method.upper()}",
+            f"Planning decision: {planning_approach.decision}",
             *[f"Directed task: {item}" for item in parsed_guidance.directed_tasks[:4]],
             *[f"Constraint: {item}" for item in parsed_guidance.constraints[:3]],
             *[f"Coordinating instruction: {item}" for item in parsed_guidance.coordinating_instructions[:3]],
@@ -153,6 +158,7 @@ class FragoToConopBuilder:
         conop_facts = [
             f"Parent concept must support: {request.mission_or_training_goal}",
             f"Supported unit: {request.supported_unit}",
+            f"Planning method: {planning_approach.recommended_method.upper()}",
             *[
                 f"Subordinate relationship: {frame.unit_name} / {frame.relationship}"
                 for frame in relationship_framework
@@ -212,6 +218,7 @@ class FragoToConopBuilder:
             title=f"FRAGO to CONOP package: {request.title}",
             guidance_summary=_guidance_summary(request),
             commander_focus=_commander_focus(request, s3_plan),
+            planning_approach=planning_approach,
             parsed_guidance=parsed_guidance,
             unit_relationship_framework=relationship_framework,
             subordinate_conop_packets=subordinate_conop_packets,
@@ -236,6 +243,32 @@ class FragoToConopBuilder:
                 *boundary_warnings,
                 "This FRAGO-to-CONOP package is advisory and must be reviewed by the command and staff chain.",
             ],
+        )
+
+    def _planning_approach(
+        self,
+        request: FragoToConopRequest,
+        parsed_guidance: GuidanceExtraction,
+    ) -> PlanningApproachAssessment:
+        return assess_planning_approach(
+            title=request.title,
+            mission_or_training_goal=request.mission_or_training_goal,
+            event_type=request.event_type,
+            timeframe=request.timeframe,
+            constraints=[*request.constraints, *parsed_guidance.constraints],
+            higher_guidance=[
+                *request.higher_guidance,
+                *parsed_guidance.commander_intent,
+                *parsed_guidance.directed_tasks,
+            ],
+            coordinating_sections=request.coordinating_sections,
+            support_requirements=request.support_requirements,
+            partner_types=request.partner_types,
+            civil_considerations=[*request.civil_considerations, *request.g9_inputs],
+            subordinate_unit_count=len(request.subordinate_units),
+            source_items_present=bool(request.source_items or request.intelligence_question),
+            formal_event=request.formal_event,
+            raw_guidance_text=request.raw_guidance_text,
         )
 
     def _build_s2_estimate(self, request: FragoToConopRequest) -> S2EstimateResponse | None:

@@ -166,6 +166,21 @@ def get_maradmin_feed_service() -> MaradminFeedService:
     return MaradminFeedService()
 
 
+def get_navadmin_store() -> Iterator[MessageRecordStore]:
+    settings = get_settings()
+    yield MessageRecordStore(Path(settings.navy_message_storage_dir) / "navadmins")
+
+
+def get_alnav_store() -> Iterator[MessageRecordStore]:
+    settings = get_settings()
+    yield MessageRecordStore(Path(settings.navy_message_storage_dir) / "alnavs")
+
+
+def get_dod_watch_store() -> Iterator[MessageRecordStore]:
+    settings = get_settings()
+    yield MessageRecordStore(settings.dod_watch_storage_dir)
+
+
 def get_history_service() -> TodayInMarineHistoryService:
     return TodayInMarineHistoryService.from_yaml(SEED_DIR / "usmc_history_on_this_day.example.yaml")
 
@@ -195,6 +210,9 @@ def get_dashboard_data(
     reading_state_store: Annotated[ReadingProgressStore, Depends(get_reading_state_store)],
     reading_catalog: Annotated[ReadingListCatalogService, Depends(get_reading_catalog_service)],
     maradmin_feed_store: Annotated[MaradminFeedStore, Depends(get_maradmin_feed_store)],
+    navadmin_store: Annotated[MessageRecordStore, Depends(get_navadmin_store)],
+    alnav_store: Annotated[MessageRecordStore, Depends(get_alnav_store)],
+    dod_watch_store: Annotated[MessageRecordStore, Depends(get_dod_watch_store)],
     custom_watch_feed_store: Annotated[CustomWatchFeedStore, Depends(get_custom_watch_feed_store)],
     history_service: Annotated[TodayInMarineHistoryService, Depends(get_history_service)],
 ) -> DashboardWorkspaceResponse:
@@ -226,6 +244,9 @@ def get_dashboard_data(
             template_repository=template_repository,
         ),
         maradmin_ticker=_maradmin_ticker(maradmin_feed),
+        navadmin_ticker=_message_watch_ticker(navadmin_store.list(limit=8)),
+        alnav_ticker=_message_watch_ticker(alnav_store.list(limit=8)),
+        dod_ticker=_message_watch_ticker(dod_watch_store.list(limit=8)),
         custom_watch_feeds=custom_watch_feeds,
         today_in_history=history_service.get_for_date(datetime.now(UTC).date()),
         reading_books=_reading_books(
@@ -246,6 +267,9 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
     admin_readiness = _admin_from_demo_brief(chief_brief)
     settings = get_settings()
     maradmin_feed = MaradminFeedStore(settings.maradmin_feed_storage_dir).list(limit=10)
+    navadmin_feed = MessageRecordStore(Path(settings.navy_message_storage_dir) / "navadmins").list(limit=8)
+    alnav_feed = MessageRecordStore(Path(settings.navy_message_storage_dir) / "alnavs").list(limit=8)
+    dod_feed = MessageRecordStore(settings.dod_watch_storage_dir).list(limit=8)
     custom_watch_feeds = _custom_watch_feed_summaries(
         CustomWatchFeedStore(settings.custom_watch_feed_storage_dir)
     )
@@ -269,6 +293,9 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
             template_repository=None,
         ),
         maradmin_ticker=_maradmin_ticker(maradmin_feed),
+        navadmin_ticker=_message_watch_ticker(navadmin_feed),
+        alnav_ticker=_message_watch_ticker(alnav_feed),
+        dod_ticker=_message_watch_ticker(dod_feed),
         custom_watch_feeds=custom_watch_feeds,
         today_in_history=TodayInMarineHistoryService.from_yaml(
             SEED_DIR / "usmc_history_on_this_day.example.yaml"
@@ -294,6 +321,9 @@ def _workspace_response(
     document_details: list[DashboardDocumentDetail],
     template_library: list[DashboardTemplateReference],
     maradmin_ticker: list[DashboardTickerItem],
+    navadmin_ticker: list[DashboardTickerItem],
+    alnav_ticker: list[DashboardTickerItem],
+    dod_ticker: list[DashboardTickerItem],
     custom_watch_feeds: list[DashboardCustomWatchFeed],
     today_in_history: list[TodayInMarineHistoryItem],
     reading_books: list[DashboardReadingBook],
@@ -340,6 +370,9 @@ def _workspace_response(
         document_details=document_details,
         template_library=template_library,
         maradmin_ticker=maradmin_ticker,
+        navadmin_ticker=navadmin_ticker,
+        alnav_ticker=alnav_ticker,
+        dod_ticker=dod_ticker,
         custom_watch_feeds=custom_watch_feeds,
         today_in_history=today_in_history,
         reading_books=reading_books,
@@ -424,6 +457,18 @@ def _maradmin_ticker(records: list[MessageRecord]) -> list[DashboardTickerItem]:
 
 def _custom_watch_feed_summaries(store: CustomWatchFeedStore) -> list[DashboardCustomWatchFeed]:
     return [_custom_watch_feed_summary(feed, store) for feed in store.list()[:8]]
+
+
+def _message_watch_ticker(records: list[MessageRecord]) -> list[DashboardTickerItem]:
+    return [
+        DashboardTickerItem(
+            title=item.title,
+            status=item.source_family,
+            summary=(item.summary or ", ".join(item.tags[:3]) or "Second-tier message-watch item.")[:220],
+            source_url=item.canonical_url,
+        )
+        for item in records[:8]
+    ]
 
 
 def _custom_watch_feed_summary(feed: CustomWatchFeed, store: CustomWatchFeedStore) -> DashboardCustomWatchFeed:

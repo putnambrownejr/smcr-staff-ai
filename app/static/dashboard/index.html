@@ -162,7 +162,34 @@
               <h2>MARADMIN / Source Watch</h2>
               <p>Source-change ticker for items that may alter local products or assumptions.</p>
             </div>
+            <div class="button-row compact-controls">
+              <button type="button" class="secondary" id="refresh-maradmins">Refresh MARADMIN feed</button>
+              <button type="button" class="secondary" id="refresh-reading">Refresh reading list</button>
+              <button type="button" class="secondary" id="refresh-source-watch">Refresh all watches</button>
+            </div>
             <div id="maradmin-ticker" class="row-stack empty-state">No source-watch items loaded yet.</div>
+            <div class="watch-subsection">
+              <span class="strip-label">Second-tier awareness</span>
+              <div class="button-row compact-controls">
+                <button type="button" class="secondary" id="refresh-navadmins">Refresh NAVADMINs</button>
+                <button type="button" class="secondary" id="refresh-alnavs">Refresh ALNAVs</button>
+                <button type="button" class="secondary" id="refresh-dod-watch">Refresh DoD watch</button>
+              </div>
+              <div class="brief-grid">
+                <section class="brief-block">
+                  <h3>NAVADMIN</h3>
+                  <div id="navadmin-ticker" class="row-stack empty-state">No NAVADMIN items loaded yet.</div>
+                </section>
+                <section class="brief-block">
+                  <h3>ALNAV</h3>
+                  <div id="alnav-ticker" class="row-stack empty-state">No ALNAV items loaded yet.</div>
+                </section>
+                <section class="brief-block">
+                  <h3>DoD</h3>
+                  <div id="dod-ticker" class="row-stack empty-state">No DoD watch items loaded yet.</div>
+                </section>
+              </div>
+            </div>
           </article>
 
           <article class="panel">

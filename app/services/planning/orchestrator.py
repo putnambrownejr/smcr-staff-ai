@@ -14,6 +14,7 @@ from app.schemas.staff import (
 )
 from app.schemas.staff_products import StaffProductDraftRequest
 from app.schemas.training import S3PlanningRequest, S3PlanningResponse, S4PlanningRequest, S4PlanningResponse
+from app.services.planning.approach import assess_planning_approach
 from app.services.staff.council import StaffCouncilService
 from app.services.staff.g9_planner import G9Planner
 from app.services.staff.medical_planner import MedicalPlanner
@@ -39,6 +40,20 @@ class StaffPlanningOrchestrator:
         boundary_warnings = detect_sensitive_input(_request_text(request))
         if boundary_warnings:
             request = _sanitize_staff_package_request(request)
+        planning_approach = assess_planning_approach(
+            title=request.title,
+            mission_or_training_goal=request.mission_or_training_goal,
+            event_type=request.event_type,
+            timeframe=request.timeframe,
+            constraints=request.constraints,
+            higher_guidance=[],
+            coordinating_sections=request.coordinating_sections,
+            support_requirements=request.support_requirements,
+            partner_types=request.partner_types,
+            civil_considerations=request.civil_considerations,
+            subordinate_unit_count=0,
+            source_items_present=bool(request.source_items or request.intelligence_question),
+        )
         s2_estimate = self._build_s2_estimate(request)
         s3_plan = self._s3.build(
             S3PlanningRequest(
@@ -146,6 +161,8 @@ class StaffPlanningOrchestrator:
                     facts=[
                         f"Training goal: {request.mission_or_training_goal}",
                         f"Event type: {request.event_type}",
+                        f"Recommended planning method: {planning_approach.recommended_method.upper()}",
+                        f"Planning decision: {planning_approach.decision}",
                         *[f"Support requirement: {item}" for item in request.support_requirements[:3]],
                     ],
                     constraints=request.constraints,
@@ -158,6 +175,7 @@ class StaffPlanningOrchestrator:
         return StaffPlanningPackageResponse(
             title=f"Staff planning package: {request.title}",
             summary=_summary_lines(request, include_g9),
+            planning_approach=planning_approach,
             recommended_course_of_action=_recommended_coa(request, s3_plan, s4_plan, s6_plan, include_g9),
             commander_decisions_now=_commander_decisions(request, s3_plan, s4_plan),
             top_risks=_top_risks(s3_plan, s4_plan, s6_plan, medical_plan),
@@ -272,6 +290,20 @@ def _recommended_coa(
     s6_plan: S6PlanResponse,
     include_g9: bool,
 ) -> list[str]:
+    planning_approach = assess_planning_approach(
+        title=request.title,
+        mission_or_training_goal=request.mission_or_training_goal,
+        event_type=request.event_type,
+        timeframe=request.timeframe,
+        constraints=request.constraints,
+        higher_guidance=[],
+        coordinating_sections=request.coordinating_sections,
+        support_requirements=request.support_requirements,
+        partner_types=request.partner_types,
+        civil_considerations=request.civil_considerations,
+        subordinate_unit_count=0,
+        source_items_present=False,
+    )
     coa = [
         "Approve one main effort, one supporting effort, and cut anything that dilutes them.",
         "Lock the critical-path products before drill ends: task list, short schedule, support asks, "
@@ -279,6 +311,7 @@ def _recommended_coa(
         "Keep the execution concept simple enough to brief quickly, rehearse once, and assess honestly.",
         "Use S-4 and S-6 early so support and information flow shape the plan before the plan hardens.",
         "Treat unresolved assumptions as named risks with owners, not as optimistic background noise.",
+        f"Planning method: {planning_approach.recommended_method.upper()} - {planning_approach.decision}",
     ]
     if include_g9:
         coa.append(

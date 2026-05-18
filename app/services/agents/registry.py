@@ -17,6 +17,7 @@ from app.services.agents.jag_agent import build_jag_agent
 from app.services.agents.leadership_agent import build_leadership_agent
 from app.services.agents.map_agent import build_map_agent
 from app.services.agents.maradmin_agent import build_maradmin_agent
+from app.services.agents.mcpp_agent import build_mcpp_agent
 from app.services.agents.medical_doc_agent import build_medical_doc_agent
 from app.services.agents.mos_civil_affairs_agent import build_mos_civil_affairs_agent
 from app.services.agents.mos_commo_agent import build_mos_commo_agent
@@ -25,6 +26,7 @@ from app.services.agents.orm_agent import build_orm_agent
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.pki_agent import build_pki_troubleshooter_agent
 from app.services.agents.privacy_hygiene_agent import build_privacy_hygiene_agent
+from app.services.agents.r2p2_agent import build_r2p2_agent
 from app.services.agents.s1_admin_chief_agent import build_s1_admin_chief_agent
 from app.services.agents.s2_intel_agent import build_s2_intel_agent
 from app.services.agents.s3_opso_agent import build_s3_opso_agent
@@ -77,6 +79,7 @@ def default_agents() -> list[Agent]:
         build_correspondence_formatting_agent(),
         build_maradmin_agent(),
         build_medical_doc_agent(),
+        build_mcpp_agent(),
         build_uniform_agent(),
         build_drill_prep_agent(),
         build_opord_agent(),
@@ -89,6 +92,7 @@ def default_agents() -> list[Agent]:
         build_jag_agent(),
         build_pki_troubleshooter_agent(),
         build_privacy_hygiene_agent(),
+        build_r2p2_agent(),
         build_leadership_agent(),
         build_osint_agent(),
         build_map_agent(),

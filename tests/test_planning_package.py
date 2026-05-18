@@ -36,6 +36,8 @@ def test_staff_planning_package_builds_cross_staff_output() -> None:
 
     assert response.status_code == 200
     payload = response.json()
+    assert payload["planning_approach"]["recommended_method"] in {"mcpp", "r2p2"}
+    assert payload["planning_approach"]["decision"]
     assert payload["recommended_course_of_action"]
     assert any("cut" in item.lower() for item in payload["recommended_course_of_action"])
     assert payload["commander_decisions_now"]
@@ -134,6 +136,8 @@ def test_frago_to_conop_builds_unit_relationship_framework() -> None:
 
     assert response.status_code == 200
     payload = response.json()
+    assert payload["planning_approach"]["recommended_method"] in {"mcpp", "r2p2"}
+    assert payload["planning_approach"]["decision"]
     assert payload["parsed_guidance"]["directed_tasks"]
     assert payload["unit_relationship_framework"]
     assert len(payload["subordinate_conop_packets"]) == 3
@@ -147,6 +151,7 @@ def test_frago_to_conop_builds_unit_relationship_framework() -> None:
     assert payload["tdg_package"]["failure_triggers"]
     assert payload["learning_cycle"]
     assert any("subordinate concept" in item.lower() for item in payload["det_follow_on_questions"])
+    assert "planning_approach" in payload
     aar_prompts = str(payload["aar_framework"]["sections"])
     assert "Wargame focus:" in aar_prompts
     assert "Failure trigger to observe:" in aar_prompts
@@ -178,6 +183,7 @@ def test_frago_to_conop_runs_xo_sel_review_for_formal_event() -> None:
 
     assert response.status_code == 200
     payload = response.json()
+    assert payload["planning_approach"]["recommended_method"] == "mcpp"
     assert payload["xo_sel_review"] is not None
     assert payload["xo_sel_review"]["roles_run"] == ["xo", "firstsgt"]
 
@@ -198,6 +204,7 @@ def test_frago_to_conop_can_skip_tdg_when_requested() -> None:
 
     assert response.status_code == 200
     payload = response.json()
+    assert "planning_approach" in payload
     assert payload["tdg_package"] is None
 
 

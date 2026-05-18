@@ -31,10 +31,12 @@ def test_agent_registry_loads_expected_agents() -> None:
         "installation-practical-advisor",
         "pki-cac-troubleshooter",
         "leadership-advisor",
+        "mcpp-planning-assistant",
         "osint-research-assistant",
         "terrain-map-advisor",
         "mos-commo",
         "mos-civil-affairs",
+        "r2p2-planning-assistant",
     }.issubset(ids)
 
 
@@ -121,6 +123,30 @@ def test_s3_opso_agent_returns_staff_planning_structure() -> None:
     assert "TDG" in response.answer or "wargame" in response.answer.lower()
     assert response.structured_citations
     assert response.source_trust
+
+
+def test_mcpp_agent_returns_deliberate_planning_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("mcpp-planning-assistant")
+    assert agent is not None
+
+    response = agent.run("Help me run deliberate planning for a new training event.", context=AgentContext())
+
+    assert "MCPP planning assistant advisory" in response.answer
+    assert "COA wargaming" in response.answer
+    assert response.structured_citations
+
+
+def test_r2p2_agent_returns_compressed_planning_guardrails() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("r2p2-planning-assistant")
+    assert agent is not None
+
+    response = agent.run("Help me refine a familiar event under a short timeline.", context=AgentContext())
+
+    assert "R2P2 planning assistant advisory" in response.answer
+    assert "Abort compressed planning" in response.answer
+    assert response.structured_citations
 
 
 def test_s4_logistics_agent_returns_supportability_structure() -> None:

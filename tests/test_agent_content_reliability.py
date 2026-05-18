@@ -19,6 +19,7 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "jag-legal-advisor": "Issue-spot this matter before routing it further.",
     "chaplain-advisor": "Help me think through a morale and welfare issue.",
     "leadership-advisor": "Help me frame a PME on standards and command climate.",
+    "mcpp-planning-assistant": "Help me conduct deliberate MCPP for a new reserve planning problem.",
     "installation-practical-advisor": "Help me think through visitor access for a base event.",
     "maradmin-monitor": "Help me triage a new MARADMIN for reserve staff relevance.",
     "uniform-advisor": "Help me think through the uniform and grooming prep for next drill.",
@@ -33,6 +34,7 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "fitrep-assistant": "Help me organize FitRep support inputs and suspense items.",
     "osint-research-assistant": "Help me summarize public-source trends for a training scenario.",
     "terrain-map-advisor": "Help me find the right public terrain and topo references for a training area.",
+    "r2p2-planning-assistant": "Help me conduct compressed R2P2-style refinement for a familiar event.",
     "repo-privacy-sweeper": "Review this repo before I push and look for personal data backflow.",
 }
 

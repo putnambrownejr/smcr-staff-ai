@@ -13,6 +13,14 @@ from app.schemas.tdg import TdgGenerationResponse
 from app.schemas.training import S3PlanningResponse, S4PlanningResponse
 
 
+class PlanningApproachAssessment(BaseModel):
+    recommended_method: str
+    decision: str
+    why: list[str] = Field(default_factory=list)
+    indicators: list[str] = Field(default_factory=list)
+    staff_implications: list[str] = Field(default_factory=list)
+
+
 class StaffPlanningPackageRequest(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
@@ -57,6 +65,7 @@ class StaffPlanningPackageRequest(BaseModel):
 class StaffPlanningPackageResponse(BaseModel):
     title: str
     summary: list[str] = Field(default_factory=list)
+    planning_approach: PlanningApproachAssessment
     recommended_course_of_action: list[str] = Field(default_factory=list)
     commander_decisions_now: list[str] = Field(default_factory=list)
     top_risks: list[str] = Field(default_factory=list)
@@ -179,6 +188,7 @@ class FragoToConopResponse(BaseModel):
     title: str
     guidance_summary: list[str] = Field(default_factory=list)
     commander_focus: list[str] = Field(default_factory=list)
+    planning_approach: PlanningApproachAssessment
     parsed_guidance: GuidanceExtraction
     unit_relationship_framework: list[UnitRelationshipFrame] = Field(default_factory=list)
     subordinate_conop_packets: list[SubordinateConopPacket] = Field(default_factory=list)
