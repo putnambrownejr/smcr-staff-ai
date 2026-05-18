@@ -41,6 +41,10 @@ Why:
 `build_tdg` is the S-3 wargaming / tactical-decision-game lane. It is meant to pressure-test assumptions,
 force decisions early, and expose reserve-specific friction before the real event does.
 
+`draft_staff_product` is now also the right lane for briefing content when you want a deck outline that behaves
+like a real staff brief instead of a generic AI slide dump. Use `decision_brief` or `command_update_brief`
+for slide-by-slide content discipline first, then convert to slides later if needed.
+
 `set_active_user_context` is the quick way to tell the app "treat me like I am at this kind of unit right now"
 without overwriting the longer-term handoff. Staff agents can pick that up automatically when the run includes
 the same `user_key`.

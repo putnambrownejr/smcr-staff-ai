@@ -12,6 +12,8 @@ class StaffProductType(StrEnum):
     conop = "conop"
     sitrep = "sitrep"
     aar = "aar"
+    decision_brief = "decision_brief"
+    command_update_brief = "command_update_brief"
     naval_letter = "naval_letter"
     memorandum = "memorandum"
     endorsement = "endorsement"

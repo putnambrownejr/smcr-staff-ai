@@ -9,7 +9,10 @@ class StaffProductsAgent(Agent):
         self.metadata = AgentMetadata(
             id="staff-products",
             name="Staff Products Assistant",
-            description="Builds advisory scaffolds for OPORDs, WARNOs, FRAGOs, SITREPs, AARs, and correspondence.",
+            description=(
+                "Builds advisory scaffolds for OPORDs, WARNOs, FRAGOs, SITREPs, AARs, "
+                "decision briefs, command-update briefs, and correspondence."
+            ),
             domain="staff products",
             intended_users=["SMCR officers", "staff officers", "company and battalion staff"],
             allowed_sources=[
@@ -56,7 +59,10 @@ class StaffProductsAgent(Agent):
             structured_citations=draft.structured_citations,
             confidence=draft.confidence,
             follow_up_questions=[
-                "What product type do you need: OPORD, WARNO, FRAGO, SITREP, AAR, letter, memo, or endorsement?",
+                (
+                    "What product type do you need: OPORD, WARNO, FRAGO, SITREP, AAR, "
+                    "decision brief, command update brief, letter, memo, or endorsement?"
+                ),
                 "Is this fictional/training-only or a real administrative workflow?",
                 "What audience, echelon, and required format should it follow?",
             ],
@@ -75,8 +81,14 @@ def _product_type_from_context(context: AgentContext, input_text: str) -> StaffP
         return StaffProductType.frago
     if "sitrep" in text:
         return StaffProductType.sitrep
+    if "decision brief" in text or ("decision" in text and ("brief" in text or "slides" in text or "deck" in text)):
+        return StaffProductType.decision_brief
+    if "command update" in text or "update brief" in text:
+        return StaffProductType.command_update_brief
     if "aar" in text or "after action" in text:
         return StaffProductType.aar
+    if "slides" in text or "slide deck" in text or "powerpoint" in text or "briefing deck" in text:
+        return StaffProductType.decision_brief
     if "letter" in text:
         return StaffProductType.naval_letter
     if "memo" in text:

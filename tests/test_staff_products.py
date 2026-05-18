@@ -85,3 +85,32 @@ def test_staff_product_builder_strengthens_aar_sections_and_notes() -> None:
     assert any("XO or S-3 would keep" in note for note in response.formatting_notes)
     assert any("named owner" in item for item in response.review_checklist)
     assert any("1553.3C" in citation.title for citation in response.structured_citations)
+
+
+def test_staff_product_builder_creates_decision_brief_slide_structure() -> None:
+    response = StaffProductBuilder().build(
+        StaffProductDraftRequest(
+            product_type=StaffProductType.decision_brief,
+            topic="Decision brief for reserve field training scope reduction",
+            facts=["Commander must decide whether to keep two lanes or cut to one."],
+        )
+    )
+
+    headings = [section.heading for section in response.sections]
+    assert "Slide 1. Commander Problem and Decision Required" in headings
+    assert "Slide 4. Options or COAs" in headings
+    assert any("one decision problem" in note for note in response.formatting_notes)
+    assert any("Cut any slide" in item for item in response.review_checklist)
+
+
+def test_staff_products_agent_defaults_slide_requests_to_decision_brief() -> None:
+    from app.services.agents.base import AgentContext
+    from app.services.agents.staff_products_agent import build_staff_products_agent
+
+    agent = build_staff_products_agent()
+    response = agent.run(
+        "Build me a short slide deck for a commander decision on drill weekend field training scope.",
+        context=AgentContext(),
+    )
+
+    assert "DECISION_BRIEF draft scaffold" in response.answer

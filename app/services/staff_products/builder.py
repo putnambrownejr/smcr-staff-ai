@@ -100,6 +100,100 @@ SITREP_SECTIONS = [
     StaffProductSection(heading="Next 24-72 Hours", prompts=["Expected activity, decisions, and support requirements"]),
 ]
 
+DECISION_BRIEF_SECTIONS = [
+    StaffProductSection(
+        heading="Slide 1. Commander Problem and Decision Required",
+        prompts=[
+            "State the problem in one sentence",
+            "State the exact decision or approval being requested",
+            "End the slide with the ask, not background",
+        ],
+    ),
+    StaffProductSection(
+        heading="Slide 2. Why This Matters Now",
+        prompts=[
+            "What changed or why the issue is on the board now",
+            "Timeline pressure, readiness impact, or opportunity cost",
+            "Keep it to the few facts that make the decision urgent",
+        ],
+    ),
+    StaffProductSection(
+        heading="Slide 3. Situation and Mission Linkage",
+        prompts=[
+            "Current status",
+            "Higher guidance or commander's intent linkage",
+            "What this supports in mission, training, or readiness terms",
+        ],
+    ),
+    StaffProductSection(
+        heading="Slide 4. Options or COAs",
+        prompts=[
+            "Present realistic options only",
+            "For each option: what it gives, what it costs, what it risks",
+            "Do not create fake options just to fill the slide",
+        ],
+    ),
+    StaffProductSection(
+        heading="Slide 5. Risks, Friction, and Assumptions",
+        prompts=[
+            "What breaks this plan first",
+            "Critical assumptions that still need confirmation",
+            "Support, comm, medical, admin, or timeline friction",
+        ],
+    ),
+    StaffProductSection(
+        heading="Slide 6. Recommendation and Immediate Actions",
+        prompts=[
+            "Recommended option and why",
+            "Immediate actions if approved",
+            "Named owners and next suspense point",
+        ],
+    ),
+]
+
+COMMAND_UPDATE_BRIEF_SECTIONS = [
+    StaffProductSection(
+        heading="Slide 1. Executive Snapshot",
+        prompts=[
+            "What the commander needs to know in under thirty seconds",
+            "Overall posture: on track, slipping, or blocked",
+            "Lead with meaning, not chronology",
+        ],
+    ),
+    StaffProductSection(
+        heading="Slide 2. Current Status by Main Effort",
+        prompts=[
+            "What is complete",
+            "What is in progress",
+            "What remains open",
+        ],
+    ),
+    StaffProductSection(
+        heading="Slide 3. What Changed Since the Last Brief",
+        prompts=[
+            "New facts only",
+            "Changes to timeline, support, risk, or command guidance",
+            "Do not re-brief stable information out of habit",
+        ],
+    ),
+    StaffProductSection(
+        heading="Slide 4. Risks and Friction",
+        prompts=[
+            "Top blockers",
+            "What is trending worse",
+            "What requires commander or XO attention",
+        ],
+    ),
+    StaffProductSection(
+        heading="Slide 5. Decisions, Support Requirements, and Suspenses",
+        prompts=[
+            "Decision required now, if any",
+            "Support shortfalls or asks",
+            "Named suspenses and next touchpoint",
+        ],
+    ),
+]
+
 AAR_SECTIONS = [
     StaffProductSection(
         heading="1. Event and Command Frame",
@@ -231,6 +325,10 @@ def _sections_for(product_type: StaffProductType) -> list[StaffProductSection]:
         return CONOP_SECTIONS
     if product_type == StaffProductType.sitrep:
         return SITREP_SECTIONS
+    if product_type == StaffProductType.decision_brief:
+        return DECISION_BRIEF_SECTIONS
+    if product_type == StaffProductType.command_update_brief:
+        return COMMAND_UPDATE_BRIEF_SECTIONS
     if product_type == StaffProductType.aar:
         return AAR_SECTIONS
     return CORRESPONDENCE_SECTIONS
@@ -277,6 +375,15 @@ def _review_checklist(request: StaffProductDraftRequest) -> list[str]:
         StaffProductType.conop,
     }:
         checklist.append("Confirm the scenario is fictional/training-only or handled in an approved environment.")
+    if request.product_type in {StaffProductType.decision_brief, StaffProductType.command_update_brief}:
+        checklist.extend(
+            [
+                "Cut any slide that does not change understanding, decision quality, or execution.",
+                "Limit each slide to one main point and no more than a few support bullets.",
+                "Move narrative paragraphs, source detail, and backup data to speaker notes or an annex.",
+                "Make the decision, ask, or suspense explicit before the brief leaves the staff level.",
+            ]
+        )
     if request.product_type == StaffProductType.aar:
         checklist.extend(
             [
@@ -333,6 +440,24 @@ def _formatting_notes_for(request: StaffProductDraftRequest) -> list[str]:
             "State supported/supporting relationships clearly so subordinate units can draft their own local concepts.",
             "Tie assessment language to task standards, decision points, and AAR capture rather than generic "
             "enthusiasm.",
+        ]
+    if request.product_type == StaffProductType.decision_brief:
+        return [
+            "Treat each section like a slide, not a memo paragraph.",
+            "Put one decision problem on the screen at a time; background belongs only where it changes the decision.",
+            "Use short bullets, not prose blocks. If it cannot be briefed aloud in a few seconds, it is too dense.",
+            "End with a recommendation, immediate actions, and the exact decision or approval required.",
+            "Keep backup data off the main slides and move it to annex slides or speaker notes.",
+        ]
+    if request.product_type == StaffProductType.command_update_brief:
+        return [
+            "This brief should update command understanding, not restate the whole plan from scratch.",
+            "Lead with posture, changes, and blockers before detail.",
+            "Use one idea per slide and cut decorative language, slogans, and filler transitions.",
+            (
+                "If a slide has no decision, support ask, or readiness consequence, "
+                "it probably does not belong in the brief."
+            ),
         ]
     if request.product_type == StaffProductType.aar:
         return [

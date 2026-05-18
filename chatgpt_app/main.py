@@ -262,8 +262,8 @@ TOOL_SPECS: list[types.Tool] = [
         name="draft_staff_product",
         title="Draft Staff Product",
         description=(
-            "Use this when the user needs an advisory WARNO, FRAGO, AAR, naval letter, memorandum, or similar "
-            "staff product scaffold."
+            "Use this when the user needs an advisory WARNO, FRAGO, AAR, decision brief, command-update brief, "
+            "naval letter, memorandum, or similar staff product scaffold."
         ),
         inputSchema=StaffProductToolInput.model_json_schema(),
         _meta=_tool_invocation_meta("Drafting the staff product", "Staff product draft ready", read_only=False),
