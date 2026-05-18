@@ -104,6 +104,18 @@ document.getElementById("refresh-navadmins").addEventListener("click", () => ref
 document.getElementById("refresh-alnavs").addEventListener("click", () => refreshSourceLane("alnavs"));
 document.getElementById("refresh-dod-watch").addEventListener("click", () => refreshSourceLane("dod"));
 document.getElementById("refresh-source-watch").addEventListener("click", () => refreshSourceLane("all"));
+document
+  .getElementById("thin-staff-open-mission-analysis")
+  .addEventListener("click", () => launchThinStaffWorkflow("mission-analysis"));
+document
+  .getElementById("thin-staff-open-planning-cell")
+  .addEventListener("click", () => launchThinStaffWorkflow("planning-cell"));
+document
+  .getElementById("thin-staff-open-update-cycle")
+  .addEventListener("click", () => launchThinStaffWorkflow("update-cycle"));
+document
+  .getElementById("thin-staff-open-admin")
+  .addEventListener("click", () => launchThinStaffWorkflow("admin"));
 
 document.addEventListener("click", async (event) => {
   const documentButton = event.target.closest("[data-document-id]");
@@ -219,6 +231,116 @@ function renderThinStaffAssist(payload) {
     payload.next_touchpoint ? [{ title: payload.next_touchpoint, category: "touchpoint" }] : [],
     "No touchpoint loaded yet.",
   );
+}
+
+async function launchThinStaffWorkflow(mode) {
+  if (!state.workspace) {
+    setWorkspaceNote("Load a workspace first so the launch can use current context.", true);
+    return;
+  }
+
+  if (mode === "admin") {
+    state.activeLane = "overview";
+    applyLaneVisibility();
+    document.getElementById("admin-summary")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setWorkspaceNote("Jumped to admin readiness.");
+    return;
+  }
+
+  primeThinStaffForms();
+  state.activeLane = "draft";
+  applyLaneVisibility();
+
+  if (mode === "update-cycle") {
+    document.getElementById("staff-cycle-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setWorkspaceNote("Opened the staff update cycle with current workspace context.");
+    return;
+  }
+
+  document.getElementById("planning-cell-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  if (mode === "planning-cell") {
+    setWorkspaceNote("Opened the planning cell with current workspace context.");
+    return;
+  }
+
+  if (mode === "mission-analysis") {
+    const payload = buildPlanningCellPayloadFromForm();
+    const data = await apiFetch("/staff/mission-analysis", { method: "POST", body: JSON.stringify(payload) });
+    renderMissionAnalysisOutput("planning-cell-output", data);
+    setWorkspaceNote("Ran mission analysis from the thin-staff assist lane.");
+  }
+}
+
+function primeThinStaffForms() {
+  const chiefBrief = state.workspace?.chief_brief || {};
+  const thinStaff = chiefBrief.thin_staff_assist || {};
+  const activeContext = chiefBrief.active_user_context || {};
+  const handoff = chiefBrief.handoff || {};
+  const supportedUnit =
+    activeContext.unit_name || activeContext.unit_type || activeContext.unit_family || "SMCR unit";
+  const missionGoal =
+    thinStaff.walk_in_brief?.[0] ||
+    state.workspace?.summary_lines?.[0] ||
+    "Refine the next drill concept and keep the staff synchronized on what matters.";
+  const priorities = chiefBrief.next_drill_readiness?.this_week_focus || [];
+  const blindSpots = thinStaff.likely_blind_spots || [];
+  const questions = thinStaff.missing_section_questions || [];
+
+  const planningForm = document.getElementById("planning-cell-form");
+  if (planningForm) {
+    planningForm.elements.title.value = `Thin-staff planning cell for ${supportedUnit}`;
+    planningForm.elements.supported_unit.value = supportedUnit;
+    planningForm.elements.mission_or_training_goal.value = missionGoal;
+    planningForm.elements.commander_priorities.value = priorities.join("\n");
+    planningForm.elements.higher_guidance.value = blindSpots.join("\n");
+    planningForm.elements.coordinating_sections.value = "S-3\nS-4\nS-6\nS-1/Admin";
+    planningForm.elements.support_requirements.value = questions.join("\n");
+    planningForm.elements.section_updates.value = buildSectionUpdateSeed(questions, blindSpots);
+    planningForm.elements.time_available.value =
+      chiefBrief.next_drill_readiness?.anchor_drill_date
+        ? `Before drill anchor ${chiefBrief.next_drill_readiness.anchor_drill_date}`
+        : "Before next staff sync";
+  }
+
+  const updateCycleForm = document.getElementById("staff-cycle-form");
+  if (updateCycleForm) {
+    updateCycleForm.elements.title.value = `Thin-staff update cycle for ${supportedUnit}`;
+    updateCycleForm.elements.supported_unit.value = supportedUnit;
+    updateCycleForm.elements.mission_or_training_goal.value = missionGoal;
+    updateCycleForm.elements.commander_priorities.value = priorities.join("\n");
+    updateCycleForm.elements.section_updates.value =
+      buildSectionUpdateSeed(questions, blindSpots) ||
+      (handoff.admin_watch_items || []).slice(0, 3).map((item) => `S-1/Admin: ${item}`).join("\n");
+  }
+}
+
+function buildPlanningCellPayloadFromForm() {
+  const form = new FormData(document.getElementById("planning-cell-form"));
+  const supportAndCivil = splitLines(form.get("support_requirements"));
+  return {
+    title: form.get("title"),
+    supported_unit: form.get("supported_unit"),
+    supported_echelon: "company",
+    event_type: form.get("event_type") || "training_event",
+    mission_or_training_goal: form.get("mission_or_training_goal"),
+    time_available: form.get("time_available") || null,
+    commander_priorities: splitLines(form.get("commander_priorities")),
+    higher_guidance: splitLines(form.get("higher_guidance")),
+    constraints: splitLines(form.get("higher_guidance")),
+    coordinating_sections: splitLines(form.get("coordinating_sections")),
+    support_requirements: supportAndCivil,
+    civil_considerations: supportAndCivil,
+    section_updates: parseSectionUpdates(form.get("section_updates")),
+    training_only: true,
+  };
+}
+
+function buildSectionUpdateSeed(questions, blindSpots) {
+  const s3 = questions[0] || "What is the real training output or commander decision?";
+  const s4 = blindSpots[0] || "Support assumptions still need to be checked honestly.";
+  const s6 = questions[2] || "Reporting and access friction still need to be clarified.";
+  return [`S-3: ${s3}`, `S-4: ${s4}`, `S-6: ${s6}`].join("\n");
 }
 
 function renderAdmin(payload) {
@@ -743,6 +865,38 @@ function renderPlanningCellOutput(targetId, payload) {
       <p class="meta-inline">CUB decisions: ${escapeHtml(((updateCycle.cub || {}).commander_decisions || []).slice(0, 3).join(" | ") || "None")}</p>
       <p class="meta-inline">CPB branches: ${escapeHtml(((updateCycle.cpb || {}).branches_and_sequels || []).slice(0, 2).join(" | ") || "None")}</p>
       <p class="meta-inline">Next OPT actions: ${escapeHtml((payload.next_opt_actions || []).slice(0, 3).join(" | ") || "None")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Warnings</span>
+      <ul>${(payload.warnings || []).slice(0, 4).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </section>
+  `;
+}
+
+function renderMissionAnalysisOutput(targetId, payload) {
+  const target = document.getElementById(targetId);
+  target.className = "tool-output";
+  target.innerHTML = `
+    <section>
+      <span class="strip-label">Mission analysis</span>
+      <p><strong>Mission statement:</strong> ${escapeHtml(payload.mission_statement || "No mission statement returned.")}</p>
+      <p class="meta-inline">Supported unit: ${escapeHtml(payload.supported_unit || "Not stated")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Tasks</span>
+      <ul>${(payload.specified_tasks || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+      <p class="meta-inline">Implied: ${escapeHtml((payload.implied_tasks || []).slice(0, 3).join(" | ") || "None")}</p>
+      <p class="meta-inline">Essential: ${escapeHtml((payload.essential_tasks || []).slice(0, 3).join(" | ") || "None")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Assumptions and requirements</span>
+      <ul>${(payload.assumptions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+      <p class="meta-inline">Information requirements: ${escapeHtml((payload.information_requirements || []).slice(0, 3).join(" | ") || "None")}</p>
+      <p class="meta-inline">Staff estimates: ${escapeHtml((payload.staff_estimate_requirements || []).slice(0, 4).join(" | ") || "None")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Commander decisions</span>
+      <ul>${(payload.commander_decisions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No commander decisions returned.</li>"}</ul>
     </section>
     <section>
       <span class="strip-label">Warnings</span>
