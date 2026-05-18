@@ -28,6 +28,9 @@ Why:
 - `build_tdg`
 - `build_staff_update_cycle`
 - `run_opt_facilitator`
+- `run_sja_military_justice_advisor`
+- `run_njp_issue_spotting_worksheet`
+- `run_military_justice_routing_checklist`
 - `run_red_team_assumptions_challenge`
 - `run_assessment_learning_advisor`
 - `run_writing_briefing_coach`
@@ -50,6 +53,18 @@ force decisions early, and expose reserve-specific friction before the real even
 `build_staff_update_cycle` is the recurring staff-rhythm lane. It takes section updates and turns them into
 a linked running estimate, CUB, and CPB so the user can move from “what changed?” to “what does the commander
 need to hear or decide?” without rebuilding the frame every time.
+
+`run_sja_military_justice_advisor` is the clean front door for command legal issue-spotting. Use it when the
+user needs SJA-shaped help on NJP, UCMJ, courts-martial process awareness, Reserve-status jurisdiction questions,
+or legal routing without pretending the tool is a lawyer.
+
+`run_njp_issue_spotting_worksheet` is the compact NJP lane. Use it when the user wants the question broken into
+authority, jurisdiction, accused advice, punishments, Reserve concerns, UPB discipline, appeal exposure, and
+what must go to the real SJA now.
+
+`run_military_justice_routing_checklist` is the compact handoff lane. Use it when the user needs a fast command
+check on whether the matter belongs with SJA, defense, VLC, trial services, or another military justice channel,
+and what minimum clean handoff package should be prepared.
 
 `run_opt_facilitator` is the cleaner front door for mission analysis and OPT conduct. Use it when the staff
 needs to keep a visible assumption log, decision log, question log, and due-out tracker instead of jumping

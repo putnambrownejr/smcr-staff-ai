@@ -76,6 +76,34 @@ class ChatGptBridgeAdapter:
     async def run_joint_interagency_frame_advisor(self, payload: dict[str, object]) -> dict[str, object]:
         return await self.run_staff_agent(agent_id="joint-interagency-frame-advisor", payload=payload)
 
+    async def run_sja_military_justice_advisor(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.run_staff_agent(agent_id="jag-legal-advisor", payload=payload)
+
+    async def run_njp_issue_spotting_worksheet(self, payload: dict[str, object]) -> dict[str, object]:
+        worksheet_payload = {
+            "input": (
+                "Use an NJP issue-spotting worksheet structure. Focus on authority, jurisdiction, accused advice, "
+                "Reserve-status concerns, available punishments, UPB/record discipline, appeal concerns, and what "
+                "must go to the real SJA now.\n\n"
+                f"User prompt: {payload.get('input', '')}"
+            ),
+            "context": payload.get("context", {}),
+        }
+        return await self.run_staff_agent(agent_id="jag-legal-advisor", payload=worksheet_payload)
+
+    async def run_military_justice_routing_checklist(self, payload: dict[str, object]) -> dict[str, object]:
+        routing_payload = {
+            "input": (
+                "Use a military justice routing checklist structure. Focus on whether the matter sounds like NJP, "
+                "courts-martial, administrative separation, investigation support, victim/witness-sensitive action, "
+                "or concurrent civilian-jurisdiction concern; identify the right legal channel and what minimum "
+                "clean handoff package the command should prepare.\n\n"
+                f"User prompt: {payload.get('input', '')}"
+            ),
+            "context": payload.get("context", {}),
+        }
+        return await self.run_staff_agent(agent_id="jag-legal-advisor", payload=routing_payload)
+
     async def list_agents(self) -> dict[str, Any]:
         return {"agents": await self._request_list("GET", "/agents")}
 

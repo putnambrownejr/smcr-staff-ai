@@ -355,6 +355,48 @@ TOOL_SPECS: list[types.Tool] = [
         ),
     ),
     types.Tool(
+        name="run_sja_military_justice_advisor",
+        title="Run SJA Military Justice Advisor",
+        description=(
+            "Use this when the user wants SJA-style command issue-spotting for NJP, UCMJ, courts-martial, "
+            "Reserve-status jurisdiction questions, or military justice routing."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the SJA advisor",
+            "SJA military justice advisor ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="run_njp_issue_spotting_worksheet",
+        title="Run NJP Issue Spotting Worksheet",
+        description=(
+            "Use this when the user wants a compact NJP worksheet covering authority, jurisdiction, accused "
+            "advice, punishments, Reserve concerns, UPB discipline, and what must go to the SJA."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the NJP worksheet",
+            "NJP issue-spotting worksheet ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="run_military_justice_routing_checklist",
+        title="Run Military Justice Routing Checklist",
+        description=(
+            "Use this when the user wants a compact routing checklist for whether a matter belongs with SJA, "
+            "defense, VLC, trial services, or another military justice channel."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the routing checklist",
+            "Military justice routing checklist ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
         name="run_opt_facilitator",
         title="Run OPT Facilitator",
         description=(
@@ -591,6 +633,27 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
                 {"input": opt_payload.input, "context": opt_payload.context}
             )
             return _ok_result("Ran the OPT facilitator.", result)
+
+        if name == "run_sja_military_justice_advisor":
+            sja_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_sja_military_justice_advisor(
+                {"input": sja_payload.input, "context": sja_payload.context}
+            )
+            return _ok_result("Ran the SJA military justice advisor.", result)
+
+        if name == "run_njp_issue_spotting_worksheet":
+            njp_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_njp_issue_spotting_worksheet(
+                {"input": njp_payload.input, "context": njp_payload.context}
+            )
+            return _ok_result("Ran the NJP issue-spotting worksheet.", result)
+
+        if name == "run_military_justice_routing_checklist":
+            routing_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_military_justice_routing_checklist(
+                {"input": routing_payload.input, "context": routing_payload.context}
+            )
+            return _ok_result("Ran the military justice routing checklist.", result)
 
         if name == "run_red_team_assumptions_challenge":
             red_team_payload = StaffAgentAssistToolInput.model_validate(arguments)

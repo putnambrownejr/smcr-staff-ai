@@ -128,6 +128,58 @@ async def test_run_opt_facilitator_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_run_sja_military_justice_advisor_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_sja_military_justice_advisor(
+        {
+            "input": "Help me issue-spot an NJP question before I route it.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "jag-legal-advisor"
+    assert "SJA / military justice advisory" in cast(str, result["answer"])
+
+
+@pytest.mark.anyio
+async def test_run_njp_issue_spotting_worksheet_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_njp_issue_spotting_worksheet(
+        {
+            "input": "Walk me through a reserve NJP issue.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "jag-legal-advisor"
+    answer = cast(str, result["answer"])
+    assert "NJP / Article 15 issue-spotting" in answer
+    assert "Reserve" in answer
+
+
+@pytest.mark.anyio
+async def test_run_military_justice_routing_checklist_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_military_justice_routing_checklist(
+        {
+            "input": "Help me route a possible military justice matter correctly.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "jag-legal-advisor"
+    answer = cast(str, result["answer"])
+    assert "proper legal handoff lane" in answer
+    assert "SJA" in answer
+    assert "defense" in answer
+    assert "VLC" in answer
+    assert "trial services" in answer
+
+
+@pytest.mark.anyio
 async def test_run_red_team_assumptions_challenge_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 
