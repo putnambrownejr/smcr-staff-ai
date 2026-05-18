@@ -7,6 +7,7 @@ from app.schemas.session import UserSessionHandoff
 from app.schemas.sharing import (
     ExternalAiPacketRequest,
     ExternalAiPacketResponse,
+    ExternalAiTarget,
     ShareSafeActiveContext,
     ShareSafeDocumentSummary,
     ShareSafeDrillPlan,
@@ -125,6 +126,7 @@ class ExternalAiPacketBuilder:
         return ExternalAiPacketResponse(
             user_key=request.user_key,
             purpose=request.purpose,
+            target_platform=request.target_platform,
             safe_to_share=safe_to_share,
             handoff=share_handoff,
             active_user_context=share_active_context,
@@ -134,6 +136,7 @@ class ExternalAiPacketBuilder:
             warnings=warnings,
             withheld_categories=sorted(dict.fromkeys(withheld_categories)),
             redacted_fields=sorted(dict.fromkeys(redacted_fields)),
+            recommended_share_format=_recommended_format(request.target_platform),
             recommended_share_prompt=_recommended_prompt(request),
         )
 
@@ -271,9 +274,38 @@ def sanitize_opportunity(opportunity: OpportunityRecord) -> ShareSafeOpportunity
 
 def _recommended_prompt(request: ExternalAiPacketRequest) -> str:
     purpose = request.purpose or "an advisory Reserve staff-planning task"
+    platform_hint = _platform_hint(request.target_platform)
     return (
         "Use this share-safe packet as local context only. Treat it as advisory, "
         "not authoritative command guidance. "
-        f"The user wants help with {purpose}. Do not infer hidden personal data, exact locations, "
+        f"The user wants help with {purpose}. {platform_hint} "
+        "Do not infer hidden personal data, exact locations, "
         "or sensitive unit details."
     )
+
+
+def _recommended_format(target_platform: ExternalAiTarget) -> str:
+    if target_platform in {
+        ExternalAiTarget.CLAUDE,
+        ExternalAiTarget.GEMINI,
+        ExternalAiTarget.GROK,
+        ExternalAiTarget.GENAI,
+    }:
+        return "json-plus-brief"
+    if target_platform is ExternalAiTarget.COPILOT:
+        return "markdown-brief-plus-json"
+    return "brief-plus-json"
+
+
+def _platform_hint(target_platform: ExternalAiTarget) -> str:
+    if target_platform is ExternalAiTarget.CLAUDE:
+        return "Ask for concise reasoning, explicit assumptions, and reviewable outputs."
+    if target_platform is ExternalAiTarget.GEMINI:
+        return "Ask it to follow the repository guidance and keep the response grounded in the provided packet."
+    if target_platform is ExternalAiTarget.GROK:
+        return "Ask it to keep the response practical, repo-aware, and limited to the provided local context."
+    if target_platform is ExternalAiTarget.COPILOT:
+        return "Ask it to stay close to repository files, concrete workflows, and implementation-ready suggestions."
+    if target_platform is ExternalAiTarget.GENAI:
+        return "Ask it to stay UNCLASSIFIED, advisory, and conservative about any operational detail."
+    return "Ask it to stay within the provided packet and avoid filling gaps with sensitive guesses."

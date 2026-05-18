@@ -1,4 +1,4 @@
-# CLAUDE.md
+# GEMINI.md
 
 This repository is safe to reason about from GitHub, but not all local user data should be shared with hosted AI systems.
 
@@ -29,11 +29,11 @@ GitHub access does not include:
 
 Do not encourage users to paste raw local handoffs, raw document previews, filenames, context IDs, exact drill-event locations, or unnecessary identifying details into hosted AI tools.
 
-If a user wants to bring local context into Claude or another external model, prefer the share-safe packet route:
+If a user wants to bring local context into Gemini or another external model, prefer the share-safe packet route:
 
 - `POST /sharing/external-ai-packet`
 
-Use `target_platform: "claude"` when building the packet if the user wants Claude-specific prompt framing.
+Use `target_platform: "gemini"` when building the packet if the user wants Gemini-specific prompt framing.
 
 That route is designed to:
 

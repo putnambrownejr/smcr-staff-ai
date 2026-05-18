@@ -1,6 +1,6 @@
 # External AI Safe Use
 
-This repo can work well with ChatGPT, Claude, and other hosted AI systems, but only if local user context is shared deliberately.
+This repo can work well with ChatGPT, Claude, Gemini, Grok, Copilot, and other hosted AI systems, but only if local user context is shared deliberately.
 
 ## Safe Principle
 
@@ -34,11 +34,24 @@ Use:
 
 This route builds a scrubbed packet for external AI use and returns:
 
+- `target_platform`
 - `safe_to_share`
 - warnings
 - withheld categories
 - redacted fields
+- recommended share format
 - a recommended share prompt
+
+Supported target values:
+
+- `generic`
+- `claude`
+- `gemini`
+- `grok`
+- `copilot`
+- `genai`
+
+Use `genai` when the target is a government-hosted or otherwise unspecified model environment and you want the most conservative prompt framing.
 
 ## Why This Exists
 

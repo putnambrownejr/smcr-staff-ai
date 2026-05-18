@@ -88,6 +88,7 @@ def test_external_ai_packet_redacts_sensitive_local_fields(tmp_path: Path) -> No
             "/sharing/external-ai-packet",
             json={
                 "user_key": "capt-share",
+                "target_platform": "gemini",
                 "include_document_summary": True,
                 "include_drill_plans": True,
                 "include_opportunities": True,
@@ -99,6 +100,7 @@ def test_external_ai_packet_redacts_sensitive_local_fields(tmp_path: Path) -> No
 
     assert response.status_code == 200
     payload = response.json()
+    assert payload["target_platform"] == "gemini"
     assert payload["handoff"]["mos"] == "0602"
     assert "display_name" not in payload["handoff"]
     assert payload["document_summary"]["total_documents"] == 1
@@ -109,4 +111,6 @@ def test_external_ai_packet_redacts_sensitive_local_fields(tmp_path: Path) -> No
     assert payload["opportunities"][0]["title"] == "ADOS Planner"
     assert "source_url" not in payload["opportunities"][0]
     assert "handoff.display_name" in payload["redacted_fields"]
+    assert payload["recommended_share_format"] == "json-plus-brief"
+    assert "repository guidance" in payload["recommended_share_prompt"]
     assert payload["safe_to_share"] is False

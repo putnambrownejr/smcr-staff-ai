@@ -1,10 +1,21 @@
 from datetime import date, datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 
+class ExternalAiTarget(StrEnum):
+    GENERIC = "generic"
+    CLAUDE = "claude"
+    GEMINI = "gemini"
+    GROK = "grok"
+    COPILOT = "copilot"
+    GENAI = "genai"
+
+
 class ExternalAiPacketRequest(BaseModel):
     user_key: str
+    target_platform: ExternalAiTarget = ExternalAiTarget.GENERIC
     include_handoff: bool = True
     include_active_user_context: bool = True
     include_document_summary: bool = False
@@ -74,6 +85,7 @@ class ShareSafeOpportunity(BaseModel):
 class ExternalAiPacketResponse(BaseModel):
     user_key: str
     purpose: str | None = None
+    target_platform: ExternalAiTarget = ExternalAiTarget.GENERIC
     safe_to_share: bool = True
     handoff: ShareSafeHandoff | None = None
     active_user_context: ShareSafeActiveContext | None = None
@@ -83,4 +95,5 @@ class ExternalAiPacketResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list)
     withheld_categories: list[str] = Field(default_factory=list)
     redacted_fields: list[str] = Field(default_factory=list)
+    recommended_share_format: str | None = None
     recommended_share_prompt: str | None = None
