@@ -72,6 +72,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | MARADMIN RSS feed | Pulls the live official Marines.mil MARADMIN RSS feed into local cache and exposes it for dashboard ticker use. | Working local live-source connector |
 | Navy message watch | Attempts to pull official NAVADMIN and ALNAV current-year message indexes into local cache, with warning-preserving fallback when MyNavyHR blocks server-side access. | Working best-effort connector |
 | DoD watch | Pulls and filters official Defense.gov release RSS items into a smaller local officer-relevant watchlist. | Working local live-source connector |
+| Custom watch feeds | Lets a user add local-only RSS/Atom feeds with trust labels, categories, and per-feed refresh so personal or unit watches stay outside the repo. | Working local live-source connector |
 | RAG foundations | Includes document/chunk models, chunking, local embedding stub, vector-store stub, doctrine manifest validation, and citation-preserving local RAG pipeline. | Ready for expansion |
 | Lightweight dashboard | Serves a browser-based local operations board for Chief brief, admin readiness, career watch, and drafting tools. | Working local UI |
 
@@ -1288,6 +1289,43 @@ curl http://127.0.0.1:8000/message-watch/dod/feed
 ```
 
 The Navy routes preserve warnings when the official source blocks automated requests from the current host. In that case, they return cached data if present rather than silently failing.
+
+### Custom RSS / Atom Watch Feeds
+
+Create a local-only custom feed:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/custom-watch-feeds `
+  -H "Content-Type: application/json" `
+  -d "{\"name\":\"Unit updates\",\"url\":\"https://example.test/feed.xml\",\"category\":\"unit_news\",\"trust_level\":\"official\",\"tags\":[\"reserve\",\"training\"]}"
+```
+
+List configured feeds:
+
+```powershell
+curl http://127.0.0.1:8000/custom-watch-feeds
+```
+
+Refresh one feed:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/custom-watch-feeds/<feed_id>/refresh
+```
+
+Read cached items for one feed:
+
+```powershell
+curl http://127.0.0.1:8000/custom-watch-feeds/<feed_id>/items
+```
+
+This feature is intentionally:
+
+- local-only
+- RSS/Atom-only
+- trust-labeled
+- disabled by toggle when needed
+
+It is meant for user awareness tailoring, not for expanding the authoritative source lane.
 
 ## Data Source Philosophy
 
