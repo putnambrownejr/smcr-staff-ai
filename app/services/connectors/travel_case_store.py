@@ -6,7 +6,12 @@ from pathlib import Path
 
 from app.core.config import default_local_context_dir
 from app.schemas.connector_digest import TravelEmailCaseSummary
+from app.schemas.context import LocalContextMetadata
 from app.schemas.travel_cases import TravelCaseRecord
+from app.services.connectors.travel_email_interpreter import (
+    build_attachment_follow_up_prompts,
+    infer_attachment_receipt_categories,
+)
 from app.services.session.handoff_store import is_valid_user_key
 
 
@@ -63,6 +68,7 @@ class TravelCaseStore:
                 attached_receipt_categories=_dedupe(case.attached_receipt_categories),
                 attachment_names=_dedupe(case.attachment_names),
                 attachment_follow_up_prompts=_dedupe(case.attachment_follow_up_prompts),
+                linked_receipt_context_ids=[],
                 source_subjects=_dedupe([case.source_subject]),
                 source_senders=_dedupe([case.sender] if case.sender else []),
                 last_message_at=case.message_received_at,
@@ -88,6 +94,7 @@ class TravelCaseStore:
                 attachment_follow_up_prompts=_dedupe(
                     [*existing.attachment_follow_up_prompts, *case.attachment_follow_up_prompts]
                 ),
+                linked_receipt_context_ids=existing.linked_receipt_context_ids,
                 source_subjects=_dedupe([*existing.source_subjects, case.source_subject]),
                 source_senders=_dedupe([*existing.source_senders, *([case.sender] if case.sender else [])]),
                 last_message_at=_latest(existing.last_message_at, case.message_received_at),
@@ -97,6 +104,51 @@ class TravelCaseStore:
             )
         self._path(record.trip_id, user_key).write_text(record.model_dump_json(indent=2), encoding="utf-8")
         return record
+
+    def get_case(self, user_key: str, trip_id: str) -> TravelCaseRecord | None:
+        if not is_valid_user_key(user_key):
+            return None
+        path = self._path(trip_id, user_key)
+        if not path.exists():
+            return None
+        return TravelCaseRecord.model_validate_json(path.read_text(encoding="utf-8"))
+
+    def link_receipt(
+        self,
+        *,
+        user_key: str,
+        trip_id: str,
+        context: LocalContextMetadata,
+        receipt_category: str | None = None,
+    ) -> TravelCaseRecord:
+        record = self.get_case(user_key, trip_id)
+        if record is None:
+            raise ValueError(f"Unknown travel case: {trip_id}")
+        inferred_categories = (
+            [receipt_category.strip()]
+            if receipt_category and receipt_category.strip()
+            else infer_attachment_receipt_categories([context.filename])
+        )
+        attached_receipt_categories = _dedupe([*record.attached_receipt_categories, *inferred_categories])
+        attachment_names = _dedupe([*record.attachment_names, context.filename])
+        linked_context_ids = _dedupe([*record.linked_receipt_context_ids, context.context_id])
+        follow_up_prompts = build_attachment_follow_up_prompts(
+            receipts_to_collect=record.receipts_to_collect,
+            attached_receipt_categories=attached_receipt_categories,
+            attachment_names=attachment_names,
+            title=record.title,
+        )
+        updated_payload = record.model_dump()
+        updated_payload.update(
+            attached_receipt_categories=attached_receipt_categories,
+            attachment_names=attachment_names,
+            linked_receipt_context_ids=linked_context_ids,
+            attachment_follow_up_prompts=_dedupe(follow_up_prompts),
+            updated_at=datetime.now(UTC),
+        )
+        updated = TravelCaseRecord(**updated_payload)
+        self._path(updated.trip_id, user_key).write_text(updated.model_dump_json(indent=2), encoding="utf-8")
+        return updated
 
     def _path(self, trip_id: str, user_key: str) -> Path:
         return self.root_dir / f"{_user_digest(user_key)}-{trip_id}.json"

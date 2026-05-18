@@ -116,7 +116,7 @@ def _case_from_message(message: ConnectorMessageSummary) -> TravelEmailCaseSumma
     travel_end = dates[1] if len(dates) > 1 else dates[0] if len(dates) == 1 else None
     rental_car_expected = any(token in lowered for token in ("rental car", "enterprise", "hertz", "avis", "budget"))
     attachment_names = [name.strip() for name in message.attachment_names if name.strip()]
-    attached_receipt_categories = _attached_receipt_categories(attachment_names)
+    attached_receipt_categories = infer_attachment_receipt_categories(attachment_names)
 
     confidence_notes: list[str] = []
     if travel_start is None:
@@ -127,7 +127,7 @@ def _case_from_message(message: ConnectorMessageSummary) -> TravelEmailCaseSumma
     status = _travel_status(lowered, message)
     voucher_due_date = travel_end + timedelta(days=5) if travel_end is not None else None
     receipts_to_collect = _receipt_requirements(rental_car_expected)
-    attachment_follow_up_prompts = _attachment_follow_up_prompts(
+    attachment_follow_up_prompts = build_attachment_follow_up_prompts(
         receipts_to_collect=receipts_to_collect,
         attached_receipt_categories=attached_receipt_categories,
         attachment_names=attachment_names,
@@ -212,7 +212,7 @@ def _receipt_requirements(rental_car_expected: bool) -> list[str]:
     return items
 
 
-def _attached_receipt_categories(attachment_names: list[str]) -> list[str]:
+def infer_attachment_receipt_categories(attachment_names: list[str]) -> list[str]:
     categories: list[str] = []
     for name in attachment_names:
         lowered = name.lower()
@@ -227,7 +227,7 @@ def _attached_receipt_categories(attachment_names: list[str]) -> list[str]:
     return _dedupe(categories)
 
 
-def _attachment_follow_up_prompts(
+def build_attachment_follow_up_prompts(
     *,
     receipts_to_collect: list[str],
     attached_receipt_categories: list[str],

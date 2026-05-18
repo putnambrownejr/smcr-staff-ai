@@ -29,6 +29,7 @@ from app.api.routes import (
     staff,
     staff_products,
     training,
+    travel_cases,
     user_context,
 )
 from app.core.config import get_settings
@@ -71,6 +72,7 @@ def create_app() -> FastAPI:
     app.include_router(staff_products.router)
     app.include_router(sharing.router)
     app.include_router(training.router)
+    app.include_router(travel_cases.router)
     app.include_router(user_context.router)
     app.mount("/static", StaticFiles(directory="app/static"), name="static")
     return app

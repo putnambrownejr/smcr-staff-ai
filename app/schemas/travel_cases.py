@@ -16,6 +16,7 @@ class TravelCaseRecord(BaseModel):
     attached_receipt_categories: list[str] = Field(default_factory=list)
     attachment_names: list[str] = Field(default_factory=list)
     attachment_follow_up_prompts: list[str] = Field(default_factory=list)
+    linked_receipt_context_ids: list[str] = Field(default_factory=list)
     source_subjects: list[str] = Field(default_factory=list)
     source_senders: list[str] = Field(default_factory=list)
     last_message_at: datetime | None = None
@@ -23,3 +24,14 @@ class TravelCaseRecord(BaseModel):
     confidence_notes: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     local_only: bool = True
+
+
+class LinkTravelReceiptRequest(BaseModel):
+    user_key: str
+    context_id: str
+    receipt_category: str | None = None
+
+
+class TravelCaseListResponse(BaseModel):
+    total_cases: int
+    records: list[TravelCaseRecord] = Field(default_factory=list)
