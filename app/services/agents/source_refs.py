@@ -421,6 +421,101 @@ TRAINING_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+STAFF_PROCESS_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="Command and Staff College",
+        url="https://www.usmcu.edu/Colleges-and-Schools/Command-and-Staff-College/",
+        publisher="Marine Corps University",
+        notes=(
+            "Intermediate-level PME reference for critical thinking, problem solving, staff work, "
+            "joint context, and capstone planning."
+        ),
+    ),
+    SourceRef(
+        title="Command and Staff College Preparatory Knowledge Program",
+        url="https://www.usmcu.edu/Colleges-and-Schools/Command-and-Staff-College/Preparatory-Knowledge-Program/",
+        publisher="Marine Corps University",
+        notes=(
+            "Useful for planning refresh, mission analysis, critical thinking, critical reading, "
+            "writing, and research discipline."
+        ),
+    ),
+    SourceRef(
+        title="MCTP 3-30A Command and Staff Actions",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Staff-action and command-post rhythm reference for running estimates, "
+            "battle rhythm, and follow-through."
+        ),
+    ),
+    SourceRef(
+        title="MCWP 5-10 Marine Corps Planning Process",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/",
+        publisher="United States Marine Corps",
+        notes="Planning-process reference for OPT conduct, mission analysis, COA work, and transition discipline.",
+    ),
+    SourceRef(
+        title="MCDP 5 Planning",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899841/mcdp-5/",
+        publisher="United States Marine Corps",
+        notes="Planning philosophy for learning, uncertainty, and decision support rather than product fetishism.",
+    ),
+)
+
+WRITING_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="Command and Staff College Preparatory Knowledge Program",
+        url="https://www.usmcu.edu/Colleges-and-Schools/Command-and-Staff-College/Preparatory-Knowledge-Program/",
+        publisher="Marine Corps University",
+        notes=(
+            "Public PME signal that critical reading, writing, and research discipline are expected inputs to "
+            "command-and-staff performance."
+        ),
+    ),
+    SourceRef(
+        title="MCO 5216.20B Marine Corps Supplement to the Department of the Navy Correspondence Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2869007/mco-521620b/",
+        publisher="United States Marine Corps",
+        notes="Formal correspondence, structure, and routing reference for official-style products.",
+    ),
+    SourceRef(
+        title="Command and Staff College",
+        url="https://www.usmcu.edu/Colleges-and-Schools/Command-and-Staff-College/",
+        publisher="Marine Corps University",
+        notes=(
+            "Useful PME reference for the level of briefing, writing, and oral defense "
+            "expected of field-grade staff."
+        ),
+    ),
+)
+
+JOINT_FRAME_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="Command and Staff College",
+        url="https://www.usmcu.edu/Colleges-and-Schools/Command-and-Staff-College/",
+        publisher="Marine Corps University",
+        notes=(
+            "Public intermediate-level PME reference for Marine, service, joint, interagency, intergovernmental, "
+            "and multinational staff work in complex environments."
+        ),
+    ),
+    SourceRef(
+        title="Command and Staff College Preparatory Knowledge Program",
+        url="https://www.usmcu.edu/Colleges-and-Schools/Command-and-Staff-College/Preparatory-Knowledge-Program/",
+        publisher="Marine Corps University",
+        notes=(
+            "Useful for joint and Marine Corps operations framing, planning refresh, and external-context awareness."
+        ),
+    ),
+    SourceRef(
+        title="MCTP 3-30A Command and Staff Actions",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        publisher="United States Marine Corps",
+        notes="Staff-action reference for coordination, command relationships, and disciplined follow-through.",
+    ),
+)
+
 OPORD_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCDP 5 Planning",

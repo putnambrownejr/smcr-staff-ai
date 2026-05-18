@@ -32,6 +32,11 @@ def test_agent_registry_loads_expected_agents() -> None:
         "pki-cac-troubleshooter",
         "leadership-advisor",
         "mcpp-planning-assistant",
+        "opt-facilitator",
+        "red-team-assumptions-challenge",
+        "assessment-learning-advisor",
+        "writing-briefing-coach",
+        "joint-interagency-frame-advisor",
         "osint-research-assistant",
         "terrain-map-advisor",
         "mos-commo",
@@ -134,6 +139,69 @@ def test_mcpp_agent_returns_deliberate_planning_structure() -> None:
 
     assert "MCPP planning assistant advisory" in response.answer
     assert "COA wargaming" in response.answer
+    assert response.structured_citations
+
+
+def test_opt_facilitator_agent_returns_opt_conduct_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("opt-facilitator")
+    assert agent is not None
+
+    response = agent.run("Help me run mission analysis with my staff.", context=AgentContext())
+
+    assert "OPT facilitator advisory" in response.answer
+    assert "assumption log" in response.answer
+    assert response.structured_citations
+
+
+def test_red_team_agent_returns_assumptions_challenge_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("red-team-assumptions-challenge")
+    assert agent is not None
+
+    response = agent.run("Pressure-test this concept before we brief it.", context=AgentContext())
+
+    assert "Red-team / assumptions challenge advisory" in response.answer
+    assert "What to challenge" in response.answer
+    assert response.structured_citations
+
+
+def test_assessment_learning_agent_returns_aar_linkage_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("assessment-learning-advisor")
+    assert agent is not None
+
+    response = agent.run("Help me tie this event to the next drill's AAR follow-through.", context=AgentContext())
+
+    assert "Assessment / learning advisory" in response.answer
+    assert "Good AAR discipline" in response.answer
+    assert response.structured_citations
+
+
+def test_writing_briefing_agent_returns_product_discipline_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("writing-briefing-coach")
+    assert agent is not None
+
+    response = agent.run("Help me clean up this command brief.", context=AgentContext())
+
+    assert "Writing / briefing coach advisory" in response.answer
+    assert "Who is the audience?" in response.answer
+    assert response.structured_citations
+
+
+def test_joint_interagency_agent_returns_external_frame_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("joint-interagency-frame-advisor")
+    assert agent is not None
+
+    response = agent.run(
+        "Help me widen the frame for a planning problem with outside stakeholders.",
+        context=AgentContext(),
+    )
+
+    assert "Joint / interagency frame advisory" in response.answer
+    assert "supported and who is supporting" in response.answer
     assert response.structured_citations
 
 

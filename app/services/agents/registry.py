@@ -5,6 +5,7 @@ import yaml
 from app.schemas.agents import AgentMetadata
 from app.services.agents.admin_agent import build_admin_readiness_agent
 from app.services.agents.airo_agent import build_airo_agent
+from app.services.agents.assessment_learning_agent import build_assessment_learning_agent
 from app.services.agents.base import Agent
 from app.services.agents.chaplain_agent import build_chaplain_agent
 from app.services.agents.chief_of_staff_agent import build_chief_of_staff_agent
@@ -14,6 +15,7 @@ from app.services.agents.fitrep_agent import build_fitrep_agent
 from app.services.agents.g9_civil_military_agent import build_g9_civil_military_agent
 from app.services.agents.installation_agent import build_installation_agent
 from app.services.agents.jag_agent import build_jag_agent
+from app.services.agents.joint_interagency_agent import build_joint_interagency_agent
 from app.services.agents.leadership_agent import build_leadership_agent
 from app.services.agents.map_agent import build_map_agent
 from app.services.agents.maradmin_agent import build_maradmin_agent
@@ -22,11 +24,13 @@ from app.services.agents.medical_doc_agent import build_medical_doc_agent
 from app.services.agents.mos_civil_affairs_agent import build_mos_civil_affairs_agent
 from app.services.agents.mos_commo_agent import build_mos_commo_agent
 from app.services.agents.opord_agent import build_opord_agent
+from app.services.agents.opt_facilitator_agent import build_opt_facilitator_agent
 from app.services.agents.orm_agent import build_orm_agent
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.pki_agent import build_pki_troubleshooter_agent
 from app.services.agents.privacy_hygiene_agent import build_privacy_hygiene_agent
 from app.services.agents.r2p2_agent import build_r2p2_agent
+from app.services.agents.red_team_agent import build_red_team_agent
 from app.services.agents.s1_admin_chief_agent import build_s1_admin_chief_agent
 from app.services.agents.s2_intel_agent import build_s2_intel_agent
 from app.services.agents.s3_opso_agent import build_s3_opso_agent
@@ -37,6 +41,7 @@ from app.services.agents.staff_advisor_agent import build_staff_advisor_agents
 from app.services.agents.staff_products_agent import build_staff_products_agent
 from app.services.agents.training_agent import build_training_agent
 from app.services.agents.uniform_agent import build_uniform_agent
+from app.services.agents.writing_briefing_agent import build_writing_briefing_agent
 
 
 class AgentRegistry:
@@ -80,6 +85,11 @@ def default_agents() -> list[Agent]:
         build_maradmin_agent(),
         build_medical_doc_agent(),
         build_mcpp_agent(),
+        build_opt_facilitator_agent(),
+        build_red_team_agent(),
+        build_assessment_learning_agent(),
+        build_writing_briefing_agent(),
+        build_joint_interagency_agent(),
         build_uniform_agent(),
         build_drill_prep_agent(),
         build_opord_agent(),
