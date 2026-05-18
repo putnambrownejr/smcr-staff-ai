@@ -177,7 +177,28 @@ S3_REFERENCES: tuple[SourceRef, ...] = (
         title="Expeditionary Warfare School Resident Curriculum",
         url="https://www.usmcu.edu/Colleges-and-Schools/Expeditionary-Warfare-School/Resident/Curriculum/",
         publisher="Marine Corps University",
-        notes="Public PME curriculum reference for staff-planning maturity and professional development.",
+        notes=(
+            "Public PME curriculum reference for company-grade staff-planning maturity, MAGTF employment, "
+            "planning exercises, and MOS credibility."
+        ),
+    ),
+    SourceRef(
+        title="Command and Staff College",
+        url="https://www.usmcu.edu/Colleges-and-Schools/Command-and-Staff-College/",
+        publisher="Marine Corps University",
+        notes=(
+            "Public intermediate-level PME reference for critical thinking, joint and external-context awareness, "
+            "complex problem solving, and capstone staff planning."
+        ),
+    ),
+    SourceRef(
+        title="Command and Staff College Preparatory Knowledge Program",
+        url="https://www.usmcu.edu/Colleges-and-Schools/Command-and-Staff-College/Preparatory-Knowledge-Program/",
+        publisher="Marine Corps University",
+        notes=(
+            "Useful for shaping mission-analysis conduct, planning refresh, critical thinking, critical reading, "
+            "writing, and research discipline."
+        ),
     ),
 )
 
@@ -331,6 +352,15 @@ LEADERSHIP_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.usmcu.edu/EWS/",
         publisher="Marine Corps University",
         notes="Public PME reference for the level of planning maturity expected from company-grade officers.",
+    ),
+    SourceRef(
+        title="Command and Staff College",
+        url="https://www.usmcu.edu/Colleges-and-Schools/Command-and-Staff-College/",
+        publisher="Marine Corps University",
+        notes=(
+            "Public PME reference for field-grade expectations in leadership, problem solving, staff work, "
+            "and joint or external coordination."
+        ),
     ),
     SourceRef(
         title="Update to the Commandant's Professional Reading List for Fiscal Year 26",

@@ -50,6 +50,7 @@ class R2P2PlanningAssistantAgent(Agent):
             "Compressed conduct rhythm:\n"
             "- Reconfirm the mission and decision in plain language.\n"
             "- Identify only what changed.\n"
+            "- Keep a short change log so the staff knows what is actually different from the last good plan.\n"
             "- Validate the assumptions most likely to break the concept.\n"
             "- Run a short branch/sequel drill or TDG.\n"
             "- Publish only the changed tasks, changed support, changed control measures, and changed suspenses.\n"
@@ -57,6 +58,7 @@ class R2P2PlanningAssistantAgent(Agent):
             "Abort compressed planning and return to deliberate MCPP if:\n"
             "- The staff cannot agree on the problem.\n"
             "- Support, medical, comm, or subordinate relationships are still unclear.\n"
+            "- The staff cannot explain the existing concept in a few clean sentences.\n"
             "- The concept depends on assumptions nobody has actually checked.\n"
             "- The staff is using the word 'rapid' to excuse confusion.\n"
         )
