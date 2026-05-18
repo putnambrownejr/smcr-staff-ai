@@ -14,10 +14,6 @@
           <h1>SMCR Staff AI Dashboard</h1>
           <p class="subhead">Readiness, continuity, staff products, and local context in one working board.</p>
         </div>
-        <div class="status-cluster">
-          <span class="status-chip" id="mode-badge">Demo mode</span>
-          <span class="status-chip muted">Human review required</span>
-        </div>
       </header>
 
       <main class="layout">
@@ -51,24 +47,32 @@
         <section class="panel config-panel is-hidden" data-section-group="configure">
           <div class="panel-header">
             <h2>Workspace</h2>
-            <p>Use demo mode for a stateless tour, or provide a local user key and API key for personal views.</p>
+            <p>Open a local personal workspace, or stay in demo mode for a safe tour.</p>
+          </div>
+          <div class="strip">
+            <span class="strip-label">How this works</span>
+            <ul class="bullet-list">
+              <li><strong>Profile name</strong> tells the dashboard which local workspace to open.</li>
+              <li><strong>Workspace passkey</strong> is only needed if you turned on local access protection.</li>
+              <li>If you have only one local workspace, use the same profile name each time.</li>
+            </ul>
           </div>
           <div class="config-grid">
             <label>
-              <span>User key</span>
-              <input id="user-key" type="text" placeholder="capt-example" />
+              <span>Profile name</span>
+              <input id="user-key" type="text" placeholder="putnam" />
             </label>
             <label>
-              <span>Local API key</span>
-              <input id="api-key" type="password" placeholder="Optional" />
+              <span>Workspace passkey (optional)</span>
+              <input id="api-key" type="password" placeholder="Only if you set one" />
             </label>
           </div>
           <div class="button-row">
-            <button id="load-demo">Load demo brief</button>
-            <button id="load-personal" class="secondary">Load personal view</button>
+            <button id="load-demo">Open demo workspace</button>
+            <button id="load-personal" class="secondary">Open my workspace</button>
           </div>
           <p class="helper-text" id="workspace-note">
-            Demo mode keeps everything read-only and stateless. Personal mode reads the local backend with your key.
+            Demo mode is a read-only tour. Personal mode opens your local workspace using the profile name above.
           </p>
         </section>
 
@@ -271,6 +275,14 @@
         </section>
 
         <section class="three-column is-hidden" data-section-group="watch">
+          <article class="panel full-span">
+            <div class="panel-header">
+              <h2>Custom watch feeds</h2>
+              <p>Local-only RSS watches with trust labels, quick toggles, and a short preview of what each feed is surfacing.</p>
+            </div>
+            <div id="custom-feed-watch" class="row-stack empty-state">No custom watch feeds are configured yet.</div>
+          </article>
+
           <article class="panel">
             <div class="panel-header">
               <h2>Action Tracker</h2>

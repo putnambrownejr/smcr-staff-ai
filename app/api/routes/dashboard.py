@@ -12,10 +12,12 @@ from app.schemas.actions import ActionRecord, ActionStatus
 from app.schemas.admin import AdminReadinessResponse
 from app.schemas.career import CareerWatchResponse
 from app.schemas.chief import ChiefActionItem, ChiefBriefRequest, ChiefBriefResponse
+from app.schemas.custom_watch_feeds import CustomWatchFeed
 from app.schemas.dashboard import (
     AnalystBrief,
     DailyOpsBrief,
     DailyOpsEntry,
+    DashboardCustomWatchFeed,
     DashboardDocumentDetail,
     DashboardReadingBook,
     DashboardTemplateReference,
@@ -37,9 +39,11 @@ from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.demo.scenarios import DEMO_USER_KEY, build_demo_career_watch, build_demo_chief_brief
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.history.today_in_history import TodayInMarineHistoryService
+from app.services.ingestion.custom_watch_feed_store import CustomWatchFeedStore
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.ingestion.maradmin_feed_service import MaradminFeedService
 from app.services.ingestion.maradmin_feed_store import MaradminFeedStore
+from app.services.ingestion.message_record_store import MessageRecordStore
 from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.reading.catalog_store import ReadingListCatalogStore
@@ -166,6 +170,11 @@ def get_history_service() -> TodayInMarineHistoryService:
     return TodayInMarineHistoryService.from_yaml(SEED_DIR / "usmc_history_on_this_day.example.yaml")
 
 
+def get_custom_watch_feed_store() -> Iterator[CustomWatchFeedStore]:
+    settings = get_settings()
+    yield CustomWatchFeedStore(settings.custom_watch_feed_storage_dir)
+
+
 @router.get(
     "/dashboard/data/{user_key}",
     response_model=DashboardWorkspaceResponse,
@@ -186,6 +195,7 @@ def get_dashboard_data(
     reading_state_store: Annotated[ReadingProgressStore, Depends(get_reading_state_store)],
     reading_catalog: Annotated[ReadingListCatalogService, Depends(get_reading_catalog_service)],
     maradmin_feed_store: Annotated[MaradminFeedStore, Depends(get_maradmin_feed_store)],
+    custom_watch_feed_store: Annotated[CustomWatchFeedStore, Depends(get_custom_watch_feed_store)],
     history_service: Annotated[TodayInMarineHistoryService, Depends(get_history_service)],
 ) -> DashboardWorkspaceResponse:
     chief_brief = orchestrator.build_brief(ChiefBriefRequest(user_key=user_key))
@@ -198,6 +208,7 @@ def get_dashboard_data(
         item for item in update_store.list() if item.review_status != UpdateReviewStatus.ignored
     ][:8]
     maradmin_feed = maradmin_feed_store.list(limit=10)
+    custom_watch_feeds = _custom_watch_feed_summaries(custom_watch_feed_store)
     reading_progress = {item.slug: item for item in reading_state_store.list(user_key).records}
     return _workspace_response(
         mode="personal",
@@ -215,6 +226,7 @@ def get_dashboard_data(
             template_repository=template_repository,
         ),
         maradmin_ticker=_maradmin_ticker(maradmin_feed),
+        custom_watch_feeds=custom_watch_feeds,
         today_in_history=history_service.get_for_date(datetime.now(UTC).date()),
         reading_books=_reading_books(
             reading_catalog=reading_catalog,
@@ -234,6 +246,9 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
     admin_readiness = _admin_from_demo_brief(chief_brief)
     settings = get_settings()
     maradmin_feed = MaradminFeedStore(settings.maradmin_feed_storage_dir).list(limit=10)
+    custom_watch_feeds = _custom_watch_feed_summaries(
+        CustomWatchFeedStore(settings.custom_watch_feed_storage_dir)
+    )
     reading_catalog = load_effective_reading_catalog(
         seed_path=SEED_DIR / "reading_list.example.yaml",
         store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
@@ -254,6 +269,7 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
             template_repository=None,
         ),
         maradmin_ticker=_maradmin_ticker(maradmin_feed),
+        custom_watch_feeds=custom_watch_feeds,
         today_in_history=TodayInMarineHistoryService.from_yaml(
             SEED_DIR / "usmc_history_on_this_day.example.yaml"
         ).get_for_date(datetime.now(UTC).date()),
@@ -278,6 +294,7 @@ def _workspace_response(
     document_details: list[DashboardDocumentDetail],
     template_library: list[DashboardTemplateReference],
     maradmin_ticker: list[DashboardTickerItem],
+    custom_watch_feeds: list[DashboardCustomWatchFeed],
     today_in_history: list[TodayInMarineHistoryItem],
     reading_books: list[DashboardReadingBook],
 ) -> DashboardWorkspaceResponse:
@@ -323,6 +340,7 @@ def _workspace_response(
         document_details=document_details,
         template_library=template_library,
         maradmin_ticker=maradmin_ticker,
+        custom_watch_feeds=custom_watch_feeds,
         today_in_history=today_in_history,
         reading_books=reading_books,
         warnings=warnings,
@@ -402,6 +420,35 @@ def _maradmin_ticker(records: list[MessageRecord]) -> list[DashboardTickerItem]:
         )
         for item in records[:8]
     ]
+
+
+def _custom_watch_feed_summaries(store: CustomWatchFeedStore) -> list[DashboardCustomWatchFeed]:
+    return [_custom_watch_feed_summary(feed, store) for feed in store.list()[:8]]
+
+
+def _custom_watch_feed_summary(feed: CustomWatchFeed, store: CustomWatchFeedStore) -> DashboardCustomWatchFeed:
+    item_store = MessageRecordStore(store.items_path(feed.feed_id))
+    previews = [
+        DashboardTickerItem(
+            title=item.title,
+            status=item.status,
+            summary=(item.summary or ", ".join(item.tags[:3]) or "Custom watch item.")[:220],
+            source_url=item.canonical_url,
+        )
+        for item in item_store.list(limit=3)
+    ]
+    return DashboardCustomWatchFeed(
+        feed_id=feed.feed_id,
+        name=feed.name,
+        category=feed.category,
+        trust_level=feed.trust_level,
+        enabled=feed.enabled,
+        last_refreshed_at=feed.last_refreshed_at.isoformat() if feed.last_refreshed_at else None,
+        last_error=feed.last_error,
+        last_item_count=feed.last_item_count,
+        tags=feed.tags,
+        preview_items=previews,
+    )
 
 
 def _reading_books(

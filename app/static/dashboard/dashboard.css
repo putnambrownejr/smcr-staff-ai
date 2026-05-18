@@ -273,6 +273,25 @@ textarea {
   gap: 10px;
 }
 
+.feed-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.feed-card.is-disabled {
+  background: var(--surface-2);
+  border-style: dashed;
+}
+
+.compact-row {
+  padding: 12px;
+  background: var(--surface-2);
+}
+
 .data-row-head {
   display: flex;
   flex-wrap: wrap;

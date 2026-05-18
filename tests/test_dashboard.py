@@ -8,6 +8,7 @@ from app.api.routes.dashboard import (
     get_admin_service,
     get_career_service,
     get_chief_orchestrator,
+    get_custom_watch_feed_store,
     get_document_organizer,
     get_opportunity_tracker,
     get_update_store,
@@ -15,6 +16,7 @@ from app.api.routes.dashboard import (
 from app.main import app
 from app.schemas.actions import ActionItemRequest
 from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
+from app.schemas.custom_watch_feeds import CreateCustomWatchFeedRequest
 from app.schemas.opportunities import ManualOpportunityRequest
 from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate
@@ -24,6 +26,7 @@ from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.career.watch import CareerWatchService
 from app.services.chief.orchestrator import ChiefAideOrchestrator
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
+from app.services.ingestion.custom_watch_feed_store import CustomWatchFeedStore
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
@@ -74,6 +77,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     opportunity_tracker = OpportunityTracker(tmp_path / "opportunities")
     action_tracker = ActionTracker(tmp_path / "actions")
     update_store = DocumentUpdateStore(tmp_path / "updates")
+    custom_feed_store = CustomWatchFeedStore(tmp_path / "custom_feeds")
     reading_catalog = ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml"))
 
     context_store.save(
@@ -134,6 +138,15 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
             )
         ]
     )
+    custom_feed_store.create(
+        CreateCustomWatchFeedRequest(
+            name="Unit updates",
+            url="https://example.test/feed.xml",
+            category="unit_news",
+            trust_level="official",
+            tags=["reserve"],
+        )
+    )
 
     def override_orchestrator() -> ChiefAideOrchestrator:
         return ChiefAideOrchestrator(
@@ -171,6 +184,9 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     def override_updates() -> DocumentUpdateStore:
         return update_store
 
+    def override_custom_feed_store() -> CustomWatchFeedStore:
+        return custom_feed_store
+
     app.dependency_overrides[get_chief_orchestrator] = override_orchestrator
     app.dependency_overrides[get_admin_service] = override_admin
     app.dependency_overrides[get_career_service] = override_career
@@ -178,6 +194,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     app.dependency_overrides[get_action_tracker] = override_action_tracker
     app.dependency_overrides[get_opportunity_tracker] = override_tracker
     app.dependency_overrides[get_update_store] = override_updates
+    app.dependency_overrides[get_custom_watch_feed_store] = override_custom_feed_store
 
     client = TestClient(app)
     try:
@@ -197,5 +214,6 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["document_summary"]["total_documents"] == 1
         assert payload["tracked_opportunities"][0]["title"] == "ADOS Planner"
         assert payload["documentation_updates"][0]["tracked_title"] == "MCO 1610.7"
+        assert payload["custom_watch_feeds"][0]["name"] == "Unit updates"
     finally:
         app.dependency_overrides.clear()

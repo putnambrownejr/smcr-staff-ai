@@ -4,6 +4,7 @@ from app.schemas.actions import ActionRecord
 from app.schemas.admin import AdminReadinessResponse
 from app.schemas.career import CareerWatchResponse
 from app.schemas.chief import ChiefBriefResponse
+from app.schemas.custom_watch_feeds import CustomWatchFeedTrustLevel
 from app.schemas.history import TodayInMarineHistoryItem
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
@@ -82,6 +83,19 @@ class DashboardTickerItem(BaseModel):
     source_url: str | None = None
 
 
+class DashboardCustomWatchFeed(BaseModel):
+    feed_id: str
+    name: str
+    category: str
+    trust_level: CustomWatchFeedTrustLevel
+    enabled: bool
+    last_refreshed_at: str | None = None
+    last_error: str | None = None
+    last_item_count: int = 0
+    tags: list[str] = Field(default_factory=list)
+    preview_items: list[DashboardTickerItem] = Field(default_factory=list)
+
+
 class DashboardWorkspaceResponse(BaseModel):
     mode: str
     user_key: str | None = None
@@ -98,6 +112,7 @@ class DashboardWorkspaceResponse(BaseModel):
     document_details: list[DashboardDocumentDetail] = Field(default_factory=list)
     template_library: list[DashboardTemplateReference] = Field(default_factory=list)
     maradmin_ticker: list[DashboardTickerItem] = Field(default_factory=list)
+    custom_watch_feeds: list[DashboardCustomWatchFeed] = Field(default_factory=list)
     today_in_history: list[TodayInMarineHistoryItem] = Field(default_factory=list)
     reading_books: list[DashboardReadingBook] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

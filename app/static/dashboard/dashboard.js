@@ -66,6 +66,18 @@ document.addEventListener("click", async (event) => {
     return;
   }
 
+  const feedToggle = event.target.closest("[data-feed-toggle]");
+  if (feedToggle) {
+    await toggleCustomFeed(feedToggle.dataset.feedToggle);
+    return;
+  }
+
+  const feedRefresh = event.target.closest("[data-feed-refresh]");
+  if (feedRefresh) {
+    await refreshCustomFeed(feedRefresh.dataset.feedRefresh);
+    return;
+  }
+
   const saveButton = event.target.closest("[data-reading-save]");
   if (saveButton) {
     await saveReadingProgress(saveButton.dataset.readingSave);
@@ -104,6 +116,7 @@ function renderWorkspace(payload) {
   renderDocumentLibrary(payload.document_details || []);
   renderTemplateLibrary(payload.template_library || []);
   renderMaradminTicker(payload.maradmin_ticker || []);
+  renderCustomWatchFeeds(payload.custom_watch_feeds || []);
   renderHistory(payload.today_in_history || []);
   renderReadingBooks(payload.reading_books || []);
   renderTrackedActions(payload.tracked_actions || []);
@@ -252,6 +265,63 @@ function renderMaradminTicker(items) {
           </div>
           <p>${escapeHtml(item.summary)}</p>
           ${item.source_url ? `<p class="meta-inline">${escapeHtml(item.source_url)}</p>` : ""}
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderCustomWatchFeeds(items) {
+  const target = document.getElementById("custom-feed-watch");
+  if (!items.length) {
+    target.className = "row-stack empty-state";
+    target.textContent = "No custom watch feeds are configured yet.";
+    return;
+  }
+  target.className = "row-stack";
+  target.innerHTML = items
+    .map(
+      (item) => `
+        <article class="feed-card ${item.enabled ? "" : "is-disabled"}">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.trust_level.replaceAll("_", " "))}</span>
+            <strong>${escapeHtml(item.name)}</strong>
+            <span class="meta-inline">${escapeHtml(item.category)}</span>
+          </div>
+          <p class="meta-inline">
+            ${escapeHtml(item.enabled ? "Enabled" : "Disabled")} |
+            ${escapeHtml(item.last_refreshed_at ? `Refreshed ${item.last_refreshed_at}` : "Not refreshed yet")} |
+            ${escapeHtml(`${item.last_item_count || 0} item(s)`)}
+          </p>
+          ${item.last_error ? `<p class="critical">${escapeHtml(item.last_error)}</p>` : ""}
+          <p class="meta-inline">${escapeHtml((item.tags || []).join(" | ") || "No extra tags")}</p>
+          <div class="button-row">
+            <button type="button" class="secondary" data-feed-toggle="${escapeHtml(item.feed_id)}">
+              ${item.enabled ? "Disable feed" : "Enable feed"}
+            </button>
+            <button type="button" class="secondary" data-feed-refresh="${escapeHtml(item.feed_id)}">
+              Refresh feed
+            </button>
+          </div>
+          <div class="row-stack">
+            ${
+              (item.preview_items || []).length
+                ? item.preview_items
+                    .map(
+                      (preview) => `
+                        <article class="data-row compact-row">
+                          <div class="data-row-head">
+                            <span class="strip-label">${escapeHtml(preview.status)}</span>
+                            <strong>${escapeHtml(preview.title)}</strong>
+                          </div>
+                          <p>${escapeHtml(preview.summary)}</p>
+                        </article>
+                      `,
+                    )
+                    .join("")
+                : `<div class="empty-state">No cached items yet.</div>`
+            }
+          </div>
         </article>
       `,
     )
@@ -543,6 +613,30 @@ async function saveReadingProgress(slug) {
   await loadWorkspace();
 }
 
+async function toggleCustomFeed(feedId) {
+  const feed = (state.workspace?.custom_watch_feeds || []).find((item) => item.feed_id === feedId);
+  if (!feed) {
+    setWorkspaceNote("Could not find that custom feed in the current workspace.", true);
+    return;
+  }
+  await apiFetch(`/custom-watch-feeds/${encodeURIComponent(feedId)}`, {
+    method: "PATCH",
+    auth: true,
+    body: JSON.stringify({ enabled: !feed.enabled }),
+  });
+  setWorkspaceNote(`Feed ${feed.enabled ? "disabled" : "enabled"}.`);
+  await loadWorkspace();
+}
+
+async function refreshCustomFeed(feedId) {
+  await apiFetch(`/custom-watch-feeds/${encodeURIComponent(feedId)}/refresh`, {
+    method: "POST",
+    auth: true,
+  });
+  setWorkspaceNote("Custom feed refreshed.");
+  await loadWorkspace();
+}
+
 async function apiFetch(path, options = {}) {
   const headers = { "Content-Type": "application/json" };
   if (options.auth && state.apiKey) {
@@ -567,7 +661,10 @@ function setWorkspaceNote(message, critical = false) {
 }
 
 function updateModeBanner() {
-  document.getElementById("mode-badge").textContent = state.mode === "demo" ? "Demo mode" : "Personal mode";
+  const badge = document.getElementById("mode-badge");
+  if (badge) {
+    badge.textContent = state.mode === "demo" ? "Demo mode" : "Personal mode";
+  }
 }
 
 function resolveApiBase() {
