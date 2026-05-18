@@ -155,6 +155,7 @@ function renderWorkspace(payload) {
   renderWorkspaceSummary(payload.summary_lines || [], payload.warnings || []);
   renderChief(payload.chief_brief);
   renderNextDrillReadiness(payload.chief_brief?.next_drill_readiness || {});
+  renderThinStaffAssist(payload.chief_brief?.thin_staff_assist || {});
   renderCareer(payload.career_watch);
   renderAdmin(payload.admin_readiness);
   renderDailyBrief(payload.daily_ops_brief || {});
@@ -205,6 +206,19 @@ function renderNextDrillReadiness(payload) {
   renderList("readiness-summary", payload.summary || []);
   renderList("readiness-ready-if", payload.ready_if || []);
   renderList("readiness-workflows", payload.recommended_follow_on_workflows || []);
+}
+
+function renderThinStaffAssist(payload) {
+  renderList("thin-staff-walk-in", payload.walk_in_brief || []);
+  renderList("thin-staff-blind-spots", payload.likely_blind_spots || []);
+  renderList("thin-staff-questions", payload.missing_section_questions || []);
+  renderList("thin-staff-products", payload.recommended_products || []);
+  renderList("thin-staff-changes", payload.changes_since_last_time || []);
+  renderEntryRows(
+    "thin-staff-next-touchpoint",
+    payload.next_touchpoint ? [{ title: payload.next_touchpoint, category: "touchpoint" }] : [],
+    "No touchpoint loaded yet.",
+  );
 }
 
 function renderAdmin(payload) {

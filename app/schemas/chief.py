@@ -56,6 +56,17 @@ class NextDrillReadiness(BaseModel):
     recommended_follow_on_workflows: list[str] = Field(default_factory=list)
 
 
+class ThinStaffAssist(BaseModel):
+    posture: str
+    summary: list[str] = Field(default_factory=list)
+    likely_blind_spots: list[str] = Field(default_factory=list)
+    missing_section_questions: list[str] = Field(default_factory=list)
+    recommended_products: list[str] = Field(default_factory=list)
+    walk_in_brief: list[str] = Field(default_factory=list)
+    changes_since_last_time: list[str] = Field(default_factory=list)
+    next_touchpoint: str | None = None
+
+
 class ChiefBriefResponse(BaseModel):
     title: str
     user_key: str | None = None
@@ -63,6 +74,7 @@ class ChiefBriefResponse(BaseModel):
     active_user_context: ActiveUserContext | None = None
     handoff_is_stale: bool = False
     next_drill_readiness: NextDrillReadiness
+    thin_staff_assist: ThinStaffAssist
     summary_lines: list[str] = Field(default_factory=list)
     action_items: list[ChiefActionItem]
     top_priority_items: list[ChiefActionItem] = Field(default_factory=list)

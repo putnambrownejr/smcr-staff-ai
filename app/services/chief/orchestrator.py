@@ -3,7 +3,13 @@ from datetime import UTC, date, datetime, timedelta
 
 from app.core.security import DEFAULT_WARNINGS
 from app.schemas.calendar import DrillPrepPlanResponse
-from app.schemas.chief import ChiefActionItem, ChiefBriefRequest, ChiefBriefResponse, NextDrillReadiness
+from app.schemas.chief import (
+    ChiefActionItem,
+    ChiefBriefRequest,
+    ChiefBriefResponse,
+    NextDrillReadiness,
+    ThinStaffAssist,
+)
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import DrillDateRecord, FitrepReminder, PmeStatus, RecurringCheck, UserSessionHandoff
@@ -78,6 +84,16 @@ class ChiefAideOrchestrator:
             actions=sorted_actions,
             user_key=request.user_key,
         )
+        thin_staff_assist = _thin_staff_assist(
+            handoff=handoff,
+            active_user_context=active_user_context,
+            handoff_is_stale=handoff_is_stale,
+            next_drill_readiness=next_drill_readiness,
+            drill_plans=drill_plans,
+            travel_cases=travel_cases,
+            updates=updates,
+            actions=sorted_actions,
+        )
         return ChiefBriefResponse(
             title="Chief of Staff / Aide de Camp triage brief",
             user_key=request.user_key,
@@ -85,6 +101,7 @@ class ChiefAideOrchestrator:
             active_user_context=active_user_context,
             handoff_is_stale=handoff_is_stale,
             next_drill_readiness=next_drill_readiness,
+            thin_staff_assist=thin_staff_assist,
             summary_lines=_summary_lines(
                 handoff=handoff,
                 active_user_context=active_user_context,
@@ -615,6 +632,124 @@ def _next_drill_readiness(
         missing_foundation=missing_foundation,
         standing_rhythm=standing_rhythm[:6],
         recommended_follow_on_workflows=recommended_follow_on_workflows,
+    )
+
+
+def _thin_staff_assist(
+    *,
+    handoff: UserSessionHandoff | None,
+    active_user_context: ActiveUserContext | None,
+    handoff_is_stale: bool,
+    next_drill_readiness: NextDrillReadiness,
+    drill_plans: list[DrillPrepPlanResponse],
+    travel_cases: list[TravelCaseRecord],
+    updates: list[DocumentationUpdateCandidate],
+    actions: list[ChiefActionItem],
+) -> ThinStaffAssist:
+    active_bits = [
+        item for item in [
+            active_user_context.unit_name if active_user_context else None,
+            active_user_context.billet_override if active_user_context else None,
+            active_user_context.mos_override if active_user_context else None,
+        ] if item
+    ]
+    summary = [
+        "Use this when you are covering thin staff or walking back into the problem after time away.",
+        *([f"Active context bias: {' / '.join(active_bits)}."] if active_bits else []),
+        (
+            "Start with the mission, the immediate decision, and what adjacent sections would ask "
+            "before polishing products."
+        ),
+    ]
+    likely_blind_spots = _dedupe_strings(
+        [
+            "Unstated assumptions between the concept and what S-4/S-6 can actually support.",
+            "Tasks that sound owned but still have no named section due-out.",
+            "Travel-admin or receipt friction that will bite after people disperse." if travel_cases else "",
+            "Continuity drift because the stored handoff is stale." if handoff_is_stale else "",
+            "Source-backed references that may be stale until reviewed." if updates else "",
+        ]
+    )
+    missing_section_questions = _dedupe_strings(
+        [
+            "S-3: what is the training output or commander decision that actually matters most?",
+            "S-4: what support shortfall fails first if the timeline compresses?",
+            "S-6: what reporting, access, or permissions problem is still being hand-waved?",
+            "S-1/Admin: what roster, orders, DTS, or suspense item is still implied instead of explicit?",
+            "SEL/XO: what standard, accountability, or release criterion is still too vague?",
+        ]
+    )
+    recommended_products = _dedupe_strings(
+        [
+            "Mission analysis worksheet",
+            "Planning cell package",
+            "Staff update cycle (running estimate -> CUB -> CPB)",
+            *(
+                ["FRAGO to CONOP package"]
+                if next_drill_readiness.anchor_drill_date is not None or drill_plans
+                else []
+            ),
+            *(
+                ["Admin readiness review"]
+                if any(item.category in {"admin", "travel", "fitrep"} for item in actions)
+                else []
+            ),
+        ]
+    )
+    walk_in_brief = _dedupe_strings(
+        [
+            f"Readiness posture: {next_drill_readiness.readiness_posture}",
+            *(
+                [f"Decisive action: {next_drill_readiness.decisive_action}"]
+                if next_drill_readiness.decisive_action
+                else []
+            ),
+            *[f"Immediate due-out: {item.title}" for item in next_drill_readiness.must_do_before_drill[:3]],
+            *[f"Friction: {item}" for item in next_drill_readiness.likely_friction_points[:2]],
+        ]
+    )
+    changes_since_last_time = _dedupe_strings(
+        [
+            *(
+                [
+                    f"New source-update review item: {update.tracked_title}"
+                    for update in updates
+                    if update.review_status == "new"
+                ][:3]
+            ),
+            *(
+                [f"Travel case in play: {case.title or case.trip_id}" for case in travel_cases[:2]]
+            ),
+            *(
+                [f"New immediate action: {item.title}" for item in actions if item.priority == "high"][:3]
+            ),
+            (
+                "No annual drill anchor is visible yet."
+                if next_drill_readiness.anchor_drill_date is None
+                else f"Next drill anchor remains {next_drill_readiness.anchor_drill_date.isoformat()}."
+            ),
+        ]
+    )
+    next_touchpoint = (
+        f"Before the next drill anchor on {next_drill_readiness.anchor_drill_date.isoformat()}, "
+        "reconfirm assumptions, named due-outs, and the one decision that still matters."
+        if next_drill_readiness.anchor_drill_date is not None
+        else "Before the next sync, confirm assumptions, named due-outs, and what the commander actually needs."
+    )
+    posture = (
+        "Thin-staff assist posture: active. Use this to compensate for missing adjacent staff pressure."
+        if handoff is not None
+        else "Thin-staff assist posture: foundational. Build continuity first, then use this to cover gaps."
+    )
+    return ThinStaffAssist(
+        posture=posture,
+        summary=summary,
+        likely_blind_spots=likely_blind_spots[:5],
+        missing_section_questions=missing_section_questions[:5],
+        recommended_products=recommended_products[:5],
+        walk_in_brief=walk_in_brief[:6],
+        changes_since_last_time=changes_since_last_time[:6],
+        next_touchpoint=next_touchpoint,
     )
 
 

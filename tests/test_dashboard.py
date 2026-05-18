@@ -48,6 +48,7 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "text/html" in response.headers["content-type"]
     assert "SMCR Staff AI" in response.text
     assert "Next Drill Readiness" in response.text
+    assert "Thin Staff Assist" in response.text
     assert "Decisive action now" in response.text
     assert "Staff update cycle" in response.text
     assert "Planning Cell" in response.text

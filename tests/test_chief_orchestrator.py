@@ -100,6 +100,10 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
     assert brief.next_drill_readiness.ready_if
     assert brief.next_drill_readiness.recommended_follow_on_workflows
     assert "POST /staff/update-cycle" in brief.next_drill_readiness.recommended_follow_on_workflows
+    assert brief.thin_staff_assist.walk_in_brief
+    assert brief.thin_staff_assist.missing_section_questions
+    assert brief.thin_staff_assist.recommended_products
+    assert brief.thin_staff_assist.next_touchpoint
 
 
 def test_chief_brief_flags_stale_handoff_and_missing_core_docs(tmp_path: Path) -> None:
