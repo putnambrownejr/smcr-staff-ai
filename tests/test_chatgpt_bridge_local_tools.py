@@ -80,6 +80,27 @@ async def test_build_tdg_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_build_infantry_training_package_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.build_infantry_training_package(
+        {
+            "title": "AT MOUT familiarization",
+            "training_goal": "Take logistics and admin Marines through a modified urban familiarization package.",
+            "primary_training_population": "logistics and admin Marines",
+            "venue_type": "MOUT town",
+            "ammunition_type": "blank ammunition",
+            "constraints": ["Keep the package simple and supervised."],
+        }
+    )
+
+    assert "03 familiarization package" in cast(str, result["title"])
+    assert result["training_phases"]
+    assert result["blank_fire_controls"]
+    assert result["citations"]
+
+
+@pytest.mark.anyio
 async def test_build_staff_update_cycle_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 

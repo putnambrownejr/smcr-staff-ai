@@ -232,3 +232,37 @@ def test_tdg_builder_returns_decision_forcing_wargame_package() -> None:
     assert payload["failure_triggers"]
     assert payload["red_team_points"]
     assert payload["aar_focus"]
+
+
+def test_infantry_training_package_returns_modified_urban_familiarization_structure() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/training/infantry-package",
+        json={
+            "title": "AT MOUT familiarization",
+            "training_goal": "Take logistics and admin Marines through a modified urban familiarization package.",
+            "unit_name": "Example logistics detachment",
+            "audience": "AT support Marines",
+            "primary_training_population": "logistics and admin Marines",
+            "venue_type": "MOUT town",
+            "ammunition_type": "blank ammunition",
+            "training_window": "one AT training day",
+            "constraints": ["Keep the package basic and supervised."],
+            "support_requirements": ["Qualified safety oversight", "Medical support", "Blank-fire SOP"],
+            "met_tasks": ["Conduct rehearsals", "Maintain accountability"],
+            "metl_focus": ["Basic warfighting familiarization"],
+            "training_only": True,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "03 familiarization package" in payload["title"]
+    assert payload["training_frame"]
+    assert payload["recommended_scope"]
+    assert payload["training_phases"]
+    assert payload["lane_design"]
+    assert payload["blank_fire_controls"]
+    assert payload["evaluation_points"]
+    assert any("Urban Operations" in item for item in payload["citations"])

@@ -198,3 +198,35 @@ class S4PlanningResponse(BaseModel):
     coordination_points: list[str] = Field(default_factory=list)
     reserve_friction_points: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+
+
+class InfantryTrainingPackageRequest(BaseModel):
+    title: str
+    training_goal: str
+    unit_name: str | None = None
+    audience: str | None = None
+    primary_training_population: str = "non-03 support Marines"
+    venue_type: str = "MOUT town"
+    ammunition_type: str = "blank ammunition"
+    training_window: str | None = None
+    constraints: list[str] = Field(default_factory=list)
+    support_requirements: list[str] = Field(default_factory=list)
+    met_tasks: list[str] = Field(default_factory=list)
+    metl_focus: list[str] = Field(default_factory=list)
+    training_only: bool = True
+
+
+class InfantryTrainingPackageResponse(BaseModel):
+    title: str
+    training_frame: list[str] = Field(default_factory=list)
+    recommended_scope: list[str] = Field(default_factory=list)
+    training_phases: list[str] = Field(default_factory=list)
+    lane_design: list[str] = Field(default_factory=list)
+    prerequisite_materials: list[str] = Field(default_factory=list)
+    leader_rehearsals: list[str] = Field(default_factory=list)
+    blank_fire_controls: list[str] = Field(default_factory=list)
+    orm_controls: list[str] = Field(default_factory=list)
+    evaluation_points: list[str] = Field(default_factory=list)
+    aar_prompts: list[str] = Field(default_factory=list)
+    citations: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)

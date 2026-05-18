@@ -26,6 +26,7 @@ Why:
 - `build_frago_to_conop`
 - `build_training_case_study`
 - `build_tdg`
+- `build_infantry_training_package`
 - `build_staff_update_cycle`
 - `run_opt_facilitator`
 - `run_sja_military_justice_advisor`
@@ -49,6 +50,10 @@ Why:
 
 `build_tdg` is the S-3 wargaming / tactical-decision-game lane. It is meant to pressure-test assumptions,
 force decisions early, and expose reserve-specific friction before the real event does.
+
+`build_infantry_training_package` is the training-safe 03 familiarization lane. Use it when the user wants a
+modified urban or infantry-flavored package for non-03 Marines, especially around blanks, MOUT sites, scope
+control, leader rehearsals, and AAR discipline without pretending it is advanced CQB instruction.
 
 `build_staff_update_cycle` is the recurring staff-rhythm lane. It takes section updates and turns them into
 a linked running estimate, CUB, and CPB so the user can move from “what changed?” to “what does the commander

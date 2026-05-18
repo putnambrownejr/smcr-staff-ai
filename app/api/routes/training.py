@@ -4,6 +4,8 @@ from app.schemas.tdg import TdgGenerationRequest, TdgGenerationResponse
 from app.schemas.training import (
     AnnualTrainingPlanRequest,
     AnnualTrainingPlanResponse,
+    InfantryTrainingPackageRequest,
+    InfantryTrainingPackageResponse,
     RangePackageRequest,
     RangePackageResponse,
     RangeSafetyRequest,
@@ -19,6 +21,7 @@ from app.schemas.training import (
 )
 from app.services.training.case_study_builder import TrainingCaseStudyBuilder
 from app.services.training.event_planner import AnnualTrainingPlanner, RangePackagePlanner
+from app.services.training.infantry_package_builder import InfantryTrainingPackageBuilder
 from app.services.training.s3_planner import S3Planner
 from app.services.training.s4_planner import S4Planner
 from app.services.training.scenario_builder import RangeSafetyBuilder, TrainingScenarioBuilder
@@ -33,6 +36,7 @@ _tdg_builder = TdgBuilder()
 _s3_planner = S3Planner()
 _s4_planner = S4Planner()
 _case_study_builder = TrainingCaseStudyBuilder()
+_infantry_package_builder = InfantryTrainingPackageBuilder()
 
 
 @router.post("/scenario", response_model=TrainingScenarioResponse)
@@ -73,3 +77,8 @@ def build_s3_plan(request: S3PlanningRequest) -> S3PlanningResponse:
 @router.post("/s4-plan", response_model=S4PlanningResponse)
 def build_s4_plan(request: S4PlanningRequest) -> S4PlanningResponse:
     return _s4_planner.build(request)
+
+
+@router.post("/infantry-package", response_model=InfantryTrainingPackageResponse)
+def build_infantry_training_package(request: InfantryTrainingPackageRequest) -> InfantryTrainingPackageResponse:
+    return _infantry_package_builder.build(request)

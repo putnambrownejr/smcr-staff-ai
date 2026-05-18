@@ -60,6 +60,14 @@ These are public, official Marine Corps references for basic infantry, tactics, 
 - CUI flag: false
 - Notes: Planning, preparing, organizing, and executing patrols.
 
+- Title: MCTP 12-10B Urban Operations
+- Type: Marine Corps Tactical Publication
+- Category: Urban operations
+- Official URL: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1464473/mctp-12-10b/
+- Classification label: UNCLASSIFIED
+- CUI flag: false
+- Notes: Urban operations planning and training reference for commanders, staffs, and Marines.
+
 - Title: NAVMC 3500.44D Infantry Training and Readiness Manual
 - Type: NAVMC
 - Category: Infantry training and readiness

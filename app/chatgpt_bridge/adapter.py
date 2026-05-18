@@ -58,6 +58,9 @@ class ChatGptBridgeAdapter:
     async def build_tdg(self, payload: dict[str, object]) -> dict[str, object]:
         return await self._request_dict("POST", "/training/tdg", json=payload)
 
+    async def build_infantry_training_package(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self._request_dict("POST", "/training/infantry-package", json=payload)
+
     async def build_staff_update_cycle(self, payload: dict[str, object]) -> dict[str, object]:
         return await self._request_dict("POST", "/staff/update-cycle", json=payload)
 

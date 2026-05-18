@@ -421,6 +421,57 @@ TRAINING_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+INFANTRY_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCWP 3-10 MAGTF Ground Operations",
+        url="https://www.marines.mil/Portals/1/Publications/MCWP%203-10.pdf",
+        publisher="United States Marine Corps",
+        notes="Keystone ground-combat doctrine reference for planning and employing the GCE.",
+    ),
+    SourceRef(
+        title="MCWP 3-01 Offensive and Defensive Tactics",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2362952/mcwp-3-01/",
+        publisher="United States Marine Corps",
+        notes="Foundational tactics reference for offensive and defensive actions.",
+    ),
+    SourceRef(
+        title="MCRP 3-10A.2 Infantry Company Operations",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1780135/mcrp-3-10a2/",
+        publisher="United States Marine Corps",
+        notes="Company-level infantry planning and employment reference.",
+    ),
+    SourceRef(
+        title="MCRP 3-10A.3 Marine Infantry Platoon",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2500719/mcrp-3-10a3/",
+        publisher="United States Marine Corps",
+        notes="Platoon-level planning and employment reference.",
+    ),
+    SourceRef(
+        title="MCRP 3-10A.4 Marine Rifle Squad",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2472229/mcrp-3-10a4/",
+        publisher="United States Marine Corps",
+        notes="Rifle-squad employment and basic TTP reference.",
+    ),
+    SourceRef(
+        title="MCTP 12-10B Urban Operations",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1464473/mctp-12-10b/",
+        publisher="United States Marine Corps",
+        notes="Urban-operations planning and training reference for commanders, staffs, and Marines.",
+    ),
+    SourceRef(
+        title="NAVMC 3500.44D Infantry Training and Readiness Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2187958/navmc-350044d/",
+        publisher="United States Marine Corps",
+        notes="Infantry training standards, regulations, and readiness baseline.",
+    ),
+    SourceRef(
+        title="NAVMC 3500.18D Common Skills Training and Readiness Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2158067/navmc-350018d/",
+        publisher="United States Marine Corps",
+        notes="Common-skills baseline for all Marines supporting event design and evaluation.",
+    ),
+)
+
 STAFF_PROCESS_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="Command and Staff College",

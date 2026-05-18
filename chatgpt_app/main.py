@@ -170,6 +170,25 @@ class TdgToolInput(BaseModel):
     )
 
 
+class InfantryTrainingPackageToolInput(BaseModel):
+    title: str = Field(..., description="Short package title.")
+    training_goal: str = Field(..., description="What the package is meant to train.")
+    unit_name: str | None = Field(default=None, description="Optional unit name.")
+    audience: str | None = Field(default=None, description="Optional audience description.")
+    primary_training_population: str = Field(
+        default="non-03 support Marines",
+        description="Who the package is mainly built for.",
+    )
+    venue_type: str = Field(default="MOUT town", description="Training venue or urban site type.")
+    ammunition_type: str = Field(default="blank ammunition", description="Training ammunition type.")
+    training_window: str | None = Field(default=None, description="Available training window.")
+    constraints: list[str] = Field(default_factory=list, description="Key constraints.")
+    support_requirements: list[str] = Field(default_factory=list, description="Support dependencies to verify.")
+    met_tasks: list[str] = Field(default_factory=list, description="Relevant MET-aligned tasks.")
+    metl_focus: list[str] = Field(default_factory=list, description="Relevant METL focus.")
+    training_only: bool = Field(default=True, description="Set true for training-only framing.")
+
+
 class StaffSectionUpdateToolInput(BaseModel):
     section: str = Field(..., description="Staff section label such as S-3 or S-4.")
     summary: str = Field(..., description="Current section summary in plain staff language.")
@@ -339,6 +358,20 @@ TOOL_SPECS: list[types.Tool] = [
         ),
         inputSchema=TdgToolInput.model_json_schema(),
         _meta=_tool_invocation_meta("Building the TDG", "TDG ready", read_only=False),
+    ),
+    types.Tool(
+        name="build_infantry_training_package",
+        title="Build Infantry Training Package",
+        description=(
+            "Use this when the user wants a training-safe 03xx-style familiarization package, especially for "
+            "non-03 Marines, blanks, MOUT sites, and modified urban lanes that need scope discipline."
+        ),
+        inputSchema=InfantryTrainingPackageToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Building the infantry training package",
+            "Infantry training package ready",
+            read_only=False,
+        ),
     ),
     types.Tool(
         name="build_staff_update_cycle",
@@ -621,6 +654,11 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             tdg_payload = TdgToolInput.model_validate(arguments)
             result = await adapter.build_tdg(tdg_payload.model_dump())
             return _ok_result("Built the TDG or wargame.", result)
+
+        if name == "build_infantry_training_package":
+            infantry_payload = InfantryTrainingPackageToolInput.model_validate(arguments)
+            result = await adapter.build_infantry_training_package(infantry_payload.model_dump())
+            return _ok_result("Built the infantry training package.", result)
 
         if name == "build_staff_update_cycle":
             update_cycle_payload = StaffUpdateCycleToolInput.model_validate(arguments)
