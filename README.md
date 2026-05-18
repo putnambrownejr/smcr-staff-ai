@@ -64,19 +64,21 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | SMCR BIC discovery | Lists official public billet source pages, parses public billet tables/cards where available, discovers Reserve Hub links, and ranks billets against user MOS/rank/location/keywords. | Working parser/recommender with live-source caveats |
 | OSINT trend aggregation | Aggregates user-supplied trusted public-source news/social trend summaries with citations, counterarguments, and confidence weighting. Also exposed as an S-2 staff-support lane. | Working source-evaluation agent |
 | Vetted social ingestion | Normalizes public news/social trend records into OSINT/deep-research-ready source items without unrestricted scraping. | Working connector |
-| Professional reading catalog | Tracks Commandant's Reading List sources, archive references, open-source classics, and study summaries. | Working catalog |
+| Professional reading catalog | Tracks cached Commandant's Reading List membership from the current official ALMAR, archive references, open-source classics, and study summaries. | Working local catalog with live refresh |
 | Leadership / historical perspective advisor | Brings Marine leadership doctrine, professional reading, and historical perspective into PME, command-climate, and leader-development questions without pretending to be a historical figure. | Working advisory agent |
 | USMC history context | Provides an easy-access Marine Corps history and heritage study reference for agent context and PME prompts. | Markdown reference |
 | Org awareness | Loads example MARFORRES-style hierarchy and answers unit chain lookups. | Working example data |
 | Exercise cadence | Provides typical/advisory exercise and battle rhythm examples. | Working example data |
-| RSS/MARADMIN parsing | Parses local RSS XML fixtures and tags messages by staff relevance. | Working parser; live ingestion is later |
+| MARADMIN RSS feed | Pulls the live official Marines.mil MARADMIN RSS feed into local cache and exposes it for dashboard ticker use. | Working local live-source connector |
+| Navy message watch | Attempts to pull official NAVADMIN and ALNAV current-year message indexes into local cache, with warning-preserving fallback when MyNavyHR blocks server-side access. | Working best-effort connector |
+| DoD watch | Pulls and filters official Defense.gov release RSS items into a smaller local officer-relevant watchlist. | Working local live-source connector |
 | RAG foundations | Includes document/chunk models, chunking, local embedding stub, vector-store stub, doctrine manifest validation, and citation-preserving local RAG pipeline. | Ready for expansion |
 | Lightweight dashboard | Serves a browser-based local operations board for Chief brief, admin readiness, career watch, and drafting tools. | Working local UI |
 
 ## What It Does Not Do Yet
 
 - It does not call a real LLM.
-- It does not ingest live MCPEL/MARADMIN sources by default.
+- It does not ingest live MCPEL by default.
 - It does not automatically use local uploads as authoritative doctrine.
 - It does not connect to Microsoft Graph, Google Calendar, Gmail, or Outlook yet; connector routes only create consent/write-action plans.
 - It does not determine billet eligibility, assignment approval, mobilization eligibility, or command decisions.
@@ -1209,6 +1211,12 @@ No connector route performs live mailbox/calendar reads or writes yet. Full acce
 
 ### Commandant's Professional Reading List
 
+Refresh the locally cached current list from the official FY26 ALMAR:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/reading-list/refresh
+```
+
 List reading-list source pages:
 
 ```powershell
@@ -1234,6 +1242,52 @@ curl http://127.0.0.1:8000/reading-list/books/defence-of-duffers-drift/summary
 ```
 
 The catalog stores metadata and original summaries only. It should not store copyrighted book text. Public-domain/open works such as `The Defence of Duffer's Drift` can link to sources like Project Gutenberg.
+
+### MARADMIN RSS Feed
+
+Refresh the locally cached official MARADMIN feed from Marines.mil:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/maradmins/refresh
+```
+
+Read the cached feed items:
+
+```powershell
+curl http://127.0.0.1:8000/maradmins/feed
+```
+
+The dashboard ticker reads from this local cache, not from a fresh network call on every page load.
+
+### NAVADMIN, ALNAV, And DoD Watch
+
+Refresh the local NAVADMIN cache from the official MyNavyHR current-year page:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/message-watch/navadmins/refresh
+```
+
+Refresh the local ALNAV cache:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/message-watch/alnavs/refresh
+```
+
+Refresh the curated DoD watchlist from the official Defense.gov releases RSS feed:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/message-watch/dod/refresh
+```
+
+Read the cached items:
+
+```powershell
+curl http://127.0.0.1:8000/message-watch/navadmins/feed
+curl http://127.0.0.1:8000/message-watch/alnavs/feed
+curl http://127.0.0.1:8000/message-watch/dod/feed
+```
+
+The Navy routes preserve warnings when the official source blocks automated requests from the current host. In that case, they return cached data if present rather than silently failing.
 
 ## Data Source Philosophy
 

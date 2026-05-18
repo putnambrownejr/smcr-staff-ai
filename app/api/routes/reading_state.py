@@ -12,6 +12,8 @@ from app.schemas.reading_state import (
     UpsertReadingProgressRequest,
 )
 from app.services.reading.catalog import ReadingListCatalogService
+from app.services.reading.catalog_store import ReadingListCatalogStore
+from app.services.reading.live_catalog import load_effective_reading_catalog
 from app.services.reading.state_store import ReadingProgressStore
 
 router = APIRouter(
@@ -28,7 +30,11 @@ def get_reading_state_store() -> Iterator[ReadingProgressStore]:
 
 
 def get_reading_catalog() -> ReadingListCatalogService:
-    return ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml")
+    settings = get_settings()
+    return load_effective_reading_catalog(
+        seed_path=SEED_DIR / "reading_list.example.yaml",
+        store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
+    )
 
 
 @router.get("/state/{user_key}", response_model=ReadingProgressListResponse)

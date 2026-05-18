@@ -23,6 +23,7 @@ from app.schemas.dashboard import (
     DashboardWorkspaceResponse,
 )
 from app.schemas.history import TodayInMarineHistoryItem
+from app.schemas.ingestion import MessageRecord
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.reading_state import ReadingProgressRecord
@@ -37,8 +38,12 @@ from app.services.demo.scenarios import DEMO_USER_KEY, build_demo_career_watch, 
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.history.today_in_history import TodayInMarineHistoryService
 from app.services.ingestion.document_update_store import DocumentUpdateStore
+from app.services.ingestion.maradmin_feed_service import MaradminFeedService
+from app.services.ingestion.maradmin_feed_store import MaradminFeedStore
 from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
+from app.services.reading.catalog_store import ReadingListCatalogStore
+from app.services.reading.live_catalog import load_effective_reading_catalog
 from app.services.reading.state_store import ReadingProgressStore
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
@@ -74,7 +79,10 @@ def get_chief_orchestrator(
         handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
         document_organizer=PersonalDocumentOrganizer(store),
         drill_plan_store=DrillPrepPlanStore(f"{settings.local_context_storage_dir}/drill_plans"),
-        reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
+        reading_catalog=load_effective_reading_catalog(
+            seed_path=SEED_DIR / "reading_list.example.yaml",
+            store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
+        ),
         document_update_store=DocumentUpdateStore(f"{settings.local_context_storage_dir}/document_updates"),
         opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
         travel_case_store=TravelCaseStore(settings.travel_case_storage_dir),
@@ -100,7 +108,10 @@ def get_career_service(
         handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
         document_organizer=PersonalDocumentOrganizer(store),
         opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
-        reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
+        reading_catalog=load_effective_reading_catalog(
+            seed_path=SEED_DIR / "reading_list.example.yaml",
+            store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
+        ),
         reading_state_store=ReadingProgressStore(settings.reading_state_storage_dir),
     )
 
@@ -134,6 +145,23 @@ def get_reading_state_store() -> Iterator[ReadingProgressStore]:
     yield ReadingProgressStore(settings.reading_state_storage_dir)
 
 
+def get_reading_catalog_service() -> ReadingListCatalogService:
+    settings = get_settings()
+    return load_effective_reading_catalog(
+        seed_path=SEED_DIR / "reading_list.example.yaml",
+        store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
+    )
+
+
+def get_maradmin_feed_store() -> Iterator[MaradminFeedStore]:
+    settings = get_settings()
+    yield MaradminFeedStore(settings.maradmin_feed_storage_dir)
+
+
+def get_maradmin_feed_service() -> MaradminFeedService:
+    return MaradminFeedService()
+
+
 def get_history_service() -> TodayInMarineHistoryService:
     return TodayInMarineHistoryService.from_yaml(SEED_DIR / "usmc_history_on_this_day.example.yaml")
 
@@ -156,6 +184,8 @@ def get_dashboard_data(
     template_repository: Annotated[ProductTemplateRepository, Depends(get_template_repository)],
     system_template_catalog: Annotated[SystemTemplateCatalog, Depends(get_system_template_catalog)],
     reading_state_store: Annotated[ReadingProgressStore, Depends(get_reading_state_store)],
+    reading_catalog: Annotated[ReadingListCatalogService, Depends(get_reading_catalog_service)],
+    maradmin_feed_store: Annotated[MaradminFeedStore, Depends(get_maradmin_feed_store)],
     history_service: Annotated[TodayInMarineHistoryService, Depends(get_history_service)],
 ) -> DashboardWorkspaceResponse:
     chief_brief = orchestrator.build_brief(ChiefBriefRequest(user_key=user_key))
@@ -167,6 +197,7 @@ def get_dashboard_data(
     documentation_updates = [
         item for item in update_store.list() if item.review_status != UpdateReviewStatus.ignored
     ][:8]
+    maradmin_feed = maradmin_feed_store.list(limit=10)
     reading_progress = {item.slug: item for item in reading_state_store.list(user_key).records}
     return _workspace_response(
         mode="personal",
@@ -183,10 +214,10 @@ def get_dashboard_data(
             system_template_catalog=system_template_catalog,
             template_repository=template_repository,
         ),
-        maradmin_ticker=_maradmin_ticker(documentation_updates),
+        maradmin_ticker=_maradmin_ticker(maradmin_feed),
         today_in_history=history_service.get_for_date(datetime.now(UTC).date()),
         reading_books=_reading_books(
-            reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
+            reading_catalog=reading_catalog,
             reading_progress=reading_progress,
         ),
     )
@@ -201,6 +232,12 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
     chief_brief = build_demo_chief_brief()
     career_watch = build_demo_career_watch()
     admin_readiness = _admin_from_demo_brief(chief_brief)
+    settings = get_settings()
+    maradmin_feed = MaradminFeedStore(settings.maradmin_feed_storage_dir).list(limit=10)
+    reading_catalog = load_effective_reading_catalog(
+        seed_path=SEED_DIR / "reading_list.example.yaml",
+        store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
+    )
     return _workspace_response(
         mode="demo",
         user_key=DEMO_USER_KEY,
@@ -216,12 +253,12 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
             system_template_catalog=SystemTemplateCatalog.from_yaml(SEED_DIR / "system_templates.example.yaml"),
             template_repository=None,
         ),
-        maradmin_ticker=_maradmin_ticker(chief_brief.documentation_updates),
+        maradmin_ticker=_maradmin_ticker(maradmin_feed),
         today_in_history=TodayInMarineHistoryService.from_yaml(
             SEED_DIR / "usmc_history_on_this_day.example.yaml"
         ).get_for_date(datetime.now(UTC).date()),
         reading_books=_reading_books(
-            reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
+            reading_catalog=reading_catalog,
             reading_progress={},
         ),
     )
@@ -351,19 +388,19 @@ def _template_library(
     return [*local_templates, *system_templates]
 
 
-def _maradmin_ticker(updates: list[DocumentationUpdateCandidate]) -> list[DashboardTickerItem]:
+def _maradmin_ticker(records: list[MessageRecord]) -> list[DashboardTickerItem]:
     return [
         DashboardTickerItem(
-            title=item.tracked_title,
-            status=item.review_status.value,
+            title=item.title,
+            status=item.status,
             summary=(
-                ", ".join(item.change_signals[:3])
-                or ", ".join(item.matched_terms[:3])
-                or "Potential source change needs review."
+                ", ".join(item.tags[:3])
+                or item.summary
+                or "Live MARADMIN feed item."
             )[:220],
-            source_url=item.trigger_url,
+            source_url=item.canonical_url,
         )
-        for item in updates[:8]
+        for item in records[:8]
     ]
 
 

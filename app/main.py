@@ -17,6 +17,8 @@ from app.api.routes import (
     documents,
     handoffs,
     health,
+    maradmins,
+    message_watch,
     opportunities,
     org,
     personal_documents,
@@ -71,6 +73,8 @@ def create_app() -> FastAPI:
     app.include_router(privacy.router)
     app.include_router(reading.router)
     app.include_router(reading_state.router)
+    app.include_router(maradmins.router)
+    app.include_router(message_watch.router)
     app.include_router(social.router)
     app.include_router(staff.router)
     app.include_router(staff_products.router)

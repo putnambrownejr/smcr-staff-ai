@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -27,6 +29,12 @@ class ReadingListCatalog(BaseModel):
     notice: str
     sources: list[ReadingListSource]
     books: list[ReadingListBook]
+
+
+class ReadingListCatalogSnapshot(BaseModel):
+    fetched_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    source_url: str
+    catalog: ReadingListCatalog
 
 
 class ReadingListBookSummary(BaseModel):

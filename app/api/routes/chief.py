@@ -12,7 +12,8 @@ from app.services.chief.orchestrator import ChiefAideOrchestrator
 from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.opportunities.tracker import OpportunityTracker
-from app.services.reading.catalog import ReadingListCatalogService
+from app.services.reading.catalog_store import ReadingListCatalogStore
+from app.services.reading.live_catalog import load_effective_reading_catalog
 from app.services.session.active_context_store import ActiveUserContextStore
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
@@ -34,7 +35,10 @@ def get_orchestrator(
         handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
         document_organizer=PersonalDocumentOrganizer(context_store),
         drill_plan_store=DrillPrepPlanStore(f"{settings.local_context_storage_dir}/drill_plans"),
-        reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
+        reading_catalog=load_effective_reading_catalog(
+            seed_path=SEED_DIR / "reading_list.example.yaml",
+            store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
+        ),
         opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
         active_context_store=ActiveUserContextStore(f"{settings.local_context_storage_dir}/active_user_context"),
         travel_case_store=TravelCaseStore(settings.travel_case_storage_dir),

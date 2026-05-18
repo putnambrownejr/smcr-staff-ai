@@ -40,6 +40,22 @@ def default_reading_state_dir() -> Path:
     return default_local_context_dir() / "reading_state"
 
 
+def default_reading_catalog_dir() -> Path:
+    return default_local_context_dir() / "reading_catalog"
+
+
+def default_maradmin_feed_dir() -> Path:
+    return default_local_context_dir() / "maradmin_feed"
+
+
+def default_navy_message_dir() -> Path:
+    return default_local_context_dir() / "navy_messages"
+
+
+def default_dod_watch_dir() -> Path:
+    return default_local_context_dir() / "dod_watch"
+
+
 def default_database_url() -> str:
     database_path = default_local_state_root() / "smcr_staff_ai.db"
     return f"sqlite:///{database_path.as_posix()}"
@@ -56,6 +72,10 @@ class Settings(BaseSettings):
     product_template_storage_dir: str = str(default_product_template_dir())
     travel_case_storage_dir: str = str(default_travel_case_dir())
     reading_state_storage_dir: str = str(default_reading_state_dir())
+    reading_catalog_storage_dir: str = str(default_reading_catalog_dir())
+    maradmin_feed_storage_dir: str = str(default_maradmin_feed_dir())
+    navy_message_storage_dir: str = str(default_navy_message_dir())
+    dod_watch_storage_dir: str = str(default_dod_watch_dir())
     local_api_key: str | None = None
     max_upload_bytes: int = 50_000_000
     public_source_only: bool = True

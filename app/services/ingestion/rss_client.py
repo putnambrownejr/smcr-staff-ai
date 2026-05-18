@@ -16,10 +16,21 @@ class FeedItem(BaseModel):
 class RssClient:
     def __init__(self, timeout_seconds: float = 10.0) -> None:
         self.timeout_seconds = timeout_seconds
+        self._headers = {"User-Agent": "smcr-staff-ai/0.1 (+local advisory tool)"}
 
     async def fetch(self, url: str) -> list[FeedItem]:
-        async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+        async with httpx.AsyncClient(
+            timeout=self.timeout_seconds,
+            headers=self._headers,
+            follow_redirects=True,
+        ) as client:
             response = await client.get(url)
+            response.raise_for_status()
+        return parse_feed(response.text)
+
+    def fetch_sync(self, url: str) -> list[FeedItem]:
+        with httpx.Client(timeout=self.timeout_seconds, headers=self._headers, follow_redirects=True) as client:
+            response = client.get(url)
             response.raise_for_status()
         return parse_feed(response.text)
 
