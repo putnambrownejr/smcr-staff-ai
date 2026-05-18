@@ -560,6 +560,7 @@ def _next_drill_readiness(
         f"POST /calendar/handoffs/{workflow_user}/reminder-plans",
         f"GET /admin/readiness/{workflow_user}",
         f"GET /career/watch/{workflow_user}",
+        "POST /staff/update-cycle",
     ]
     if anchor is not None or drill_plans:
         recommended_follow_on_workflows.append("POST /planning/staff-package")

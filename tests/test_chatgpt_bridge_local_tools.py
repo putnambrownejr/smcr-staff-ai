@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import pytest
 
@@ -77,6 +77,39 @@ async def test_build_tdg_via_adapter() -> None:
     assert "TDG / wargaming package" in cast(str, result["title"])
     assert result["decision_points"]
     assert result["discussion_questions"]
+
+
+@pytest.mark.anyio
+async def test_build_staff_update_cycle_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.build_staff_update_cycle(
+        {
+            "title": "Adapter update cycle test",
+            "supported_unit": "Civil affairs company",
+            "mission_or_training_goal": "Refine the next drill training plan.",
+            "section_updates": [
+                {
+                    "section": "S-3",
+                    "summary": "The event is supportable if the company cuts to one primary lane.",
+                    "decisions_needed": ["Commander decides whether to preserve one lane or push two."],
+                },
+                {
+                    "section": "S-4",
+                    "summary": "Transport support exists, but issue timing is still tight.",
+                    "risks": ["Late issue will compress movement time."],
+                },
+            ],
+            "training_only": True,
+        }
+    )
+
+    assert "running_estimate" in result
+    assert "cub" in result
+    assert "cpb" in result
+    cub = cast(dict[str, Any], result["cub"])
+    update_brief = cast(dict[str, Any], cub["update_brief"])
+    assert update_brief["product_type"] == "command_update_brief"
 
 
 @pytest.mark.anyio

@@ -58,6 +58,22 @@ document.getElementById("staff-form").addEventListener("submit", async (event) =
   renderToolOutput("staff-output", data, ["review_checklist", "citations", "warnings"]);
 });
 
+document.getElementById("staff-cycle-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const payload = {
+    title: form.get("title"),
+    supported_unit: form.get("supported_unit"),
+    supported_echelon: "company",
+    mission_or_training_goal: form.get("mission_or_training_goal"),
+    commander_priorities: splitLines(form.get("commander_priorities")),
+    section_updates: parseSectionUpdates(form.get("section_updates")),
+    training_only: true,
+  };
+  const data = await apiFetch("/staff/update-cycle", { method: "POST", body: JSON.stringify(payload) });
+  renderStaffUpdateCycleOutput("staff-cycle-output", data);
+});
+
 document.addEventListener("click", async (event) => {
   const documentButton = event.target.closest("[data-document-id]");
   if (documentButton) {
@@ -589,6 +605,51 @@ function renderToolOutput(targetId, payload, listKeys) {
   target.innerHTML = sectionMarkup.join("") || "No output returned.";
 }
 
+function renderStaffUpdateCycleOutput(targetId, payload) {
+  const target = document.getElementById(targetId);
+  const runningEstimate = payload.running_estimate || {};
+  const cub = payload.cub || {};
+  const cpb = payload.cpb || {};
+  const estimateRows = (runningEstimate.running_estimates || [])
+    .map(
+      (item) => `
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.section || "section")}</span>
+            <strong>${escapeHtml((item.current_situation || [])[0] || "No summary")}</strong>
+          </div>
+          <p>${escapeHtml((item.risks || [])[0] || (item.supportability || [])[0] || "No immediate friction recorded.")}</p>
+        </article>
+      `,
+    )
+    .join("");
+  target.className = "tool-output";
+  target.innerHTML = `
+    <section>
+      <span class="strip-label">Command summary</span>
+      <ul>${(runningEstimate.command_summary || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Running estimates</span>
+      <div class="row-stack">${estimateRows || "<div class=\"empty-state\">No section estimates returned.</div>"}</div>
+    </section>
+    <section>
+      <span class="strip-label">CUB</span>
+      <ul>${(cub.commander_decisions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No commander decisions surfaced.</li>"}</ul>
+      <p class="meta-inline">Due-outs: ${escapeHtml((cub.due_outs || []).slice(0, 3).join(" | ") || "None recorded.")}</p>
+    </section>
+    <section>
+      <span class="strip-label">CPB</span>
+      <ul>${(cpb.decision_points || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No CPB decision points surfaced.</li>"}</ul>
+      <p class="meta-inline">Branches/sequels: ${escapeHtml((cpb.branches_and_sequels || []).slice(0, 2).join(" | ") || "None recorded.")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Warnings</span>
+      <ul>${(payload.warnings || []).slice(0, 4).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </section>
+  `;
+}
+
 function renderList(targetId, items) {
   const target = document.getElementById(targetId);
   target.innerHTML = items.length ? items.map((item) => `<li>${escapeHtml(item)}</li>`).join("") : "<li>No items.</li>";
@@ -696,6 +757,23 @@ function splitLines(value) {
   return String(value || "")
     .split(/\r?\n/)
     .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseSectionUpdates(value) {
+  return splitLines(value)
+    .map((line) => {
+      const index = line.indexOf(":");
+      if (index <= 0) {
+        return null;
+      }
+      const section = line.slice(0, index).trim();
+      const summary = line.slice(index + 1).trim();
+      if (!section || !summary) {
+        return null;
+      }
+      return { section, summary };
+    })
     .filter(Boolean);
 }
 

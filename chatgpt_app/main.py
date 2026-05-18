@@ -170,6 +170,39 @@ class TdgToolInput(BaseModel):
     )
 
 
+class StaffSectionUpdateToolInput(BaseModel):
+    section: str = Field(..., description="Staff section label such as S-3 or S-4.")
+    summary: str = Field(..., description="Current section summary in plain staff language.")
+    changes_since_last: list[str] = Field(default_factory=list, description="What changed since the last update.")
+    assumptions: list[str] = Field(default_factory=list, description="Assumptions still driving the section view.")
+    open_issues: list[str] = Field(default_factory=list, description="Open issues the section is carrying.")
+    support_requests: list[str] = Field(default_factory=list, description="Support requests or dependencies.")
+    decisions_needed: list[str] = Field(default_factory=list, description="Commander or XO decisions needed.")
+    risks: list[str] = Field(default_factory=list, description="Main risks or friction points.")
+    next_24_72: list[str] = Field(default_factory=list, description="What the section owes in the next 24 to 72 hours.")
+    adjacent_section_asks: list[str] = Field(
+        default_factory=list,
+        description="What this section needs from adjacent staff.",
+    )
+
+
+class StaffUpdateCycleToolInput(BaseModel):
+    title: str = Field(..., description="Short update-cycle title.")
+    supported_unit: str = Field(..., description="Unit receiving the update cycle.")
+    supported_echelon: str = Field(default="company", description="Supported echelon such as company or battalion.")
+    mission_or_training_goal: str = Field(..., description="What the unit is trying to accomplish.")
+    timeframe: str | None = Field(default=None, description="Optional update horizon.")
+    commander_priorities: list[str] = Field(default_factory=list, description="Commander priorities for this cycle.")
+    higher_guidance: list[str] = Field(default_factory=list, description="Higher guidance to preserve.")
+    met_tasks: list[str] = Field(default_factory=list, description="Relevant MET-aligned tasks.")
+    metl_focus: list[str] = Field(default_factory=list, description="Relevant METL focus.")
+    section_updates: list[StaffSectionUpdateToolInput] = Field(
+        default_factory=list,
+        description="Structured section updates feeding the running estimate, CUB, and CPB.",
+    )
+    training_only: bool = Field(default=True, description="Set true for training-only or fictional scenarios.")
+
+
 class AgentRunToolInput(BaseModel):
     agent_id: str = Field(..., description="Registered staff or specialty agent id.")
     input: str = Field(..., description="The actual user question or task for the agent.")
@@ -303,6 +336,20 @@ TOOL_SPECS: list[types.Tool] = [
         _meta=_tool_invocation_meta("Building the TDG", "TDG ready", read_only=False),
     ),
     types.Tool(
+        name="build_staff_update_cycle",
+        title="Build Staff Update Cycle",
+        description=(
+            "Use this when the user has section updates and wants a linked running estimate, CUB, and CPB "
+            "instead of a one-off product draft."
+        ),
+        inputSchema=StaffUpdateCycleToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Building the staff update cycle",
+            "Staff update cycle ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
         name="list_staff_agents",
         title="List Staff Agents",
         description="Use this when the user wants to see which staff and specialty agents are available.",
@@ -412,7 +459,7 @@ TOOL_SPECS: list[types.Tool] = [
 ]
 
 
-@mcp._mcp_server.list_tools()
+@mcp._mcp_server.list_tools()  # type: ignore[untyped-decorator,no-untyped-call]
 async def _list_tools() -> list[types.Tool]:
     return TOOL_SPECS
 
@@ -442,93 +489,98 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
 
     try:
         if name == "build_staff_package":
-            payload = StaffPackageToolInput.model_validate(arguments)
-            result = await adapter.build_staff_package(payload.model_dump())
+            staff_package_payload = StaffPackageToolInput.model_validate(arguments)
+            result = await adapter.build_staff_package(staff_package_payload.model_dump())
             return _ok_result("Built the staff package.", result)
 
         if name == "draft_staff_product":
-            payload = StaffProductToolInput.model_validate(arguments)
-            result = await adapter.draft_staff_product(payload.model_dump())
+            staff_product_payload = StaffProductToolInput.model_validate(arguments)
+            result = await adapter.draft_staff_product(staff_product_payload.model_dump())
             return _ok_result("Drafted the staff product.", result)
 
         if name == "build_frago_to_conop":
-            payload = FragoToConopToolInput.model_validate(arguments)
-            result = await adapter.build_frago_to_conop(payload.model_dump())
+            frago_payload = FragoToConopToolInput.model_validate(arguments)
+            result = await adapter.build_frago_to_conop(frago_payload.model_dump())
             return _ok_result("Built the FRAGO-to-CONOP package.", result)
 
         if name == "build_training_case_study":
-            payload = CaseStudyToolInput.model_validate(arguments)
-            result = await adapter.build_training_case_study(payload.model_dump())
+            case_study_payload = CaseStudyToolInput.model_validate(arguments)
+            result = await adapter.build_training_case_study(case_study_payload.model_dump())
             return _ok_result("Built the training case study.", result)
 
         if name == "build_tdg":
-            payload = TdgToolInput.model_validate(arguments)
-            result = await adapter.build_tdg(payload.model_dump())
+            tdg_payload = TdgToolInput.model_validate(arguments)
+            result = await adapter.build_tdg(tdg_payload.model_dump())
             return _ok_result("Built the TDG or wargame.", result)
+
+        if name == "build_staff_update_cycle":
+            update_cycle_payload = StaffUpdateCycleToolInput.model_validate(arguments)
+            result = await adapter.build_staff_update_cycle(update_cycle_payload.model_dump())
+            return _ok_result("Built the staff update cycle.", result)
 
         if name == "list_staff_agents":
             result = await adapter.list_agents()
             return _ok_result("Listed the available staff agents.", result)
 
         if name == "run_staff_agent":
-            payload = AgentRunToolInput.model_validate(arguments)
+            agent_payload = AgentRunToolInput.model_validate(arguments)
             result = await adapter.run_staff_agent(
-                agent_id=payload.agent_id,
-                payload={"input": payload.input, "context": payload.context},
+                agent_id=agent_payload.agent_id,
+                payload={"input": agent_payload.input, "context": agent_payload.context},
             )
-            return _ok_result(f"Ran the {payload.agent_id} agent.", result)
+            return _ok_result(f"Ran the {agent_payload.agent_id} agent.", result)
 
         if name == "build_chief_brief":
-            payload = ChiefBriefToolInput.model_validate(arguments)
-            result = await adapter.build_chief_brief(payload.model_dump())
+            chief_payload = ChiefBriefToolInput.model_validate(arguments)
+            result = await adapter.build_chief_brief(chief_payload.model_dump())
             return _ok_result("Built the Chief brief.", result)
 
         if name == "build_next_drill_readiness":
-            payload = ChiefBriefToolInput.model_validate(arguments)
-            result = await adapter.build_next_drill_readiness(payload.model_dump())
+            readiness_payload = ChiefBriefToolInput.model_validate(arguments)
+            result = await adapter.build_next_drill_readiness(readiness_payload.model_dump())
             return _ok_result("Built next-drill readiness.", result)
 
         if name == "career_watch":
-            payload = UserKeyToolInput.model_validate(arguments)
-            result = await adapter.get_career_watch(user_key=payload.user_key)
+            user_key_payload = UserKeyToolInput.model_validate(arguments)
+            result = await adapter.get_career_watch(user_key=user_key_payload.user_key)
             return _ok_result("Built the career watch.", result)
 
         if name == "admin_readiness":
-            payload = UserKeyToolInput.model_validate(arguments)
-            result = await adapter.get_admin_readiness(user_key=payload.user_key)
+            user_key_payload = UserKeyToolInput.model_validate(arguments)
+            result = await adapter.get_admin_readiness(user_key=user_key_payload.user_key)
             return _ok_result("Built the admin readiness summary.", result)
 
         if name == "build_admin_workflow":
-            payload = AdminWorkflowToolInput.model_validate(arguments)
-            result = await adapter.build_admin_workflow(payload.model_dump())
+            workflow_payload = AdminWorkflowToolInput.model_validate(arguments)
+            result = await adapter.build_admin_workflow(workflow_payload.model_dump())
             return _ok_result("Built the admin workflow.", result)
 
         if name == "build_handoff_reminder_plans":
-            payload = ReminderPlanToolInput.model_validate(arguments)
+            reminder_payload = ReminderPlanToolInput.model_validate(arguments)
             result = await adapter.build_handoff_reminder_plans(
-                user_key=payload.user_key,
+                user_key=reminder_payload.user_key,
                 payload={
-                    "include_travel_tasks": payload.include_travel_tasks,
-                    "only_future_drills": payload.only_future_drills,
+                    "include_travel_tasks": reminder_payload.include_travel_tasks,
+                    "only_future_drills": reminder_payload.only_future_drills,
                 },
             )
             return _ok_result("Built the handoff reminder plans.", result)
 
         if name == "build_external_ai_packet":
-            payload = ExternalAiPacketToolInput.model_validate(arguments)
-            result = await adapter.build_external_ai_packet(payload.model_dump())
+            external_packet_payload = ExternalAiPacketToolInput.model_validate(arguments)
+            result = await adapter.build_external_ai_packet(external_packet_payload.model_dump())
             return _ok_result("Built the external AI packet.", result)
 
         if name == "get_active_user_context":
-            payload = UserKeyToolInput.model_validate(arguments)
-            result = await adapter.get_active_user_context(user_key=payload.user_key)
+            user_key_payload = UserKeyToolInput.model_validate(arguments)
+            result = await adapter.get_active_user_context(user_key=user_key_payload.user_key)
             return _ok_result("Loaded the active user context.", result)
 
         if name == "set_active_user_context":
-            payload = ActiveUserContextToolInput.model_validate(arguments)
+            active_context_payload = ActiveUserContextToolInput.model_validate(arguments)
             result = await adapter.set_active_user_context(
-                user_key=payload.user_key,
-                payload=payload.model_dump(),
+                user_key=active_context_payload.user_key,
+                payload=active_context_payload.model_dump(),
             )
             return _ok_result("Saved the active user context.", result)
 

@@ -412,6 +412,55 @@
             </form>
             <div id="staff-output" class="tool-output empty-state">Sections and review notes will appear here.</div>
           </article>
+
+          <article class="panel tool-panel">
+            <div class="panel-header">
+              <h2>Staff update cycle</h2>
+              <p>Turn quick section updates into a running estimate, CUB, and CPB without rebuilding the frame.</p>
+            </div>
+            <form id="staff-cycle-form" class="tool-form">
+              <div class="form-row">
+                <label>
+                  <span>Title</span>
+                  <input name="title" type="text" value="Weekly company update cycle" />
+                </label>
+                <label>
+                  <span>Supported unit</span>
+                  <input name="supported_unit" type="text" value="Civil affairs company" />
+                </label>
+              </div>
+              <label>
+                <span>Mission / training goal</span>
+                <input
+                  name="mission_or_training_goal"
+                  type="text"
+                  value="Refine the next drill plan and preserve staff continuity."
+                />
+              </label>
+              <label>
+                <span>Commander priorities (one per line)</span>
+                <textarea
+                  name="commander_priorities"
+                  rows="3"
+                  placeholder="Protect training value&#10;Keep reporting/accountability standards tight"
+                ></textarea>
+              </label>
+              <label>
+                <span>Section updates (one per line as SECTION: summary)</span>
+                <textarea
+                  name="section_updates"
+                  rows="6"
+                  placeholder="S-3: The concept is supportable if the company cuts to one primary lane.&#10;S-4: Transport and water support are available, but issue timing is still tight.&#10;S-6: Reporting windows are workable if the company keeps one simple method."
+                ></textarea>
+              </label>
+              <div class="button-row">
+                <button type="submit">Build staff update cycle</button>
+              </div>
+            </form>
+            <div id="staff-cycle-output" class="tool-output empty-state">
+              Running estimate, CUB, and CPB outputs will appear here.
+            </div>
+          </article>
         </section>
       </main>
     </div>

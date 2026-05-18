@@ -26,6 +26,7 @@ Why:
 - `build_frago_to_conop`
 - `build_training_case_study`
 - `build_tdg`
+- `build_staff_update_cycle`
 - `list_staff_agents`
 - `run_staff_agent`
 - `build_chief_brief`
@@ -40,6 +41,10 @@ Why:
 
 `build_tdg` is the S-3 wargaming / tactical-decision-game lane. It is meant to pressure-test assumptions,
 force decisions early, and expose reserve-specific friction before the real event does.
+
+`build_staff_update_cycle` is the recurring staff-rhythm lane. It takes section updates and turns them into
+a linked running estimate, CUB, and CPB so the user can move from “what changed?” to “what does the commander
+need to hear or decide?” without rebuilding the frame every time.
 
 `draft_staff_product` is now also the right lane for briefing content when you want a deck outline that behaves
 like a real staff brief instead of a generic AI slide dump. Use `decision_brief` or `command_update_brief`
