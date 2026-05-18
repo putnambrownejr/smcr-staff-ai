@@ -488,6 +488,93 @@
               Running estimate, CUB, and CPB outputs will appear here.
             </div>
           </article>
+
+          <article class="panel tool-panel full-span">
+            <div class="panel-header">
+              <h2>Planning Cell</h2>
+              <p>Run mission analysis, pick a planning rhythm, and keep assumptions, decisions, and due-outs visible.</p>
+            </div>
+            <form id="planning-cell-form" class="tool-form">
+              <div class="form-row">
+                <label>
+                  <span>Title</span>
+                  <input name="title" type="text" value="Drill weekend planning cell" />
+                </label>
+                <label>
+                  <span>Supported unit</span>
+                  <input name="supported_unit" type="text" value="Civil affairs company" />
+                </label>
+              </div>
+              <div class="form-row">
+                <label>
+                  <span>Event type</span>
+                  <input name="event_type" type="text" value="training_event" />
+                </label>
+                <label>
+                  <span>Time available</span>
+                  <input name="time_available" type="text" placeholder="48 hours before final brief" />
+                </label>
+              </div>
+              <label>
+                <span>Mission / training goal</span>
+                <input
+                  name="mission_or_training_goal"
+                  type="text"
+                  value="Refine the next drill concept and keep the staff synchronized on what matters."
+                />
+              </label>
+              <div class="form-row">
+                <label>
+                  <span>Commander priorities (one per line)</span>
+                  <textarea
+                    name="commander_priorities"
+                    rows="4"
+                    placeholder="Protect training value&#10;Keep supportability honest&#10;Leave with named due-outs"
+                  ></textarea>
+                </label>
+                <label>
+                  <span>Higher guidance / constraints (one per line)</span>
+                  <textarea
+                    name="higher_guidance"
+                    rows="4"
+                    placeholder="Battalion wants a concise mission analysis before final sync&#10;One drill weekend only&#10;Distributed arrivals still matter"
+                  ></textarea>
+                </label>
+              </div>
+              <div class="form-row">
+                <label>
+                  <span>Coordinating sections (one per line)</span>
+                  <textarea
+                    name="coordinating_sections"
+                    rows="4"
+                    placeholder="S-3&#10;S-4&#10;S-6&#10;Medical"
+                  ></textarea>
+                </label>
+                <label>
+                  <span>Support requirements / civil factors (one per line)</span>
+                  <textarea
+                    name="support_requirements"
+                    rows="4"
+                    placeholder="Transport timeline&#10;Water plan&#10;Billeting reality&#10;Partner visibility if required"
+                  ></textarea>
+                </label>
+              </div>
+              <label>
+                <span>Section updates (one per line as SECTION: summary)</span>
+                <textarea
+                  name="section_updates"
+                  rows="6"
+                  placeholder="S-3: The concept is supportable if the company cuts to one primary lane.&#10;S-4: Transport and water support are available, but issue timing is still tight.&#10;S-6: Reporting windows are workable if the company keeps one simple method."
+                ></textarea>
+              </label>
+              <div class="button-row">
+                <button type="submit">Build planning cell package</button>
+              </div>
+            </form>
+            <div id="planning-cell-output" class="tool-output empty-state">
+              Mission analysis, planning approach, assumption log, decision log, and due-outs will appear here.
+            </div>
+          </article>
         </section>
       </main>
     </div>

@@ -74,6 +74,30 @@ document.getElementById("staff-cycle-form").addEventListener("submit", async (ev
   renderStaffUpdateCycleOutput("staff-cycle-output", data);
 });
 
+document.getElementById("planning-cell-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const supportAndCivil = splitLines(form.get("support_requirements"));
+  const payload = {
+    title: form.get("title"),
+    supported_unit: form.get("supported_unit"),
+    supported_echelon: "company",
+    event_type: form.get("event_type") || "training_event",
+    mission_or_training_goal: form.get("mission_or_training_goal"),
+    time_available: form.get("time_available") || null,
+    commander_priorities: splitLines(form.get("commander_priorities")),
+    higher_guidance: splitLines(form.get("higher_guidance")),
+    constraints: splitLines(form.get("higher_guidance")),
+    coordinating_sections: splitLines(form.get("coordinating_sections")),
+    support_requirements: supportAndCivil,
+    civil_considerations: supportAndCivil,
+    section_updates: parseSectionUpdates(form.get("section_updates")),
+    training_only: true,
+  };
+  const data = await apiFetch("/staff/planning-cell", { method: "POST", body: JSON.stringify(payload) });
+  renderPlanningCellOutput("planning-cell-output", data);
+});
+
 document.getElementById("refresh-maradmins").addEventListener("click", () => refreshSourceLane("maradmins"));
 document.getElementById("refresh-reading").addEventListener("click", () => refreshSourceLane("reading"));
 document.getElementById("refresh-navadmins").addEventListener("click", () => refreshSourceLane("navadmins"));
@@ -656,6 +680,55 @@ function renderStaffUpdateCycleOutput(targetId, payload) {
       <span class="strip-label">CPB</span>
       <ul>${(cpb.decision_points || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No CPB decision points surfaced.</li>"}</ul>
       <p class="meta-inline">Branches/sequels: ${escapeHtml((cpb.branches_and_sequels || []).slice(0, 2).join(" | ") || "None recorded.")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Warnings</span>
+      <ul>${(payload.warnings || []).slice(0, 4).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </section>
+  `;
+}
+
+function renderPlanningCellOutput(targetId, payload) {
+  const target = document.getElementById(targetId);
+  const missionAnalysis = payload.mission_analysis || {};
+  const planningApproach = payload.planning_approach || {};
+  const updateCycle = payload.update_cycle || {};
+  target.className = "tool-output";
+  target.innerHTML = `
+    <section>
+      <span class="strip-label">Planning approach</span>
+      <h3>${escapeHtml((planningApproach.recommended_method || "planning").toUpperCase())}</h3>
+      <p>${escapeHtml(planningApproach.decision || "No planning approach decision returned.")}</p>
+      <ul>${(planningApproach.why || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Mission analysis</span>
+      <p><strong>Mission statement:</strong> ${escapeHtml(missionAnalysis.mission_statement || "No mission statement returned.")}</p>
+      <p class="meta-inline">Specified tasks: ${escapeHtml((missionAnalysis.specified_tasks || []).slice(0, 3).join(" | ") || "None")}</p>
+      <p class="meta-inline">Implied tasks: ${escapeHtml((missionAnalysis.implied_tasks || []).slice(0, 3).join(" | ") || "None")}</p>
+      <p class="meta-inline">Information requirements: ${escapeHtml((missionAnalysis.information_requirements || []).slice(0, 3).join(" | ") || "None")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Assumption log</span>
+      <ul>${(payload.assumption_log || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No assumptions returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Commander decision log</span>
+      <ul>${(payload.commander_decision_log || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No commander decisions returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Due-out board</span>
+      <ul>${(payload.due_out_board || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No due-outs returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Red-team focus</span>
+      <ul>${(payload.red_team_focus || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No red-team focus returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Linked update cycle</span>
+      <p class="meta-inline">CUB decisions: ${escapeHtml(((updateCycle.cub || {}).commander_decisions || []).slice(0, 3).join(" | ") || "None")}</p>
+      <p class="meta-inline">CPB branches: ${escapeHtml(((updateCycle.cpb || {}).branches_and_sequels || []).slice(0, 2).join(" | ") || "None")}</p>
+      <p class="meta-inline">Next OPT actions: ${escapeHtml((payload.next_opt_actions || []).slice(0, 3).join(" | ") || "None")}</p>
     </section>
     <section>
       <span class="strip-label">Warnings</span>
