@@ -137,6 +137,7 @@ For one-command local startup, use [scripts/start-local.cmd](/C:/smcr-staff-ai/s
 For GitHub/ChatGPT-friendly orientation, also see [docs/chatgpt_repo_mode.md](/C:/smcr-staff-ai/docs/chatgpt_repo_mode.md).
 For the lowest-friction GitHub-plus-local workflow, see [docs/how_to_use_with_chatgpt.md](/C:/smcr-staff-ai/docs/how_to_use_with_chatgpt.md).
 For project purpose and scope, see [docs/project_purpose.md](/C:/smcr-staff-ai/docs/project_purpose.md).
+For Claude/Gemini/Grok/Copilot/GENAI-safe usage patterns, see [docs/external_ai_safe_use.md](/C:/smcr-staff-ai/docs/external_ai_safe_use.md) and [docs/external_ai_playbooks.md](/C:/smcr-staff-ai/docs/external_ai_playbooks.md).
 For the first-pass ChatGPT-facing tool plan, see [docs/chatgpt_app_surface.md](/C:/smcr-staff-ai/docs/chatgpt_app_surface.md).
 For the current in-repo bridge scaffold, see [docs/chatgpt_app_scaffold.md](/C:/smcr-staff-ai/docs/chatgpt_app_scaffold.md).
 For the new local ChatGPT app server layer, see [chatgpt_app/README.md](/C:/smcr-staff-ai/chatgpt_app/README.md).
@@ -753,6 +754,8 @@ curl -X POST http://127.0.0.1:8000/sharing/external-ai-packet `
 ```
 
 This route is the preferred way to take local user context to an external AI. It withholds raw local file references, context IDs, and other fields that should usually stay on the machine, and it can tailor the recommended share prompt for `claude`, `gemini`, `grok`, `copilot`, `genai`, or a generic external model.
+
+For provider-specific defaults and starter prompts, see [docs/external_ai_playbooks.md](/C:/smcr-staff-ai/docs/external_ai_playbooks.md).
 
 Draft a proposed handoff update from notes:
 
