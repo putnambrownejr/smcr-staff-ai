@@ -47,6 +47,7 @@ Why:
 - `run_staff_agent`
 - `build_chief_brief`
 - `build_next_drill_readiness`
+- `build_walk_in_brief_pack`
 - `career_watch`
 - `admin_readiness`
 - `build_admin_workflow`
@@ -77,6 +78,10 @@ planning-cell package that keeps the frame honest.
 `build_staff_update_cycle` is the recurring staff-rhythm lane. It takes section updates and turns them into
 a linked running estimate, CUB, and CPB so the user can move from “what changed?” to “what does the commander
 need to hear or decide?” without rebuilding the frame every time.
+
+`build_walk_in_brief_pack` is the cold-start continuity lane. Use it when the user needs the fastest honest
+picture before a sync, call, or drill walk-in: what changed, what may be stale, what decisions are still open,
+and what needs to be carried in their head before they step into the room.
 
 `run_infantry_03xx_advisor` is the S-3-family infantry thinking lane. Use it when the user wants infantry-
 flavored training help without pretending every event is a formal 03xx qualification package.

@@ -635,6 +635,20 @@ TOOL_SPECS: list[types.Tool] = [
         ),
     ),
     types.Tool(
+        name="build_walk_in_brief_pack",
+        title="Build Walk-In Brief Pack",
+        description=(
+            "Use this when the user wants the fastest continuity picture before a sync, call, or drill walk-in: "
+            "what changed, what is stale, what still needs a decision, and what to carry in cold."
+        ),
+        inputSchema=ChiefBriefToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Building the walk-in brief pack",
+            "Walk-in brief pack ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
         name="career_watch",
         title="Career Watch",
         description=(
@@ -890,6 +904,11 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             readiness_payload = ChiefBriefToolInput.model_validate(arguments)
             result = await adapter.build_next_drill_readiness(readiness_payload.model_dump())
             return _ok_result("Built next-drill readiness.", result)
+
+        if name == "build_walk_in_brief_pack":
+            walk_in_payload = ChiefBriefToolInput.model_validate(arguments)
+            result = await adapter.build_walk_in_brief_pack(walk_in_payload.model_dump())
+            return _ok_result("Built the walk-in brief pack.", result)
 
         if name == "career_watch":
             user_key_payload = UserKeyToolInput.model_validate(arguments)

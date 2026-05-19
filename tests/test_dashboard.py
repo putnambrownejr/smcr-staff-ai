@@ -52,9 +52,11 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "SMCR Staff AI" in response.text
     assert "Next Drill Readiness" in response.text
     assert "Thin Staff Assist" in response.text
+    assert "Walk-In Brief Pack" in response.text
     assert "Decisive action now" in response.text
     assert "Staff update cycle" in response.text
     assert "Planning Cell" in response.text
+    assert "Brief Clinic" in response.text
     assert "Time watch" in response.text
     assert "Time zones" in response.text
     assert "Battle Rhythm Board" in response.text
@@ -96,6 +98,8 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "thin-staff-open-planning-cell",
         "thin-staff-open-update-cycle",
         "thin-staff-open-admin",
+        "walk-in-open-lone-planner",
+        "walk-in-open-brief-clinic",
         "run-lone-planner",
         "save-planning-cell-board",
     ]
@@ -107,6 +111,7 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "battle-rhythm-form",
         "personnel-form",
         "staff-form",
+        "brief-clinic-form",
         "staff-cycle-form",
         "planning-cell-form",
     ]
@@ -342,6 +347,8 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["chief_brief"]["next_drill_readiness"]["decisive_action"]
         assert payload["chief_brief"]["next_drill_readiness"]["this_week_focus"]
         assert payload["chief_brief"]["next_drill_readiness"]["ready_if"]
+        assert payload["chief_brief"]["walk_in_brief_pack"]["current_state"]
+        assert payload["chief_brief"]["walk_in_brief_pack"]["before_you_walk_in"]
         assert payload["chief_brief"]["next_drill_readiness"]["must_do_before_drill"]
         assert payload["daily_ops_brief"]["must_do"]
         assert payload["analyst_brief"]["data_quality_notes"]

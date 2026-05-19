@@ -67,6 +67,34 @@ document.getElementById("staff-form").addEventListener("submit", async (event) =
   renderToolOutput("staff-output", data, ["review_checklist", "citations", "warnings"]);
 });
 
+document.getElementById("brief-clinic-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const briefType = form.get("brief_type");
+  const audience = form.get("audience");
+  const decisionRequired = form.get("decision_required");
+  const currentBrief = form.get("current_brief");
+  const input = [
+    `Brief type: ${briefType}`,
+    `Audience: ${audience}`,
+    `Decision required: ${decisionRequired}`,
+    "Current brief:",
+    String(currentBrief || "").trim(),
+  ].join("\n");
+  const data = await apiFetch("/agents/writing-briefing-coach/run", {
+    method: "POST",
+    body: JSON.stringify({
+      input,
+      context: {
+        user_key: state.userKey || undefined,
+        request_is_training_or_fictional: true,
+        user_role: "SMCR officer",
+      },
+    }),
+  });
+  renderBriefClinicOutput("brief-clinic-output", data);
+});
+
 document.getElementById("staff-cycle-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -128,6 +156,12 @@ document
 document
   .getElementById("thin-staff-open-admin")
   .addEventListener("click", () => launchThinStaffWorkflow("admin"));
+document
+  .getElementById("walk-in-open-lone-planner")
+  .addEventListener("click", () => launchWalkInWorkflow("lone-planner"));
+document
+  .getElementById("walk-in-open-brief-clinic")
+  .addEventListener("click", () => launchWalkInWorkflow("brief-clinic"));
 document.getElementById("toggle-timezone-panel").addEventListener("click", toggleTimezonePanel);
 document.getElementById("save-planning-cell-board").addEventListener("click", savePlanningCellToBattleRhythm);
 document.getElementById("run-lone-planner").addEventListener("click", runLonePlannerMode);
@@ -188,6 +222,7 @@ function renderWorkspace(payload) {
   renderChief(payload.chief_brief);
   renderNextDrillReadiness(payload.chief_brief?.next_drill_readiness || {});
   renderThinStaffAssist(payload.chief_brief?.thin_staff_assist || {});
+  renderWalkInBriefPack(payload.chief_brief?.walk_in_brief_pack || {});
   renderBattleRhythm(payload.battle_rhythm || payload.chief_brief?.battle_rhythm || null);
   renderCareer(payload.career_watch);
   renderAdmin(payload.admin_readiness);
@@ -252,6 +287,16 @@ function renderThinStaffAssist(payload) {
     payload.next_touchpoint ? [{ title: payload.next_touchpoint, category: "touchpoint" }] : [],
     "No touchpoint loaded yet.",
   );
+}
+
+function renderWalkInBriefPack(payload) {
+  renderList("walk-in-current-state", payload.current_state || []);
+  renderList("walk-in-delta-drill", payload.delta_since_last_drill || []);
+  renderList("walk-in-delta-touch", payload.delta_since_last_touchpoint || []);
+  renderList("walk-in-open-decisions", payload.open_decisions || []);
+  renderList("walk-in-stale-assumptions", payload.stale_assumptions || []);
+  renderList("walk-in-source-hits", payload.source_watch_hits || []);
+  renderList("walk-in-before", payload.before_you_walk_in || []);
 }
 
 function renderBattleRhythm(payload) {
@@ -390,6 +435,18 @@ async function launchThinStaffWorkflow(mode) {
     renderMissionAnalysisOutput("planning-cell-output", data);
     setWorkspaceNote("Ran mission analysis from the thin-staff assist lane.");
   }
+}
+
+function launchWalkInWorkflow(mode) {
+  state.activeLane = "draft";
+  applyLaneVisibility();
+  if (mode === "brief-clinic") {
+    document.getElementById("brief-clinic-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setWorkspaceNote("Opened brief clinic from the walk-in brief pack.");
+    return;
+  }
+  document.getElementById("run-lone-planner")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  setWorkspaceNote("Opened lone planner mode from the walk-in brief pack.");
 }
 
 function primeThinStaffForms() {
@@ -1030,6 +1087,29 @@ function renderPlanningCellOutput(targetId, payload) {
     <section>
       <span class="strip-label">Warnings</span>
       <ul>${(payload.warnings || []).slice(0, 4).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </section>
+  `;
+}
+
+function renderBriefClinicOutput(targetId, payload) {
+  const target = document.getElementById(targetId);
+  target.className = "tool-output";
+  target.innerHTML = `
+    <section>
+      <span class="strip-label">Coach answer</span>
+      <p>${escapeHtml(payload.answer || "No answer returned.")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Follow-up questions</span>
+      <ul>${(payload.follow_up_questions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No follow-up questions returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Warnings</span>
+      <ul>${(payload.warnings || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No warnings returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Citations</span>
+      <ul>${(payload.citations || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No citations returned.</li>"}</ul>
     </section>
   `;
 }

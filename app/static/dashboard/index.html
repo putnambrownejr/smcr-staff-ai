@@ -337,6 +337,47 @@
 
           <article class="panel">
             <div class="panel-header">
+              <h2>Walk-In Brief Pack</h2>
+              <p>What changed, what is stale, and what still needs a decision before you walk into the next sync.</p>
+            </div>
+            <div class="button-row compact-controls">
+              <button type="button" class="secondary" id="walk-in-open-lone-planner">Open lone planner mode</button>
+              <button type="button" class="secondary" id="walk-in-open-brief-clinic">Open brief clinic</button>
+            </div>
+            <div class="brief-grid">
+              <section class="brief-block">
+                <h3>Current state</h3>
+                <ul id="walk-in-current-state" class="bullet-list"></ul>
+              </section>
+              <section class="brief-block">
+                <h3>Delta since last drill</h3>
+                <ul id="walk-in-delta-drill" class="bullet-list"></ul>
+              </section>
+              <section class="brief-block">
+                <h3>Delta since last touchpoint</h3>
+                <ul id="walk-in-delta-touch" class="bullet-list"></ul>
+              </section>
+              <section class="brief-block">
+                <h3>Open decisions</h3>
+                <ul id="walk-in-open-decisions" class="bullet-list"></ul>
+              </section>
+              <section class="brief-block">
+                <h3>Stale assumptions</h3>
+                <ul id="walk-in-stale-assumptions" class="bullet-list"></ul>
+              </section>
+              <section class="brief-block">
+                <h3>Source watch hits</h3>
+                <ul id="walk-in-source-hits" class="bullet-list"></ul>
+              </section>
+              <section class="brief-block full-span">
+                <h3>Before you walk in</h3>
+                <ul id="walk-in-before" class="bullet-list"></ul>
+              </section>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
               <h2>Priority queue</h2>
               <p>What matters now from the Chief/Aide and admin digest.</p>
             </div>
@@ -583,6 +624,46 @@
               </div>
             </form>
             <div id="staff-output" class="tool-output empty-state">Sections and review notes will appear here.</div>
+          </article>
+
+          <article class="panel tool-panel">
+            <div class="panel-header">
+              <h2>Brief Clinic</h2>
+              <p>Tighten a CUB, CPB, command update, or decision brief around audience, decision, evidence, and backup.</p>
+            </div>
+            <form id="brief-clinic-form" class="tool-form">
+              <div class="form-row">
+                <label>
+                  <span>Brief type</span>
+                  <select name="brief_type">
+                    <option value="command_update_brief">Command update brief</option>
+                    <option value="decision_brief">Decision brief</option>
+                    <option value="cub">CUB</option>
+                    <option value="cpb">CPB</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Audience</span>
+                  <input name="audience" type="text" value="XO / commander" />
+                </label>
+              </div>
+              <label>
+                <span>Decision required</span>
+                <input name="decision_required" type="text" value="Confirm what decision is actually needed before the brief turns into background noise." />
+              </label>
+              <label>
+                <span>Current brief content</span>
+                <textarea
+                  name="current_brief"
+                  rows="8"
+                  placeholder="Paste the current command update, CPB outline, or brief draft here."
+                ></textarea>
+              </label>
+              <div class="button-row">
+                <button type="submit">Run brief clinic</button>
+              </div>
+            </form>
+            <div id="brief-clinic-output" class="tool-output empty-state">Brief-clinic feedback will appear here.</div>
           </article>
 
           <article class="panel tool-panel">

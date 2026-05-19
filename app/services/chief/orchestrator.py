@@ -10,6 +10,7 @@ from app.schemas.chief import (
     ChiefBriefResponse,
     NextDrillReadiness,
     ThinStaffAssist,
+    WalkInBriefPack,
 )
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
@@ -100,6 +101,17 @@ class ChiefAideOrchestrator:
             updates=updates,
             actions=sorted_actions,
         )
+        walk_in_brief_pack = _walk_in_brief_pack(
+            handoff=handoff,
+            handoff_is_stale=handoff_is_stale,
+            active_user_context=active_user_context,
+            battle_rhythm=battle_rhythm,
+            next_drill_readiness=next_drill_readiness,
+            drill_plans=drill_plans,
+            travel_cases=travel_cases,
+            updates=updates,
+            actions=sorted_actions,
+        )
         return ChiefBriefResponse(
             title="Chief of Staff / Aide de Camp triage brief",
             user_key=request.user_key,
@@ -108,6 +120,7 @@ class ChiefAideOrchestrator:
             handoff_is_stale=handoff_is_stale,
             next_drill_readiness=next_drill_readiness,
             thin_staff_assist=thin_staff_assist,
+            walk_in_brief_pack=walk_in_brief_pack,
             battle_rhythm_summary=_battle_rhythm_summary(battle_rhythm),
             battle_rhythm=battle_rhythm,
             summary_lines=_summary_lines(
@@ -791,6 +804,170 @@ def _thin_staff_assist(
     )
 
 
+def _walk_in_brief_pack(
+    *,
+    handoff: UserSessionHandoff | None,
+    handoff_is_stale: bool,
+    active_user_context: ActiveUserContext | None,
+    battle_rhythm: BattleRhythmBoardResponse | None,
+    next_drill_readiness: NextDrillReadiness,
+    drill_plans: list[DrillPrepPlanResponse],
+    travel_cases: list[TravelCaseRecord],
+    updates: list[DocumentationUpdateCandidate],
+    actions: list[ChiefActionItem],
+) -> WalkInBriefPack:
+    today = datetime.now(UTC).date()
+    last_drill = _last_drill_anchor(handoff, drill_plans, today)
+    last_touch = _last_touchpoint(handoff, battle_rhythm)
+    current_state = _dedupe_strings(
+        [
+            f"Readiness posture: {next_drill_readiness.readiness_posture}",
+            *(
+                [f"Active context: {active_user_context.unit_name or active_user_context.unit_type}"]
+                if active_user_context is not None
+                and (active_user_context.unit_name or active_user_context.unit_type)
+                else []
+            ),
+            *(
+                [f"Next drill anchor: {next_drill_readiness.anchor_drill_date.isoformat()}"]
+                if next_drill_readiness.anchor_drill_date is not None
+                else ["Next drill anchor is still missing."]
+            ),
+            *(
+                [f"Persistent board: {battle_rhythm.board_title}"]
+                if battle_rhythm is not None
+                else ["No persistent battle rhythm board is stored yet."]
+            ),
+        ]
+    )
+    delta_since_last_drill = _dedupe_strings(
+        [
+            (
+                f"Last drill anchor was {last_drill.isoformat()}."
+                if last_drill is not None
+                else "No prior drill anchor is stored, so changes are being measured without a last-drill baseline."
+            ),
+            *[
+                f"New or still-urgent item since last drill: {item.title}"
+                for item in actions
+                if item.priority == "high"
+            ][:3],
+            *[
+                f"New source-watch review item: {item.tracked_title}"
+                for item in updates
+                if item.review_status == "new"
+            ][:3],
+            *[f"Travel/admin item in play: {case.title or case.trip_id}" for case in travel_cases[:2]],
+        ]
+    )
+    delta_since_last_touchpoint = _dedupe_strings(
+        [
+            (
+                f"Last continuity touchpoint: {last_touch.date().isoformat()}."
+                if last_touch is not None
+                else "No prior continuity touchpoint is visible yet."
+            ),
+            *(
+                [f"Battle rhythm board updated: {battle_rhythm.updated_at.date().isoformat()}"]
+                if battle_rhythm is not None
+                else []
+            ),
+            *(
+                [f"Handoff updated: {handoff.updated_at.date().isoformat()}"]
+                if handoff is not None
+                else []
+            ),
+            "Continuity may be stale because the handoff is older than the current drill rhythm."
+            if handoff_is_stale
+            else "",
+        ]
+    )
+    open_decisions = _dedupe_strings(
+        [
+            *(
+                [entry.text for entry in battle_rhythm.commander_decision_log if entry.status != "complete"]
+                if battle_rhythm is not None
+                else []
+            ),
+            *[item.title for item in next_drill_readiness.must_do_before_drill[:3]],
+        ]
+    )
+    stale_assumptions = _dedupe_strings(
+        [
+            *(
+                [entry.text for entry in battle_rhythm.assumption_log[:4]]
+                if battle_rhythm is not None and _board_is_stale(battle_rhythm, today)
+                else []
+            ),
+            "Battle rhythm assumptions may be stale because the board has not been refreshed recently."
+            if battle_rhythm is not None and _board_is_stale(battle_rhythm, today)
+            else "",
+            "Session handoff assumptions may be stale because the handoff is not current."
+            if handoff_is_stale
+            else "",
+            "No persistent assumptions are stored yet; the plan may be cleaner on paper than it is in reality."
+            if battle_rhythm is None
+            else "",
+        ]
+    )
+    source_watch_hits = _dedupe_strings(
+        [
+            *[
+                f"{item.tracked_title}: {', '.join(item.change_signals[:2]) or 'review pending'}"
+                for item in updates
+                if item.review_status != "ignored"
+            ][:4],
+            "No current source-watch hits are stored."
+            if not updates
+            else "",
+        ]
+    )
+    before_you_walk_in = _dedupe_strings(
+        [
+            *(
+                [f"Do this first: {next_drill_readiness.decisive_action}"]
+                if next_drill_readiness.decisive_action
+                else []
+            ),
+            *[f"Decision to hold in your head: {item}" for item in open_decisions[:2]],
+            *[f"Assumption to challenge: {item}" for item in stale_assumptions[:2]],
+            *[f"Source delta worth checking: {item}" for item in source_watch_hits[:2]],
+            *(
+                [f"Walk in ready to answer: {battle_rhythm.next_touchpoint}"]
+                if battle_rhythm is not None and battle_rhythm.next_touchpoint
+                else []
+            ),
+        ]
+    )
+    posture = (
+        "Walk-in brief posture: continuity supported."
+        if battle_rhythm is not None and not handoff_is_stale
+        else "Walk-in brief posture: continuity fragile."
+    )
+    summary = _dedupe_strings(
+        [
+            "Use this when you need the fastest honest picture before a call, sync, or drill-weekend walk-in.",
+            "Bias toward what changed, what is stale, and what still needs a decision.",
+            *(
+                ["The continuity picture is being helped by a persistent battle rhythm board."]
+                if battle_rhythm is not None
+                else ["The continuity picture is still thin because no persistent battle rhythm board is stored."]
+            ),
+        ]
+    )
+    return WalkInBriefPack(
+        posture=posture,
+        summary=summary,
+        current_state=current_state[:5],
+        delta_since_last_drill=delta_since_last_drill[:6],
+        delta_since_last_touchpoint=delta_since_last_touchpoint[:5],
+        open_decisions=open_decisions[:5],
+        stale_assumptions=stale_assumptions[:5],
+        source_watch_hits=source_watch_hits[:5],
+        before_you_walk_in=before_you_walk_in[:6],
+    )
+
+
 def _battle_rhythm_summary(battle_rhythm: BattleRhythmBoardResponse | None) -> list[str]:
     if battle_rhythm is None:
         return ["No battle rhythm board stored yet."]
@@ -802,6 +979,33 @@ def _battle_rhythm_summary(battle_rhythm: BattleRhythmBoardResponse | None) -> l
     if battle_rhythm.next_touchpoint:
         summary.append(f"Next touchpoint: {battle_rhythm.next_touchpoint}")
     return summary
+
+
+def _last_drill_anchor(
+    handoff: UserSessionHandoff | None,
+    drill_plans: list[DrillPrepPlanResponse],
+    today: date,
+) -> date | None:
+    candidates = [record.drill_date for record in handoff.drill_dates] if handoff is not None else []
+    candidates.extend(plan.drill_date for plan in drill_plans)
+    past = sorted({item for item in candidates if item <= today})
+    return past[-1] if past else None
+
+
+def _last_touchpoint(
+    handoff: UserSessionHandoff | None,
+    battle_rhythm: BattleRhythmBoardResponse | None,
+) -> datetime | None:
+    candidates = []
+    if handoff is not None:
+        candidates.append(handoff.updated_at)
+    if battle_rhythm is not None:
+        candidates.append(battle_rhythm.updated_at)
+    return max(candidates) if candidates else None
+
+
+def _board_is_stale(battle_rhythm: BattleRhythmBoardResponse, today: date) -> bool:
+    return (today - battle_rhythm.updated_at.date()).days > 14
 
 
 def _readiness_posture(

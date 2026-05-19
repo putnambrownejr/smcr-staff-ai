@@ -225,6 +225,22 @@ async def test_build_lone_planner_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_build_walk_in_brief_pack_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.build_walk_in_brief_pack(
+        {
+            "user_key": "demo-smcr-officer",
+            "include_personal_documents": True,
+            "include_drill_plans": True,
+        }
+    )
+
+    assert result["walk_in_brief_pack"]["current_state"]
+    assert result["walk_in_brief_pack"]["before_you_walk_in"]
+
+
+@pytest.mark.anyio
 async def test_run_opt_facilitator_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 

@@ -68,6 +68,18 @@ class ThinStaffAssist(BaseModel):
     next_touchpoint: str | None = None
 
 
+class WalkInBriefPack(BaseModel):
+    posture: str
+    summary: list[str] = Field(default_factory=list)
+    current_state: list[str] = Field(default_factory=list)
+    delta_since_last_drill: list[str] = Field(default_factory=list)
+    delta_since_last_touchpoint: list[str] = Field(default_factory=list)
+    open_decisions: list[str] = Field(default_factory=list)
+    stale_assumptions: list[str] = Field(default_factory=list)
+    source_watch_hits: list[str] = Field(default_factory=list)
+    before_you_walk_in: list[str] = Field(default_factory=list)
+
+
 class ChiefBriefResponse(BaseModel):
     title: str
     user_key: str | None = None
@@ -76,6 +88,7 @@ class ChiefBriefResponse(BaseModel):
     handoff_is_stale: bool = False
     next_drill_readiness: NextDrillReadiness
     thin_staff_assist: ThinStaffAssist
+    walk_in_brief_pack: WalkInBriefPack
     battle_rhythm_summary: list[str] = Field(default_factory=list)
     battle_rhythm: BattleRhythmBoardResponse | None = None
     summary_lines: list[str] = Field(default_factory=list)
