@@ -120,6 +120,54 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
     assert brief.thin_staff_assist.next_touchpoint
     assert brief.battle_rhythm_summary
     assert brief.battle_rhythm is not None
+    assert brief.battle_rhythm_health.board_status in {"watch", "critical", "steady"}
+    assert brief.battle_rhythm_health.unresolved_decision_count >= 1
+    assert brief.battle_rhythm_health.summary
+
+
+def test_chief_brief_marks_aged_battle_rhythm_items_as_drift(tmp_path: Path) -> None:
+    handoff_store = SessionHandoffStore(tmp_path / "handoffs")
+    handoff_store.upsert(UserSessionHandoff(user_key="capt-drift"))
+    battle_rhythm_store = BattleRhythmStore(tmp_path / "battle-rhythm")
+    board = battle_rhythm_store.upsert(
+        "capt-drift",
+        BattleRhythmBoardUpsertRequest(
+            board_title="Drift board",
+            assumption_log=[BattleRhythmEntryInput(text="Fuel support still works.", section="S-4")],
+            commander_decision_log=[BattleRhythmEntryInput(text="Choose the primary lane.", section="Command")],
+            due_out_board=[
+                BattleRhythmEntryInput(
+                    text="S-6: Confirm reporting plan.",
+                    section="S-6",
+                    suspense_date="2026-05-10",
+                )
+            ],
+            next_touchpoint="Before next drill sync.",
+        ),
+    )
+    stale_time = datetime(2026, 5, 1, tzinfo=UTC)
+    for entry in board.assumption_log + board.commander_decision_log + board.due_out_board:
+        entry.updated_at = stale_time
+    board.updated_at = stale_time
+    board_path = battle_rhythm_store._path("capt-drift")
+    board_path.write_text(board.model_dump_json(indent=2), encoding="utf-8")
+
+    orchestrator = ChiefAideOrchestrator(
+        handoff_store=handoff_store,
+        document_organizer=PersonalDocumentOrganizer(LocalContextStore(tmp_path / "context")),
+        drill_plan_store=DrillPrepPlanStore(tmp_path / "plans"),
+        reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
+        document_update_store=DocumentUpdateStore(tmp_path / "updates"),
+        opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+        battle_rhythm_store=battle_rhythm_store,
+    )
+
+    brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-drift"))
+
+    assert brief.battle_rhythm_health.board_status == "critical"
+    assert brief.battle_rhythm_health.stale_assumption_count == 1
+    assert brief.battle_rhythm_health.overdue_due_out_count == 1
+    assert any("Fuel support still works." in item for item in brief.battle_rhythm_health.hot_items)
 
 
 def test_chief_brief_flags_stale_handoff_and_missing_core_docs(tmp_path: Path) -> None:

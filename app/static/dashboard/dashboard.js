@@ -223,6 +223,7 @@ function renderWorkspace(payload) {
   renderNextDrillReadiness(payload.chief_brief?.next_drill_readiness || {});
   renderThinStaffAssist(payload.chief_brief?.thin_staff_assist || {});
   renderWalkInBriefPack(payload.chief_brief?.walk_in_brief_pack || {});
+  renderBattleRhythmHealth(payload.chief_brief?.battle_rhythm_health || {});
   renderBattleRhythm(payload.battle_rhythm || payload.chief_brief?.battle_rhythm || null);
   renderCareer(payload.career_watch);
   renderAdmin(payload.admin_readiness);
@@ -297,6 +298,18 @@ function renderWalkInBriefPack(payload) {
   renderList("walk-in-stale-assumptions", payload.stale_assumptions || []);
   renderList("walk-in-source-hits", payload.source_watch_hits || []);
   renderList("walk-in-before", payload.before_you_walk_in || []);
+}
+
+function renderBattleRhythmHealth(payload) {
+  const posture = document.getElementById("battle-rhythm-health-posture");
+  if (posture) {
+    const status = payload.board_status || "uninitialized";
+    const age = Number.isInteger(payload.board_age_days) ? `${payload.board_age_days} day(s) old` : "not started";
+    const recommendation = payload.refresh_recommendation || "No refresh recommendation yet.";
+    posture.textContent = `Continuity watch: ${status}. Board age: ${age}. ${recommendation}`;
+  }
+  renderList("battle-rhythm-health-summary", payload.summary || []);
+  renderList("battle-rhythm-hot-items", payload.hot_items || []);
 }
 
 function renderBattleRhythm(payload) {

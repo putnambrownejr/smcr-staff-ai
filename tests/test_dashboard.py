@@ -60,6 +60,7 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Time watch" in response.text
     assert "Time zones" in response.text
     assert "Battle Rhythm Board" in response.text
+    assert "Continuity watch" in response.text
     assert "Save battle rhythm board" in response.text
     assert "Commander decision log (one per line" in response.text
     assert "Save to battle rhythm board" in response.text
@@ -129,6 +130,11 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     ]
     for control in delegated_controls:
         assert control in html or control in js
+
+    assert 'id="battle-rhythm-health-posture"' in html
+    assert 'id="battle-rhythm-health-summary"' in html
+    assert 'id="battle-rhythm-hot-items"' in html
+    assert 'renderBattleRhythmHealth(' in js
 
 
 def test_demo_dashboard_data_route_returns_workspace_payload() -> None:

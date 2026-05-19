@@ -2,7 +2,7 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.battle_rhythm import BattleRhythmBoardResponse
+from app.schemas.battle_rhythm import BattleRhythmBoardResponse, BattleRhythmHealthSummary
 from app.schemas.calendar import DrillPrepPlanResponse
 from app.schemas.ingestion import MessageRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
@@ -91,6 +91,7 @@ class ChiefBriefResponse(BaseModel):
     walk_in_brief_pack: WalkInBriefPack
     battle_rhythm_summary: list[str] = Field(default_factory=list)
     battle_rhythm: BattleRhythmBoardResponse | None = None
+    battle_rhythm_health: BattleRhythmHealthSummary = Field(default_factory=BattleRhythmHealthSummary)
     summary_lines: list[str] = Field(default_factory=list)
     action_items: list[ChiefActionItem]
     top_priority_items: list[ChiefActionItem] = Field(default_factory=list)

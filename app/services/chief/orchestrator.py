@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from datetime import UTC, date, datetime, timedelta
 
 from app.core.security import DEFAULT_WARNINGS
-from app.schemas.battle_rhythm import BattleRhythmBoardResponse
+from app.schemas.battle_rhythm import BattleRhythmBoardResponse, BattleRhythmEntry, BattleRhythmHealthSummary
 from app.schemas.calendar import DrillPrepPlanResponse
 from app.schemas.chief import (
     ChiefActionItem,
@@ -123,6 +123,10 @@ class ChiefAideOrchestrator:
             walk_in_brief_pack=walk_in_brief_pack,
             battle_rhythm_summary=_battle_rhythm_summary(battle_rhythm),
             battle_rhythm=battle_rhythm,
+            battle_rhythm_health=_battle_rhythm_health(
+                battle_rhythm=battle_rhythm,
+                anchor=next_drill_readiness.anchor_drill_date,
+            ),
             summary_lines=_summary_lines(
                 handoff=handoff,
                 active_user_context=active_user_context,
@@ -981,6 +985,89 @@ def _battle_rhythm_summary(battle_rhythm: BattleRhythmBoardResponse | None) -> l
     return summary
 
 
+def _battle_rhythm_health(
+    *,
+    battle_rhythm: BattleRhythmBoardResponse | None,
+    anchor: date | None,
+) -> BattleRhythmHealthSummary:
+    if battle_rhythm is None:
+        return BattleRhythmHealthSummary(
+            board_status="uninitialized",
+            summary=[
+                "No persistent battle rhythm board is stored yet.",
+                "Assumptions, decisions, and due-outs are still at risk of drifting between drills.",
+            ],
+            refresh_recommendation=(
+                "Create a battle rhythm board the next time you build a planning cell or update cycle."
+            ),
+        )
+
+    today = datetime.now(UTC).date()
+    board_age_days = max((today - battle_rhythm.updated_at.date()).days, 0)
+    stale_assumptions = [
+        entry for entry in battle_rhythm.assumption_log if _entry_is_open(entry) and _entry_age_days(entry, today) > 14
+    ]
+    unresolved_decisions = [
+        entry for entry in battle_rhythm.commander_decision_log if _entry_is_open(entry)
+    ]
+    aging_decisions = [entry for entry in unresolved_decisions if _entry_age_days(entry, today) > 7]
+    overdue_due_outs = [
+        entry for entry in battle_rhythm.due_out_board if _entry_is_open(entry) and _entry_is_overdue(entry, today)
+    ]
+    aging_due_outs = [
+        entry
+        for entry in battle_rhythm.due_out_board
+        if _entry_is_open(entry) and not _entry_is_overdue(entry, today) and _entry_is_aging_due_out(entry, today)
+    ]
+
+    drill_week = anchor is not None and (anchor - today).days <= 7
+    board_status = _board_health_status(
+        board_age_days=board_age_days,
+        stale_assumptions=stale_assumptions,
+        overdue_due_outs=overdue_due_outs,
+        aging_decisions=aging_decisions,
+        aging_due_outs=aging_due_outs,
+        drill_week=drill_week,
+    )
+
+    summary = _dedupe_strings(
+        [
+            f"Board age: {board_age_days} day(s) since last refresh.",
+            f"{len(stale_assumptions)} assumption(s) are aging past the last honest refresh point.",
+            f"{len(unresolved_decisions)} commander decision item(s) remain unresolved.",
+            f"{len(overdue_due_outs)} due-out(s) are overdue.",
+            f"{len(aging_due_outs)} due-out(s) are approaching the suspense window."
+            if aging_due_outs
+            else "",
+            "Drill week is close, so stale continuity is more dangerous than usual." if drill_week else "",
+        ]
+    )
+    hot_items = _dedupe_strings(
+        [
+            *[f"Challenge assumption now: {entry.text}" for entry in stale_assumptions[:3]],
+            *[f"Commander decision still open: {entry.text}" for entry in aging_decisions[:3]],
+            *[f"Due-out overdue: {entry.text}" for entry in overdue_due_outs[:3]],
+            *[f"Due-out nearing suspense: {entry.text}" for entry in aging_due_outs[:2]],
+        ]
+    )
+    return BattleRhythmHealthSummary(
+        board_status=board_status,
+        board_age_days=board_age_days,
+        stale_assumption_count=len(stale_assumptions),
+        unresolved_decision_count=len(unresolved_decisions),
+        aging_decision_count=len(aging_decisions),
+        overdue_due_out_count=len(overdue_due_outs),
+        aging_due_out_count=len(aging_due_outs),
+        summary=summary[:6],
+        hot_items=hot_items[:6],
+        refresh_recommendation=_refresh_recommendation(
+            board_status=board_status,
+            drill_week=drill_week,
+            board_age_days=board_age_days,
+        ),
+    )
+
+
 def _last_drill_anchor(
     handoff: UserSessionHandoff | None,
     drill_plans: list[DrillPrepPlanResponse],
@@ -1006,6 +1093,66 @@ def _last_touchpoint(
 
 def _board_is_stale(battle_rhythm: BattleRhythmBoardResponse, today: date) -> bool:
     return (today - battle_rhythm.updated_at.date()).days > 14
+
+
+def _entry_is_open(entry: BattleRhythmEntry) -> bool:
+    return entry.status.strip().lower() not in {"closed", "complete", "completed", "done"}
+
+
+def _entry_age_days(entry: BattleRhythmEntry, today: date) -> int:
+    return max((today - entry.updated_at.date()).days, 0)
+
+
+def _entry_is_overdue(entry: BattleRhythmEntry, today: date) -> bool:
+    suspense = _parse_iso_date(entry.suspense_date)
+    return suspense is not None and suspense < today
+
+
+def _entry_is_aging_due_out(entry: BattleRhythmEntry, today: date) -> bool:
+    suspense = _parse_iso_date(entry.suspense_date)
+    if suspense is not None:
+        return 0 <= (suspense - today).days <= 7
+    return _entry_age_days(entry, today) > 7
+
+
+def _parse_iso_date(value: str | None) -> date | None:
+    if value is None:
+        return None
+    try:
+        return date.fromisoformat(value.strip())
+    except ValueError:
+        return None
+
+
+def _board_health_status(
+    *,
+    board_age_days: int,
+    stale_assumptions: list[BattleRhythmEntry],
+    overdue_due_outs: list[BattleRhythmEntry],
+    aging_decisions: list[BattleRhythmEntry],
+    aging_due_outs: list[BattleRhythmEntry],
+    drill_week: bool,
+) -> str:
+    if overdue_due_outs or (drill_week and (stale_assumptions or board_age_days > 7)):
+        return "critical"
+    if stale_assumptions or aging_decisions or aging_due_outs or board_age_days > 14:
+        return "watch"
+    return "steady"
+
+
+def _refresh_recommendation(*, board_status: str, drill_week: bool, board_age_days: int) -> str:
+    if board_status == "critical" and drill_week:
+        return "Refresh the board now and resolve overdue due-outs before drill week closes the decision space."
+    if board_status == "critical":
+        return "Refresh the board now; stale assumptions or overdue due-outs are already distorting continuity."
+    if board_status == "watch":
+        return (
+            "Refresh assumptions, decisions, and due-outs before the next sync "
+            "so the board does not drift on old logic."
+        )
+    if board_age_days <= 3:
+        return "Board is current enough to trust, but keep decisions and due-outs moving."
+    return "Board is stable; refresh it after the next meaningful planning touchpoint."
 
 
 def _readiness_posture(

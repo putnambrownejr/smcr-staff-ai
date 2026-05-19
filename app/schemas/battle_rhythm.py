@@ -20,6 +20,19 @@ class BattleRhythmEntry(BattleRhythmEntryInput):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class BattleRhythmHealthSummary(BaseModel):
+    board_status: str = "uninitialized"
+    board_age_days: int | None = None
+    stale_assumption_count: int = 0
+    unresolved_decision_count: int = 0
+    aging_decision_count: int = 0
+    overdue_due_out_count: int = 0
+    aging_due_out_count: int = 0
+    summary: list[str] = Field(default_factory=list)
+    hot_items: list[str] = Field(default_factory=list)
+    refresh_recommendation: str | None = None
+
+
 class BattleRhythmBoardResponse(BaseModel):
     user_key: str
     board_title: str
