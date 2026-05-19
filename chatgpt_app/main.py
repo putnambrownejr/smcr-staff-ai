@@ -269,6 +269,29 @@ class ActiveUserContextToolInput(BaseModel):
     expires_at: str | None = Field(default=None, description="Optional ISO timestamp for expiration.")
 
 
+class SectionMemoryEntryToolInput(BaseModel):
+    section: str = Field(..., description="Section lane such as S-4, S-6, XO/Chief, or SEL.")
+    title: str = Field(..., description="Short label for the recurring memory item.")
+    recurring_questions: list[str] = Field(default_factory=list, description="Questions this lane usually needs asked.")
+    recurring_failure_modes: list[str] = Field(
+        default_factory=list,
+        description="Ways this lane usually fails or drifts.",
+    )
+    preferred_checks: list[str] = Field(
+        default_factory=list,
+        description="Checks or prompts that keep this lane honest.",
+    )
+    notes: list[str] = Field(default_factory=list, description="Short reusable notes for this lane.")
+
+
+class SectionMemoryToolInput(BaseModel):
+    user_key: str = Field(..., description="Stable local user profile key.")
+    entries: list[SectionMemoryEntryToolInput] = Field(
+        default_factory=list,
+        description="Local section-memory entries.",
+    )
+
+
 class AdminWorkflowToolInput(BaseModel):
     workflow_type: str = Field(..., description="Workflow type such as gtcc, dts_authorization, or award_package.")
     title: str = Field(..., description="Short workflow title.")
@@ -735,6 +758,34 @@ TOOL_SPECS: list[types.Tool] = [
         inputSchema=ActiveUserContextToolInput.model_json_schema(),
         _meta=_tool_invocation_meta("Saving active context", "Active context saved", read_only=False),
     ),
+    types.Tool(
+        name="get_section_memory_profile",
+        title="Get Section Memory Profile",
+        description=(
+            "Use this when the user wants to read local recurring staff-memory notes for sections like S-4, "
+            "S-6, XO/Chief, or SEL."
+        ),
+        inputSchema=UserKeyToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Loading section memory",
+            "Section memory ready",
+            read_only=True,
+        ),
+    ),
+    types.Tool(
+        name="set_section_memory_profile",
+        title="Set Section Memory Profile",
+        description=(
+            "Use this when the user wants to save local recurring staff-memory notes, usual failure modes, "
+            "questions, and checks for specific sections."
+        ),
+        inputSchema=SectionMemoryToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Saving section memory",
+            "Section memory saved",
+            read_only=False,
+        ),
+    ),
 ]
 
 
@@ -976,6 +1027,19 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
                 payload=active_context_payload.model_dump(),
             )
             return _ok_result("Saved the active user context.", result)
+
+        if name == "get_section_memory_profile":
+            user_key_payload = UserKeyToolInput.model_validate(arguments)
+            result = await adapter.get_section_memory_profile(user_key=user_key_payload.user_key)
+            return _ok_result("Loaded the section memory profile.", result)
+
+        if name == "set_section_memory_profile":
+            section_memory_payload = SectionMemoryToolInput.model_validate(arguments)
+            result = await adapter.set_section_memory_profile(
+                user_key=section_memory_payload.user_key,
+                payload={"entries": [item.model_dump() for item in section_memory_payload.entries]},
+            )
+            return _ok_result("Saved the section memory profile.", result)
 
         return _error_result(f"Unknown tool: {name}")
     except ValidationError as exc:

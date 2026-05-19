@@ -255,6 +255,33 @@ async def test_build_assisted_section_estimates_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_set_and_get_section_memory_profile_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    saved = await adapter.set_section_memory_profile(
+        user_key="capt-memory-tool",
+        payload={
+            "entries": [
+                {
+                    "section": "S-4",
+                    "title": "Usual S-4 friction",
+                    "recurring_questions": ["What support timeline breaks first?"],
+                    "recurring_failure_modes": ["Issue/recovery timing usually gets hand-waved."],
+                    "preferred_checks": ["Force an issue/recovery timeline before final brief."],
+                    "notes": ["This unit usually needs a logistics simplification pass."],
+                }
+            ]
+        },
+    )
+
+    fetched = await adapter.get_section_memory_profile(user_key="capt-memory-tool")
+
+    assert saved["profile"]["user_key"] == "capt-memory-tool"
+    assert fetched["user_key"] == "capt-memory-tool"
+    assert fetched["entries"][0]["section"] == "S-4"
+
+
+@pytest.mark.anyio
 async def test_build_walk_in_brief_pack_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 

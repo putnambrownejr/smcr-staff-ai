@@ -1,6 +1,10 @@
 from fastapi.testclient import TestClient
 
+from app.api.routes.section_memory import get_section_memory_store
+from app.api.routes.staff import get_section_memory_store as get_staff_section_memory_store
 from app.main import app
+from app.schemas.section_memory import SectionMemoryEntry, SectionMemoryProfileUpsertRequest
+from app.services.staff.section_memory_store import SectionMemoryStore
 
 
 def _sample_request() -> dict[str, object]:
@@ -160,3 +164,47 @@ def test_staff_assisted_section_estimates_builds_gap_cover_pack() -> None:
     assert body["xo_walk_in_lines"]
     assert body["cross_lane_risks"]
     assert body["recommended_products"]
+
+
+def test_section_memory_profile_enriches_thin_staff_outputs(tmp_path) -> None:
+    store = SectionMemoryStore(tmp_path / "section-memory")
+    store.upsert(
+        "capt-memory",
+        SectionMemoryProfileUpsertRequest(
+            entries=[
+                SectionMemoryEntry(
+                    section="S-6",
+                    title="Usual S-6 friction",
+                    recurring_questions=["What access issue always slows this unit first?"],
+                    recurring_failure_modes=["Reporting plan usually gets overcomplicated."],
+                    preferred_checks=["Force one primary reporting method before final brief."],
+                    notes=["This unit usually needs a comms simplification pass."],
+                )
+            ]
+        ),
+    )
+
+    def override_store() -> SectionMemoryStore:
+        return store
+
+    app.dependency_overrides[get_staff_section_memory_store] = override_store
+    app.dependency_overrides[get_section_memory_store] = override_store
+    client = TestClient(app)
+    try:
+        payload = _sample_request()
+        payload["user_key"] = "capt-memory"
+
+        lone_response = client.post("/staff/lone-planner", json=payload)
+        assert lone_response.status_code == 200
+        lone_body = lone_response.json()
+        assert any("S-6 recurring question" in item for item in lone_body["missing_section_questions"])
+        assert any("S-6 preferred check" in item for item in lone_body["cross_lane_asks"])
+
+        gap_response = client.post("/staff/assisted-section-estimates", json=payload | {"focus_sections": ["S-6"]})
+        assert gap_response.status_code == 200
+        gap_body = gap_response.json()
+        s6 = gap_body["section_estimates"][0]
+        assert "What access issue always slows this unit first?" in s6["likely_questions"]
+        assert "This unit usually needs a comms simplification pass." in s6["likely_support_facts"]
+    finally:
+        app.dependency_overrides.clear()

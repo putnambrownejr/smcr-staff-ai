@@ -1,5 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from collections.abc import Iterator
+from typing import Annotated
 
+from fastapi import APIRouter, Depends, HTTPException
+
+from app.core.config import get_settings
 from app.schemas.admin_workflows import (
     AdminWorkflowDraftRequest,
     AdminWorkflowRequest,
@@ -44,6 +48,7 @@ from app.services.staff.g9_planner import G9Planner
 from app.services.staff.medical_planner import MedicalPlanner
 from app.services.staff.s2_estimator import S2Estimator
 from app.services.staff.s6_planner import S6Planner
+from app.services.staff.section_memory_store import SectionMemoryStore
 from app.services.staff.update_cycle import StaffUpdateCycleBuilder
 
 router = APIRouter(prefix="/staff", tags=["staff council"])
@@ -57,6 +62,11 @@ _pki_service = PkiTroubleshootingService()
 _admin_workflow_builder = AdminWorkflowBuilder()
 _osint_agent = build_osint_agent()
 _update_cycle = StaffUpdateCycleBuilder()
+
+
+def get_section_memory_store() -> Iterator[SectionMemoryStore]:
+    settings = get_settings()
+    yield SectionMemoryStore(settings.section_memory_storage_dir)
 
 
 @router.get("/roles", response_model=list[StaffRoleMetadata])
@@ -175,12 +185,18 @@ def build_planning_cell(request: RunningEstimateRequest) -> PlanningCellResponse
 
 
 @router.post("/lone-planner", response_model=LonePlannerResponse)
-def build_lone_planner(request: RunningEstimateRequest) -> LonePlannerResponse:
-    return _update_cycle.build_lone_planner(request)
+def build_lone_planner(
+    request: RunningEstimateRequest,
+    section_memory_store: Annotated[SectionMemoryStore, Depends(get_section_memory_store)],
+) -> LonePlannerResponse:
+    profile = section_memory_store.get(request.user_key) if request.user_key else None
+    return _update_cycle.build_lone_planner(request, section_memory=profile)
 
 
 @router.post("/assisted-section-estimates", response_model=AssistedSectionEstimatesResponse)
 def build_assisted_section_estimates(
     request: AssistedSectionEstimateRequest,
+    section_memory_store: Annotated[SectionMemoryStore, Depends(get_section_memory_store)],
 ) -> AssistedSectionEstimatesResponse:
-    return _update_cycle.build_assisted_section_estimates(request)
+    profile = section_memory_store.get(request.user_key) if request.user_key else None
+    return _update_cycle.build_assisted_section_estimates(request, section_memory=profile)

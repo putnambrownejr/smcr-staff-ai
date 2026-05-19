@@ -209,6 +209,17 @@ class ChatGptBridgeAdapter:
             include_local_api_key=True,
         )
 
+    async def get_section_memory_profile(self, *, user_key: str) -> dict[str, object]:
+        return await self._request_dict("GET", f"/section-memory/{user_key}", include_local_api_key=True)
+
+    async def set_section_memory_profile(self, *, user_key: str, payload: dict[str, object]) -> dict[str, object]:
+        return await self._request_dict(
+            "PUT",
+            f"/section-memory/{user_key}",
+            json=payload,
+            include_local_api_key=True,
+        )
+
     async def _request_dict(
         self,
         method: str,

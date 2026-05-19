@@ -510,6 +510,7 @@ function buildPlanningCellPayloadFromForm() {
   const form = new FormData(document.getElementById("planning-cell-form"));
   const supportAndCivil = splitLines(form.get("support_requirements"));
   return {
+    user_key: state.mode === "personal" && state.userKey ? state.userKey : null,
     title: form.get("title"),
     supported_unit: form.get("supported_unit"),
     supported_echelon: "company",

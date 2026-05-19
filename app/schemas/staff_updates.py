@@ -19,6 +19,7 @@ class StaffSectionUpdate(BaseModel):
 
 
 class RunningEstimateRequest(BaseModel):
+    user_key: str | None = None
     title: str = Field(min_length=1)
     supported_unit: str = Field(min_length=1)
     supported_echelon: StaffEchelon = StaffEchelon.company

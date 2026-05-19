@@ -56,6 +56,8 @@ Why:
 - `build_external_ai_packet`
 - `get_active_user_context`
 - `set_active_user_context`
+- `get_section_memory_profile`
+- `set_section_memory_profile`
 
 `build_tdg` is the S-3 wargaming / tactical-decision-game lane. It is meant to pressure-test assumptions,
 force decisions early, and expose reserve-specific friction before the real event does.
@@ -136,6 +138,10 @@ for slide-by-slide content discipline first, then convert to slides later if nee
 `set_active_user_context` is the quick way to tell the app "treat me like I am at this kind of unit right now"
 without overwriting the longer-term handoff. Staff agents can pick that up automatically when the run includes
 the same `user_key`.
+
+`set_section_memory_profile` is the recurring bench-memory lane. Use it to save what your actual reserve staff
+usually gets wrong, what XO always asks, what S-4/S-6 pain points recur, and what checks keep a lane honest.
+`get_section_memory_profile` reads that local memory back so you can inspect or update it.
 
 `build_external_ai_packet` is the safe way to prepare local context for an external model such as Claude,
 Gemini, Grok, Copilot, or a generic government-hosted environment. It returns a scrubbed packet, warnings,

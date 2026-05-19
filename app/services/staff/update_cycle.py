@@ -1,4 +1,5 @@
 from app.core.security import DEFAULT_WARNINGS, detect_sensitive_input
+from app.schemas.section_memory import SectionMemoryProfile
 from app.schemas.staff_products import StaffProductDraftRequest, StaffProductType
 from app.schemas.staff_updates import (
     AssistedSectionEstimateItem,
@@ -222,12 +223,16 @@ class StaffUpdateCycleBuilder:
             warnings=mission_analysis.warnings,
         )
 
-    def build_lone_planner(self, request: RunningEstimateRequest) -> LonePlannerResponse:
+    def build_lone_planner(
+        self,
+        request: RunningEstimateRequest,
+        section_memory: SectionMemoryProfile | None = None,
+    ) -> LonePlannerResponse:
         planning_cell = self.build_planning_cell(request)
         sections = _present_sections(request)
-        likely_blind_spots = _lone_planner_blind_spots(request, sections)
-        missing_section_questions = _lone_planner_questions(request, sections)
-        cross_lane_asks = _lone_planner_cross_lane_asks(request, sections)
+        likely_blind_spots = _lone_planner_blind_spots(request, sections, section_memory)
+        missing_section_questions = _lone_planner_questions(request, sections, section_memory)
+        cross_lane_asks = _lone_planner_cross_lane_asks(request, sections, section_memory)
         recommended_products = _lone_planner_products(request, planning_cell)
         immediate_actions = _unique_ordered(
             [
@@ -282,7 +287,9 @@ class StaffUpdateCycleBuilder:
         )
 
     def build_assisted_section_estimates(
-        self, request: AssistedSectionEstimateRequest
+        self,
+        request: AssistedSectionEstimateRequest,
+        section_memory: SectionMemoryProfile | None = None,
     ) -> AssistedSectionEstimatesResponse:
         planning_cell = self.build_planning_cell(request)
         sections = _present_sections(request)
@@ -293,6 +300,7 @@ class StaffUpdateCycleBuilder:
                 section_label=section,
                 sections_present=sections,
                 planning_cell=planning_cell,
+                section_memory=section_memory,
             )
             for section in focus_sections
         ]
@@ -497,7 +505,11 @@ def _has_section(sections: set[str], *candidates: str) -> bool:
     return any(candidate in section for section in sections for candidate in normalized)
 
 
-def _lone_planner_blind_spots(request: RunningEstimateRequest, sections: set[str]) -> list[str]:
+def _lone_planner_blind_spots(
+    request: RunningEstimateRequest,
+    sections: set[str],
+    section_memory: SectionMemoryProfile | None = None,
+) -> list[str]:
     blind_spots = [
         "The lone planner should assume at least one adjacent section owes context that is still unstated.",
     ]
@@ -531,10 +543,15 @@ def _lone_planner_blind_spots(request: RunningEstimateRequest, sections: set[str
             "Outside actors or civil considerations are in play; do not let the staff "
             "stay Marine-only in its assumptions."
         )
+    blind_spots.extend(_section_memory_lines(section_memory, "failure_modes"))
     return _unique_ordered(blind_spots)
 
 
-def _lone_planner_questions(request: RunningEstimateRequest, sections: set[str]) -> list[str]:
+def _lone_planner_questions(
+    request: RunningEstimateRequest,
+    sections: set[str],
+    section_memory: SectionMemoryProfile | None = None,
+) -> list[str]:
     questions = [
         "What decision does the commander actually need before the next sync or brief?",
         "Which assumption is most likely to fail first once execution starts?",
@@ -564,10 +581,15 @@ def _lone_planner_questions(request: RunningEstimateRequest, sections: set[str])
             "SEL/1stSgt: What friction will hit Marines first when the plan meets real "
             "arrival times, gear reality, and accountability?"
         )
+    questions.extend(_section_memory_lines(section_memory, "questions"))
     return _unique_ordered(questions)
 
 
-def _lone_planner_cross_lane_asks(request: RunningEstimateRequest, sections: set[str]) -> list[str]:
+def _lone_planner_cross_lane_asks(
+    request: RunningEstimateRequest,
+    sections: set[str],
+    section_memory: SectionMemoryProfile | None = None,
+) -> list[str]:
     asks = []
     if not _has_section(sections, "s-1", "admin"):
         asks.append(
@@ -602,6 +624,7 @@ def _lone_planner_cross_lane_asks(request: RunningEstimateRequest, sections: set
             "Ask who owns outside coordination so partner or civil assumptions do not "
             "hide inside the main scheme of maneuver."
         )
+    asks.extend(_section_memory_lines(section_memory, "checks"))
     return _unique_ordered(asks)
 
 
@@ -629,13 +652,14 @@ def _assisted_section_estimate(
     section_label: str,
     sections_present: set[str],
     planning_cell: PlanningCellResponse,
+    section_memory: SectionMemoryProfile | None = None,
 ) -> AssistedSectionEstimateItem:
     key = section_label.lower()
     is_present = _has_section(sections_present, key, key.replace("/", " "), key.split("/")[0], key.split("/")[-1])
     known_inputs = _section_known_inputs(section_label, request)
-    likely_questions = _section_likely_questions(section_label, request)
-    likely_support_facts = _section_likely_support_facts(section_label, request)
-    likely_coordination = _section_likely_coordination(section_label, request)
+    likely_questions = _section_likely_questions(section_label, request, section_memory)
+    likely_support_facts = _section_likely_support_facts(section_label, request, section_memory)
+    likely_coordination = _section_likely_coordination(section_label, request, section_memory)
     draft_estimate_lines = _unique_ordered(
         [
             f"Current situation: {_section_current_situation(section_label, request)}",
@@ -687,7 +711,87 @@ def _section_known_inputs(section_label: str, request: AssistedSectionEstimateRe
     return _unique_ordered(facts)
 
 
-def _section_likely_questions(section_label: str, request: AssistedSectionEstimateRequest) -> list[str]:
+def _section_likely_support_facts(
+    section_label: str,
+    request: AssistedSectionEstimateRequest,
+    section_memory: SectionMemoryProfile | None = None,
+) -> list[str]:
+    key = section_label.lower()
+    facts = []
+    if "s-1" in key or "admin" in key:
+        facts.extend(["Orders coverage", "Attendance roster", "DTS / voucher friction"])
+    elif "s-4" in key or "log" in key:
+        facts.extend(["Transport timeline", "Water/chow plan", "Issue and recovery timing"])
+    elif "s-6" in key or "comm" in key:
+        facts.extend(["Primary reporting method", "Fallback reporting path", "Access / permissions status"])
+    elif "medical" in key or "doc" in key:
+        facts.extend(["Corpsman coverage", "CASEVAC / emergency plan", "Stop-training criteria"])
+    elif "xo" in key or "chief" in key:
+        facts.extend(["Decision timeline", "Named owners", "Next sync battle rhythm"])
+    elif "sel" in key or "1stsgt" in key or "first sergeant" in key or "sergeant major" in key:
+        facts.extend(["Accountability method", "NCO leader checks", "Release criteria"])
+    if request.support_requirements:
+        facts.extend(request.support_requirements[:2])
+    facts.extend(_section_memory_for(section_memory, section_label, "notes"))
+    return _unique_ordered(facts)
+
+
+def _section_likely_coordination(
+    section_label: str,
+    request: AssistedSectionEstimateRequest,
+    section_memory: SectionMemoryProfile | None = None,
+) -> list[str]:
+    key = section_label.lower()
+    links = []
+    if "s-1" in key or "admin" in key:
+        links.extend(["Coordinate with XO/Chief on suspenses", "Coordinate with S-4 on travel/admin support timing"])
+    elif "s-4" in key or "log" in key:
+        links.extend(["Coordinate with S-3 on lane timing", "Coordinate with S-1/Admin on attendance and drivers"])
+    elif "s-6" in key or "comm" in key:
+        links.extend(
+            [
+                "Coordinate with S-3 on reporting windows",
+                "Coordinate with XO/Chief on the one method everyone will use",
+            ]
+        )
+    elif "medical" in key or "doc" in key:
+        links.extend(
+            [
+                "Coordinate with S-3 on casualty injects and stop-training criteria",
+                "Coordinate with SEL on risk-control enforcement",
+            ]
+        )
+    elif "xo" in key or "chief" in key:
+        links.extend(
+            [
+                "Coordinate with every section on named due-outs",
+                "Coordinate with commander on the actual decision list",
+            ]
+        )
+    elif "sel" in key or "1stsgt" in key or "first sergeant" in key or "sergeant major" in key:
+        links.extend(
+            [
+                "Coordinate with S-1/Admin on accountability",
+                "Coordinate with S-3 on execution standards and release criteria",
+            ]
+        )
+    if request.coordinating_sections:
+        links.extend(f"Coordinate with {item}" for item in request.coordinating_sections[:2])
+    links.extend(_section_memory_for(section_memory, section_label, "preferred_checks"))
+    return _unique_ordered(links)
+
+
+def _section_likely_questions(
+    section_label: str,
+    request: AssistedSectionEstimateRequest,
+    section_memory: SectionMemoryProfile | None = None,
+) -> list[str]:
+    base = _base_section_likely_questions(section_label, request)
+    base.extend(_section_memory_for(section_memory, section_label, "recurring_questions"))
+    return _unique_ordered(base)
+
+
+def _base_section_likely_questions(section_label: str, request: AssistedSectionEstimateRequest) -> list[str]:
     key = section_label.lower()
     if "s-1" in key or "admin" in key:
         return _unique_ordered(
@@ -745,64 +849,38 @@ def _section_likely_questions(section_label: str, request: AssistedSectionEstima
     )
 
 
-def _section_likely_support_facts(section_label: str, request: AssistedSectionEstimateRequest) -> list[str]:
+def _section_memory_for(
+    profile: SectionMemoryProfile | None,
+    section_label: str,
+    field_name: str,
+) -> list[str]:
+    if profile is None:
+        return []
     key = section_label.lower()
-    facts = []
-    if "s-1" in key or "admin" in key:
-        facts.extend(["Orders coverage", "Attendance roster", "DTS / voucher friction"])
-    elif "s-4" in key or "log" in key:
-        facts.extend(["Transport timeline", "Water/chow plan", "Issue and recovery timing"])
-    elif "s-6" in key or "comm" in key:
-        facts.extend(["Primary reporting method", "Fallback reporting path", "Access / permissions status"])
-    elif "medical" in key or "doc" in key:
-        facts.extend(["Corpsman coverage", "CASEVAC / emergency plan", "Stop-training criteria"])
-    elif "xo" in key or "chief" in key:
-        facts.extend(["Decision timeline", "Named owners", "Next sync battle rhythm"])
-    elif "sel" in key or "1stsgt" in key or "first sergeant" in key or "sergeant major" in key:
-        facts.extend(["Accountability method", "NCO leader checks", "Release criteria"])
-    if request.support_requirements:
-        facts.extend(request.support_requirements[:2])
-    return _unique_ordered(facts)
+    lines: list[str] = []
+    for entry in profile.entries:
+        section_key = entry.section.lower()
+        if section_key not in key and key not in section_key:
+            continue
+        lines.extend(getattr(entry, field_name, []))
+    return _unique_ordered(lines)
 
 
-def _section_likely_coordination(section_label: str, request: AssistedSectionEstimateRequest) -> list[str]:
-    key = section_label.lower()
-    links = []
-    if "s-1" in key or "admin" in key:
-        links.extend(["Coordinate with XO/Chief on suspenses", "Coordinate with S-4 on travel/admin support timing"])
-    elif "s-4" in key or "log" in key:
-        links.extend(["Coordinate with S-3 on lane timing", "Coordinate with S-1/Admin on attendance and drivers"])
-    elif "s-6" in key or "comm" in key:
-        links.extend(
-            [
-                "Coordinate with S-3 on reporting windows",
-                "Coordinate with XO/Chief on the one method everyone will use",
-            ]
-        )
-    elif "medical" in key or "doc" in key:
-        links.extend(
-            [
-                "Coordinate with S-3 on casualty injects and stop-training criteria",
-                "Coordinate with SEL on risk-control enforcement",
-            ]
-        )
-    elif "xo" in key or "chief" in key:
-        links.extend(
-            [
-                "Coordinate with every section on named due-outs",
-                "Coordinate with commander on the actual decision list",
-            ]
-        )
-    elif "sel" in key or "1stsgt" in key or "first sergeant" in key or "sergeant major" in key:
-        links.extend(
-            [
-                "Coordinate with S-1/Admin on accountability",
-                "Coordinate with S-3 on execution standards and release criteria",
-            ]
-        )
-    if request.coordinating_sections:
-        links.extend(f"Coordinate with {item}" for item in request.coordinating_sections[:2])
-    return _unique_ordered(links)
+def _section_memory_lines(profile: SectionMemoryProfile | None, memory_type: str) -> list[str]:
+    if profile is None:
+        return []
+    lines: list[str] = []
+    for entry in profile.entries:
+        if memory_type == "questions":
+            lines.extend(f"{entry.section} recurring question: {item}" for item in entry.recurring_questions[:2])
+        elif memory_type == "failure_modes":
+            lines.extend(
+                f"{entry.section} recurring failure mode: {item}"
+                for item in entry.recurring_failure_modes[:2]
+            )
+        elif memory_type == "checks":
+            lines.extend(f"{entry.section} preferred check: {item}" for item in entry.preferred_checks[:2])
+    return _unique_ordered(lines)
 
 
 def _section_current_situation(section_label: str, request: AssistedSectionEstimateRequest) -> str:
