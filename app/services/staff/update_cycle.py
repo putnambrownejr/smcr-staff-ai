@@ -1,6 +1,9 @@
 from app.core.security import DEFAULT_WARNINGS, detect_sensitive_input
 from app.schemas.staff_products import StaffProductDraftRequest, StaffProductType
 from app.schemas.staff_updates import (
+    AssistedSectionEstimateItem,
+    AssistedSectionEstimateRequest,
+    AssistedSectionEstimatesResponse,
     CpbResponse,
     CubResponse,
     LonePlannerResponse,
@@ -278,6 +281,70 @@ class StaffUpdateCycleBuilder:
             warnings=planning_cell.warnings,
         )
 
+    def build_assisted_section_estimates(
+        self, request: AssistedSectionEstimateRequest
+    ) -> AssistedSectionEstimatesResponse:
+        planning_cell = self.build_planning_cell(request)
+        sections = _present_sections(request)
+        focus_sections = _focus_sections(request, sections)
+        section_estimates = [
+            _assisted_section_estimate(
+                request=request,
+                section_label=section,
+                sections_present=sections,
+                planning_cell=planning_cell,
+            )
+            for section in focus_sections
+        ]
+        cross_lane_risks = _unique_ordered(
+            [
+                *planning_cell.update_cycle.cub.cross_staff_friction[:4],
+                *[
+                    f"{item.section}: {item.confidence_note}"
+                    for item in section_estimates
+                    if item.section_status == "gap-cover"
+                ][:4],
+            ]
+        )
+        xo_walk_in_lines = _unique_ordered(
+            [
+                planning_cell.planning_approach.decision,
+                f"Mission statement: {planning_cell.mission_analysis.mission_statement}",
+                *[
+                    f"Section gap to cover: {item.section}"
+                    for item in section_estimates
+                    if item.section_status == "gap-cover"
+                ],
+                *[f"Decision to keep visible: {item}" for item in planning_cell.commander_decision_log[:2]],
+                *[f"Immediate cross-lane risk: {item}" for item in cross_lane_risks[:2]],
+            ]
+        )
+        recommended_products = _unique_ordered(
+            [
+                "Mission analysis worksheet",
+                "Planning cell package",
+                "Running estimate / CUB / CPB cycle",
+                *[
+                    f"{item.section} running estimate scaffold"
+                    for item in section_estimates
+                ],
+            ]
+        )
+        posture = (
+            "Section gap cover active. Treat these as disciplined staff scaffolds for missing lanes, "
+            "not confirmed estimates."
+        )
+        return AssistedSectionEstimatesResponse(
+            title=f"Assisted section estimates: {request.title}",
+            posture=posture,
+            focus_sections=focus_sections,
+            section_estimates=section_estimates,
+            cross_lane_risks=cross_lane_risks,
+            xo_walk_in_lines=xo_walk_in_lines,
+            recommended_products=recommended_products,
+            warnings=planning_cell.warnings,
+        )
+
 
 def _estimate_from_update(update: StaffSectionUpdate) -> RunningEstimateItem:
     supportability = [
@@ -536,6 +603,235 @@ def _lone_planner_cross_lane_asks(request: RunningEstimateRequest, sections: set
             "hide inside the main scheme of maneuver."
         )
     return _unique_ordered(asks)
+
+
+def _focus_sections(request: AssistedSectionEstimateRequest, sections_present: set[str]) -> list[str]:
+    requested = _unique_ordered(request.focus_sections)
+    if requested:
+        return requested
+    defaults = ["S-1/Admin", "S-4", "S-6", "Medical", "XO/Chief", "SEL/1stSgt"]
+    missing = [
+        item
+        for item in defaults
+        if not _has_section(
+            sections_present,
+            item.lower(),
+            item.split("/")[0].lower(),
+            item.split("/")[-1].lower(),
+        )
+    ]
+    return missing or defaults[:3]
+
+
+def _assisted_section_estimate(
+    *,
+    request: AssistedSectionEstimateRequest,
+    section_label: str,
+    sections_present: set[str],
+    planning_cell: PlanningCellResponse,
+) -> AssistedSectionEstimateItem:
+    key = section_label.lower()
+    is_present = _has_section(sections_present, key, key.replace("/", " "), key.split("/")[0], key.split("/")[-1])
+    known_inputs = _section_known_inputs(section_label, request)
+    likely_questions = _section_likely_questions(section_label, request)
+    likely_support_facts = _section_likely_support_facts(section_label, request)
+    likely_coordination = _section_likely_coordination(section_label, request)
+    draft_estimate_lines = _unique_ordered(
+        [
+            f"Current situation: {_section_current_situation(section_label, request)}",
+            *[f"Key question: {item}" for item in likely_questions[:2]],
+            *[f"Support fact to verify: {item}" for item in likely_support_facts[:2]],
+            *[f"Coordination required: {item}" for item in likely_coordination[:2]],
+            *(
+                [f"Decision this lane affects: {planning_cell.commander_decision_log[0]}"]
+                if planning_cell.commander_decision_log
+                else []
+            ),
+        ]
+    )
+    return AssistedSectionEstimateItem(
+        section=section_label,
+        section_status="present" if is_present else "gap-cover",
+        known_inputs=known_inputs,
+        likely_questions=likely_questions,
+        likely_support_facts=likely_support_facts,
+        likely_coordination=likely_coordination,
+        draft_estimate_lines=draft_estimate_lines,
+        confidence_note=(
+            "Estimate is built from partial inputs plus planning context; verify with the actual section "
+            "before treating it as settled."
+            if not is_present
+            else (
+                "Estimate is informed by at least some present section context, "
+                "but still needs the section owner to confirm details."
+            )
+        ),
+    )
+
+
+def _section_known_inputs(section_label: str, request: AssistedSectionEstimateRequest) -> list[str]:
+    key = section_label.lower()
+    facts: list[str] = []
+    if request.support_requirements:
+        facts.extend(f"Support requirement: {item}" for item in request.support_requirements[:3])
+    if request.coordinating_sections:
+        facts.extend(f"Coordinating section in play: {item}" for item in request.coordinating_sections[:3])
+    if "s-1" in key or "admin" in key:
+        facts.extend(f"Commander priority: {item}" for item in request.commander_priorities[:2])
+    if "s-4" in key or "log" in key:
+        facts.extend(f"Constraint: {item}" for item in request.constraints[:2])
+    if "s-6" in key or "comm" in key:
+        facts.extend(f"Higher guidance: {item}" for item in request.higher_guidance[:2])
+    if "medical" in key or "doc" in key:
+        facts.extend(f"Training focus: {item}" for item in request.met_tasks[:2])
+    return _unique_ordered(facts)
+
+
+def _section_likely_questions(section_label: str, request: AssistedSectionEstimateRequest) -> list[str]:
+    key = section_label.lower()
+    if "s-1" in key or "admin" in key:
+        return _unique_ordered(
+            [
+                "Who is actually attending, covered by orders, and clear on reporting/accountability?",
+                "What admin or DTS friction will become visible only after Marines disperse?",
+                "What roster, arrival-window, or pay-status fact is still assumed instead of confirmed?",
+            ]
+        )
+    if "s-4" in key or "log" in key:
+        return _unique_ordered(
+            [
+                "What support assumption breaks the concept first?",
+                "What transport, billeting, chow, water, or issue/recovery fact is still unconfirmed?",
+                "What is the no-regret reduced-scope branch if support compresses?",
+            ]
+        )
+    if "s-6" in key or "comm" in key:
+        return _unique_ordered(
+            [
+                "What is the simplest primary reporting method?",
+                "What access, comms, or permissions problem is most likely to hit first?",
+                "What fallback method exists if the primary reporting plan degrades?",
+            ]
+        )
+    if "medical" in key or "doc" in key:
+        return _unique_ordered(
+            [
+                "What casualty response or stop-training criteria still need to be stated out loud?",
+                "Where is medical coverage thin once the event begins to move?",
+                "What risk-control check must happen before execution starts?",
+            ]
+        )
+    if "xo" in key or "chief" in key:
+        return _unique_ordered(
+            [
+                "What actually needs a commander decision now versus later?",
+                "What is still drifting because nobody named an owner or suspense?",
+                "What can be cut without hollowing out the training or briefing value?",
+            ]
+        )
+    if "sel" in key or "1stsgt" in key or "first sergeant" in key or "sergeant major" in key:
+        return _unique_ordered(
+            [
+                "What friction will hit Marines first when the plan meets reality?",
+                "What accountability or standard will erode if leaders are vague?",
+                "What needs to be rehearsed at the NCO level before execution?",
+            ]
+        )
+    return _unique_ordered(
+        [
+            "What does this lane need to confirm before the next sync?",
+            "What assumption in this lane breaks the broader concept first?",
+        ]
+    )
+
+
+def _section_likely_support_facts(section_label: str, request: AssistedSectionEstimateRequest) -> list[str]:
+    key = section_label.lower()
+    facts = []
+    if "s-1" in key or "admin" in key:
+        facts.extend(["Orders coverage", "Attendance roster", "DTS / voucher friction"])
+    elif "s-4" in key or "log" in key:
+        facts.extend(["Transport timeline", "Water/chow plan", "Issue and recovery timing"])
+    elif "s-6" in key or "comm" in key:
+        facts.extend(["Primary reporting method", "Fallback reporting path", "Access / permissions status"])
+    elif "medical" in key or "doc" in key:
+        facts.extend(["Corpsman coverage", "CASEVAC / emergency plan", "Stop-training criteria"])
+    elif "xo" in key or "chief" in key:
+        facts.extend(["Decision timeline", "Named owners", "Next sync battle rhythm"])
+    elif "sel" in key or "1stsgt" in key or "first sergeant" in key or "sergeant major" in key:
+        facts.extend(["Accountability method", "NCO leader checks", "Release criteria"])
+    if request.support_requirements:
+        facts.extend(request.support_requirements[:2])
+    return _unique_ordered(facts)
+
+
+def _section_likely_coordination(section_label: str, request: AssistedSectionEstimateRequest) -> list[str]:
+    key = section_label.lower()
+    links = []
+    if "s-1" in key or "admin" in key:
+        links.extend(["Coordinate with XO/Chief on suspenses", "Coordinate with S-4 on travel/admin support timing"])
+    elif "s-4" in key or "log" in key:
+        links.extend(["Coordinate with S-3 on lane timing", "Coordinate with S-1/Admin on attendance and drivers"])
+    elif "s-6" in key or "comm" in key:
+        links.extend(
+            [
+                "Coordinate with S-3 on reporting windows",
+                "Coordinate with XO/Chief on the one method everyone will use",
+            ]
+        )
+    elif "medical" in key or "doc" in key:
+        links.extend(
+            [
+                "Coordinate with S-3 on casualty injects and stop-training criteria",
+                "Coordinate with SEL on risk-control enforcement",
+            ]
+        )
+    elif "xo" in key or "chief" in key:
+        links.extend(
+            [
+                "Coordinate with every section on named due-outs",
+                "Coordinate with commander on the actual decision list",
+            ]
+        )
+    elif "sel" in key or "1stsgt" in key or "first sergeant" in key or "sergeant major" in key:
+        links.extend(
+            [
+                "Coordinate with S-1/Admin on accountability",
+                "Coordinate with S-3 on execution standards and release criteria",
+            ]
+        )
+    if request.coordinating_sections:
+        links.extend(f"Coordinate with {item}" for item in request.coordinating_sections[:2])
+    return _unique_ordered(links)
+
+
+def _section_current_situation(section_label: str, request: AssistedSectionEstimateRequest) -> str:
+    key = section_label.lower()
+    if "s-1" in key or "admin" in key:
+        return (
+            "Admin continuity is only partially visible; roster, orders, and travel friction "
+            "need explicit confirmation."
+        )
+    if "s-4" in key or "log" in key:
+        return (
+            "Supportability is plausible but still depends on timelines and issue/recovery discipline "
+            "staying honest."
+        )
+    if "s-6" in key or "comm" in key:
+        return (
+            "The reporting plan is probably being treated as simpler than it is until one primary "
+            "and one fallback method are named."
+        )
+    if "medical" in key or "doc" in key:
+        return (
+            "Medical support is often assumed until the event starts moving; stop-training criteria "
+            "and casualty response need to be explicit."
+        )
+    if "xo" in key or "chief" in key:
+        return "The staff likely has enough to move, but priorities, decisions, and named owners still need tightening."
+    if "sel" in key or "1stsgt" in key or "first sergeant" in key or "sergeant major" in key:
+        return "Execution standards will drift unless leader checks and accountability expectations are made concrete."
+    return f"{section_label} context is only partially visible and needs a deliberate estimate before the next sync."
 
 
 def _lone_planner_products(request: RunningEstimateRequest, planning_cell: PlanningCellResponse) -> list[str]:

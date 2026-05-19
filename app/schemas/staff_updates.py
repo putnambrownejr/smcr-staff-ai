@@ -39,6 +39,10 @@ class RunningEstimateRequest(BaseModel):
     training_only: bool = True
 
 
+class AssistedSectionEstimateRequest(RunningEstimateRequest):
+    focus_sections: list[str] = Field(default_factory=list)
+
+
 class MissionAnalysisResponse(BaseModel):
     title: str
     supported_unit: str
@@ -128,4 +132,26 @@ class LonePlannerResponse(BaseModel):
     recommended_products: list[str] = Field(default_factory=list)
     immediate_actions: list[str] = Field(default_factory=list)
     planning_cell: PlanningCellResponse
+    warnings: list[str] = Field(default_factory=list)
+
+
+class AssistedSectionEstimateItem(BaseModel):
+    section: str
+    section_status: str
+    known_inputs: list[str] = Field(default_factory=list)
+    likely_questions: list[str] = Field(default_factory=list)
+    likely_support_facts: list[str] = Field(default_factory=list)
+    likely_coordination: list[str] = Field(default_factory=list)
+    draft_estimate_lines: list[str] = Field(default_factory=list)
+    confidence_note: str
+
+
+class AssistedSectionEstimatesResponse(BaseModel):
+    title: str
+    posture: str
+    focus_sections: list[str] = Field(default_factory=list)
+    section_estimates: list[AssistedSectionEstimateItem] = Field(default_factory=list)
+    cross_lane_risks: list[str] = Field(default_factory=list)
+    xo_walk_in_lines: list[str] = Field(default_factory=list)
+    recommended_products: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

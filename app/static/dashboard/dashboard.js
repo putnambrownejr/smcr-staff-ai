@@ -165,6 +165,7 @@ document
 document.getElementById("toggle-timezone-panel").addEventListener("click", toggleTimezonePanel);
 document.getElementById("save-planning-cell-board").addEventListener("click", savePlanningCellToBattleRhythm);
 document.getElementById("run-lone-planner").addEventListener("click", runLonePlannerMode);
+document.getElementById("run-section-gap-cover").addEventListener("click", runSectionGapCover);
 
 document.addEventListener("click", async (event) => {
   const documentButton = event.target.closest("[data-document-id]");
@@ -521,6 +522,7 @@ function buildPlanningCellPayloadFromForm() {
     coordinating_sections: splitLines(form.get("coordinating_sections")),
     support_requirements: supportAndCivil,
     civil_considerations: supportAndCivil,
+    focus_sections: splitLines(form.get("focus_sections")),
     section_updates: parseSectionUpdates(form.get("section_updates")),
     training_only: true,
   };
@@ -1170,6 +1172,50 @@ function renderLonePlannerOutput(targetId, payload) {
   `;
 }
 
+function renderSectionGapCoverOutput(targetId, payload) {
+  const target = document.getElementById(targetId);
+  target.className = "tool-output";
+  target.innerHTML = `
+    <section>
+      <span class="strip-label">Posture</span>
+      <h3>${escapeHtml(payload.posture || "No section gap-cover posture returned.")}</h3>
+      <p class="meta-inline">Focus sections: ${escapeHtml((payload.focus_sections || []).join(" | ") || "None stated")}</p>
+    </section>
+    <section>
+      <span class="strip-label">XO walk-in lines</span>
+      <ul>${(payload.xo_walk_in_lines || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No walk-in lines returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Cross-lane risks</span>
+      <ul>${(payload.cross_lane_risks || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No cross-lane risks returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Recommended products</span>
+      <ul>${(payload.recommended_products || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No products returned.</li>"}</ul>
+    </section>
+    ${(payload.section_estimates || [])
+      .map(
+        (item) => `
+          <section>
+            <span class="strip-label">${escapeHtml(item.section_status || "section")}</span>
+            <h3>${escapeHtml(item.section)}</h3>
+            <p class="meta-inline">${escapeHtml(item.confidence_note || "")}</p>
+            <p><strong>Known inputs:</strong> ${escapeHtml((item.known_inputs || []).join(" | ") || "None stated")}</p>
+            <p><strong>Likely questions:</strong> ${escapeHtml((item.likely_questions || []).join(" | ") || "None stated")}</p>
+            <p><strong>Support facts:</strong> ${escapeHtml((item.likely_support_facts || []).join(" | ") || "None stated")}</p>
+            <p><strong>Coordination:</strong> ${escapeHtml((item.likely_coordination || []).join(" | ") || "None stated")}</p>
+            <ul>${(item.draft_estimate_lines || []).map((line) => `<li>${escapeHtml(line)}</li>`).join("") || "<li>No draft estimate lines returned.</li>"}</ul>
+          </section>
+        `,
+      )
+      .join("")}
+    <section>
+      <span class="strip-label">Warnings</span>
+      <ul>${(payload.warnings || []).slice(0, 4).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </section>
+  `;
+}
+
 function renderMissionAnalysisOutput(targetId, payload) {
   const target = document.getElementById(targetId);
   target.className = "tool-output";
@@ -1282,6 +1328,23 @@ async function runLonePlannerMode() {
     applyLaneVisibility();
     document.getElementById("lone-planner-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
     setWorkspaceNote("Lone planner mode ran against the current planning context.");
+  } catch (error) {
+    setWorkspaceNote(error.message, true);
+  }
+}
+
+async function runSectionGapCover() {
+  try {
+    const payload = buildPlanningCellPayloadFromForm();
+    const data = await apiFetch("/staff/assisted-section-estimates", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    renderSectionGapCoverOutput("section-gap-cover-output", data);
+    state.activeLane = "draft";
+    applyLaneVisibility();
+    document.getElementById("section-gap-cover-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setWorkspaceNote("Built assisted section estimates from the current planning context.");
   } catch (error) {
     setWorkspaceNote(error.message, true);
   }

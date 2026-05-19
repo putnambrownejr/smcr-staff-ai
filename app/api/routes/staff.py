@@ -24,6 +24,8 @@ from app.schemas.staff import (
     StaffRoundRobinResponse,
 )
 from app.schemas.staff_updates import (
+    AssistedSectionEstimateRequest,
+    AssistedSectionEstimatesResponse,
     CpbResponse,
     CubResponse,
     LonePlannerResponse,
@@ -175,3 +177,10 @@ def build_planning_cell(request: RunningEstimateRequest) -> PlanningCellResponse
 @router.post("/lone-planner", response_model=LonePlannerResponse)
 def build_lone_planner(request: RunningEstimateRequest) -> LonePlannerResponse:
     return _update_cycle.build_lone_planner(request)
+
+
+@router.post("/assisted-section-estimates", response_model=AssistedSectionEstimatesResponse)
+def build_assisted_section_estimates(
+    request: AssistedSectionEstimateRequest,
+) -> AssistedSectionEstimatesResponse:
+    return _update_cycle.build_assisted_section_estimates(request)

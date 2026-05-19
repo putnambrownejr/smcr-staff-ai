@@ -795,6 +795,14 @@
                 </label>
               </div>
               <label>
+                <span>Gap-cover focus sections (optional, one per line)</span>
+                <textarea
+                  name="focus_sections"
+                  rows="3"
+                  placeholder="S-1/Admin&#10;S-4&#10;S-6"
+                ></textarea>
+              </label>
+              <label>
                 <span>Section updates (one per line as SECTION: summary)</span>
                 <textarea
                   name="section_updates"
@@ -805,6 +813,7 @@
               <div class="button-row">
                 <button type="submit">Build planning cell package</button>
                 <button type="button" class="secondary" id="run-lone-planner">Run lone planner mode</button>
+                <button type="button" class="secondary" id="run-section-gap-cover">Build section gap cover</button>
                 <button type="button" class="secondary" id="save-planning-cell-board">Save to battle rhythm board</button>
               </div>
             </form>
@@ -813,6 +822,9 @@
             </div>
             <div id="lone-planner-output" class="tool-output empty-state">
               Lone planner assist will surface walk-in brief lines, blind spots, cross-lane asks, and immediate actions here.
+            </div>
+            <div id="section-gap-cover-output" class="tool-output empty-state">
+              Assisted section estimates will surface likely questions, support facts, coordination, and XO-ready walk-in lines here.
             </div>
           </article>
         </section>

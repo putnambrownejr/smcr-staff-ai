@@ -222,6 +222,10 @@ class StaffUpdateCycleToolInput(BaseModel):
     civil_considerations: list[str] = Field(default_factory=list, description="Relevant civil considerations.")
     met_tasks: list[str] = Field(default_factory=list, description="Relevant MET-aligned tasks.")
     metl_focus: list[str] = Field(default_factory=list, description="Relevant METL focus.")
+    focus_sections: list[str] = Field(
+        default_factory=list,
+        description="Optional section lanes to emphasize for gap-cover or thin-bench support.",
+    )
     section_updates: list[StaffSectionUpdateToolInput] = Field(
         default_factory=list,
         description="Structured section updates feeding the running estimate, CUB, and CPB.",
@@ -419,6 +423,20 @@ TOOL_SPECS: list[types.Tool] = [
         _meta=_tool_invocation_meta(
             "Building the lone planner assist package",
             "Lone planner assist ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="build_assisted_section_estimates",
+        title="Build Assisted Section Estimates",
+        description=(
+            "Use this when the user has partial staff coverage and needs disciplined gap-cover scaffolds for missing "
+            "lanes such as S-1/Admin, S-4, S-6, medical, XO/Chief, or SEL before briefing the XO or commander."
+        ),
+        inputSchema=StaffUpdateCycleToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Building the assisted section estimates",
+            "Assisted section estimates ready",
             read_only=False,
         ),
     ),
@@ -793,6 +811,11 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             lone_planner_payload = StaffUpdateCycleToolInput.model_validate(arguments)
             result = await adapter.build_lone_planner(lone_planner_payload.model_dump())
             return _ok_result("Built the lone planner assist package.", result)
+
+        if name == "build_assisted_section_estimates":
+            section_estimate_payload = StaffUpdateCycleToolInput.model_validate(arguments)
+            result = await adapter.build_assisted_section_estimates(section_estimate_payload.model_dump())
+            return _ok_result("Built the assisted section estimates.", result)
 
         if name == "build_staff_update_cycle":
             update_cycle_payload = StaffUpdateCycleToolInput.model_validate(arguments)

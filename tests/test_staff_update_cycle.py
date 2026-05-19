@@ -143,3 +143,20 @@ def test_staff_lone_planner_builds_thin_staff_assist_package() -> None:
     assert payload["recommended_products"]
     assert payload["immediate_actions"]
     assert payload["planning_cell"]["planning_approach"]["recommended_method"] in {"mcpp", "r2p2"}
+
+
+def test_staff_assisted_section_estimates_builds_gap_cover_pack() -> None:
+    client = TestClient(app)
+
+    payload = _sample_request()
+    payload["focus_sections"] = ["S-1/Admin", "S-6", "XO/Chief"]
+    response = client.post("/staff/assisted-section-estimates", json=payload)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["posture"]
+    assert body["focus_sections"] == ["S-1/Admin", "S-6", "XO/Chief"]
+    assert body["section_estimates"]
+    assert body["xo_walk_in_lines"]
+    assert body["cross_lane_risks"]
+    assert body["recommended_products"]

@@ -30,6 +30,7 @@ Why:
 - `build_mission_analysis`
 - `build_planning_cell`
 - `build_lone_planner`
+- `build_assisted_section_estimates`
 - `build_staff_update_cycle`
 - `run_infantry_03xx_advisor`
 - `run_patrolling_refresher`
@@ -74,6 +75,10 @@ red-team focus, and the linked running estimate/CUB/CPB package together.
 `build_lone_planner` is the thin-bench continuity lane. Use it when the user is covering down alone or outside
 their lane and needs a walk-in brief, likely blind spots, cross-lane asks, immediate actions, and a linked
 planning-cell package that keeps the frame honest.
+
+`build_assisted_section_estimates` is the cross-lane gap-cover lane. Use it when the user has only partial
+staff coverage and needs disciplined scaffolds for missing lanes like S-1/Admin, S-4, S-6, medical, XO/Chief,
+or SEL before briefing the XO or commander.
 
 `build_staff_update_cycle` is the recurring staff-rhythm lane. It takes section updates and turns them into
 a linked running estimate, CUB, and CPB so the user can move from “what changed?” to “what does the commander

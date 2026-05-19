@@ -225,6 +225,36 @@ async def test_build_lone_planner_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_build_assisted_section_estimates_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.build_assisted_section_estimates(
+        {
+            "title": "Adapter assisted section estimates test",
+            "supported_unit": "Civil affairs company",
+            "mission_or_training_goal": "Refine the next drill training plan.",
+            "coordinating_sections": ["S-3", "S-4"],
+            "support_requirements": ["Transport", "Water"],
+            "focus_sections": ["S-1/Admin", "S-6"],
+            "section_updates": [
+                {
+                    "section": "S-3",
+                    "summary": "The event is supportable if the company cuts to one primary lane.",
+                    "assumptions": ["Subordinate elements can rehearse locally."],
+                    "decisions_needed": ["Commander decides whether to keep one lane."],
+                }
+            ],
+            "training_only": True,
+        }
+    )
+
+    assert result["posture"]
+    assert result["focus_sections"] == ["S-1/Admin", "S-6"]
+    assert result["section_estimates"]
+    assert result["xo_walk_in_lines"]
+
+
+@pytest.mark.anyio
 async def test_build_walk_in_brief_pack_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 

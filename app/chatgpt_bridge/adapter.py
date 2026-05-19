@@ -73,6 +73,9 @@ class ChatGptBridgeAdapter:
     async def build_lone_planner(self, payload: dict[str, object]) -> dict[str, object]:
         return await self._request_dict("POST", "/staff/lone-planner", json=payload)
 
+    async def build_assisted_section_estimates(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self._request_dict("POST", "/staff/assisted-section-estimates", json=payload)
+
     async def run_opt_facilitator(self, payload: dict[str, object]) -> dict[str, object]:
         return await self.run_staff_agent(agent_id="opt-facilitator", payload=payload)
 

@@ -66,6 +66,7 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Save to battle rhythm board" in response.text
     assert "Build planning cell package" in response.text
     assert "Run lone planner mode" in response.text
+    assert "Build section gap cover" in response.text
     assert "Refresh MARADMIN feed" in response.text
     assert "Second-tier awareness" in response.text
     assert "dashboard.js" in response.text
@@ -102,6 +103,7 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "walk-in-open-lone-planner",
         "walk-in-open-brief-clinic",
         "run-lone-planner",
+        "run-section-gap-cover",
         "save-planning-cell-board",
     ]
     for button_id in button_ids:
@@ -135,6 +137,8 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'id="battle-rhythm-health-summary"' in html
     assert 'id="battle-rhythm-hot-items"' in html
     assert 'renderBattleRhythmHealth(' in js
+    assert 'id="section-gap-cover-output"' in html
+    assert 'renderSectionGapCoverOutput(' in js
 
 
 def test_demo_dashboard_data_route_returns_workspace_payload() -> None:
