@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 
 from app.schemas.actions import ActionRecord
 from app.schemas.admin import AdminReadinessResponse
+from app.schemas.battle_rhythm import BattleRhythmBoardResponse
 from app.schemas.career import CareerWatchResponse
 from app.schemas.chief import ChiefBriefResponse
 from app.schemas.custom_watch_feeds import CustomWatchFeedTrustLevel
@@ -103,6 +104,7 @@ class DashboardWorkspaceResponse(BaseModel):
     chief_brief: ChiefBriefResponse
     admin_readiness: AdminReadinessResponse
     career_watch: CareerWatchResponse
+    battle_rhythm: BattleRhythmBoardResponse | None = None
     daily_ops_brief: DailyOpsBrief
     analyst_brief: AnalystBrief
     document_summary: PersonalDocumentSummary | None = None

@@ -2,6 +2,7 @@ from collections.abc import Sequence
 from datetime import UTC, date, datetime, timedelta
 
 from app.core.security import DEFAULT_WARNINGS
+from app.schemas.battle_rhythm import BattleRhythmBoardResponse
 from app.schemas.calendar import DrillPrepPlanResponse
 from app.schemas.chief import (
     ChiefActionItem,
@@ -25,6 +26,7 @@ from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.active_context_store import ActiveUserContextStore
 from app.services.session.handoff_store import SessionHandoffStore
+from app.services.staff.battle_rhythm_store import BattleRhythmStore
 
 
 class ChiefAideOrchestrator:
@@ -38,6 +40,7 @@ class ChiefAideOrchestrator:
         opportunity_tracker: OpportunityTracker | None = None,
         active_context_store: ActiveUserContextStore | None = None,
         travel_case_store: TravelCaseStore | None = None,
+        battle_rhythm_store: BattleRhythmStore | None = None,
     ) -> None:
         self.handoff_store = handoff_store
         self.document_organizer = document_organizer
@@ -47,6 +50,7 @@ class ChiefAideOrchestrator:
         self.opportunity_tracker = opportunity_tracker or OpportunityTracker()
         self.active_context_store = active_context_store
         self.travel_case_store = travel_case_store or TravelCaseStore()
+        self.battle_rhythm_store = battle_rhythm_store or BattleRhythmStore()
 
     def build_brief(self, request: ChiefBriefRequest) -> ChiefBriefResponse:
         handoff = self.handoff_store.get(request.user_key) if request.user_key else None
@@ -57,6 +61,7 @@ class ChiefAideOrchestrator:
         document_summary = self.document_organizer.list_documents() if request.include_personal_documents else None
         drill_plans = self.drill_plan_store.list() if request.include_drill_plans else []
         travel_cases = self.travel_case_store.list_cases(request.user_key) if request.user_key else []
+        battle_rhythm = self.battle_rhythm_store.get(request.user_key) if request.user_key else None
         opportunities = self.opportunity_tracker.list()
         updates = self.document_update_store.list()
         if request.maradmin_records:
@@ -87,6 +92,7 @@ class ChiefAideOrchestrator:
         thin_staff_assist = _thin_staff_assist(
             handoff=handoff,
             active_user_context=active_user_context,
+            battle_rhythm=battle_rhythm,
             handoff_is_stale=handoff_is_stale,
             next_drill_readiness=next_drill_readiness,
             drill_plans=drill_plans,
@@ -102,9 +108,12 @@ class ChiefAideOrchestrator:
             handoff_is_stale=handoff_is_stale,
             next_drill_readiness=next_drill_readiness,
             thin_staff_assist=thin_staff_assist,
+            battle_rhythm_summary=_battle_rhythm_summary(battle_rhythm),
+            battle_rhythm=battle_rhythm,
             summary_lines=_summary_lines(
                 handoff=handoff,
                 active_user_context=active_user_context,
+                battle_rhythm=battle_rhythm,
                 handoff_is_stale=handoff_is_stale,
                 actions=sorted_actions,
                 updates=updates,
@@ -469,6 +478,7 @@ def _top_priority_items(actions: list[ChiefActionItem]) -> list[ChiefActionItem]
 def _summary_lines(
     handoff: UserSessionHandoff | None,
     active_user_context: ActiveUserContext | None,
+    battle_rhythm: BattleRhythmBoardResponse | None,
     handoff_is_stale: bool,
     actions: list[ChiefActionItem],
     updates: list[DocumentationUpdateCandidate],
@@ -499,6 +509,14 @@ def _summary_lines(
         lines.append(f"{len(handoff.drill_dates)} annual drill date(s) are stored for recurring prep reminders.")
     if handoff is not None and handoff.recurring_checks:
         lines.append(f"{len(handoff.recurring_checks)} recurring readiness/admin check(s) are tracked in the handoff.")
+    if battle_rhythm is None:
+        lines.append("No persistent staff battle rhythm board is stored yet.")
+    else:
+        lines.append(
+            f"Battle rhythm board holds {len(battle_rhythm.assumption_log)} assumptions, "
+            f"{len(battle_rhythm.commander_decision_log)} decisions, and "
+            f"{len(battle_rhythm.due_out_board)} due-out(s)."
+        )
     if travel_cases:
         lines.append(f"{len(travel_cases)} stored travel case(s) are available for voucher and receipt follow-through.")
     new_updates = [update for update in updates if update.review_status == "new"]
@@ -639,6 +657,7 @@ def _thin_staff_assist(
     *,
     handoff: UserSessionHandoff | None,
     active_user_context: ActiveUserContext | None,
+    battle_rhythm: BattleRhythmBoardResponse | None,
     handoff_is_stale: bool,
     next_drill_readiness: NextDrillReadiness,
     drill_plans: list[DrillPrepPlanResponse],
@@ -656,6 +675,11 @@ def _thin_staff_assist(
     summary = [
         "Use this when you are covering thin staff or walking back into the problem after time away.",
         *([f"Active context bias: {' / '.join(active_bits)}."] if active_bits else []),
+        *(
+            [f"Persistent battle rhythm board: {battle_rhythm.board_title}."]
+            if battle_rhythm is not None
+            else ["No persistent battle rhythm board exists yet, so assumptions and due-outs can still drift."]
+        ),
         (
             "Start with the mission, the immediate decision, and what adjacent sections would ask "
             "before polishing products."
@@ -665,6 +689,9 @@ def _thin_staff_assist(
         [
             "Unstated assumptions between the concept and what S-4/S-6 can actually support.",
             "Tasks that sound owned but still have no named section due-out.",
+            "Assumptions and decisions may still be trapped in old products instead of a living board."
+            if battle_rhythm is None
+            else "",
             "Travel-admin or receipt friction that will bite after people disperse." if travel_cases else "",
             "Continuity drift because the stored handoff is stale." if handoff_is_stale else "",
             "Source-backed references that may be stale until reviewed." if updates else "",
@@ -683,6 +710,7 @@ def _thin_staff_assist(
         [
             "Mission analysis worksheet",
             "Planning cell package",
+            "Persistent battle rhythm board",
             "Staff update cycle (running estimate -> CUB -> CPB)",
             *(
                 ["FRAGO to CONOP package"]
@@ -705,6 +733,11 @@ def _thin_staff_assist(
                 else []
             ),
             *[f"Immediate due-out: {item.title}" for item in next_drill_readiness.must_do_before_drill[:3]],
+            *(
+                [f"Board touchpoint: {battle_rhythm.next_touchpoint}"]
+                if battle_rhythm is not None and battle_rhythm.next_touchpoint
+                else []
+            ),
             *[f"Friction: {item}" for item in next_drill_readiness.likely_friction_points[:2]],
         ]
     )
@@ -722,6 +755,11 @@ def _thin_staff_assist(
             ),
             *(
                 [f"New immediate action: {item.title}" for item in actions if item.priority == "high"][:3]
+            ),
+            *(
+                [f"Battle rhythm board updated: {battle_rhythm.updated_at.date().isoformat()}"]
+                if battle_rhythm is not None
+                else ["No battle rhythm board update has been captured yet."]
             ),
             (
                 "No annual drill anchor is visible yet."
@@ -751,6 +789,19 @@ def _thin_staff_assist(
         changes_since_last_time=changes_since_last_time[:6],
         next_touchpoint=next_touchpoint,
     )
+
+
+def _battle_rhythm_summary(battle_rhythm: BattleRhythmBoardResponse | None) -> list[str]:
+    if battle_rhythm is None:
+        return ["No battle rhythm board stored yet."]
+    summary = [
+        f"{len(battle_rhythm.assumption_log)} assumption(s) remain visible.",
+        f"{len(battle_rhythm.commander_decision_log)} commander decision item(s) remain visible.",
+        f"{len(battle_rhythm.due_out_board)} due-out(s) are still being carried.",
+    ]
+    if battle_rhythm.next_touchpoint:
+        summary.append(f"Next touchpoint: {battle_rhythm.next_touchpoint}")
+    return summary
 
 
 def _readiness_posture(

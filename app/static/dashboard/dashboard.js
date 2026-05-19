@@ -121,6 +121,7 @@ document
   .getElementById("thin-staff-open-admin")
   .addEventListener("click", () => launchThinStaffWorkflow("admin"));
 document.getElementById("toggle-timezone-panel").addEventListener("click", toggleTimezonePanel);
+document.getElementById("save-planning-cell-board").addEventListener("click", savePlanningCellToBattleRhythm);
 
 document.addEventListener("click", async (event) => {
   const documentButton = event.target.closest("[data-document-id]");
@@ -178,6 +179,7 @@ function renderWorkspace(payload) {
   renderChief(payload.chief_brief);
   renderNextDrillReadiness(payload.chief_brief?.next_drill_readiness || {});
   renderThinStaffAssist(payload.chief_brief?.thin_staff_assist || {});
+  renderBattleRhythm(payload.battle_rhythm || payload.chief_brief?.battle_rhythm || null);
   renderCareer(payload.career_watch);
   renderAdmin(payload.admin_readiness);
   renderDailyBrief(payload.daily_ops_brief || {});
@@ -241,6 +243,73 @@ function renderThinStaffAssist(payload) {
     payload.next_touchpoint ? [{ title: payload.next_touchpoint, category: "touchpoint" }] : [],
     "No touchpoint loaded yet.",
   );
+}
+
+function renderBattleRhythm(payload) {
+  renderList("battle-rhythm-focus", payload?.focus || []);
+  renderEntryRows(
+    "battle-rhythm-touchpoint",
+    payload?.next_touchpoint ? [{ title: payload.next_touchpoint, category: "touchpoint" }] : [],
+    "No next touchpoint stored yet.",
+  );
+  renderBattleRhythmEntries(
+    "battle-rhythm-assumptions",
+    payload?.assumption_log || [],
+    "No assumptions stored yet.",
+  );
+  renderBattleRhythmEntries(
+    "battle-rhythm-decisions",
+    payload?.commander_decision_log || [],
+    "No decision items stored yet.",
+  );
+  renderBattleRhythmEntries(
+    "battle-rhythm-questions",
+    payload?.question_log || [],
+    "No question log stored yet.",
+  );
+  renderBattleRhythmEntries(
+    "battle-rhythm-dueouts",
+    payload?.due_out_board || [],
+    "No due-outs stored yet.",
+  );
+}
+
+function renderBattleRhythmEntries(targetId, items, emptyMessage) {
+  const target = document.getElementById(targetId);
+  if (!items.length) {
+    target.className = "row-stack empty-state";
+    target.textContent = emptyMessage;
+    return;
+  }
+  target.className = "row-stack";
+  target.innerHTML = items
+    .map(
+      (item) => `
+        <article class="data-row compact-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.section || "staff")}</span>
+            <strong>${escapeHtml(item.text)}</strong>
+            <span class="meta-inline">${escapeHtml(item.status || "open")}</span>
+          </div>
+          <p class="meta-inline">${escapeHtml(formatBattleRhythmMeta(item))}</p>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function formatBattleRhythmMeta(item) {
+  const parts = [];
+  if (item.owner) {
+    parts.push(`Owner: ${item.owner}`);
+  }
+  if (item.suspense_date) {
+    parts.push(`Suspense: ${item.suspense_date}`);
+  }
+  if (item.source) {
+    parts.push(`Source: ${item.source}`);
+  }
+  return parts.join(" | ") || "Open continuity item.";
 }
 
 async function launchThinStaffWorkflow(mode) {
@@ -961,6 +1030,29 @@ async function refreshCustomFeed(feedId) {
   });
   setWorkspaceNote("Custom feed refreshed.");
   await loadWorkspace();
+}
+
+async function savePlanningCellToBattleRhythm() {
+  if (state.mode !== "personal" || !state.userKey) {
+    setWorkspaceNote("Open your personal workspace first so the battle rhythm board can stay local to your profile.", true);
+    return;
+  }
+  try {
+    const payload = buildPlanningCellPayloadFromForm();
+    const board = await apiFetch(
+      `/staff/battle-rhythm/${encodeURIComponent(state.userKey)}/from-planning-cell`,
+      {
+        method: "POST",
+        auth: true,
+        body: JSON.stringify(payload),
+      },
+    );
+    renderBattleRhythm(board);
+    await loadWorkspace();
+    setWorkspaceNote("Battle rhythm board saved from the current planning cell.");
+  } catch (error) {
+    setWorkspaceNote(error.message, true);
+  }
 }
 
 async function refreshSourceLane(lane) {

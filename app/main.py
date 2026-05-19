@@ -6,6 +6,7 @@ from app.api.routes import (
     admin,
     agents,
     analysis,
+    battle_rhythm,
     billets,
     calendar,
     career,
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
     app.include_router(admin.router)
     app.include_router(analysis.router)
     app.include_router(agents.router)
+    app.include_router(battle_rhythm.router)
     app.include_router(billets.router)
     app.include_router(career.router)
     app.include_router(context.router)

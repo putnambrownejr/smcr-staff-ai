@@ -2,6 +2,7 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.battle_rhythm import BattleRhythmBoardResponse
 from app.schemas.calendar import DrillPrepPlanResponse
 from app.schemas.ingestion import MessageRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
@@ -75,6 +76,8 @@ class ChiefBriefResponse(BaseModel):
     handoff_is_stale: bool = False
     next_drill_readiness: NextDrillReadiness
     thin_staff_assist: ThinStaffAssist
+    battle_rhythm_summary: list[str] = Field(default_factory=list)
+    battle_rhythm: BattleRhythmBoardResponse | None = None
     summary_lines: list[str] = Field(default_factory=list)
     action_items: list[ChiefActionItem]
     top_priority_items: list[ChiefActionItem] = Field(default_factory=list)

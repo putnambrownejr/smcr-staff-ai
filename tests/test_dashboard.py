@@ -7,6 +7,7 @@ from app.api.routes.dashboard import (
     get_action_tracker,
     get_admin_service,
     get_alnav_store,
+    get_battle_rhythm_store,
     get_career_service,
     get_chief_orchestrator,
     get_custom_watch_feed_store,
@@ -18,6 +19,7 @@ from app.api.routes.dashboard import (
 )
 from app.main import app
 from app.schemas.actions import ActionItemRequest
+from app.schemas.battle_rhythm import BattleRhythmBoardUpsertRequest, BattleRhythmEntryInput
 from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
 from app.schemas.custom_watch_feeds import CreateCustomWatchFeedRequest
 from app.schemas.ingestion import MessageRecord
@@ -36,6 +38,7 @@ from app.services.ingestion.message_record_store import MessageRecordStore
 from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
+from app.services.staff.battle_rhythm_store import BattleRhythmStore
 from app.services.storage.local_context_store import LocalContextStore
 
 
@@ -54,6 +57,8 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Planning Cell" in response.text
     assert "Time watch" in response.text
     assert "Time zones" in response.text
+    assert "Battle Rhythm Board" in response.text
+    assert "Save to battle rhythm board" in response.text
     assert "Build planning cell package" in response.text
     assert "Refresh MARADMIN feed" in response.text
     assert "Second-tier awareness" in response.text
@@ -91,6 +96,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     action_tracker = ActionTracker(tmp_path / "actions")
     update_store = DocumentUpdateStore(tmp_path / "updates")
     custom_feed_store = CustomWatchFeedStore(tmp_path / "custom_feeds")
+    battle_rhythm_store = BattleRhythmStore(tmp_path / "battle_rhythm")
     navadmin_store = MessageRecordStore(tmp_path / "navadmins")
     alnav_store = MessageRecordStore(tmp_path / "alnavs")
     dod_store = MessageRecordStore(tmp_path / "dod")
@@ -196,6 +202,17 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
             )
         ]
     )
+    battle_rhythm_store.upsert(
+        "capt-dash",
+        BattleRhythmBoardUpsertRequest(
+            board_title="June drill board",
+            focus=["Protect training value", "Keep support honest"],
+            assumption_log=[BattleRhythmEntryInput(text="Transport window remains workable.", section="S-4")],
+            commander_decision_log=[BattleRhythmEntryInput(text="Approve one primary lane.", section="Command")],
+            due_out_board=[BattleRhythmEntryInput(text="S-6: Confirm reporting method.", section="S-6")],
+            next_touchpoint="Before the next drill sync, confirm assumptions and named due-outs.",
+        ),
+    )
 
     def override_orchestrator() -> ChiefAideOrchestrator:
         return ChiefAideOrchestrator(
@@ -205,6 +222,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
             reading_catalog=reading_catalog,
             document_update_store=update_store,
             opportunity_tracker=opportunity_tracker,
+            battle_rhythm_store=battle_rhythm_store,
         )
 
     def override_admin() -> AdminReadinessService:
@@ -236,6 +254,9 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     def override_custom_feed_store() -> CustomWatchFeedStore:
         return custom_feed_store
 
+    def override_battle_rhythm_store() -> BattleRhythmStore:
+        return battle_rhythm_store
+
     def override_navadmin_store() -> MessageRecordStore:
         return navadmin_store
 
@@ -253,6 +274,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     app.dependency_overrides[get_opportunity_tracker] = override_tracker
     app.dependency_overrides[get_update_store] = override_updates
     app.dependency_overrides[get_custom_watch_feed_store] = override_custom_feed_store
+    app.dependency_overrides[get_battle_rhythm_store] = override_battle_rhythm_store
     app.dependency_overrides[get_navadmin_store] = override_navadmin_store
     app.dependency_overrides[get_alnav_store] = override_alnav_store
     app.dependency_overrides[get_dod_watch_store] = override_dod_store
@@ -276,6 +298,8 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["tracked_opportunities"][0]["title"] == "ADOS Planner"
         assert payload["documentation_updates"][0]["tracked_title"] == "MCO 1610.7"
         assert payload["custom_watch_feeds"][0]["name"] == "Unit updates"
+        assert payload["battle_rhythm"]["board_title"] == "June drill board"
+        assert payload["chief_brief"]["battle_rhythm_summary"]
         assert payload["navadmin_ticker"][0]["status"] == "NAVADMIN"
         assert payload["alnav_ticker"][0]["status"] == "ALNAV"
         assert payload["dod_ticker"][0]["status"] == "DoD"

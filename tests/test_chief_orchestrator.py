@@ -1,6 +1,7 @@
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+from app.schemas.battle_rhythm import BattleRhythmBoardUpsertRequest, BattleRhythmEntryInput
 from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
 from app.schemas.chief import ChiefBriefRequest
 from app.schemas.connector_digest import TravelEmailCaseSummary
@@ -23,6 +24,7 @@ from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
+from app.services.staff.battle_rhythm_store import BattleRhythmStore
 from app.services.storage.local_context_store import LocalContextStore
 
 
@@ -68,6 +70,18 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
         document_update_store=DocumentUpdateStore(tmp_path / "updates"),
         opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
     )
+    battle_rhythm_store = BattleRhythmStore(tmp_path / "battle-rhythm")
+    battle_rhythm_store.upsert(
+        "capt-example",
+        BattleRhythmBoardUpsertRequest(
+            board_title="Drill board",
+            assumption_log=[BattleRhythmEntryInput(text="Transport remains supportable.", section="S-4")],
+            commander_decision_log=[BattleRhythmEntryInput(text="Approve the final lane mix.", section="Command")],
+            due_out_board=[BattleRhythmEntryInput(text="S-6: Confirm reporting method.", section="S-6")],
+            next_touchpoint="Before final drill sync.",
+        ),
+    )
+    orchestrator.battle_rhythm_store = battle_rhythm_store
 
     brief = orchestrator.build_brief(
         ChiefBriefRequest(
@@ -104,6 +118,8 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
     assert brief.thin_staff_assist.missing_section_questions
     assert brief.thin_staff_assist.recommended_products
     assert brief.thin_staff_assist.next_touchpoint
+    assert brief.battle_rhythm_summary
+    assert brief.battle_rhythm is not None
 
 
 def test_chief_brief_flags_stale_handoff_and_missing_core_docs(tmp_path: Path) -> None:

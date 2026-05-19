@@ -10,6 +10,7 @@ from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.actions import ActionRecord, ActionStatus
 from app.schemas.admin import AdminReadinessResponse
+from app.schemas.battle_rhythm import BattleRhythmBoardResponse
 from app.schemas.career import CareerWatchResponse
 from app.schemas.chief import ChiefActionItem, ChiefBriefRequest, ChiefBriefResponse
 from app.schemas.custom_watch_feeds import CustomWatchFeed
@@ -50,6 +51,7 @@ from app.services.reading.catalog_store import ReadingListCatalogStore
 from app.services.reading.live_catalog import load_effective_reading_catalog
 from app.services.reading.state_store import ReadingProgressStore
 from app.services.session.handoff_store import SessionHandoffStore
+from app.services.staff.battle_rhythm_store import BattleRhythmStore
 from app.services.storage.local_context_store import LocalContextStore
 from app.services.templates.product_template_repository import ProductTemplateRepository
 from app.services.templates.system_template_catalog import SystemTemplateCatalog
@@ -90,6 +92,7 @@ def get_chief_orchestrator(
         document_update_store=DocumentUpdateStore(f"{settings.local_context_storage_dir}/document_updates"),
         opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
         travel_case_store=TravelCaseStore(settings.travel_case_storage_dir),
+        battle_rhythm_store=BattleRhythmStore(settings.battle_rhythm_storage_dir),
     )
 
 
@@ -133,6 +136,11 @@ def get_update_store() -> Iterator[DocumentUpdateStore]:
 def get_action_tracker() -> Iterator[ActionTracker]:
     settings = get_settings()
     yield ActionTracker(f"{settings.local_context_storage_dir}/actions")
+
+
+def get_battle_rhythm_store() -> Iterator[BattleRhythmStore]:
+    settings = get_settings()
+    yield BattleRhythmStore(settings.battle_rhythm_storage_dir)
 
 
 def get_template_repository() -> Iterator[ProductTemplateRepository]:
@@ -203,6 +211,7 @@ def get_dashboard_data(
     career_service: Annotated[CareerWatchService, Depends(get_career_service)],
     organizer: Annotated[PersonalDocumentOrganizer, Depends(get_document_organizer)],
     action_tracker: Annotated[ActionTracker, Depends(get_action_tracker)],
+    battle_rhythm_store: Annotated[BattleRhythmStore, Depends(get_battle_rhythm_store)],
     opportunity_tracker: Annotated[OpportunityTracker, Depends(get_opportunity_tracker)],
     update_store: Annotated[DocumentUpdateStore, Depends(get_update_store)],
     template_repository: Annotated[ProductTemplateRepository, Depends(get_template_repository)],
@@ -220,6 +229,7 @@ def get_dashboard_data(
     admin_readiness = admin_service.build(user_key)
     career_watch = career_service.build_watch(user_key)
     document_summary = organizer.list_documents()
+    battle_rhythm = battle_rhythm_store.get(user_key)
     tracked_actions = action_tracker.list(user_key=user_key, include_closed=False)[:12]
     tracked_opportunities = list(opportunity_tracker.list())[:8]
     documentation_updates = [
@@ -234,6 +244,7 @@ def get_dashboard_data(
         chief_brief=chief_brief,
         admin_readiness=admin_readiness,
         career_watch=career_watch,
+        battle_rhythm=battle_rhythm,
         document_summary=document_summary,
         tracked_actions=tracked_actions,
         tracked_opportunities=tracked_opportunities,
@@ -277,12 +288,14 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
         seed_path=SEED_DIR / "reading_list.example.yaml",
         store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
     )
+    demo_battle_rhythm = _demo_battle_rhythm(chief_brief)
     return _workspace_response(
         mode="demo",
         user_key=DEMO_USER_KEY,
         chief_brief=chief_brief,
         admin_readiness=admin_readiness,
         career_watch=career_watch,
+        battle_rhythm=demo_battle_rhythm,
         document_summary=chief_brief.document_summary,
         tracked_actions=[],
         tracked_opportunities=career_watch.tracked_opportunities,
@@ -314,6 +327,7 @@ def _workspace_response(
     chief_brief: ChiefBriefResponse,
     admin_readiness: AdminReadinessResponse,
     career_watch: CareerWatchResponse,
+    battle_rhythm: BattleRhythmBoardResponse | None,
     document_summary: PersonalDocumentSummary | None,
     tracked_actions: list[ActionRecord],
     tracked_opportunities: list[OpportunityRecord],
@@ -346,6 +360,7 @@ def _workspace_response(
         chief_brief=chief_brief,
         admin_readiness=admin_readiness,
         career_watch=career_watch,
+        battle_rhythm=battle_rhythm,
         daily_ops_brief=_daily_ops_brief(
             chief_brief=chief_brief,
             admin_readiness=admin_readiness,
@@ -544,6 +559,22 @@ def _admin_from_demo_brief(chief_brief: ChiefBriefResponse) -> AdminReadinessRes
         items=items[:6],
         document_summary=document_summary,
         warnings=["Demo mode is stateless and read-only."],
+    )
+
+
+def _demo_battle_rhythm(chief_brief: ChiefBriefResponse) -> BattleRhythmBoardResponse:
+    return BattleRhythmBoardResponse(
+        user_key=DEMO_USER_KEY,
+        board_title="Demo battle rhythm board",
+        source_title="Demo planning cell",
+        focus=chief_brief.summary_lines[:3],
+        assumption_log=[],
+        commander_decision_log=[],
+        question_log=[],
+        due_out_board=[],
+        next_touchpoint=chief_brief.thin_staff_assist.next_touchpoint,
+        context_note="Demo mode shows the shape of the continuity board without persisting personal staff data.",
+        warnings=["Demo mode is read-only."],
     )
 
 

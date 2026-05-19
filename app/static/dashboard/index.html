@@ -342,6 +342,39 @@
             <div id="priority-queue" class="row-stack empty-state">Load the workspace to see current priorities.</div>
           </article>
 
+          <article class="panel full-span">
+            <div class="panel-header">
+              <h2>Battle Rhythm Board</h2>
+              <p>Persistent assumptions, decisions, questions, and due-outs that should survive between drills.</p>
+            </div>
+            <div class="brief-grid">
+              <section class="brief-block">
+                <h3>Commander focus</h3>
+                <ul id="battle-rhythm-focus" class="bullet-list"></ul>
+              </section>
+              <section class="brief-block">
+                <h3>Next touchpoint</h3>
+                <div id="battle-rhythm-touchpoint" class="row-stack empty-state">No next touchpoint stored yet.</div>
+              </section>
+              <section class="brief-block">
+                <h3>Assumption log</h3>
+                <div id="battle-rhythm-assumptions" class="row-stack empty-state">No assumptions stored yet.</div>
+              </section>
+              <section class="brief-block">
+                <h3>Commander decision log</h3>
+                <div id="battle-rhythm-decisions" class="row-stack empty-state">No decision items stored yet.</div>
+              </section>
+              <section class="brief-block">
+                <h3>Question log</h3>
+                <div id="battle-rhythm-questions" class="row-stack empty-state">No question log stored yet.</div>
+              </section>
+              <section class="brief-block">
+                <h3>Due-out board</h3>
+                <div id="battle-rhythm-dueouts" class="row-stack empty-state">No due-outs stored yet.</div>
+              </section>
+            </div>
+          </article>
+
           <article class="panel">
             <div class="panel-header">
               <h2>Local document watch</h2>
@@ -621,6 +654,7 @@
               </label>
               <div class="button-row">
                 <button type="submit">Build planning cell package</button>
+                <button type="button" class="secondary" id="save-planning-cell-board">Save to battle rhythm board</button>
               </div>
             </form>
             <div id="planning-cell-output" class="tool-output empty-state">

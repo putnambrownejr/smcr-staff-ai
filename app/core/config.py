@@ -36,6 +36,10 @@ def default_travel_case_dir() -> Path:
     return default_local_context_dir() / "travel_cases"
 
 
+def default_battle_rhythm_dir() -> Path:
+    return default_local_context_dir() / "battle_rhythm"
+
+
 def default_reading_state_dir() -> Path:
     return default_local_context_dir() / "reading_state"
 
@@ -75,6 +79,7 @@ class Settings(BaseSettings):
     session_handoff_storage_dir: str = str(default_session_handoff_dir())
     product_template_storage_dir: str = str(default_product_template_dir())
     travel_case_storage_dir: str = str(default_travel_case_dir())
+    battle_rhythm_storage_dir: str = str(default_battle_rhythm_dir())
     reading_state_storage_dir: str = str(default_reading_state_dir())
     reading_catalog_storage_dir: str = str(default_reading_catalog_dir())
     maradmin_feed_storage_dir: str = str(default_maradmin_feed_dir())
