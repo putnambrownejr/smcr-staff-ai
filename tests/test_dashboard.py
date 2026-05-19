@@ -58,6 +58,8 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Time watch" in response.text
     assert "Time zones" in response.text
     assert "Battle Rhythm Board" in response.text
+    assert "Save battle rhythm board" in response.text
+    assert "Commander decision log (one per line" in response.text
     assert "Save to battle rhythm board" in response.text
     assert "Build planning cell package" in response.text
     assert "Refresh MARADMIN feed" in response.text

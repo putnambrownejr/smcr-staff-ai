@@ -35,6 +35,16 @@ document.getElementById("load-personal").addEventListener("click", () => {
   loadWorkspace();
 });
 
+document.getElementById("battle-rhythm-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await saveBattleRhythmBoard();
+});
+
+document.getElementById("battle-rhythm-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await saveBattleRhythmBoard();
+});
+
 document.getElementById("personnel-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -246,6 +256,7 @@ function renderThinStaffAssist(payload) {
 }
 
 function renderBattleRhythm(payload) {
+  populateBattleRhythmForm(payload);
   renderList("battle-rhythm-focus", payload?.focus || []);
   renderEntryRows(
     "battle-rhythm-touchpoint",
@@ -310,6 +321,31 @@ function formatBattleRhythmMeta(item) {
     parts.push(`Source: ${item.source}`);
   }
   return parts.join(" | ") || "Open continuity item.";
+}
+
+function populateBattleRhythmForm(payload) {
+  const form = document.getElementById("battle-rhythm-form");
+  if (!form) {
+    return;
+  }
+  const chiefBrief = state.workspace?.chief_brief || {};
+  const activeContext = chiefBrief.active_user_context || {};
+  const supportedUnit =
+    activeContext.unit_name || activeContext.unit_type || activeContext.unit_family || "SMCR unit";
+  form.elements.board_title.value =
+    payload?.board_title || `Battle rhythm board for ${supportedUnit}`;
+  form.elements.next_touchpoint.value = payload?.next_touchpoint || chiefBrief.thin_staff_assist?.next_touchpoint || "";
+  form.elements.focus.value = (payload?.focus || []).join("\n");
+  form.elements.assumption_log.value = battleRhythmLines(payload?.assumption_log || []);
+  form.elements.commander_decision_log.value = battleRhythmLines(payload?.commander_decision_log || []);
+  form.elements.question_log.value = battleRhythmLines(payload?.question_log || []);
+  form.elements.due_out_board.value = battleRhythmLines(payload?.due_out_board || []);
+}
+
+function battleRhythmLines(items) {
+  return items
+    .map((item) => (item.section ? `${item.section}: ${item.text}` : item.text))
+    .join("\n");
 }
 
 async function launchThinStaffWorkflow(mode) {
@@ -420,6 +456,47 @@ function buildSectionUpdateSeed(questions, blindSpots) {
   const s4 = blindSpots[0] || "Support assumptions still need to be checked honestly.";
   const s6 = questions[2] || "Reporting and access friction still need to be clarified.";
   return [`S-3: ${s3}`, `S-4: ${s4}`, `S-6: ${s6}`].join("\n");
+}
+
+function buildBattleRhythmPayloadFromForm() {
+  const form = new FormData(document.getElementById("battle-rhythm-form"));
+  return {
+    board_title: String(form.get("board_title") || "").trim() || "Battle rhythm board",
+    source_title: "dashboard_manual_edit",
+    focus: splitLines(form.get("focus")),
+    assumption_log: parseBattleRhythmEntries(form.get("assumption_log"), "dashboard_manual_edit"),
+    commander_decision_log: parseBattleRhythmEntries(
+      form.get("commander_decision_log"),
+      "dashboard_manual_edit",
+      "pending",
+    ),
+    question_log: parseBattleRhythmEntries(form.get("question_log"), "dashboard_manual_edit"),
+    due_out_board: parseBattleRhythmEntries(form.get("due_out_board"), "dashboard_manual_edit"),
+    next_touchpoint: String(form.get("next_touchpoint") || "").trim() || null,
+    context_note: "Updated from the dashboard battle-rhythm board editor.",
+  };
+}
+
+function parseBattleRhythmEntries(value, source, status = "open") {
+  return splitLines(value).map((line) => {
+    const index = line.indexOf(":");
+    if (index > 0) {
+      const section = line.slice(0, index).trim();
+      const text = line.slice(index + 1).trim();
+      return {
+        text: text || line.trim(),
+        section: section || null,
+        status,
+        source,
+      };
+    }
+    return {
+      text: line.trim(),
+      section: null,
+      status,
+      source,
+    };
+  });
 }
 
 function renderAdmin(payload) {
@@ -1050,6 +1127,26 @@ async function savePlanningCellToBattleRhythm() {
     renderBattleRhythm(board);
     await loadWorkspace();
     setWorkspaceNote("Battle rhythm board saved from the current planning cell.");
+  } catch (error) {
+    setWorkspaceNote(error.message, true);
+  }
+}
+
+async function saveBattleRhythmBoard() {
+  if (state.mode !== "personal" || !state.userKey) {
+    setWorkspaceNote("Open your personal workspace first so board edits stay local to your profile.", true);
+    return;
+  }
+  try {
+    const payload = buildBattleRhythmPayloadFromForm();
+    const board = await apiFetch(`/staff/battle-rhythm/${encodeURIComponent(state.userKey)}`, {
+      method: "PUT",
+      auth: true,
+      body: JSON.stringify(payload),
+    });
+    renderBattleRhythm(board);
+    await loadWorkspace();
+    setWorkspaceNote("Battle rhythm board updated.");
   } catch (error) {
     setWorkspaceNote(error.message, true);
   }
