@@ -3,6 +3,7 @@ from app.schemas.staff_products import StaffProductDraftRequest, StaffProductTyp
 from app.schemas.staff_updates import (
     CpbResponse,
     CubResponse,
+    LonePlannerResponse,
     MissionAnalysisResponse,
     PlanningCellResponse,
     RunningEstimateItem,
@@ -218,6 +219,65 @@ class StaffUpdateCycleBuilder:
             warnings=mission_analysis.warnings,
         )
 
+    def build_lone_planner(self, request: RunningEstimateRequest) -> LonePlannerResponse:
+        planning_cell = self.build_planning_cell(request)
+        sections = _present_sections(request)
+        likely_blind_spots = _lone_planner_blind_spots(request, sections)
+        missing_section_questions = _lone_planner_questions(request, sections)
+        cross_lane_asks = _lone_planner_cross_lane_asks(request, sections)
+        recommended_products = _lone_planner_products(request, planning_cell)
+        immediate_actions = _unique_ordered(
+            [
+                *planning_cell.next_opt_actions[:4],
+                *[f"Decision now: {item}" for item in planning_cell.commander_decision_log[:3]],
+                *[f"Due-out now: {item}" for item in planning_cell.due_out_board[:3]],
+            ]
+        )
+        walk_in_brief = _unique_ordered(
+            [
+                planning_cell.planning_approach.decision,
+                f"Mission statement: {planning_cell.mission_analysis.mission_statement}",
+                *(
+                    [f"Commander priority: {item}" for item in request.commander_priorities[:2]]
+                    if request.commander_priorities
+                    else [
+                        "Commander priority: Clarify what the commander actually needs "
+                        "decided before polishing products."
+                    ]
+                ),
+                *(
+                    [f"Assumption that breaks first: {planning_cell.assumption_log[0]}"]
+                    if planning_cell.assumption_log
+                    else []
+                ),
+                *(
+                    [f"Immediate due-out: {planning_cell.due_out_board[0]}"]
+                    if planning_cell.due_out_board
+                    else []
+                ),
+            ]
+        )
+        posture = (
+            "Thin bench, manageable if the staff keeps one visible mission-analysis frame and names owners now."
+            if len(sections) >= 3
+            else (
+                "Thin bench, elevated blind-spot risk. Keep the frame simple and force "
+                "missing-section questions early."
+            )
+        )
+        return LonePlannerResponse(
+            title=f"Lone planner assist: {request.title}",
+            posture=posture,
+            walk_in_brief=walk_in_brief,
+            likely_blind_spots=likely_blind_spots,
+            missing_section_questions=missing_section_questions,
+            cross_lane_asks=cross_lane_asks,
+            recommended_products=recommended_products,
+            immediate_actions=immediate_actions,
+            planning_cell=planning_cell,
+            warnings=planning_cell.warnings,
+        )
+
 
 def _estimate_from_update(update: StaffSectionUpdate) -> RunningEstimateItem:
     supportability = [
@@ -357,6 +417,142 @@ def _warnings_for(request: RunningEstimateRequest) -> list[str]:
             ]
         )
     )
+
+
+def _present_sections(request: RunningEstimateRequest) -> set[str]:
+    sections = {item.section.strip().lower() for item in request.section_updates if item.section.strip()}
+    sections.update(item.strip().lower() for item in request.coordinating_sections if item.strip())
+    return sections
+
+
+def _has_section(sections: set[str], *candidates: str) -> bool:
+    normalized = [candidate.lower() for candidate in candidates]
+    return any(candidate in section for section in sections for candidate in normalized)
+
+
+def _lone_planner_blind_spots(request: RunningEstimateRequest, sections: set[str]) -> list[str]:
+    blind_spots = [
+        "The lone planner should assume at least one adjacent section owes context that is still unstated.",
+    ]
+    if not _has_section(sections, "s-1", "admin"):
+        blind_spots.append(
+            "S-1/Admin blind spot: attendance, orders coverage, and admin readiness "
+            "may be softer than the concept assumes."
+        )
+    if not _has_section(sections, "s-4", "log"):
+        blind_spots.append(
+            "S-4 blind spot: transport, chow, water, issue/recovery, and timing friction "
+            "may break the plan first."
+        )
+    if not _has_section(sections, "s-6", "comm"):
+        blind_spots.append(
+            "S-6 blind spot: the plan may be assuming reporting or access discipline "
+            "that no one has verified."
+        )
+    if not _has_section(sections, "medical", "corpsman", "doc"):
+        blind_spots.append(
+            "Medical blind spot: casualty response, stop-training criteria, and coverage "
+            "may still be implied instead of checked."
+        )
+    if not request.section_updates:
+        blind_spots.append(
+            "No section updates were provided, so the concept is at risk of sounding "
+            "cleaner than the staff reality."
+        )
+    if request.partner_types or request.civil_considerations:
+        blind_spots.append(
+            "Outside actors or civil considerations are in play; do not let the staff "
+            "stay Marine-only in its assumptions."
+        )
+    return _unique_ordered(blind_spots)
+
+
+def _lone_planner_questions(request: RunningEstimateRequest, sections: set[str]) -> list[str]:
+    questions = [
+        "What decision does the commander actually need before the next sync or brief?",
+        "Which assumption is most likely to fail first once execution starts?",
+    ]
+    if not _has_section(sections, "s-1", "admin"):
+        questions.append(
+            "S-1/Admin: Who is actually attending, covered by orders, and clear on "
+            "reporting/accountability expectations?"
+        )
+    if not _has_section(sections, "s-4", "log"):
+        questions.append(
+            "S-4: What support timeline, transport, billeting, water, or issue/recovery "
+            "fact is still assumed instead of confirmed?"
+        )
+    if not _has_section(sections, "s-6", "comm"):
+        questions.append(
+            "S-6: What is the simplest reporting method, and what access or comms "
+            "friction will hit the unit first?"
+        )
+    if not _has_section(sections, "xo", "chief"):
+        questions.append(
+            "XO/Chief: What can wait, what must be decided now, and what should never "
+            "be allowed to drift into a last-minute surprise?"
+        )
+    if not _has_section(sections, "sel", "first sergeant", "sergeant major"):
+        questions.append(
+            "SEL/1stSgt: What friction will hit Marines first when the plan meets real "
+            "arrival times, gear reality, and accountability?"
+        )
+    return _unique_ordered(questions)
+
+
+def _lone_planner_cross_lane_asks(request: RunningEstimateRequest, sections: set[str]) -> list[str]:
+    asks = []
+    if not _has_section(sections, "s-1", "admin"):
+        asks.append(
+            "Ask S-1/Admin for a blunt attendance, orders, and readiness read instead "
+            "of a generic admin comfort statement."
+        )
+    if not _has_section(sections, "s-4", "log"):
+        asks.append(
+            "Ask S-4 for the one support assumption that breaks the concept first and "
+            "the no-regret fallback if it fails."
+        )
+    if not _has_section(sections, "s-6", "comm"):
+        asks.append(
+            "Ask S-6 for one primary reporting method, one fallback, and the access "
+            "problem most likely to slow execution."
+        )
+    if not _has_section(sections, "medical", "corpsman", "doc"):
+        asks.append(
+            "Ask medical support what stop-training criteria, casualty movement plan, "
+            "and med coverage are actually in place."
+        )
+    asks.append(
+        "Ask the XO/Chief to restate the decision threshold: what must be briefed up "
+        "now versus what can be carried as a due-out."
+    )
+    asks.append(
+        "Ask the SEL what part of the plan Marines will actually feel first when the "
+        "schedule slips or support arrives late."
+    )
+    if request.partner_types or request.civil_considerations:
+        asks.append(
+            "Ask who owns outside coordination so partner or civil assumptions do not "
+            "hide inside the main scheme of maneuver."
+        )
+    return _unique_ordered(asks)
+
+
+def _lone_planner_products(request: RunningEstimateRequest, planning_cell: PlanningCellResponse) -> list[str]:
+    products = [
+        "Mission analysis worksheet",
+        "Planning cell package with visible assumption, decision, and due-out logs",
+        "Command update brief / CUB",
+        "Decision brief / CPB",
+        "Battle rhythm board entry",
+    ]
+    if planning_cell.commander_decision_log:
+        products.append("Commander decision list")
+    if request.higher_guidance or planning_cell.update_cycle.cub.due_outs:
+        products.append("Short FRAGO or tasking note")
+    if request.support_requirements or _has_section(_present_sections(request), "s-1", "admin", "s-4", "log"):
+        products.append("Admin readiness and supportability check")
+    return _unique_ordered(products)
 
 
 def _unique_ordered(items: list[str]) -> list[str]:

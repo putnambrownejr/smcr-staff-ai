@@ -62,6 +62,7 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Commander decision log (one per line" in response.text
     assert "Save to battle rhythm board" in response.text
     assert "Build planning cell package" in response.text
+    assert "Run lone planner mode" in response.text
     assert "Refresh MARADMIN feed" in response.text
     assert "Second-tier awareness" in response.text
     assert "dashboard.js" in response.text
@@ -74,6 +75,55 @@ def test_dashboard_assets_are_served() -> None:
 
     assert response.status_code == 200
     assert "text/css" in response.headers["content-type"]
+
+
+def test_dashboard_button_inventory_has_wiring() -> None:
+    html = Path("app/static/dashboard/index.html").read_text(encoding="utf-8")
+    js = Path("app/static/dashboard/dashboard.js").read_text(encoding="utf-8")
+
+    button_ids = [
+        "toggle-timezone-panel",
+        "load-demo",
+        "load-personal",
+        "refresh-maradmins",
+        "refresh-reading",
+        "refresh-source-watch",
+        "refresh-navadmins",
+        "refresh-alnavs",
+        "refresh-dod-watch",
+        "thin-staff-run-lone-planner",
+        "thin-staff-open-mission-analysis",
+        "thin-staff-open-planning-cell",
+        "thin-staff-open-update-cycle",
+        "thin-staff-open-admin",
+        "run-lone-planner",
+        "save-planning-cell-board",
+    ]
+    for button_id in button_ids:
+        assert f'id="{button_id}"' in html
+        assert f'getElementById("{button_id}")' in js
+
+    form_ids = [
+        "battle-rhythm-form",
+        "personnel-form",
+        "staff-form",
+        "staff-cycle-form",
+        "planning-cell-form",
+    ]
+    for form_id in form_ids:
+        assert f'id="{form_id}"' in html
+        assert f'getElementById("{form_id}")' in js
+        assert "addEventListener(\"submit\"" in js
+
+    delegated_controls = [
+        "data-document-id",
+        "data-feed-toggle",
+        "data-feed-refresh",
+        "data-reading-save",
+        "data-timezone-option",
+    ]
+    for control in delegated_controls:
+        assert control in html or control in js
 
 
 def test_demo_dashboard_data_route_returns_workspace_payload() -> None:

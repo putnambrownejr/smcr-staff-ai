@@ -29,6 +29,7 @@ Why:
 - `build_infantry_training_package`
 - `build_mission_analysis`
 - `build_planning_cell`
+- `build_lone_planner`
 - `build_staff_update_cycle`
 - `run_infantry_03xx_advisor`
 - `run_patrolling_refresher`
@@ -68,6 +69,10 @@ staff starts polishing products.
 `build_planning_cell` is the fuller planning-rhythm lane. Use it when the user wants mission analysis, a
 deliberate-vs-compressed planning recommendation, an assumption log, a commander decision log, due-outs,
 red-team focus, and the linked running estimate/CUB/CPB package together.
+
+`build_lone_planner` is the thin-bench continuity lane. Use it when the user is covering down alone or outside
+their lane and needs a walk-in brief, likely blind spots, cross-lane asks, immediate actions, and a linked
+planning-cell package that keeps the frame honest.
 
 `build_staff_update_cycle` is the recurring staff-rhythm lane. It takes section updates and turns them into
 a linked running estimate, CUB, and CPB so the user can move from “what changed?” to “what does the commander

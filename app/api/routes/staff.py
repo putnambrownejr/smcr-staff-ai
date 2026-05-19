@@ -26,6 +26,7 @@ from app.schemas.staff import (
 from app.schemas.staff_updates import (
     CpbResponse,
     CubResponse,
+    LonePlannerResponse,
     MissionAnalysisResponse,
     PlanningCellResponse,
     RunningEstimateRequest,
@@ -169,3 +170,8 @@ def build_staff_update_cycle(request: RunningEstimateRequest) -> StaffUpdateCycl
 @router.post("/planning-cell", response_model=PlanningCellResponse)
 def build_planning_cell(request: RunningEstimateRequest) -> PlanningCellResponse:
     return _update_cycle.build_planning_cell(request)
+
+
+@router.post("/lone-planner", response_model=LonePlannerResponse)
+def build_lone_planner(request: RunningEstimateRequest) -> LonePlannerResponse:
+    return _update_cycle.build_lone_planner(request)

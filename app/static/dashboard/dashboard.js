@@ -40,11 +40,6 @@ document.getElementById("battle-rhythm-form").addEventListener("submit", async (
   await saveBattleRhythmBoard();
 });
 
-document.getElementById("battle-rhythm-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  await saveBattleRhythmBoard();
-});
-
 document.getElementById("personnel-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -119,6 +114,9 @@ document.getElementById("refresh-alnavs").addEventListener("click", () => refres
 document.getElementById("refresh-dod-watch").addEventListener("click", () => refreshSourceLane("dod"));
 document.getElementById("refresh-source-watch").addEventListener("click", () => refreshSourceLane("all"));
 document
+  .getElementById("thin-staff-run-lone-planner")
+  .addEventListener("click", () => launchThinStaffWorkflow("lone-planner"));
+document
   .getElementById("thin-staff-open-mission-analysis")
   .addEventListener("click", () => launchThinStaffWorkflow("mission-analysis"));
 document
@@ -132,6 +130,7 @@ document
   .addEventListener("click", () => launchThinStaffWorkflow("admin"));
 document.getElementById("toggle-timezone-panel").addEventListener("click", toggleTimezonePanel);
 document.getElementById("save-planning-cell-board").addEventListener("click", savePlanningCellToBattleRhythm);
+document.getElementById("run-lone-planner").addEventListener("click", runLonePlannerMode);
 
 document.addEventListener("click", async (event) => {
   const documentButton = event.target.closest("[data-document-id]");
@@ -376,6 +375,12 @@ async function launchThinStaffWorkflow(mode) {
 
   if (mode === "planning-cell") {
     setWorkspaceNote("Opened the planning cell with current workspace context.");
+    return;
+  }
+
+  if (mode === "lone-planner") {
+    await runLonePlannerMode();
+    setWorkspaceNote("Ran lone planner mode from the thin-staff assist lane.");
     return;
   }
 
@@ -1029,6 +1034,49 @@ function renderPlanningCellOutput(targetId, payload) {
   `;
 }
 
+function renderLonePlannerOutput(targetId, payload) {
+  const target = document.getElementById(targetId);
+  const planningCell = payload.planning_cell || {};
+  target.className = "tool-output";
+  target.innerHTML = `
+    <section>
+      <span class="strip-label">Posture</span>
+      <h3>${escapeHtml(payload.posture || "No lone-planner posture returned.")}</h3>
+      <ul>${(payload.walk_in_brief || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No walk-in brief returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Likely blind spots</span>
+      <ul>${(payload.likely_blind_spots || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No blind spots returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Missing section questions</span>
+      <ul>${(payload.missing_section_questions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No section questions returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Cross-lane asks</span>
+      <ul>${(payload.cross_lane_asks || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No cross-lane asks returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Recommended products</span>
+      <ul>${(payload.recommended_products || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No products returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Immediate actions</span>
+      <ul>${(payload.immediate_actions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No immediate actions returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Linked planning cell</span>
+      <p class="meta-inline">Approach: ${escapeHtml((planningCell.planning_approach || {}).recommended_method || "Not stated")}</p>
+      <p class="meta-inline">Top decision: ${escapeHtml(((planningCell.commander_decision_log || [])[0]) || "None")}</p>
+      <p class="meta-inline">Top due-out: ${escapeHtml(((planningCell.due_out_board || [])[0]) || "None")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Warnings</span>
+      <ul>${(payload.warnings || []).slice(0, 4).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </section>
+  `;
+}
+
 function renderMissionAnalysisOutput(targetId, payload) {
   const target = document.getElementById(targetId);
   target.className = "tool-output";
@@ -1127,6 +1175,20 @@ async function savePlanningCellToBattleRhythm() {
     renderBattleRhythm(board);
     await loadWorkspace();
     setWorkspaceNote("Battle rhythm board saved from the current planning cell.");
+  } catch (error) {
+    setWorkspaceNote(error.message, true);
+  }
+}
+
+async function runLonePlannerMode() {
+  try {
+    const payload = buildPlanningCellPayloadFromForm();
+    const data = await apiFetch("/staff/lone-planner", { method: "POST", body: JSON.stringify(payload) });
+    renderLonePlannerOutput("lone-planner-output", data);
+    state.activeLane = "draft";
+    applyLaneVisibility();
+    document.getElementById("lone-planner-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setWorkspaceNote("Lone planner mode ran against the current planning context.");
   } catch (error) {
     setWorkspaceNote(error.message, true);
   }

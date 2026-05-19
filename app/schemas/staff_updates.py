@@ -116,3 +116,16 @@ class PlanningCellResponse(BaseModel):
     red_team_focus: list[str] = Field(default_factory=list)
     next_opt_actions: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+
+
+class LonePlannerResponse(BaseModel):
+    title: str
+    posture: str
+    walk_in_brief: list[str] = Field(default_factory=list)
+    likely_blind_spots: list[str] = Field(default_factory=list)
+    missing_section_questions: list[str] = Field(default_factory=list)
+    cross_lane_asks: list[str] = Field(default_factory=list)
+    recommended_products: list[str] = Field(default_factory=list)
+    immediate_actions: list[str] = Field(default_factory=list)
+    planning_cell: PlanningCellResponse
+    warnings: list[str] = Field(default_factory=list)

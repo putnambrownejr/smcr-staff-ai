@@ -409,6 +409,20 @@ TOOL_SPECS: list[types.Tool] = [
         ),
     ),
     types.Tool(
+        name="build_lone_planner",
+        title="Build Lone Planner Assist",
+        description=(
+            "Use this when the user is thin-staffed or working alone and needs a walk-in brief, likely blind spots, "
+            "cross-lane asks, immediate actions, and a linked planning-cell package."
+        ),
+        inputSchema=StaffUpdateCycleToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Building the lone planner assist package",
+            "Lone planner assist ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
         name="build_staff_update_cycle",
         title="Build Staff Update Cycle",
         description=(
@@ -760,6 +774,11 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
             planning_cell_payload = StaffUpdateCycleToolInput.model_validate(arguments)
             result = await adapter.build_planning_cell(planning_cell_payload.model_dump())
             return _ok_result("Built the planning cell package.", result)
+
+        if name == "build_lone_planner":
+            lone_planner_payload = StaffUpdateCycleToolInput.model_validate(arguments)
+            result = await adapter.build_lone_planner(lone_planner_payload.model_dump())
+            return _ok_result("Built the lone planner assist package.", result)
 
         if name == "build_staff_update_cycle":
             update_cycle_payload = StaffUpdateCycleToolInput.model_validate(arguments)

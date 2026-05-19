@@ -301,6 +301,7 @@
               <p>For the off-drill reality: one person, thin bench, and still expected to cover down above their lane.</p>
             </div>
             <div class="button-row compact-controls">
+              <button type="button" class="secondary" id="thin-staff-run-lone-planner">Run lone planner mode</button>
               <button type="button" class="secondary" id="thin-staff-open-mission-analysis">Run mission analysis</button>
               <button type="button" class="secondary" id="thin-staff-open-planning-cell">Open planning cell</button>
               <button type="button" class="secondary" id="thin-staff-open-update-cycle">Open update cycle</button>
@@ -713,11 +714,15 @@
               </label>
               <div class="button-row">
                 <button type="submit">Build planning cell package</button>
+                <button type="button" class="secondary" id="run-lone-planner">Run lone planner mode</button>
                 <button type="button" class="secondary" id="save-planning-cell-board">Save to battle rhythm board</button>
               </div>
             </form>
             <div id="planning-cell-output" class="tool-output empty-state">
               Mission analysis, planning approach, assumption log, decision log, and due-outs will appear here.
+            </div>
+            <div id="lone-planner-output" class="tool-output empty-state">
+              Lone planner assist will surface walk-in brief lines, blind spots, cross-lane asks, and immediate actions here.
             </div>
           </article>
         </section>

@@ -196,6 +196,35 @@ async def test_build_planning_cell_via_adapter() -> None:
 
 
 @pytest.mark.anyio
+async def test_build_lone_planner_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.build_lone_planner(
+        {
+            "title": "Adapter lone planner test",
+            "supported_unit": "Civil affairs company",
+            "mission_or_training_goal": "Refine the next drill training plan.",
+            "coordinating_sections": ["S-3", "S-4"],
+            "support_requirements": ["Transport", "Water"],
+            "section_updates": [
+                {
+                    "section": "S-3",
+                    "summary": "The event is supportable if the company cuts to one primary lane.",
+                    "assumptions": ["Subordinate elements can rehearse locally."],
+                    "decisions_needed": ["Commander decides whether to keep one lane."],
+                }
+            ],
+            "training_only": True,
+        }
+    )
+
+    assert result["posture"]
+    assert result["walk_in_brief"]
+    assert result["likely_blind_spots"]
+    assert result["planning_cell"]["mission_analysis"]["mission_statement"]
+
+
+@pytest.mark.anyio
 async def test_run_opt_facilitator_via_adapter() -> None:
     adapter = ChatGptBridgeAdapter(app=create_app())
 

@@ -126,3 +126,20 @@ def test_staff_planning_cell_builds_linked_package() -> None:
     assert payload["assumption_log"]
     assert payload["commander_decision_log"]
     assert payload["due_out_board"]
+
+
+def test_staff_lone_planner_builds_thin_staff_assist_package() -> None:
+    client = TestClient(app)
+
+    response = client.post("/staff/lone-planner", json=_sample_request())
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["posture"]
+    assert payload["walk_in_brief"]
+    assert payload["likely_blind_spots"]
+    assert payload["missing_section_questions"]
+    assert payload["cross_lane_asks"]
+    assert payload["recommended_products"]
+    assert payload["immediate_actions"]
+    assert payload["planning_cell"]["planning_approach"]["recommended_method"] in {"mcpp", "r2p2"}
