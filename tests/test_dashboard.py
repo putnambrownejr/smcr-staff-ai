@@ -69,6 +69,8 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "MOS advisor" in response.text
     assert "Save section memory" in response.text
     assert "Save battle rhythm board" in response.text
+    assert "Open reading tracker" in response.text
+    assert 'id="reading-book-select"' in response.text
     assert "Commander decision log (one per line" in response.text
     assert "Save to battle rhythm board" in response.text
     assert "Build planning cell package" in response.text
@@ -151,9 +153,11 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'renderSectionGapCoverOutput(' in js
     assert 'id="section-memory-library"' in html
     assert 'id="mos-bench-library"' in html
+    assert 'id="reading-book-select"' in html
     assert 'id="mos-advisor-output"' in html
     assert 'renderSectionMemoryProfile(' in js
     assert 'renderMosBenchLibrary(' in js
+    assert 'renderReadingBooks(' in js
     assert 'renderAgentAdvisoryOutput(' in js
     assert 'data-section-memory-edit' in js
     assert 'data-section-memory-delete' in js

@@ -215,12 +215,18 @@
         </section>
 
         <section class="two-column" data-section-group="overview">
-          <article class="panel">
-            <div class="panel-header">
-              <h2>Daily Brief</h2>
-              <p>Operational triage shaped around must-do work, blockers, leverage actions, and follow-ups.</p>
-            </div>
-            <div class="brief-grid">
+          <article class="panel collapsible-panel">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header">
+                  <div>
+                    <h2>Daily Brief</h2>
+                    <p>Operational triage shaped around must-do work, blockers, leverage actions, and follow-ups.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body brief-grid">
               <section class="brief-block">
                 <h3>Executive snapshot</h3>
                 <ul id="daily-executive" class="bullet-list"></ul>
@@ -253,15 +259,22 @@
                 <h3>Prep and follow-up</h3>
                 <ul id="daily-followups" class="bullet-list"></ul>
               </section>
-            </div>
+              </div>
+            </details>
           </article>
 
-          <article class="panel">
-            <div class="panel-header">
-              <h2>Analyst Brief</h2>
-              <p>Data quality first, then signal health, anomalies, assumptions, and follow-up checks.</p>
-            </div>
-            <div class="brief-grid">
+          <article class="panel collapsible-panel">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header">
+                  <div>
+                    <h2>Analyst Brief</h2>
+                    <p>Data quality first, then signal health, anomalies, assumptions, and follow-up checks.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body brief-grid">
               <section class="brief-block">
                 <h3>Executive summary</h3>
                 <ul id="analyst-executive" class="bullet-list"></ul>
@@ -290,7 +303,8 @@
                 <h3>Follow-up checks</h3>
                 <ul id="analyst-followups" class="bullet-list"></ul>
               </section>
-            </div>
+              </div>
+            </details>
           </article>
         </section>
 
@@ -634,7 +648,22 @@
               <h2>Commandant's Reading List</h2>
               <p>Track what you’ve read, keep notes, and let future recommendations key off your reading history.</p>
             </div>
-            <div id="reading-library" class="reading-grid empty-state">No reading-list entries loaded yet.</div>
+            <div id="reading-summary" class="meta-inline">No reading-list entries loaded yet.</div>
+            <details id="reading-library-drawer" class="panel-drawer reading-drawer">
+              <summary>
+                <span>Open reading tracker</span>
+                <span class="drawer-label">Select book</span>
+              </summary>
+              <div class="panel-drawer-body">
+                <label>
+                  <span>Book</span>
+                  <select id="reading-book-select">
+                    <option value="">No reading-list entries loaded yet.</option>
+                  </select>
+                </label>
+                <div id="reading-library" class="reading-detail empty-state">No reading-list entries loaded yet.</div>
+              </div>
+            </details>
           </article>
         </section>
 
@@ -952,11 +981,12 @@
     <script>
       (function loadDashboardAssets() {
         const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
+        const assetVersion = "20260519b";
         const stylesheet = document.getElementById("dashboard-style");
-        stylesheet.href = `${staticBase}/dashboard.css`;
+        stylesheet.href = `${staticBase}/dashboard.css?v=${assetVersion}`;
 
         const script = document.createElement("script");
-        script.src = `${staticBase}/dashboard.js`;
+        script.src = `${staticBase}/dashboard.js?v=${assetVersion}`;
         document.body.appendChild(script);
       })();
     </script>

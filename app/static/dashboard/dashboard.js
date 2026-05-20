@@ -5,6 +5,7 @@ const state = {
   activeLane: resolveInitialLane(),
   workspace: null,
   selectedDocumentId: null,
+  selectedReadingSlug: "",
   apiBase: resolveApiBase(),
   timezoneOptions: buildTimezoneOptions(),
   selectedTimezoneIds: loadTimezoneSelection(),
@@ -216,6 +217,10 @@ document.getElementById("toggle-timezone-panel").addEventListener("click", toggl
 document.getElementById("save-planning-cell-board").addEventListener("click", savePlanningCellToBattleRhythm);
 document.getElementById("run-lone-planner").addEventListener("click", runLonePlannerMode);
 document.getElementById("run-section-gap-cover").addEventListener("click", runSectionGapCover);
+document.getElementById("reading-book-select").addEventListener("change", (event) => {
+  state.selectedReadingSlug = event.target.value || "";
+  renderReadingBooks(state.workspace?.reading_books || []);
+});
 
 document.addEventListener("click", async (event) => {
   const documentButton = event.target.closest("[data-document-id]");
@@ -755,7 +760,7 @@ function renderMosBenchLibrary() {
         </div>
         <p>${escapeHtml(item.summary)}</p>
         <div class="button-row compact-controls">
-          <button type="button" class="secondary" data-mos-bench="${escapeHtml(item.id)}">Open lane</button>
+          <button type="button" class="secondary" data-mos-bench="${escapeHtml(item.id)}">Open ${escapeHtml(item.label)} lane</button>
         </div>
       </article>
     `,
@@ -882,50 +887,64 @@ function renderHistory(items) {
 }
 
 function renderReadingBooks(items) {
+  const summary = document.getElementById("reading-summary");
+  const selector = document.getElementById("reading-book-select");
   const target = document.getElementById("reading-library");
   if (!items.length) {
-    target.className = "reading-grid empty-state";
+    summary.textContent = "No reading-list entries loaded yet.";
+    selector.innerHTML = '<option value="">No reading-list entries loaded yet.</option>';
+    selector.disabled = true;
+    target.className = "reading-detail empty-state";
     target.textContent = "No reading-list entries loaded yet.";
     return;
   }
-  target.className = "reading-grid";
-  target.innerHTML = items
+  const completedCount = items.filter((item) => (item.progress?.status || "not_started") === "completed").length;
+  summary.textContent = `${items.length} books loaded. ${completedCount} marked completed${state.mode !== "personal" ? ". Open a personal workspace to save notes." : "."}`;
+  if (!state.selectedReadingSlug || !items.some((item) => item.slug === state.selectedReadingSlug)) {
+    state.selectedReadingSlug = items[0].slug;
+  }
+  selector.disabled = false;
+  selector.innerHTML = items
     .map((item) => {
-      const progress = item.progress || {};
-      const notes = Array.isArray(progress.notes) ? progress.notes.join("\n") : "";
-      const status = progress.status || "not_started";
-      const disabled = state.mode !== "personal" ? "disabled" : "";
-      return `
-        <article class="reading-item">
-          <div class="data-row-head">
-            <span class="strip-label">${escapeHtml(status.replaceAll("_", " "))}</span>
-            <strong>${escapeHtml(item.title)}</strong>
-          </div>
-          <p class="meta-inline">${escapeHtml(item.author)} | ${escapeHtml((item.categories || []).slice(0, 3).join(", "))}</p>
-          <p>${escapeHtml(item.summary)}</p>
-          <p class="meta-inline">${escapeHtml((item.key_themes || []).slice(0, 4).join(" | "))}</p>
-          <label>
-            <span>Status</span>
-            <select data-reading-status="${escapeHtml(item.slug)}" ${disabled}>
-              ${["not_started", "in_progress", "completed"]
-                .map(
-                  (value) =>
-                    `<option value="${value}" ${value === status ? "selected" : ""}>${value.replaceAll("_", " ")}</option>`,
-                )
-                .join("")}
-            </select>
-          </label>
-          <label>
-            <span>Notes</span>
-            <textarea data-reading-notes="${escapeHtml(item.slug)}" rows="4" ${disabled} placeholder="Thoughts, PME takeaways, or why this matters to your lane.">${escapeHtml(notes)}</textarea>
-          </label>
-          <div class="button-row">
-            <button type="button" class="secondary" data-reading-save="${escapeHtml(item.slug)}" ${disabled}>Save reading state</button>
-          </div>
-        </article>
-      `;
+      const status = item.progress?.status || "not_started";
+      return `<option value="${escapeHtml(item.slug)}" ${item.slug === state.selectedReadingSlug ? "selected" : ""}>${escapeHtml(item.title)} (${escapeHtml(status.replaceAll("_", " "))})</option>`;
     })
     .join("");
+  const selected = items.find((item) => item.slug === state.selectedReadingSlug) || items[0];
+  const progress = selected.progress || {};
+  const notes = Array.isArray(progress.notes) ? progress.notes.join("\n") : "";
+  const status = progress.status || "not_started";
+  const disabled = state.mode !== "personal" ? "disabled" : "";
+  target.className = "reading-detail";
+  target.innerHTML = `
+    <article class="reading-item reading-focus-card">
+      <div class="data-row-head">
+        <span class="strip-label">${escapeHtml(status.replaceAll("_", " "))}</span>
+        <strong>${escapeHtml(selected.title)}</strong>
+      </div>
+      <p class="meta-inline">${escapeHtml(selected.author)} | ${escapeHtml((selected.categories || []).slice(0, 3).join(", "))}</p>
+      <p>${escapeHtml(selected.summary)}</p>
+      <p class="meta-inline">${escapeHtml((selected.key_themes || []).slice(0, 4).join(" | "))}</p>
+      <label>
+        <span>Status</span>
+        <select data-reading-status="${escapeHtml(selected.slug)}" ${disabled}>
+          ${["not_started", "in_progress", "completed"]
+            .map(
+              (value) =>
+                `<option value="${value}" ${value === status ? "selected" : ""}>${value.replaceAll("_", " ")}</option>`,
+            )
+            .join("")}
+        </select>
+      </label>
+      <label>
+        <span>Notes</span>
+        <textarea data-reading-notes="${escapeHtml(selected.slug)}" rows="5" ${disabled} placeholder="Thoughts, PME takeaways, or why this matters to your lane.">${escapeHtml(notes)}</textarea>
+      </label>
+      <div class="button-row">
+        <button type="button" class="secondary" data-reading-save="${escapeHtml(selected.slug)}" ${disabled}>Save reading state</button>
+      </div>
+    </article>
+  `;
 }
 
 function renderDailyBrief(payload) {
