@@ -91,6 +91,18 @@ class ChatGptBridgeAdapter:
     async def run_joint_interagency_frame_advisor(self, payload: dict[str, object]) -> dict[str, object]:
         return await self.run_staff_agent(agent_id="joint-interagency-frame-advisor", payload=payload)
 
+    async def run_mos_adjutant_0102_advisor(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.run_staff_agent(agent_id="mos-adjutant-0102", payload=payload)
+
+    async def run_mos_logistics_0402_advisor(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.run_staff_agent(agent_id="mos-logistics-0402", payload=payload)
+
+    async def run_mos_supply_3002_advisor(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.run_staff_agent(agent_id="mos-supply-3002", payload=payload)
+
+    async def run_mos_magtf_planner_0511_advisor(self, payload: dict[str, object]) -> dict[str, object]:
+        return await self.run_staff_agent(agent_id="mos-magtf-planner-0511", payload=payload)
+
     async def run_infantry_03xx_advisor(self, payload: dict[str, object]) -> dict[str, object]:
         return await self.run_staff_agent(agent_id="infantry-03xx-advisor", payload=payload)
 

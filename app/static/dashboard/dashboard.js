@@ -12,6 +12,41 @@ const state = {
   clockTimer: null,
 };
 
+const MOS_BENCH_CATALOG = [
+  {
+    id: "mos-adjutant-0102",
+    label: "0102 / Adjutant",
+    parent: "S-1",
+    summary: "Accountability, correspondence, awards, staffing discipline, and reserve admin continuity.",
+    starter:
+      "Help me tighten accountability and correspondence continuity between drills and show me what an XO will ask first.",
+  },
+  {
+    id: "mos-logistics-0402",
+    label: "0402 / Logistics officer",
+    parent: "S-4",
+    summary: "Supportability, sustainment judgment, lead times, and what breaks the plan first.",
+    starter:
+      "Help me clean up the logistics estimate for AT and show me the first supportability problem I should brief.",
+  },
+  {
+    id: "mos-supply-3002",
+    label: "3002 / Supply officer",
+    parent: "S-4",
+    summary: "Supply accountability, fiscal discipline, inventory readiness, and command supply risk.",
+    starter:
+      "Help me think through supply accountability before drill and surface the risks that are easiest to miss.",
+  },
+  {
+    id: "mos-magtf-planner-0511",
+    label: "0511 / MAGTF planner",
+    parent: "S-3",
+    summary: "Mission analysis, planning support, assumption control, and staff-integration discipline.",
+    starter:
+      "Help me keep mission analysis and staff integration clean so the planning process does not drift into busy slides.",
+  },
+];
+
 for (const button of document.querySelectorAll(".lane-button")) {
   button.addEventListener("click", () => {
     state.activeLane = button.dataset.lane || "overview";
@@ -103,6 +138,11 @@ document.getElementById("brief-clinic-form").addEventListener("submit", async (e
     }),
   });
   renderBriefClinicOutput("brief-clinic-output", data);
+});
+
+document.getElementById("mos-advisor-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await runMosAdvisorFromForm();
 });
 
 document.getElementById("staff-cycle-form").addEventListener("submit", async (event) => {
@@ -203,6 +243,12 @@ document.addEventListener("click", async (event) => {
     return;
   }
 
+  const mosBenchButton = event.target.closest("[data-mos-bench]");
+  if (mosBenchButton) {
+    openMosBenchLane(mosBenchButton.dataset.mosBench);
+    return;
+  }
+
   const feedToggle = event.target.closest("[data-feed-toggle]");
   if (feedToggle) {
     await toggleCustomFeed(feedToggle.dataset.feedToggle);
@@ -261,6 +307,7 @@ function renderWorkspace(payload) {
   renderDocumentsWatch(payload.document_summary || payload.chief_brief?.document_summary || { records: [] });
   renderDocumentLibrary(payload.document_details || []);
   renderTemplateLibrary(payload.template_library || []);
+  renderMosBenchLibrary();
   renderSectionMemoryProfile(payload.section_memory_profile || null);
   renderMaradminTicker(payload.maradmin_ticker || []);
   renderTickerStack("navadmin-ticker", payload.navadmin_ticker || [], "No NAVADMIN items loaded yet.");
@@ -694,6 +741,25 @@ function renderTemplateLibrary(items) {
       `,
     )
     .join("");
+}
+
+function renderMosBenchLibrary() {
+  const target = document.getElementById("mos-bench-library");
+  target.className = "row-stack";
+  target.innerHTML = MOS_BENCH_CATALOG.map(
+    (item) => `
+      <article class="data-row">
+        <div class="data-row-head">
+          <span class="strip-label">${escapeHtml(item.parent)}</span>
+          <strong>${escapeHtml(item.label)}</strong>
+        </div>
+        <p>${escapeHtml(item.summary)}</p>
+        <div class="button-row compact-controls">
+          <button type="button" class="secondary" data-mos-bench="${escapeHtml(item.id)}">Open lane</button>
+        </div>
+      </article>
+    `,
+  ).join("");
 }
 
 function renderSectionMemoryProfile(profile) {
@@ -1193,6 +1259,29 @@ function renderBriefClinicOutput(targetId, payload) {
   `;
 }
 
+function renderAgentAdvisoryOutput(targetId, payload) {
+  const target = document.getElementById(targetId);
+  target.className = "tool-output";
+  target.innerHTML = `
+    <section>
+      <span class="strip-label">Advisor answer</span>
+      <p>${escapeHtml(payload.answer || "No answer returned.")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Follow-up questions</span>
+      <ul>${(payload.follow_up_questions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No follow-up questions returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Warnings</span>
+      <ul>${(payload.warnings || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No warnings returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Citations</span>
+      <ul>${(payload.citations || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No citations returned.</li>"}</ul>
+    </section>
+  `;
+}
+
 function renderLonePlannerOutput(targetId, payload) {
   const target = document.getElementById(targetId);
   const planningCell = payload.planning_cell || {};
@@ -1430,6 +1519,44 @@ async function runSectionGapCover() {
   } catch (error) {
     setWorkspaceNote(error.message, true);
   }
+}
+
+function openMosBenchLane(agentId) {
+  const item = MOS_BENCH_CATALOG.find((entry) => entry.id === agentId);
+  if (!item) {
+    setWorkspaceNote("That MOS lane is not available.", true);
+    return;
+  }
+  const form = document.getElementById("mos-advisor-form");
+  form.elements.mos_tool.value = item.id;
+  form.elements.prompt.value = item.starter;
+  state.activeLane = "draft";
+  applyLaneVisibility();
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+  setWorkspaceNote(`Opened the ${item.label} lane.`);
+}
+
+async function runMosAdvisorFromForm() {
+  const form = document.getElementById("mos-advisor-form");
+  const toolId = form.elements.mos_tool.value;
+  const prompt = String(form.elements.prompt.value || "").trim();
+  const audience = String(form.elements.audience.value || "SMCR officer").trim();
+  if (!prompt) {
+    setWorkspaceNote("Add a prompt before running the MOS advisor.", true);
+    return;
+  }
+  const data = await apiFetch(`/agents/${encodeURIComponent(toolId)}/run`, {
+    method: "POST",
+    body: JSON.stringify({
+      input: prompt,
+      context: {
+        user_key: state.userKey || undefined,
+        request_is_training_or_fictional: true,
+        user_role: audience,
+      },
+    }),
+  });
+  renderAgentAdvisoryOutput("mos-advisor-output", data);
 }
 
 async function saveBattleRhythmBoard() {

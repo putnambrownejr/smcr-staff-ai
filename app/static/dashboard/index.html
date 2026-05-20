@@ -547,6 +547,14 @@
             <div id="template-library" class="row-stack empty-state">No templates are loaded yet.</div>
           </article>
 
+          <article class="panel">
+            <div class="panel-header">
+              <h2>MOS bench</h2>
+              <p>Quick access to the MOS slices that sit under the staff sections and help thin-bench officers cover down faster.</p>
+            </div>
+            <div id="mos-bench-library" class="row-stack empty-state">MOS lane shortcuts will appear here.</div>
+          </article>
+
           <article class="panel full-span">
             <div class="panel-header">
               <h2>Section Bench Notebook</h2>
@@ -747,6 +755,42 @@
               </div>
             </form>
             <div id="brief-clinic-output" class="tool-output empty-state">Brief-clinic feedback will appear here.</div>
+          </article>
+
+          <article class="panel tool-panel">
+            <div class="panel-header">
+              <h2>MOS advisor</h2>
+              <p>Run a focused staff MOS lane when you need the narrower officer slice under S-1, S-3, or S-4.</p>
+            </div>
+            <form id="mos-advisor-form" class="tool-form">
+              <div class="form-row">
+                <label>
+                  <span>MOS lane</span>
+                  <select name="mos_tool">
+                    <option value="mos-adjutant-0102">0102 / Adjutant</option>
+                    <option value="mos-logistics-0402">0402 / Logistics officer</option>
+                    <option value="mos-supply-3002">3002 / Supply officer</option>
+                    <option value="mos-magtf-planner-0511">0511 / MAGTF planner</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Audience / role</span>
+                  <input name="audience" type="text" value="SMCR officer" />
+                </label>
+              </div>
+              <label>
+                <span>Prompt</span>
+                <textarea
+                  name="prompt"
+                  rows="6"
+                  placeholder="Help me tighten the logistics estimate for AT and show me what the XO will ask first."
+                ></textarea>
+              </label>
+              <div class="button-row">
+                <button type="submit">Run MOS advisor</button>
+              </div>
+            </form>
+            <div id="mos-advisor-output" class="tool-output empty-state">MOS-specific advisory output will appear here.</div>
           </article>
 
           <article class="panel tool-panel">

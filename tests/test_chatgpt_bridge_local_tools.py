@@ -221,7 +221,9 @@ async def test_build_lone_planner_via_adapter() -> None:
     assert result["posture"]
     assert result["walk_in_brief"]
     assert result["likely_blind_spots"]
-    assert result["planning_cell"]["mission_analysis"]["mission_statement"]
+    planning_cell = cast(dict[str, Any], result["planning_cell"])
+    mission_analysis = cast(dict[str, Any], planning_cell["mission_analysis"])
+    assert mission_analysis["mission_statement"]
 
 
 @pytest.mark.anyio
@@ -276,9 +278,11 @@ async def test_set_and_get_section_memory_profile_via_adapter() -> None:
 
     fetched = await adapter.get_section_memory_profile(user_key="capt-memory-tool")
 
-    assert saved["profile"]["user_key"] == "capt-memory-tool"
+    saved_profile = cast(dict[str, Any], saved["profile"])
+    assert saved_profile["user_key"] == "capt-memory-tool"
     assert fetched["user_key"] == "capt-memory-tool"
-    assert fetched["entries"][0]["section"] == "S-4"
+    entries = cast(list[dict[str, Any]], fetched["entries"])
+    assert entries[0]["section"] == "S-4"
 
 
 @pytest.mark.anyio
@@ -293,8 +297,9 @@ async def test_build_walk_in_brief_pack_via_adapter() -> None:
         }
     )
 
-    assert result["walk_in_brief_pack"]["current_state"]
-    assert result["walk_in_brief_pack"]["before_you_walk_in"]
+    walk_in_pack = cast(dict[str, Any], result["walk_in_brief_pack"])
+    assert walk_in_pack["current_state"]
+    assert walk_in_pack["before_you_walk_in"]
 
 
 @pytest.mark.anyio
@@ -340,6 +345,66 @@ async def test_run_infantry_03xx_advisor_via_adapter() -> None:
 
     assert result["agent_id"] == "infantry-03xx-advisor"
     assert "Infantry / 03XX advisory draft under the S-3 family." in cast(str, result["answer"])
+
+
+@pytest.mark.anyio
+async def test_run_mos_adjutant_0102_advisor_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_mos_adjutant_0102_advisor(
+        {
+            "input": "Help me tighten accountability and correspondence continuity between drills.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "mos-adjutant-0102"
+    assert "S-1 lane" in cast(str, result["answer"])
+
+
+@pytest.mark.anyio
+async def test_run_mos_logistics_0402_advisor_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_mos_logistics_0402_advisor(
+        {
+            "input": "Help me clean up the logistics estimate for AT.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "mos-logistics-0402"
+    assert "S-4 lane" in cast(str, result["answer"])
+
+
+@pytest.mark.anyio
+async def test_run_mos_supply_3002_advisor_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_mos_supply_3002_advisor(
+        {
+            "input": "Help me think through supply accountability before drill.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "mos-supply-3002"
+    assert "S-4 lane" in cast(str, result["answer"])
+
+
+@pytest.mark.anyio
+async def test_run_mos_magtf_planner_0511_advisor_via_adapter() -> None:
+    adapter = ChatGptBridgeAdapter(app=create_app())
+
+    result = await adapter.run_mos_magtf_planner_0511_advisor(
+        {
+            "input": "Help me keep mission analysis and staff integration clean.",
+            "context": {"request_is_training_or_fictional": True, "user_role": "SMCR officer"},
+        }
+    )
+
+    assert result["agent_id"] == "mos-magtf-planner-0511"
+    assert "S-3 lane" in cast(str, result["answer"])
 
 
 @pytest.mark.anyio

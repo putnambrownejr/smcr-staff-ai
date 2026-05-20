@@ -44,6 +44,10 @@ Why:
 - `run_assessment_learning_advisor`
 - `run_writing_briefing_coach`
 - `run_joint_interagency_frame_advisor`
+- `run_mos_adjutant_0102_advisor`
+- `run_mos_logistics_0402_advisor`
+- `run_mos_supply_3002_advisor`
+- `run_mos_magtf_planner_0511_advisor`
 - `list_staff_agents`
 - `run_staff_agent`
 - `build_chief_brief`
@@ -130,6 +134,18 @@ backup.
 
 `run_joint_interagency_frame_advisor` is the external-frame lane. Use it when the Marine-only view is too
 narrow and the staff needs help with command relationships, outside actors, and coordination assumptions.
+
+`run_mos_adjutant_0102_advisor` is the S-1 MOS lane. Use it when the user wants the 0102 adjutant/manpower
+officer slice: command correspondence, accountability, staffing discipline, awards, and reserve admin continuity.
+
+`run_mos_logistics_0402_advisor` is the S-4 MOS lane for supportability. Use it when the user wants the 0402
+officer slice: sustainment judgment, lead times, support priorities, and what will break the plan first.
+
+`run_mos_supply_3002_advisor` is the S-4 MOS lane for supply accountability. Use it when the user wants the
+3002 officer slice: property visibility, fiscal discipline, inventories, and command supply risk.
+
+`run_mos_magtf_planner_0511_advisor` is the S-3 MOS lane for planning support. Use it when the user wants the
+0511 planner slice: mission analysis, assumption control, staff integration, and keeping MCPP support products honest.
 
 `draft_staff_product` is now also the right lane for briefing content when you want a deck outline that behaves
 like a real staff brief instead of a generic AI slide dump. Use `decision_brief` or `command_update_brief`

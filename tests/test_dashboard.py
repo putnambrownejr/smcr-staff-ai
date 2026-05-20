@@ -65,6 +65,8 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Battle Rhythm Board" in response.text
     assert "Continuity watch" in response.text
     assert "Section Bench Notebook" in response.text
+    assert "MOS bench" in response.text
+    assert "MOS advisor" in response.text
     assert "Save section memory" in response.text
     assert "Save battle rhythm board" in response.text
     assert "Commander decision log (one per line" in response.text
@@ -124,6 +126,7 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "staff-cycle-form",
         "planning-cell-form",
         "section-memory-form",
+        "mos-advisor-form",
     ]
     for form_id in form_ids:
         assert f'id="{form_id}"' in html
@@ -147,10 +150,15 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'id="section-gap-cover-output"' in html
     assert 'renderSectionGapCoverOutput(' in js
     assert 'id="section-memory-library"' in html
+    assert 'id="mos-bench-library"' in html
+    assert 'id="mos-advisor-output"' in html
     assert 'renderSectionMemoryProfile(' in js
+    assert 'renderMosBenchLibrary(' in js
+    assert 'renderAgentAdvisoryOutput(' in js
     assert 'data-section-memory-edit' in js
     assert 'data-section-memory-delete' in js
     assert 'data-section-memory-seed' in js
+    assert 'data-mos-bench' in js
 
 
 def test_demo_dashboard_data_route_returns_workspace_payload() -> None:

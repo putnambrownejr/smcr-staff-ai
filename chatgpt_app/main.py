@@ -638,6 +638,62 @@ TOOL_SPECS: list[types.Tool] = [
         ),
     ),
     types.Tool(
+        name="run_mos_adjutant_0102_advisor",
+        title="Run MOS 0102 Adjutant Advisor",
+        description=(
+            "Use this when the user wants the 0102 officer slice under S-1: accountability, correspondence, "
+            "awards, staffing discipline, and reserve admin continuity."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the 0102 adjutant advisor",
+            "MOS 0102 adjutant advisor ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="run_mos_logistics_0402_advisor",
+        title="Run MOS 0402 Logistics Officer Advisor",
+        description=(
+            "Use this when the user wants the 0402 officer slice under S-4: supportability, sustainment judgment, "
+            "lead times, movement friction, and what breaks the plan first."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the 0402 logistics advisor",
+            "MOS 0402 logistics advisor ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="run_mos_supply_3002_advisor",
+        title="Run MOS 3002 Supply Officer Advisor",
+        description=(
+            "Use this when the user wants the 3002 officer slice under S-4: supply accountability, fiscal "
+            "discipline, inventory readiness, and command supply risk."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the 3002 supply advisor",
+            "MOS 3002 supply advisor ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
+        name="run_mos_magtf_planner_0511_advisor",
+        title="Run MOS 0511 MAGTF Planner Advisor",
+        description=(
+            "Use this when the user wants the 0511 planner slice under S-3: mission analysis, planning support, "
+            "assumption control, and staff-integration discipline."
+        ),
+        inputSchema=StaffAgentAssistToolInput.model_json_schema(),
+        _meta=_tool_invocation_meta(
+            "Running the 0511 MAGTF planner advisor",
+            "MOS 0511 MAGTF planner advisor ready",
+            read_only=False,
+        ),
+    ),
+    types.Tool(
         name="list_staff_agents",
         title="List Staff Agents",
         description="Use this when the user wants to see which staff and specialty agents are available.",
@@ -956,6 +1012,34 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
                 {"input": joint_payload.input, "context": joint_payload.context}
             )
             return _ok_result("Ran the joint interagency frame advisor.", result)
+
+        if name == "run_mos_adjutant_0102_advisor":
+            mos_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_mos_adjutant_0102_advisor(
+                {"input": mos_payload.input, "context": mos_payload.context}
+            )
+            return _ok_result("Ran the MOS 0102 adjutant advisor.", result)
+
+        if name == "run_mos_logistics_0402_advisor":
+            mos_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_mos_logistics_0402_advisor(
+                {"input": mos_payload.input, "context": mos_payload.context}
+            )
+            return _ok_result("Ran the MOS 0402 logistics advisor.", result)
+
+        if name == "run_mos_supply_3002_advisor":
+            mos_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_mos_supply_3002_advisor(
+                {"input": mos_payload.input, "context": mos_payload.context}
+            )
+            return _ok_result("Ran the MOS 3002 supply advisor.", result)
+
+        if name == "run_mos_magtf_planner_0511_advisor":
+            mos_payload = StaffAgentAssistToolInput.model_validate(arguments)
+            result = await adapter.run_mos_magtf_planner_0511_advisor(
+                {"input": mos_payload.input, "context": mos_payload.context}
+            )
+            return _ok_result("Ran the MOS 0511 MAGTF planner advisor.", result)
 
         if name == "list_staff_agents":
             result = await adapter.list_agents()
