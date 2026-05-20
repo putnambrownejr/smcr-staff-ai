@@ -30,6 +30,7 @@ from app.schemas.ingestion import MessageRecord
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.reading_state import ReadingProgressRecord
+from app.schemas.section_memory import SectionMemoryProfile
 from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateReviewStatus
 from app.services.actions.tracker import ActionTracker
 from app.services.admin.readiness import AdminReadinessService
@@ -52,6 +53,7 @@ from app.services.reading.live_catalog import load_effective_reading_catalog
 from app.services.reading.state_store import ReadingProgressStore
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.staff.battle_rhythm_store import BattleRhythmStore
+from app.services.staff.section_memory_store import SectionMemoryStore
 from app.services.storage.local_context_store import LocalContextStore
 from app.services.templates.product_template_repository import ProductTemplateRepository
 from app.services.templates.system_template_catalog import SystemTemplateCatalog
@@ -143,6 +145,11 @@ def get_battle_rhythm_store() -> Iterator[BattleRhythmStore]:
     yield BattleRhythmStore(settings.battle_rhythm_storage_dir)
 
 
+def get_section_memory_store() -> Iterator[SectionMemoryStore]:
+    settings = get_settings()
+    yield SectionMemoryStore(settings.section_memory_storage_dir)
+
+
 def get_template_repository() -> Iterator[ProductTemplateRepository]:
     settings = get_settings()
     yield ProductTemplateRepository(settings.product_template_storage_dir)
@@ -212,6 +219,7 @@ def get_dashboard_data(
     organizer: Annotated[PersonalDocumentOrganizer, Depends(get_document_organizer)],
     action_tracker: Annotated[ActionTracker, Depends(get_action_tracker)],
     battle_rhythm_store: Annotated[BattleRhythmStore, Depends(get_battle_rhythm_store)],
+    section_memory_store: Annotated[SectionMemoryStore, Depends(get_section_memory_store)],
     opportunity_tracker: Annotated[OpportunityTracker, Depends(get_opportunity_tracker)],
     update_store: Annotated[DocumentUpdateStore, Depends(get_update_store)],
     template_repository: Annotated[ProductTemplateRepository, Depends(get_template_repository)],
@@ -230,6 +238,7 @@ def get_dashboard_data(
     career_watch = career_service.build_watch(user_key)
     document_summary = organizer.list_documents()
     battle_rhythm = battle_rhythm_store.get(user_key)
+    section_memory_profile = section_memory_store.get(user_key)
     tracked_actions = action_tracker.list(user_key=user_key, include_closed=False)[:12]
     tracked_opportunities = list(opportunity_tracker.list())[:8]
     documentation_updates = [
@@ -254,6 +263,7 @@ def get_dashboard_data(
             system_template_catalog=system_template_catalog,
             template_repository=template_repository,
         ),
+        section_memory_profile=section_memory_profile,
         maradmin_ticker=_maradmin_ticker(maradmin_feed),
         navadmin_ticker=_message_watch_ticker(navadmin_store.list(limit=8)),
         alnav_ticker=_message_watch_ticker(alnav_store.list(limit=8)),
@@ -305,6 +315,7 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
             system_template_catalog=SystemTemplateCatalog.from_yaml(SEED_DIR / "system_templates.example.yaml"),
             template_repository=None,
         ),
+        section_memory_profile=None,
         maradmin_ticker=_maradmin_ticker(maradmin_feed),
         navadmin_ticker=_message_watch_ticker(navadmin_feed),
         alnav_ticker=_message_watch_ticker(alnav_feed),
@@ -334,6 +345,7 @@ def _workspace_response(
     documentation_updates: list[DocumentationUpdateCandidate],
     document_details: list[DashboardDocumentDetail],
     template_library: list[DashboardTemplateReference],
+    section_memory_profile: SectionMemoryProfile | None,
     maradmin_ticker: list[DashboardTickerItem],
     navadmin_ticker: list[DashboardTickerItem],
     alnav_ticker: list[DashboardTickerItem],
@@ -384,6 +396,7 @@ def _workspace_response(
         documentation_updates=documentation_updates,
         document_details=document_details,
         template_library=template_library,
+        section_memory_profile=section_memory_profile,
         maradmin_ticker=maradmin_ticker,
         navadmin_ticker=navadmin_ticker,
         alnav_ticker=alnav_ticker,

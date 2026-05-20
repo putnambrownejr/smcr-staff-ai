@@ -549,6 +549,80 @@
 
           <article class="panel full-span">
             <div class="panel-header">
+              <h2>Section Bench Notebook</h2>
+              <p>Local-only recurring staff memory for what your reserve bench usually misses, asks, or needs checked.</p>
+            </div>
+            <form id="section-memory-form" class="tool-form">
+              <div class="form-row">
+                <label>
+                  <span>Section lane</span>
+                  <select name="section">
+                    <option value="S-1/Admin">S-1 / Admin</option>
+                    <option value="S-3">S-3</option>
+                    <option value="S-4">S-4</option>
+                    <option value="S-6">S-6</option>
+                    <option value="XO/Chief">XO / Chief</option>
+                    <option value="SEL">SEL / 1stSgt / SgtMaj</option>
+                    <option value="Medical">Medical</option>
+                    <option value="G-9">G-9</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Memory title</span>
+                  <input name="title" type="text" placeholder="Usual S-6 friction" />
+                </label>
+              </div>
+              <div class="form-row">
+                <label>
+                  <span>Recurring questions (one per line)</span>
+                  <textarea
+                    name="recurring_questions"
+                    rows="4"
+                    placeholder="What access issue slows this unit first?"
+                  ></textarea>
+                </label>
+                <label>
+                  <span>Recurring failure modes (one per line)</span>
+                  <textarea
+                    name="recurring_failure_modes"
+                    rows="4"
+                    placeholder="Reporting plan gets too complicated."
+                  ></textarea>
+                </label>
+              </div>
+              <div class="form-row">
+                <label>
+                  <span>Preferred checks (one per line)</span>
+                  <textarea
+                    name="preferred_checks"
+                    rows="4"
+                    placeholder="Force one primary reporting method before final brief."
+                  ></textarea>
+                </label>
+                <label>
+                  <span>Notes (one per line)</span>
+                  <textarea
+                    name="notes"
+                    rows="4"
+                    placeholder="This unit usually needs a comms simplification pass."
+                  ></textarea>
+                </label>
+              </div>
+              <div class="button-row">
+                <button type="submit">Save section memory</button>
+                <button type="button" class="secondary" id="clear-section-memory-form">Clear form</button>
+              </div>
+              <p class="helper-text">
+                This stays local to your workspace and is meant to sharpen lone-planner and gap-cover outputs over time.
+              </p>
+            </form>
+            <div id="section-memory-library" class="row-stack empty-state">
+              No recurring section memory is stored yet.
+            </div>
+          </article>
+
+          <article class="panel full-span">
+            <div class="panel-header">
               <h2>Commandant's Reading List</h2>
               <p>Track what you’ve read, keep notes, and let future recommendations key off your reading history.</p>
             </div>

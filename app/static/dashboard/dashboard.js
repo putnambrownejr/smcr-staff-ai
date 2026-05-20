@@ -35,6 +35,16 @@ document.getElementById("load-personal").addEventListener("click", () => {
   loadWorkspace();
 });
 
+document.getElementById("section-memory-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await saveSectionMemoryProfile();
+});
+
+document.getElementById("clear-section-memory-form").addEventListener("click", () => {
+  clearSectionMemoryForm();
+  setWorkspaceNote("Section-memory form cleared.");
+});
+
 document.getElementById("battle-rhythm-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   await saveBattleRhythmBoard();
@@ -175,6 +185,24 @@ document.addEventListener("click", async (event) => {
     return;
   }
 
+  const sectionMemoryEditButton = event.target.closest("[data-section-memory-edit]");
+  if (sectionMemoryEditButton) {
+    editSectionMemoryEntry(sectionMemoryEditButton.dataset.sectionMemoryEdit);
+    return;
+  }
+
+  const sectionMemoryDeleteButton = event.target.closest("[data-section-memory-delete]");
+  if (sectionMemoryDeleteButton) {
+    await deleteSectionMemoryEntry(sectionMemoryDeleteButton.dataset.sectionMemoryDelete);
+    return;
+  }
+
+  const sectionMemorySeedButton = event.target.closest("[data-section-memory-seed]");
+  if (sectionMemorySeedButton) {
+    seedSectionMemoryEntry(sectionMemorySeedButton.dataset.sectionMemorySeed);
+    return;
+  }
+
   const feedToggle = event.target.closest("[data-feed-toggle]");
   if (feedToggle) {
     await toggleCustomFeed(feedToggle.dataset.feedToggle);
@@ -233,6 +261,7 @@ function renderWorkspace(payload) {
   renderDocumentsWatch(payload.document_summary || payload.chief_brief?.document_summary || { records: [] });
   renderDocumentLibrary(payload.document_details || []);
   renderTemplateLibrary(payload.template_library || []);
+  renderSectionMemoryProfile(payload.section_memory_profile || null);
   renderMaradminTicker(payload.maradmin_ticker || []);
   renderTickerStack("navadmin-ticker", payload.navadmin_ticker || [], "No NAVADMIN items loaded yet.");
   renderTickerStack("alnav-ticker", payload.alnav_ticker || [], "No ALNAV items loaded yet.");
@@ -664,6 +693,40 @@ function renderTemplateLibrary(items) {
         </article>
       `,
     )
+    .join("");
+}
+
+function renderSectionMemoryProfile(profile) {
+  const target = document.getElementById("section-memory-library");
+  const entries = profile?.entries || [];
+  if (!entries.length) {
+    target.className = "row-stack empty-state";
+    target.textContent = "No recurring section memory is stored yet.";
+    clearSectionMemoryForm();
+    return;
+  }
+  target.className = "row-stack";
+  target.innerHTML = entries
+    .map((entry) => {
+      const entryKey = sectionMemoryEntryKey(entry);
+      return `
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(entry.section)}</span>
+            <strong>${escapeHtml(entry.title)}</strong>
+            <span class="meta-inline">${escapeHtml(formatSectionMemoryUpdatedAt(entry.updated_at))}</span>
+          </div>
+          <p><strong>Questions:</strong> ${escapeHtml((entry.recurring_questions || []).slice(0, 3).join(" | ") || "None stored")}</p>
+          <p><strong>Failure modes:</strong> ${escapeHtml((entry.recurring_failure_modes || []).slice(0, 3).join(" | ") || "None stored")}</p>
+          <p><strong>Checks:</strong> ${escapeHtml((entry.preferred_checks || []).slice(0, 3).join(" | ") || "None stored")}</p>
+          <p class="meta-inline">${escapeHtml((entry.notes || []).slice(0, 3).join(" | ") || "No extra notes stored.")}</p>
+          <div class="button-row compact-controls">
+            <button type="button" class="secondary" data-section-memory-edit="${escapeHtml(entryKey)}">Edit</button>
+            <button type="button" class="secondary" data-section-memory-delete="${escapeHtml(entryKey)}">Delete</button>
+          </div>
+        </article>
+      `;
+    })
     .join("");
 }
 
@@ -1206,6 +1269,24 @@ function renderSectionGapCoverOutput(targetId, payload) {
             <p><strong>Support facts:</strong> ${escapeHtml((item.likely_support_facts || []).join(" | ") || "None stated")}</p>
             <p><strong>Coordination:</strong> ${escapeHtml((item.likely_coordination || []).join(" | ") || "None stated")}</p>
             <ul>${(item.draft_estimate_lines || []).map((line) => `<li>${escapeHtml(line)}</li>`).join("") || "<li>No draft estimate lines returned.</li>"}</ul>
+            <div class="button-row compact-controls">
+              <button
+                type="button"
+                class="secondary"
+                data-section-memory-seed="${escapeHtml(
+                  encodeSectionMemorySeed({
+                    section: item.section,
+                    title: `${item.section} recurring estimate checks`,
+                    recurring_questions: item.likely_questions || [],
+                    recurring_failure_modes: item.confidence_note ? [item.confidence_note] : [],
+                    preferred_checks: item.likely_coordination || [],
+                    notes: item.likely_support_facts || [],
+                  }),
+                )}"
+              >
+                Save as section memory starter
+              </button>
+            </div>
           </section>
         `,
       )
@@ -1675,6 +1756,138 @@ function normalizePosture(value) {
     return "steady";
   }
   return "default";
+}
+
+function currentSectionMemoryEntries() {
+  return state.workspace?.section_memory_profile?.entries || [];
+}
+
+function sectionMemoryEntryKey(entry) {
+  return `${String(entry.section || "").trim().toLowerCase()}::${String(entry.title || "").trim().toLowerCase()}`;
+}
+
+function formatSectionMemoryUpdatedAt(value) {
+  if (!value) {
+    return "Not yet updated";
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Update time unavailable";
+  }
+  return `Updated ${parsed.toLocaleDateString()}`;
+}
+
+function populateSectionMemoryForm(entry = null) {
+  const form = document.getElementById("section-memory-form");
+  if (!form) {
+    return;
+  }
+  form.dataset.entryKey = entry ? sectionMemoryEntryKey(entry) : "";
+  form.elements.section.value = entry?.section || "S-1/Admin";
+  form.elements.title.value = entry?.title || "";
+  form.elements.recurring_questions.value = (entry?.recurring_questions || []).join("\n");
+  form.elements.recurring_failure_modes.value = (entry?.recurring_failure_modes || []).join("\n");
+  form.elements.preferred_checks.value = (entry?.preferred_checks || []).join("\n");
+  form.elements.notes.value = (entry?.notes || []).join("\n");
+}
+
+function clearSectionMemoryForm() {
+  populateSectionMemoryForm();
+}
+
+function editSectionMemoryEntry(entryKey) {
+  const entry = currentSectionMemoryEntries().find((item) => sectionMemoryEntryKey(item) === entryKey);
+  if (!entry) {
+    setWorkspaceNote("Could not find that section-memory entry in the current workspace.", true);
+    return;
+  }
+  populateSectionMemoryForm(entry);
+  state.activeLane = "library";
+  applyLaneVisibility();
+  document.getElementById("section-memory-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  setWorkspaceNote(`Editing section memory for ${entry.section}.`);
+}
+
+async function deleteSectionMemoryEntry(entryKey) {
+  if (state.mode !== "personal" || !state.userKey) {
+    setWorkspaceNote("Open your personal workspace first so section memory stays local to your profile.", true);
+    return;
+  }
+  const nextEntries = currentSectionMemoryEntries().filter((item) => sectionMemoryEntryKey(item) !== entryKey);
+  try {
+    await apiFetch(`/section-memory/${encodeURIComponent(state.userKey)}`, {
+      method: "PUT",
+      auth: true,
+      body: JSON.stringify({ entries: nextEntries }),
+    });
+    await loadWorkspace();
+    clearSectionMemoryForm();
+    setWorkspaceNote("Section-memory entry removed.");
+  } catch (error) {
+    setWorkspaceNote(error.message, true);
+  }
+}
+
+function buildSectionMemoryEntryFromForm() {
+  const form = new FormData(document.getElementById("section-memory-form"));
+  return {
+    section: String(form.get("section") || "").trim(),
+    title: String(form.get("title") || "").trim(),
+    recurring_questions: splitLines(form.get("recurring_questions")),
+    recurring_failure_modes: splitLines(form.get("recurring_failure_modes")),
+    preferred_checks: splitLines(form.get("preferred_checks")),
+    notes: splitLines(form.get("notes")),
+  };
+}
+
+async function saveSectionMemoryProfile() {
+  if (state.mode !== "personal" || !state.userKey) {
+    setWorkspaceNote("Open your personal workspace first so section memory stays local to your profile.", true);
+    return;
+  }
+  const form = document.getElementById("section-memory-form");
+  const entry = buildSectionMemoryEntryFromForm();
+  if (!entry.section || !entry.title) {
+    setWorkspaceNote("Section lane and memory title are required.", true);
+    return;
+  }
+  const currentEntries = currentSectionMemoryEntries();
+  const existingKey = form.dataset.entryKey || "";
+  const nextEntries = currentEntries.filter((item) => sectionMemoryEntryKey(item) !== existingKey);
+  nextEntries.push(entry);
+  try {
+    await apiFetch(`/section-memory/${encodeURIComponent(state.userKey)}`, {
+      method: "PUT",
+      auth: true,
+      body: JSON.stringify({ entries: nextEntries }),
+    });
+    await loadWorkspace();
+    populateSectionMemoryForm(entry);
+    setWorkspaceNote(`Saved section memory for ${entry.section}.`);
+  } catch (error) {
+    setWorkspaceNote(error.message, true);
+  }
+}
+
+function encodeSectionMemorySeed(seed) {
+  return encodeURIComponent(JSON.stringify(seed));
+}
+
+function decodeSectionMemorySeed(value) {
+  return JSON.parse(decodeURIComponent(value));
+}
+
+function seedSectionMemoryEntry(encodedSeed) {
+  try {
+    const seed = decodeSectionMemorySeed(encodedSeed);
+    populateSectionMemoryForm(seed);
+    state.activeLane = "library";
+    applyLaneVisibility();
+    document.getElementById("section-memory-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setWorkspaceNote(`Loaded a section-memory starter for ${seed.section}.`);
+  } catch (_error) {
+    setWorkspaceNote("Could not load that section-memory starter.", true);
+  }
 }
 
 loadWorkspace();

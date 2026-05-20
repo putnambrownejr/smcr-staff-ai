@@ -15,6 +15,7 @@ from app.api.routes.dashboard import (
     get_dod_watch_store,
     get_navadmin_store,
     get_opportunity_tracker,
+    get_section_memory_store,
     get_update_store,
 )
 from app.main import app
@@ -24,6 +25,7 @@ from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
 from app.schemas.custom_watch_feeds import CreateCustomWatchFeedRequest
 from app.schemas.ingestion import MessageRecord
 from app.schemas.opportunities import ManualOpportunityRequest
+from app.schemas.section_memory import SectionMemoryEntry, SectionMemoryProfileUpsertRequest
 from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff
 from app.schemas.source_updates import DocumentationUpdateCandidate
 from app.services.actions.tracker import ActionTracker
@@ -39,6 +41,7 @@ from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.staff.battle_rhythm_store import BattleRhythmStore
+from app.services.staff.section_memory_store import SectionMemoryStore
 from app.services.storage.local_context_store import LocalContextStore
 
 
@@ -61,6 +64,8 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Time zones" in response.text
     assert "Battle Rhythm Board" in response.text
     assert "Continuity watch" in response.text
+    assert "Section Bench Notebook" in response.text
+    assert "Save section memory" in response.text
     assert "Save battle rhythm board" in response.text
     assert "Commander decision log (one per line" in response.text
     assert "Save to battle rhythm board" in response.text
@@ -95,6 +100,7 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "refresh-navadmins",
         "refresh-alnavs",
         "refresh-dod-watch",
+        "clear-section-memory-form",
         "thin-staff-run-lone-planner",
         "thin-staff-open-mission-analysis",
         "thin-staff-open-planning-cell",
@@ -117,6 +123,7 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "brief-clinic-form",
         "staff-cycle-form",
         "planning-cell-form",
+        "section-memory-form",
     ]
     for form_id in form_ids:
         assert f'id="{form_id}"' in html
@@ -139,6 +146,11 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'renderBattleRhythmHealth(' in js
     assert 'id="section-gap-cover-output"' in html
     assert 'renderSectionGapCoverOutput(' in js
+    assert 'id="section-memory-library"' in html
+    assert 'renderSectionMemoryProfile(' in js
+    assert 'data-section-memory-edit' in js
+    assert 'data-section-memory-delete' in js
+    assert 'data-section-memory-seed' in js
 
 
 def test_demo_dashboard_data_route_returns_workspace_payload() -> None:
@@ -164,6 +176,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     update_store = DocumentUpdateStore(tmp_path / "updates")
     custom_feed_store = CustomWatchFeedStore(tmp_path / "custom_feeds")
     battle_rhythm_store = BattleRhythmStore(tmp_path / "battle_rhythm")
+    section_memory_store = SectionMemoryStore(tmp_path / "section_memory")
     navadmin_store = MessageRecordStore(tmp_path / "navadmins")
     alnav_store = MessageRecordStore(tmp_path / "alnavs")
     dod_store = MessageRecordStore(tmp_path / "dod")
@@ -280,6 +293,20 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
             next_touchpoint="Before the next drill sync, confirm assumptions and named due-outs.",
         ),
     )
+    section_memory_store.upsert(
+        "capt-dash",
+        SectionMemoryProfileUpsertRequest(
+            entries=[
+                SectionMemoryEntry(
+                    section="S-6",
+                    title="Usual S-6 friction",
+                    recurring_questions=["What access issue slows this unit first?"],
+                    preferred_checks=["Force one primary reporting method before the final brief."],
+                    notes=["This unit usually needs a comms simplification pass."],
+                )
+            ]
+        ),
+    )
 
     def override_orchestrator() -> ChiefAideOrchestrator:
         return ChiefAideOrchestrator(
@@ -333,6 +360,9 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     def override_dod_store() -> MessageRecordStore:
         return dod_store
 
+    def override_section_memory_store() -> SectionMemoryStore:
+        return section_memory_store
+
     app.dependency_overrides[get_chief_orchestrator] = override_orchestrator
     app.dependency_overrides[get_admin_service] = override_admin
     app.dependency_overrides[get_career_service] = override_career
@@ -345,6 +375,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     app.dependency_overrides[get_navadmin_store] = override_navadmin_store
     app.dependency_overrides[get_alnav_store] = override_alnav_store
     app.dependency_overrides[get_dod_watch_store] = override_dod_store
+    app.dependency_overrides[get_section_memory_store] = override_section_memory_store
 
     client = TestClient(app)
     try:
@@ -368,6 +399,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["documentation_updates"][0]["tracked_title"] == "MCO 1610.7"
         assert payload["custom_watch_feeds"][0]["name"] == "Unit updates"
         assert payload["battle_rhythm"]["board_title"] == "June drill board"
+        assert payload["section_memory_profile"]["entries"][0]["section"] == "S-6"
         assert payload["chief_brief"]["battle_rhythm_summary"]
         assert payload["navadmin_ticker"][0]["status"] == "NAVADMIN"
         assert payload["alnav_ticker"][0]["status"] == "ALNAV"

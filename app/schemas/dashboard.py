@@ -10,6 +10,7 @@ from app.schemas.history import TodayInMarineHistoryItem
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.reading_state import ReadingProgressRecord
+from app.schemas.section_memory import SectionMemoryProfile
 from app.schemas.source_updates import DocumentationUpdateCandidate
 
 
@@ -113,6 +114,7 @@ class DashboardWorkspaceResponse(BaseModel):
     documentation_updates: list[DocumentationUpdateCandidate] = Field(default_factory=list)
     document_details: list[DashboardDocumentDetail] = Field(default_factory=list)
     template_library: list[DashboardTemplateReference] = Field(default_factory=list)
+    section_memory_profile: SectionMemoryProfile | None = None
     maradmin_ticker: list[DashboardTickerItem] = Field(default_factory=list)
     navadmin_ticker: list[DashboardTickerItem] = Field(default_factory=list)
     alnav_ticker: list[DashboardTickerItem] = Field(default_factory=list)
