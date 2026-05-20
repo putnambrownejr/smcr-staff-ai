@@ -63,3 +63,16 @@ Formalize security reporting, contributor policy, release process, and source re
 ## Phase 9: Multi-Unit/Multi-Service Expansion
 
 Generalize organizational models, source manifests, and agent registry patterns for broader reserve and joint use.
+
+## Current Priority Shift
+
+The roadmap above reflects the original repo sequence. The current implementation focus has shifted toward:
+
+1. SMCR continuity between drills
+2. thin-bench / lone-planner support
+3. staff battle rhythm and planning-cell discipline
+4. local-only storage, privacy, and user-specific continuity
+5. dashboard-first usability
+
+That means optional ChatGPT/MCP and Docker surfaces are no longer treated as leading roadmap items. They are
+maintained as secondary/legacy surfaces unless a clear user need pulls them forward again.

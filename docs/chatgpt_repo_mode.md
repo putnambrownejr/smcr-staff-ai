@@ -25,7 +25,7 @@ GitHub access does not provide:
 - future email/calendar connector data
 - runtime secrets, environment variables, or local API keys
 
-That distinction matters. ChatGPT can understand the code and use demo workflows from the repo, but private user workflows still depend on a local or hosted runtime.
+That distinction matters. ChatGPT can understand the code and use demo workflows from the repo, but private user workflows still depend on a local runtime. Hosted or ChatGPT/MCP-facing surfaces are optional, not the primary path.
 
 ## Repo-Friendly Design Choices
 
@@ -45,7 +45,7 @@ If ChatGPT only has the repo:
 4. inspect `docs/architecture.md`
 5. inspect `docs/chatgpt_repo_mode.md`
 6. search `app/services/agents/registry.py`
-7. search `chatgpt_app/main.py` and `app/chatgpt_bridge/adapter.py`
+7. search `chatgpt_app/main.py` and `app/chatgpt_bridge/adapter.py` only when the question is specifically about the optional ChatGPT/MCP surface
 8. read `app/main.py` and `app/api/routes/`
 9. use `/demo/*` routes and `docs/examples/` as canonical examples of intended behavior
 
@@ -57,10 +57,13 @@ Minimum search targets:
 
 - `app/services/agents/`
 - `app/services/agents/registry.py`
-- `chatgpt_app/main.py`
-- `app/chatgpt_bridge/adapter.py`
 - `app/api/routes/`
 - `docs/examples/`
+
+Optional only when relevant:
+
+- `chatgpt_app/main.py`
+- `app/chatgpt_bridge/adapter.py`
 
 Typical search patterns:
 
@@ -70,9 +73,9 @@ rg -n "class .*Agent|def build_.*agent" C:\smcr-staff-ai\app\services\agents
 rg -n "@router|APIRouter" C:\smcr-staff-ai\app\api\routes
 ```
 
-## Path To A Fuller ChatGPT Integration
+## Optional ChatGPT Integration
 
-The repo is now friendlier to ChatGPT-as-reader. To make it friendlier to ChatGPT-as-product, the next steps would be:
+The repo is friendlier to ChatGPT-as-reader. If the optional ChatGPT surface is ever promoted again, the next steps would be:
 
 1. refine OpenAPI metadata and tool descriptions further
 2. preserve stateless demo workflows as the public contract

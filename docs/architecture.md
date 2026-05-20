@@ -2,6 +2,18 @@
 
 The initial architecture is backend-first and intentionally modular.
 
+## Primary Path
+
+The primary product path is:
+
+1. local FastAPI backend
+2. local browser dashboard
+3. local-only continuity, memory, and document storage
+
+Optional surfaces such as the ChatGPT/MCP app layer and Docker/container path are kept available, but they are
+quarantined as secondary/legacy surfaces and should not drive default product decisions. See
+[optional_legacy_surfaces.md](/C:/smcr-staff-ai/docs/optional_legacy_surfaces.md).
+
 ## Layers
 
 - `app/api/routes`: FastAPI route handlers and request/response boundaries.
@@ -14,6 +26,16 @@ The initial architecture is backend-first and intentionally modular.
 - `app/services/org_awareness`: Unit hierarchy and exercise cadence support.
 - `app/services/storage`: Local filesystem storage for user-provided working context.
 - `app/services/billets`: Advisory SMCR billet recommendation from parsed public-source listings.
+
+## Optional Legacy Surfaces
+
+These surfaces still exist, but are not the repo's center of gravity:
+
+- `chatgpt_app/`: optional local ChatGPT/MCP-facing surface
+- `app/chatgpt_bridge/`: optional bridge layer for that surface
+- `Dockerfile`, `docker-compose.yml`, `docs/docker_local.md`: optional container path
+
+They should be maintained only insofar as they do not distort the simpler local backend + dashboard workflow.
 
 ## RAG Direction
 
