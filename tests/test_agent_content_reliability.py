@@ -38,6 +38,12 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "fitrep-assistant": "Help me organize FitRep support inputs and suspense items.",
     "osint-research-assistant": "Help me summarize public-source trends for a training scenario.",
     "terrain-map-advisor": "Help me find the right public terrain and topo references for a training area.",
+    "mos-adjutant-0102": "Help me tighten S-1 accountability and correspondence continuity between drills.",
+    "mos-intel-0202": "Help me turn this staff question into a cleaner intelligence estimate.",
+    "mos-logistics-0402": "Help me turn this support concept into a real logistics estimate.",
+    "mos-mobility-0430": "Help me think through embarkation and movement-control friction for AT.",
+    "mos-supply-3002": "Help me think through supply accountability and readiness before drill.",
+    "mos-magtf-planner-0511": "Help me run mission analysis and keep the planning support products straight.",
     "r2p2-planning-assistant": "Help me conduct compressed R2P2-style refinement for a familiar event.",
     "repo-privacy-sweeper": "Review this repo before I push and look for personal data backflow.",
 }

@@ -40,6 +40,12 @@ def test_agent_registry_loads_expected_agents() -> None:
         "infantry-03xx-advisor",
         "osint-research-assistant",
         "terrain-map-advisor",
+        "mos-adjutant-0102",
+        "mos-intel-0202",
+        "mos-logistics-0402",
+        "mos-mobility-0430",
+        "mos-supply-3002",
+        "mos-magtf-planner-0511",
         "mos-commo",
         "mos-civil-affairs",
         "r2p2-planning-assistant",
@@ -226,6 +232,66 @@ def test_mos_commo_agent_reads_as_s6_subordinate_lane() -> None:
     response = agent.run("Help me clean up a reserve comm plan.", context=AgentContext())
 
     assert "S-6 lane" in response.answer
+    assert "Relationship to the parent lane" in response.answer
+    assert response.structured_citations
+
+
+def test_mos_adjutant_agent_reads_as_s1_subordinate_lane() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("mos-adjutant-0102")
+    assert agent is not None
+
+    response = agent.run("Help me tighten accountability and correspondence discipline.", context=AgentContext())
+
+    assert "S-1 lane" in response.answer
+    assert "Relationship to the parent lane" in response.answer
+    assert response.structured_citations
+
+
+def test_mos_logistics_agent_reads_as_s4_subordinate_lane() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("mos-logistics-0402")
+    assert agent is not None
+
+    response = agent.run("Help me clean up the logistics estimate for AT.", context=AgentContext())
+
+    assert "S-4 lane" in response.answer
+    assert "Relationship to the parent lane" in response.answer
+    assert response.structured_citations
+
+
+def test_mos_supply_agent_reads_as_s4_subordinate_lane() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("mos-supply-3002")
+    assert agent is not None
+
+    response = agent.run("Help me think through supply accountability before drill.", context=AgentContext())
+
+    assert "S-4 lane" in response.answer
+    assert "Relationship to the parent lane" in response.answer
+    assert response.structured_citations
+
+
+def test_mos_intel_agent_reads_as_s2_subordinate_lane() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("mos-intel-0202")
+    assert agent is not None
+
+    response = agent.run("Help me sharpen this estimate for a commander decision.", context=AgentContext())
+
+    assert "S-2 lane" in response.answer
+    assert "Relationship to the parent lane" in response.answer
+    assert response.structured_citations
+
+
+def test_mos_magtf_planner_agent_reads_as_s3_subordinate_lane() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("mos-magtf-planner-0511")
+    assert agent is not None
+
+    response = agent.run("Help me clean up mission analysis for this drill problem.", context=AgentContext())
+
+    assert "S-3 lane" in response.answer
     assert "Relationship to the parent lane" in response.answer
     assert response.structured_citations
 

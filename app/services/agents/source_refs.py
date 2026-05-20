@@ -64,6 +64,36 @@ S1_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+MOS_0102_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="NAVMC 3500.3E Manpower and Administration Training and Readiness Manual",
+        url="https://www.marines.mil/Portals/1/Publications/NAVMC%203500.3E%20Manpower%20and%20Administrtion%20T-R%20Manual.pdf?ver=2020-04-28-100336-353",
+        publisher="United States Marine Corps",
+        notes=(
+            "Current public manpower and administration T&R baseline, including 0102 billet descriptions, "
+            "core capabilities, and S-1/adjutant training expectations."
+        ),
+    ),
+    SourceRef(
+        title="NAVMC 1200.1E Military Occupational Specialties Manual",
+        url="https://www.marines.mil/Portals/1/Publications/MOS%20Manual%20NAVMC%201200.1E.pdf?ver=2019-04-23-135930-100",
+        publisher="United States Marine Corps",
+        notes="Official MOS manual describing 0102 Manpower Officer duties, progression, and course requirements.",
+    ),
+    SourceRef(
+        title="MCO 5216.20B Marine Corps Supplement to the Department of the Navy Correspondence Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2869007/mco-521620b/",
+        publisher="United States Marine Corps",
+        notes="Official correspondence and routing discipline reference for adjutant work.",
+    ),
+    SourceRef(
+        title="MCO 1001R.1L w/ Ch-2 Marine Corps Reserve Administrative Management Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900627/mco-1001r1l-w-ch-2/index.html",
+        publisher="United States Marine Corps",
+        notes="Reserve administration, participation, and continuity baseline for SMCR manpower/admin work.",
+    ),
+)
+
 S2_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCDP 2 Intelligence",
@@ -100,6 +130,36 @@ S2_REFERENCES: tuple[SourceRef, ...] = (
             "Authoritative public terrain, elevation, hydrography, and topographic-map source for location-based "
             "planning context."
         ),
+    ),
+)
+
+MOS_0202_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="PMOS 0202 Intelligence Officer",
+        url="https://www.intelligence.marines.mil/Careers/PMOS/0202/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Official 0202 career page describing advisor role, prerequisites, and Tactical Intelligence Officer "
+            "Course requirement for active and reserve officers."
+        ),
+    ),
+    SourceRef(
+        title="NAVMC 3500.100B Intelligence Training and Readiness Manual",
+        url="https://www.marines.mil/portals/1/Publications/NAVMC%203500.100B.pdf",
+        publisher="United States Marine Corps",
+        notes="Official intelligence T&R baseline for MAGTF intelligence officer training standards.",
+    ),
+    SourceRef(
+        title="MCDP 2 Intelligence",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcdp-2/",
+        publisher="United States Marine Corps",
+        notes="Doctrine for intelligence as commander decision support.",
+    ),
+    SourceRef(
+        title="MCTP 3-30A Command and Staff Actions",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        publisher="United States Marine Corps",
+        notes="Staff-action rhythm for turning intelligence into usable command support.",
     ),
 )
 
@@ -202,6 +262,33 @@ S3_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+MOS_0511_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="NAVMC 3500.108B Marine Air-Ground Task Force Planner Training and Readiness Manual",
+        url="https://www.marines.mil/Portals/1/Publications/NAVMC%203500.108B%20Marine%20Air-Ground%20Task%20Force%20Planner%20T-R%20Manual.pdf?ver=2020-04-16-101300-923",
+        publisher="United States Marine Corps",
+        notes="Current public MAGTF planner T&R baseline, including 0511 individual-event standards.",
+    ),
+    SourceRef(
+        title="MCDP 5 Planning",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899841/mcdp-5/",
+        publisher="United States Marine Corps",
+        notes="Planning mindset, uncertainty management, and decision-support doctrine.",
+    ),
+    SourceRef(
+        title="MCWP 5-10 Marine Corps Planning Process",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/",
+        publisher="United States Marine Corps",
+        notes="Concrete MCPP rhythm, planning support, and staff-product discipline reference.",
+    ),
+    SourceRef(
+        title="Command and Staff College Preparatory Knowledge Program",
+        url="https://www.usmcu.edu/Colleges-and-Schools/Command-and-Staff-College/Preparatory-Knowledge-Program/",
+        publisher="Marine Corps University",
+        notes="Useful public reference for mission-analysis, research, writing, and planning discipline.",
+    ),
+)
+
 S4_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCDP 4 Logistics",
@@ -226,6 +313,87 @@ S4_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2221611/mco-35028a/",
         publisher="United States Marine Corps",
         notes="Logistics training expectations and professional development baseline.",
+    ),
+)
+
+MOS_0402_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="NAVMC 3500.27D Logistics Training and Readiness Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1838898/navmc-350027d/",
+        publisher="United States Marine Corps",
+        notes="Current public logistics T&R baseline, including 0402 individual-event training expectations.",
+    ),
+    SourceRef(
+        title="NAVMC 1200.1E Military Occupational Specialties Manual",
+        url="https://www.marines.mil/Portals/1/Publications/MOS%20Manual%20NAVMC%201200.1E.pdf?ver=2019-04-23-135930-100",
+        publisher="United States Marine Corps",
+        notes="Official MOS manual describing 0402 Logistics Officer duties and progression.",
+    ),
+    SourceRef(
+        title="MCDP 4 Logistics",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899840/mcdp-4/",
+        publisher="United States Marine Corps",
+        notes="Logistics philosophy and support mindset reference for 0402 work.",
+    ),
+    SourceRef(
+        title="Logistics Operations School",
+        url="https://www.mccsss.marines.mil/Schools/Logistics-Operations/",
+        publisher="United States Marine Corps",
+        notes="Official schoolhouse reference for resident logistics training supporting 0402 and related fields.",
+    ),
+)
+
+MOS_0430_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="NAVMC 3500.27D Logistics Training and Readiness Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1838898/navmc-350027d/",
+        publisher="United States Marine Corps",
+        notes="Current public logistics T&R baseline, including 0430 mobility officer individual events.",
+    ),
+    SourceRef(
+        title="NAVMC 1200.1E Military Occupational Specialties Manual",
+        url="https://www.marines.mil/Portals/1/Publications/MOS%20Manual%20NAVMC%201200.1E.pdf?ver=2019-04-23-135930-100",
+        publisher="United States Marine Corps",
+        notes="Official MOS manual describing 0430 Mobility Officer duties, prerequisites, and training path.",
+    ),
+    SourceRef(
+        title="Strategic Mobility Mission",
+        url="https://www.iandl.marines.mil/Divisions/Logistics-Division-LP/Logistics-Plans-and-Operations-Branch-LPO/LPO-3-Mission/",
+        publisher="United States Marine Corps",
+        notes="Official I&L mission page framing Marine Corps strategic mobility, FDP&E, and embarkation oversight.",
+    ),
+    SourceRef(
+        title="MCTP 3-40F Distribution and Transportation Operations",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899565/mctp-3-40f/",
+        publisher="United States Marine Corps",
+        notes="Distribution, transportation, and movement-planning reference for mobility officers.",
+    ),
+)
+
+MOS_3002_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="NAVMC 3500.64D Supply Chain Management Training and Readiness Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3259614/navmc-350064d/",
+        publisher="United States Marine Corps",
+        notes="Current public supply-chain-management T&R baseline for 3002 training standards.",
+    ),
+    SourceRef(
+        title="NAVMC 1200.1E Military Occupational Specialties Manual",
+        url="https://www.marines.mil/Portals/1/Publications/MOS%20Manual%20NAVMC%201200.1E.pdf?ver=2019-04-23-135930-100",
+        publisher="United States Marine Corps",
+        notes="Official MOS manual describing 3002 Ground Supply Officer duties and course requirement.",
+    ),
+    SourceRef(
+        title="MCDP 4 Logistics",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899840/mcdp-4/",
+        publisher="United States Marine Corps",
+        notes="Logistics philosophy baseline for supply support, accountability, and sustainment judgment.",
+    ),
+    SourceRef(
+        title="MCO 3502.8A Marine Corps Logistics Tactics, Training, and Education Program",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2221611/mco-35028a/",
+        publisher="United States Marine Corps",
+        notes="Logistics training expectations and professional-development baseline relevant to 3002 support lanes.",
     ),
 )
 
