@@ -1,6 +1,14 @@
-# Local Docker Use
+# Local Docker Use (Optional / Quarantined)
 
 This repo can run locally in Docker without touching the Swagger page for setup work.
+
+This is an **optional/quarantined surface**, not the primary product path.
+
+Default product decisions should optimize for:
+
+- local backend
+- local browser dashboard
+- local-only continuity and storage
 
 The Docker path is best for:
 

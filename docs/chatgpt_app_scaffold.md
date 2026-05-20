@@ -1,5 +1,7 @@
 # ChatGPT App Scaffold
 
+This is an **optional/quarantined surface**, not the primary product path.
+
 This repository now includes both:
 
 - a lightweight bridge scaffold under `app/chatgpt_bridge/`

@@ -1,5 +1,15 @@
 # SMCR Staff AI ChatGPT App
 
+This is an **optional/quarantined surface**.
+
+The primary product path is:
+
+- local backend
+- local dashboard
+- local-only continuity and storage
+
+This ChatGPT/MCP layer stays available for experimentation and integration work, but it is not the main user path.
+
 This is a first-pass local ChatGPT app surface for `smcr-staff-ai`.
 
 It is designed to feel more like the Coach Dave style experience:

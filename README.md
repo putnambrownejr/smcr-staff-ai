@@ -139,16 +139,17 @@ Open the lightweight dashboard:
 http://127.0.0.1:8000/dashboard
 ```
 
-For a cleaner local container workflow, see [docs/docker_local.md](/C:/smcr-staff-ai/docs/docker_local.md).
+For the current optional container path, see [docs/docker_local.md](/C:/smcr-staff-ai/docs/docker_local.md).
 For one-command local startup, use [scripts/start-local.cmd](/C:/smcr-staff-ai/scripts/start-local.cmd) or [scripts/start-local.ps1](/C:/smcr-staff-ai/scripts/start-local.ps1).
 
 For GitHub/ChatGPT-friendly orientation, also see [docs/chatgpt_repo_mode.md](/C:/smcr-staff-ai/docs/chatgpt_repo_mode.md).
 For the lowest-friction GitHub-plus-local workflow, see [docs/how_to_use_with_chatgpt.md](/C:/smcr-staff-ai/docs/how_to_use_with_chatgpt.md).
 For project purpose and scope, see [docs/project_purpose.md](/C:/smcr-staff-ai/docs/project_purpose.md).
 For Claude/Gemini/Grok/Copilot/GENAI-safe usage patterns, see [docs/external_ai_safe_use.md](/C:/smcr-staff-ai/docs/external_ai_safe_use.md) and [docs/external_ai_playbooks.md](/C:/smcr-staff-ai/docs/external_ai_playbooks.md).
+For the quarantined optional ChatGPT/MCP and Docker surfaces, see [docs/optional_legacy_surfaces.md](/C:/smcr-staff-ai/docs/optional_legacy_surfaces.md).
 For the first-pass ChatGPT-facing tool plan, see [docs/chatgpt_app_surface.md](/C:/smcr-staff-ai/docs/chatgpt_app_surface.md).
 For the current in-repo bridge scaffold, see [docs/chatgpt_app_scaffold.md](/C:/smcr-staff-ai/docs/chatgpt_app_scaffold.md).
-For the new local ChatGPT app server layer, see [chatgpt_app/README.md](/C:/smcr-staff-ai/chatgpt_app/README.md).
+For the optional local ChatGPT app server layer, see [chatgpt_app/README.md](/C:/smcr-staff-ai/chatgpt_app/README.md).
 For one-command ChatGPT app startup, use [scripts/start-chatgpt-app.cmd](/C:/smcr-staff-ai/scripts/start-chatgpt-app.cmd) or [scripts/start-chatgpt-app.ps1](/C:/smcr-staff-ai/scripts/start-chatgpt-app.ps1).
 For the build-vs-reuse decision matrix, see [docs/capability_reuse_audit.md](/C:/smcr-staff-ai/docs/capability_reuse_audit.md).
 For a local-only offline note template, see [docs/offline_notes.example.md](/C:/smcr-staff-ai/docs/offline_notes.example.md); keep the real `docs/offline_notes.md` untracked.

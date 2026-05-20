@@ -9,6 +9,8 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 
+Write-Host "Note: the ChatGPT/MCP app surface is optional/quarantined, not the primary local workflow." -ForegroundColor Yellow
+
 function Test-PortAvailable {
     param([int]$CandidatePort)
 

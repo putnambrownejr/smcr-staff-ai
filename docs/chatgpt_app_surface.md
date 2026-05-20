@@ -1,5 +1,7 @@
 # ChatGPT App Surface
 
+This is an **optional/quarantined surface**, not the primary product path.
+
 This file defines the recommended first-pass ChatGPT-facing surface for `smcr-staff-ai`.
 
 ## Intended Archetype
