@@ -19,6 +19,7 @@ from app.api.routes import (
     documents,
     handoffs,
     health,
+    history,
     maradmins,
     message_watch,
     opportunities,
@@ -53,6 +54,7 @@ def create_app() -> FastAPI:
         ),
     )
     app.include_router(health.router)
+    app.include_router(history.router)
     app.include_router(actions.router)
     app.include_router(admin.router)
     app.include_router(analysis.router)

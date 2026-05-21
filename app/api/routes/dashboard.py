@@ -197,7 +197,14 @@ def get_dod_watch_store() -> Iterator[MessageRecordStore]:
 
 
 def get_history_service() -> TodayInMarineHistoryService:
-    return TodayInMarineHistoryService.from_yaml(SEED_DIR / "usmc_history_on_this_day.example.yaml")
+    settings = get_settings()
+    local_history_path = Path(settings.history_storage_dir) / "today_in_history.yaml"
+    return TodayInMarineHistoryService.from_paths(
+        [
+            SEED_DIR / "usmc_history_on_this_day.example.yaml",
+            local_history_path,
+        ]
+    )
 
 
 def get_custom_watch_feed_store() -> Iterator[CustomWatchFeedStore]:

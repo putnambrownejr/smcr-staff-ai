@@ -10,3 +10,15 @@ class TodayInMarineHistoryItem(BaseModel):
     summary: str
     significance: list[str] = Field(default_factory=list)
     references: list[str] = Field(default_factory=list)
+
+
+class HistoryImportRequest(BaseModel):
+    markdown_paths: list[str] = Field(default_factory=list)
+    replace_existing: bool = False
+
+
+class HistoryImportResponse(BaseModel):
+    imported_count: int
+    total_available: int
+    sources: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)

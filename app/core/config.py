@@ -68,6 +68,10 @@ def default_section_memory_dir() -> Path:
     return default_local_context_dir() / "section_memory"
 
 
+def default_history_storage_dir() -> Path:
+    return default_local_context_dir() / "history"
+
+
 def default_database_url() -> str:
     database_path = default_local_state_root() / "smcr_staff_ai.db"
     return f"sqlite:///{database_path.as_posix()}"
@@ -91,6 +95,7 @@ class Settings(BaseSettings):
     dod_watch_storage_dir: str = str(default_dod_watch_dir())
     custom_watch_feed_storage_dir: str = str(default_custom_watch_feed_dir())
     section_memory_storage_dir: str = str(default_section_memory_dir())
+    history_storage_dir: str = str(default_history_storage_dir())
     local_api_key: str | None = None
     max_upload_bytes: int = 50_000_000
     public_source_only: bool = True
