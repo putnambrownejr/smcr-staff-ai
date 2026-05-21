@@ -282,6 +282,15 @@ body {
   gap: 10px;
 }
 
+.quick-actions {
+  margin-top: 14px;
+}
+
+.lane-intro-panel {
+  border-style: dashed;
+  background: var(--surface-2);
+}
+
 .command-grid {
   display: grid;
   gap: 12px;
@@ -622,6 +631,10 @@ textarea {
 
 .empty-state {
   color: var(--muted);
+}
+
+.empty-state p {
+  margin: 0 0 8px;
 }
 
 .critical {

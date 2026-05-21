@@ -39,9 +39,9 @@
           </div>
           <div class="command-toolbar" role="tablist" aria-label="Dashboard lanes">
             <button type="button" class="lane-button active" data-lane="overview">Overview</button>
-            <button type="button" class="lane-button" data-lane="watch">Watch floor</button>
-            <button type="button" class="lane-button" data-lane="library">Library</button>
-            <button type="button" class="lane-button" data-lane="draft">Drafting</button>
+            <button type="button" class="lane-button" data-lane="watch">Watch</button>
+            <button type="button" class="lane-button" data-lane="library">Bench / Files</button>
+            <button type="button" class="lane-button" data-lane="draft">Workflows</button>
             <button type="button" class="lane-button" data-lane="configure">Workspace</button>
             <button type="button" class="lane-button secondary" data-lane="all">Show all</button>
           </div>
@@ -54,6 +54,12 @@
               <span class="strip-label">Guardrails</span>
               <ul id="workspace-warnings" class="bullet-list"></ul>
             </section>
+          </div>
+          <div class="button-row quick-actions">
+            <button type="button" class="secondary" id="quick-open-watch">Open watch lane</button>
+            <button type="button" class="secondary" id="quick-open-library">Open bench / files</button>
+            <button type="button" class="secondary" id="quick-open-workflows">Open workflows</button>
+            <button type="button" class="secondary" id="quick-run-lone-planner">Run lone planner</button>
           </div>
         </section>
 
@@ -511,6 +517,15 @@
         </section>
 
         <section class="three-column is-hidden" data-section-group="watch">
+          <article class="panel full-span lane-intro-panel">
+            <div class="panel-header compact">
+              <div>
+                <h2>Watch lane</h2>
+                <p>Use this lane to stay plugged in between drills: message watches, custom feeds, action tracking, and source changes.</p>
+              </div>
+              <button type="button" class="secondary" id="watch-open-workspace">Open workspace setup</button>
+            </div>
+          </article>
           <article class="panel full-span">
             <div class="panel-header">
               <h2>Custom watch feeds</h2>
@@ -545,6 +560,15 @@
         </section>
 
         <section class="library-grid is-hidden" data-section-group="library">
+          <article class="panel full-span lane-intro-panel">
+            <div class="panel-header compact">
+              <div>
+                <h2>Bench / Files lane</h2>
+                <p>Use this lane to keep local references, reusable templates, MOS shortcuts, and recurring bench memory close at hand.</p>
+              </div>
+              <button type="button" class="secondary" id="library-open-workspace">Open workspace setup</button>
+            </div>
+          </article>
           <article class="panel">
             <div class="panel-header">
               <h2>Personal files</h2>
@@ -668,6 +692,18 @@
         </section>
 
         <section class="tool-grid is-hidden" data-section-group="draft">
+          <article class="panel full-span lane-intro-panel">
+            <div class="panel-header compact">
+              <div>
+                <h2>Workflow lane</h2>
+                <p>Use this lane when you need to build products, run planning support, pressure-test a brief, or cover gaps outside your normal box.</p>
+              </div>
+              <div class="button-row compact-controls">
+                <button type="button" class="secondary" id="draft-open-planning-cell">Open planning cell</button>
+                <button type="button" class="secondary" id="draft-open-brief-clinic">Open brief clinic</button>
+              </div>
+            </div>
+          </article>
           <article class="panel tool-panel">
             <div class="panel-header">
               <h2>Personnel products</h2>
@@ -981,7 +1017,7 @@
     <script>
       (function loadDashboardAssets() {
         const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
-        const assetVersion = "20260519b";
+        const assetVersion = "20260521a";
         const stylesheet = document.getElementById("dashboard-style");
         stylesheet.href = `${staticBase}/dashboard.css?v=${assetVersion}`;
 

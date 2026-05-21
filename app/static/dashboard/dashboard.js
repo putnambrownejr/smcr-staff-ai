@@ -221,6 +221,29 @@ document.getElementById("reading-book-select").addEventListener("change", (event
   state.selectedReadingSlug = event.target.value || "";
   renderReadingBooks(state.workspace?.reading_books || []);
 });
+document.getElementById("quick-open-watch").addEventListener("click", () => openLane("watch", "Opened the watch lane."));
+document
+  .getElementById("quick-open-library")
+  .addEventListener("click", () => openLane("library", "Opened the bench and files lane."));
+document
+  .getElementById("quick-open-workflows")
+  .addEventListener("click", () => openLane("draft", "Opened the workflows lane."));
+document.getElementById("quick-run-lone-planner").addEventListener("click", () => {
+  openLane("draft");
+  runLonePlannerMode();
+});
+document
+  .getElementById("watch-open-workspace")
+  .addEventListener("click", () => openLane("configure", "Opened workspace setup from the watch lane."));
+document
+  .getElementById("library-open-workspace")
+  .addEventListener("click", () => openLane("configure", "Opened workspace setup from the bench and files lane."));
+document
+  .getElementById("draft-open-planning-cell")
+  .addEventListener("click", () => launchThinStaffWorkflow("planning-cell"));
+document
+  .getElementById("draft-open-brief-clinic")
+  .addEventListener("click", () => launchWalkInWorkflow("brief-clinic"));
 
 document.addEventListener("click", async (event) => {
   const documentButton = event.target.closest("[data-document-id]");
@@ -687,7 +710,10 @@ function renderDocumentLibrary(items) {
   const target = document.getElementById("document-library");
   if (!items.length) {
     target.className = "document-library empty-state";
-    target.textContent = "No local document previews loaded yet.";
+    target.innerHTML = `
+      <p>No local document previews loaded yet.</p>
+      <p class="helper-text">Open your personal workspace to review orders, BIO, RQS, receipts, and other local references here.</p>
+    `;
     return;
   }
   if (!state.selectedDocumentId || !items.some((item) => item.context_id === state.selectedDocumentId)) {
@@ -727,7 +753,10 @@ function renderTemplateLibrary(items) {
   const target = document.getElementById("template-library");
   if (!items.length) {
     target.className = "row-stack empty-state";
-    target.textContent = "No templates are loaded yet.";
+    target.innerHTML = `
+      <p>No templates are loaded yet.</p>
+      <p class="helper-text">User-saved examples and reusable staff scaffolds will appear here once you promote them into the local template repo.</p>
+    `;
     return;
   }
   target.className = "row-stack";
@@ -772,7 +801,10 @@ function renderSectionMemoryProfile(profile) {
   const entries = profile?.entries || [];
   if (!entries.length) {
     target.className = "row-stack empty-state";
-    target.textContent = "No recurring section memory is stored yet.";
+    target.innerHTML = `
+      <p>No recurring section memory is stored yet.</p>
+      <p class="helper-text">Start with the section your reserve bench misses most often. This is meant to sharpen lone-planner and gap-cover outputs over time.</p>
+    `;
     clearSectionMemoryForm();
     return;
   }
@@ -809,7 +841,10 @@ function renderCustomWatchFeeds(items) {
   const target = document.getElementById("custom-feed-watch");
   if (!items.length) {
     target.className = "row-stack empty-state";
-    target.textContent = "No custom watch feeds are configured yet.";
+    target.innerHTML = `
+      <p>No custom watch feeds are configured yet.</p>
+      <p class="helper-text">This lane is for local-only RSS watches like unit pages, PME sources, or professional feeds you want to keep in your off-drill scan.</p>
+    `;
     return;
   }
   target.className = "row-stack";
@@ -1553,6 +1588,14 @@ function openMosBenchLane(agentId) {
   applyLaneVisibility();
   form.scrollIntoView({ behavior: "smooth", block: "start" });
   setWorkspaceNote(`Opened the ${item.label} lane.`);
+}
+
+function openLane(lane, message = "") {
+  state.activeLane = lane;
+  applyLaneVisibility();
+  if (message) {
+    setWorkspaceNote(message);
+  }
 }
 
 async function runMosAdvisorFromForm() {
