@@ -358,6 +358,21 @@ body {
   font-weight: 700;
 }
 
+.strip-label.strip-critical {
+  background: #3b171d;
+  color: #ffced3;
+}
+
+.strip-label.strip-attention {
+  background: #352a16;
+  color: #f3d48d;
+}
+
+.strip-label.strip-routine {
+  background: #20262d;
+  color: #d1d7dd;
+}
+
 .meta-inline {
   color: var(--muted);
   font-size: 0.84rem;
@@ -441,6 +456,24 @@ textarea {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
+}
+
+.queue-item {
+  border-left: 4px solid var(--line);
+}
+
+.queue-item-critical {
+  border-left-color: var(--scarlet);
+  background: #1b1114;
+}
+
+.queue-item-attention {
+  border-left-color: var(--amber);
+  background: #18140d;
+}
+
+.queue-item-routine {
+  border-left-color: var(--field);
 }
 
 .feed-card.is-disabled {

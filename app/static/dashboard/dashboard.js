@@ -1136,10 +1136,11 @@ function renderQueue(items, hotItems = []) {
   target.innerHTML = combined
     .map(
       (item) => `
-        <article class="data-row">
+        <article class="data-row ${queueSeverityClass(item.severity)}">
           <div class="data-row-head">
-            <span class="strip-label">${escapeHtml(item.category || "watch")}</span>
+            <span class="strip-label ${queueSeverityBadgeClass(item.severity)}">${escapeHtml(item.category || "watch")}</span>
             <strong>${escapeHtml(item.title || "Untitled item")}</strong>
+            <span class="meta-inline">${escapeHtml(queueSeverityLabel(item.severity))}</span>
           </div>
           <p>${escapeHtml(item.recommendation || item.notes || item.detail || "")}</p>
         </article>
@@ -1158,7 +1159,10 @@ function buildActionStack(items, hotItems) {
       continue;
     }
     seen.add(key);
-    combined.push(item);
+    combined.push({
+      ...item,
+      severity: prioritySeverity(item.priority, item.category),
+    });
   }
 
   for (const hotItem of hotItems.slice(0, 4)) {
@@ -1175,10 +1179,67 @@ function buildActionStack(items, hotItems) {
       category: "continuity",
       title,
       detail: "Continuity drift from the battle rhythm board needs a direct look.",
+      severity: "attention",
     });
   }
 
-  return combined;
+  return combined.sort((left, right) => queueSeverityRank(right.severity) - queueSeverityRank(left.severity));
+}
+
+function prioritySeverity(priority, category) {
+  const normalizedPriority = String(priority || "").toLowerCase();
+  const normalizedCategory = String(category || "").toLowerCase();
+  if (normalizedPriority === "high") {
+    return "critical";
+  }
+  if (normalizedCategory === "source_updates" || normalizedCategory === "pme" || normalizedCategory === "admin") {
+    return "attention";
+  }
+  return "routine";
+}
+
+function queueSeverityRank(severity) {
+  switch (severity) {
+    case "critical":
+      return 3;
+    case "attention":
+      return 2;
+    default:
+      return 1;
+  }
+}
+
+function queueSeverityLabel(severity) {
+  switch (severity) {
+    case "critical":
+      return "Critical";
+    case "attention":
+      return "Attention";
+    default:
+      return "Routine";
+  }
+}
+
+function queueSeverityClass(severity) {
+  switch (severity) {
+    case "critical":
+      return "queue-item queue-item-critical";
+    case "attention":
+      return "queue-item queue-item-attention";
+    default:
+      return "queue-item queue-item-routine";
+  }
+}
+
+function queueSeverityBadgeClass(severity) {
+  switch (severity) {
+    case "critical":
+      return "strip-critical";
+    case "attention":
+      return "strip-attention";
+    default:
+      return "strip-routine";
+  }
 }
 
 function renderEntryRows(targetId, items, emptyText) {
