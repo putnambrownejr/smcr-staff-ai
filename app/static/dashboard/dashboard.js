@@ -244,6 +244,15 @@ document
 document
   .getElementById("draft-open-brief-clinic")
   .addEventListener("click", () => launchWalkInWorkflow("brief-clinic"));
+document
+  .getElementById("workflow-open-lone-planner")
+  .addEventListener("click", () => launchThinStaffWorkflow("lone-planner"));
+document
+  .getElementById("workflow-open-planning-cell")
+  .addEventListener("click", () => launchThinStaffWorkflow("planning-cell"));
+document
+  .getElementById("workflow-open-brief-clinic")
+  .addEventListener("click", () => launchWalkInWorkflow("brief-clinic"));
 
 document.addEventListener("click", async (event) => {
   const documentButton = event.target.closest("[data-document-id]");
@@ -1876,7 +1885,9 @@ function resolveInitialLane() {
 function applyLaneVisibility() {
   const active = state.activeLane;
   for (const button of document.querySelectorAll(".lane-button")) {
-    button.classList.toggle("active", button.dataset.lane === active);
+    const isActive = button.dataset.lane === active;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", isActive ? "true" : "false");
   }
   for (const section of document.querySelectorAll("[data-section-group]")) {
     const group = section.dataset.sectionGroup;

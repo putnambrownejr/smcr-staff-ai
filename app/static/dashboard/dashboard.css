@@ -29,6 +29,24 @@ body {
   color: var(--text);
 }
 
+.skip-link {
+  position: absolute;
+  left: 14px;
+  top: 10px;
+  z-index: 20;
+  transform: translateY(-160%);
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--scarlet);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 .app-shell {
   min-height: 100vh;
 }
@@ -291,6 +309,27 @@ body {
   background: var(--surface-2);
 }
 
+.workflow-priority-panel {
+  border-top: 4px solid var(--amber);
+}
+
+.workflow-priority-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.workflow-priority-card {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  background: var(--surface-2);
+}
+
+.compact-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .command-grid {
   display: grid;
   gap: 12px;
@@ -484,6 +523,10 @@ textarea {
   margin-top: 16px;
 }
 
+.overview-priority-grid > .panel.full-span {
+  grid-column: 1 / -1;
+}
+
 .brief-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -645,7 +688,9 @@ textarea {
   .summary-grid,
   .three-column,
   .library-grid,
-  .readiness-footer {
+  .readiness-footer,
+  .compact-summary-grid,
+  .workflow-priority-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -666,7 +711,9 @@ textarea {
   .command-grid,
   .document-library,
   .reading-grid,
-  .library-grid {
+  .library-grid,
+  .workflow-priority-grid,
+  .compact-summary-grid {
     grid-template-columns: 1fr;
   }
 

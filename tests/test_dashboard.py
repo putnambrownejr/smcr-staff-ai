@@ -85,6 +85,9 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Watch lane" in response.text
     assert "Bench / Files lane" in response.text
     assert "Workflow lane" in response.text
+    assert "Command Snapshots" in response.text
+    assert "Start Here" in response.text
+    assert "Skip to dashboard content" in response.text
     assert "dashboard.js" in response.text
 
 
@@ -120,6 +123,9 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "library-open-workspace",
         "draft-open-planning-cell",
         "draft-open-brief-clinic",
+        "workflow-open-lone-planner",
+        "workflow-open-planning-cell",
+        "workflow-open-brief-clinic",
         "thin-staff-run-lone-planner",
         "thin-staff-open-mission-analysis",
         "thin-staff-open-planning-cell",

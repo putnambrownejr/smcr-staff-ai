@@ -7,6 +7,7 @@
     <link id="dashboard-style" rel="stylesheet" href="" />
   </head>
   <body>
+    <a class="skip-link" href="#dashboard-main">Skip to dashboard content</a>
     <div class="app-shell">
       <header class="topbar">
         <div class="title-stack">
@@ -29,7 +30,7 @@
         </div>
       </header>
 
-      <main class="layout">
+      <main class="layout" id="dashboard-main" tabindex="-1">
         <section class="panel command-panel" data-section-group="global">
           <div class="panel-header">
             <div>
@@ -150,33 +151,46 @@
             </div>
           </article>
 
-          <article class="panel stat-panel">
-            <div class="panel-header compact">
-              <h2>Chief brief</h2>
-              <span id="chief-count" class="metric">0</span>
-            </div>
-            <ul id="chief-summary" class="bullet-list"></ul>
-          </article>
-
-          <article class="panel stat-panel">
-            <div class="panel-header compact">
-              <h2>Admin readiness</h2>
-              <span id="admin-count" class="metric">0</span>
-            </div>
-            <ul id="admin-summary" class="bullet-list"></ul>
-          </article>
-
-          <article class="panel stat-panel">
-            <div class="panel-header compact">
-              <h2>Career watch</h2>
-              <span id="career-count" class="metric">0</span>
-            </div>
-            <ul id="career-summary" class="bullet-list"></ul>
+          <article class="panel collapsible-panel full-span">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header compact">
+                  <div>
+                    <h2>Command Snapshots</h2>
+                    <p>Compact Chief, admin, and career status when you need the wider picture.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body summary-grid compact-summary-grid">
+                <section class="brief-block">
+                  <div class="panel-header compact">
+                    <h3>Chief brief</h3>
+                    <span id="chief-count" class="metric">0</span>
+                  </div>
+                  <ul id="chief-summary" class="bullet-list"></ul>
+                </section>
+                <section class="brief-block">
+                  <div class="panel-header compact">
+                    <h3>Admin readiness</h3>
+                    <span id="admin-count" class="metric">0</span>
+                  </div>
+                  <ul id="admin-summary" class="bullet-list"></ul>
+                </section>
+                <section class="brief-block">
+                  <div class="panel-header compact">
+                    <h3>Career watch</h3>
+                    <span id="career-count" class="metric">0</span>
+                  </div>
+                  <ul id="career-summary" class="bullet-list"></ul>
+                </section>
+              </div>
+            </details>
           </article>
         </section>
 
-        <section class="two-column" data-section-group="overview">
-          <article class="panel">
+        <section class="two-column overview-priority-grid" data-section-group="overview">
+          <article class="panel full-span">
             <div class="panel-header">
               <h2>MARADMIN / Source Watch</h2>
               <p>Source-change ticker for items that may alter local products or assumptions.</p>
@@ -211,16 +225,9 @@
             </div>
           </article>
 
-          <article class="panel">
-            <div class="panel-header">
-              <h2>Today in Marine Corps History</h2>
-              <p>Short heritage context that can feed PME, ceremony framing, and command climate conversations.</p>
-            </div>
-            <div id="history-feed" class="row-stack empty-state">No history entry is loaded for today.</div>
-          </article>
         </section>
 
-        <section class="two-column" data-section-group="overview">
+        <section class="two-column" data-section-group="watch">
           <article class="panel collapsible-panel">
             <details class="panel-drawer">
               <summary>
@@ -309,6 +316,25 @@
                 <h3>Follow-up checks</h3>
                 <ul id="analyst-followups" class="bullet-list"></ul>
               </section>
+              </div>
+            </details>
+          </article>
+        </section>
+
+        <section class="two-column" data-section-group="watch">
+          <article class="panel collapsible-panel">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header">
+                  <div>
+                    <h2>Today in Marine Corps History</h2>
+                    <p>Heritage context for PME, command climate, and ceremony framing when you want it.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
+                <div id="history-feed" class="row-stack empty-state">No history entry is loaded for today.</div>
               </div>
             </details>
           </article>
@@ -704,6 +730,40 @@
               </div>
             </div>
           </article>
+          <article class="panel full-span workflow-priority-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Start Here</h2>
+                <p>Use the shortest path back into the problem before you start building supporting products.</p>
+              </div>
+            </div>
+            <div class="workflow-priority-grid">
+              <section class="brief-block workflow-priority-card">
+                <span class="strip-label">Primary</span>
+                <h3>Lone planner mode</h3>
+                <p class="helper-text">Best first move when you are cold, thin-staffed, or carrying multiple lanes alone.</p>
+                <div class="button-row">
+                  <button type="button" id="workflow-open-lone-planner">Run lone planner mode</button>
+                </div>
+              </section>
+              <section class="brief-block workflow-priority-card">
+                <span class="strip-label">Primary</span>
+                <h3>Planning Cell</h3>
+                <p class="helper-text">Use when you need mission analysis, assumptions, decisions, and due-outs in one working package.</p>
+                <div class="button-row">
+                  <button type="button" id="workflow-open-planning-cell">Open planning cell</button>
+                </div>
+              </section>
+              <section class="brief-block workflow-priority-card">
+                <span class="strip-label">Secondary</span>
+                <h3>Brief Clinic</h3>
+                <p class="helper-text">Use after the thinking is mostly done and the brief still needs to get sharper.</p>
+                <div class="button-row">
+                  <button type="button" class="secondary" id="workflow-open-brief-clinic">Open brief clinic</button>
+                </div>
+              </section>
+            </div>
+          </article>
           <article class="panel tool-panel">
             <div class="panel-header">
               <h2>Personnel products</h2>
@@ -1017,7 +1077,7 @@
     <script>
       (function loadDashboardAssets() {
         const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
-        const assetVersion = "20260521a";
+        const assetVersion = "20260521b";
         const stylesheet = document.getElementById("dashboard-style");
         stylesheet.href = `${staticBase}/dashboard.css?v=${assetVersion}`;
 
