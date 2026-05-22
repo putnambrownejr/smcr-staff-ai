@@ -620,8 +620,52 @@ def _extract_reference_links(lines: list[str]) -> list[DashboardReferenceLink]:
         if stripped.startswith("- Title: "):
             current_title = stripped.removeprefix("- Title: ").strip()
             continue
+        if (
+            stripped.startswith("- ")
+            and not stripped.startswith("- Title: ")
+            and not stripped.startswith("- Type: ")
+            and not stripped.startswith("- Category: ")
+            and not stripped.startswith("- Notes: ")
+            and not stripped.startswith("- Why it matters: ")
+            and not stripped.startswith("- Classification label: ")
+            and not stripped.startswith("- CUI flag: ")
+            and not stripped.startswith("- Official URL: ")
+            and not stripped.startswith("- URL: ")
+            and not stripped.startswith("- Current strategy page: ")
+            and not stripped.startswith("- Public-domain text: ")
+            and not stripped.startswith("- Public-domain translation: ")
+            and not stripped.startswith("- Official public PDF: ")
+            and "http" not in stripped
+        ):
+            current_title = stripped.removeprefix("- ").strip()
+            continue
         if stripped.startswith("- Official URL: "):
             url = stripped.removeprefix("- Official URL: ").strip()
+            if current_title and url:
+                links.append(DashboardReferenceLink(title=current_title, url=url))
+            continue
+        if stripped.startswith("- URL: "):
+            url = stripped.removeprefix("- URL: ").strip()
+            if current_title and url:
+                links.append(DashboardReferenceLink(title=current_title, url=url))
+            continue
+        if stripped.startswith("- Current strategy page: "):
+            url = stripped.removeprefix("- Current strategy page: ").strip()
+            if current_title and url:
+                links.append(DashboardReferenceLink(title=current_title, url=url))
+            continue
+        if stripped.startswith("- Public-domain text: "):
+            url = stripped.removeprefix("- Public-domain text: ").strip()
+            if current_title and url:
+                links.append(DashboardReferenceLink(title=current_title, url=url))
+            continue
+        if stripped.startswith("- Public-domain translation: "):
+            url = stripped.removeprefix("- Public-domain translation: ").strip()
+            if current_title and url:
+                links.append(DashboardReferenceLink(title=current_title, url=url))
+            continue
+        if stripped.startswith("- Official public PDF: "):
+            url = stripped.removeprefix("- Official public PDF: ").strip()
             if current_title and url:
                 links.append(DashboardReferenceLink(title=current_title, url=url))
             continue

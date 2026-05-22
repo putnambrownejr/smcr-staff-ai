@@ -222,6 +222,7 @@ def test_demo_dashboard_data_route_returns_workspace_payload() -> None:
     assert payload["analyst_brief"]["kpi_summary"]
     assert "history_library" in payload
     assert "reference_library" in payload
+    assert any(item["official_links"] for item in payload["reference_library"])
     assert "tracked_opportunities" in payload
 
 
@@ -461,6 +462,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["chief_brief"]["battle_rhythm_summary"]
         assert "history_library" in payload
         assert payload["reference_library"]
+        assert any(item["official_links"] for item in payload["reference_library"])
         assert payload["navadmin_ticker"][0]["status"] == "NAVADMIN"
         assert payload["alnav_ticker"][0]["status"] == "ALNAV"
         assert payload["dod_ticker"][0]["status"] == "DoD"
