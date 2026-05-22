@@ -45,6 +45,12 @@ class TodayInMarineHistoryService:
             if item.month == target_date.month and item.day == target_date.day
         ]
 
+    def list_items(self) -> list[TodayInMarineHistoryItem]:
+        return sorted(
+            self.items,
+            key=lambda item: (item.month, item.day, item.year_label, item.slug),
+        )
+
 
 _MONTHS = {
     "jan": 1,

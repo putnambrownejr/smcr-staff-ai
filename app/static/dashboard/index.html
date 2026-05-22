@@ -566,6 +566,29 @@
 
           <article class="panel full-span">
             <div class="panel-header">
+              <h2>History Library</h2>
+              <p>Browse imported and seeded Marine Corps history by date so the material is useful beyond whatever happens to match today.</p>
+            </div>
+            <div class="form-row">
+              <label>
+                <span>Month</span>
+                <select id="history-library-month"></select>
+              </label>
+              <label>
+                <span>Day</span>
+                <select id="history-library-day"></select>
+              </label>
+            </div>
+            <div class="button-row">
+              <button type="button" class="secondary" id="history-library-show-date">Show date</button>
+              <button type="button" class="secondary" id="history-library-use-today">Use today</button>
+            </div>
+            <div id="history-library-summary" class="meta-inline">No history library entries loaded yet.</div>
+            <div id="history-library-results" class="row-stack empty-state">No history library entries loaded yet.</div>
+          </article>
+
+          <article class="panel full-span">
+            <div class="panel-header">
               <h2>Section Bench Notebook</h2>
               <p>Local-only recurring staff memory for what your reserve bench usually misses, asks, or needs checked.</p>
             </div>
@@ -1087,7 +1110,7 @@
     <script>
       (function loadDashboardAssets() {
         const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
-        const assetVersion = "20260521c";
+        const assetVersion = "20260521d";
         const stylesheet = document.getElementById("dashboard-style");
         stylesheet.href = `${staticBase}/dashboard.css?v=${assetVersion}`;
 

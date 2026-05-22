@@ -254,6 +254,7 @@ def get_dashboard_data(
     maradmin_feed = maradmin_feed_store.list(limit=10)
     custom_watch_feeds = _custom_watch_feed_summaries(custom_watch_feed_store)
     reading_progress = {item.slug: item for item in reading_state_store.list(user_key).records}
+    history_library = history_service.list_items()
     return _workspace_response(
         mode="personal",
         user_key=user_key,
@@ -277,6 +278,7 @@ def get_dashboard_data(
         dod_ticker=_message_watch_ticker(dod_watch_store.list(limit=8)),
         custom_watch_feeds=custom_watch_feeds,
         today_in_history=history_service.get_for_date(datetime.now(UTC).date()),
+        history_library=history_library,
         reading_books=_reading_books(
             reading_catalog=reading_catalog,
             reading_progress=reading_progress,
@@ -301,6 +303,7 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
     custom_watch_feeds = _custom_watch_feed_summaries(
         CustomWatchFeedStore(settings.custom_watch_feed_storage_dir)
     )
+    history_service = get_history_service()
     reading_catalog = load_effective_reading_catalog(
         seed_path=SEED_DIR / "reading_list.example.yaml",
         store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
@@ -328,9 +331,8 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
         alnav_ticker=_message_watch_ticker(alnav_feed),
         dod_ticker=_message_watch_ticker(dod_feed),
         custom_watch_feeds=custom_watch_feeds,
-        today_in_history=TodayInMarineHistoryService.from_yaml(
-            SEED_DIR / "usmc_history_on_this_day.example.yaml"
-        ).get_for_date(datetime.now(UTC).date()),
+        today_in_history=history_service.get_for_date(datetime.now(UTC).date()),
+        history_library=history_service.list_items(),
         reading_books=_reading_books(
             reading_catalog=reading_catalog,
             reading_progress={},
@@ -359,6 +361,7 @@ def _workspace_response(
     dod_ticker: list[DashboardTickerItem],
     custom_watch_feeds: list[DashboardCustomWatchFeed],
     today_in_history: list[TodayInMarineHistoryItem],
+    history_library: list[TodayInMarineHistoryItem],
     reading_books: list[DashboardReadingBook],
 ) -> DashboardWorkspaceResponse:
     summary_lines = [
@@ -410,6 +413,7 @@ def _workspace_response(
         dod_ticker=dod_ticker,
         custom_watch_feeds=custom_watch_feeds,
         today_in_history=today_in_history,
+        history_library=history_library,
         reading_books=reading_books,
         warnings=warnings,
     )

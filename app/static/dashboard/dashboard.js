@@ -6,6 +6,9 @@ const state = {
   workspace: null,
   selectedDocumentId: null,
   selectedReadingSlug: "",
+  historyLibrary: [],
+  selectedHistoryMonth: "",
+  selectedHistoryDay: "",
   apiBase: resolveApiBase(),
   timezoneOptions: buildTimezoneOptions(),
   selectedTimezoneIds: loadTimezoneSelection(),
@@ -221,6 +224,18 @@ document.getElementById("reading-book-select").addEventListener("change", (event
   state.selectedReadingSlug = event.target.value || "";
   renderReadingBooks(state.workspace?.reading_books || []);
 });
+document.getElementById("history-library-show-date").addEventListener("click", () => {
+  renderHistoryLibrary(state.historyLibrary);
+});
+document.getElementById("history-library-use-today").addEventListener("click", () => {
+  setHistoryLibraryToToday();
+});
+document.getElementById("history-library-month").addEventListener("change", (event) => {
+  state.selectedHistoryMonth = event.target.value || "";
+});
+document.getElementById("history-library-day").addEventListener("change", (event) => {
+  state.selectedHistoryDay = event.target.value || "";
+});
 document.getElementById("quick-open-watch").addEventListener("click", () => openLane("watch", "Opened the watch lane."));
 document
   .getElementById("quick-open-library")
@@ -358,6 +373,7 @@ function renderWorkspace(payload) {
   renderTickerStack("dod-ticker", payload.dod_ticker || [], "No DoD watch items loaded yet.");
   renderCustomWatchFeeds(payload.custom_watch_feeds || []);
   renderHistory(payload.today_in_history || []);
+  renderHistoryLibrary(payload.history_library || []);
   renderReadingBooks(payload.reading_books || []);
   renderTrackedActions(payload.tracked_actions || []);
   renderOpportunities(payload.tracked_opportunities || payload.career_watch?.tracked_opportunities || []);
@@ -943,6 +959,61 @@ function renderHistory(items) {
     .join("");
 }
 
+function renderHistoryLibrary(items) {
+  state.historyLibrary = Array.isArray(items) ? items : [];
+  const monthSelect = document.getElementById("history-library-month");
+  const daySelect = document.getElementById("history-library-day");
+  const summary = document.getElementById("history-library-summary");
+  const target = document.getElementById("history-library-results");
+  const today = new Date();
+
+  if (!state.selectedHistoryMonth) {
+    state.selectedHistoryMonth = String(today.getMonth() + 1);
+  }
+  if (!state.selectedHistoryDay) {
+    state.selectedHistoryDay = String(today.getDate());
+  }
+
+  populateHistoryMonthOptions(monthSelect, state.selectedHistoryMonth);
+  populateHistoryDayOptions(daySelect, state.selectedHistoryDay);
+
+  if (!state.historyLibrary.length) {
+    summary.textContent = "No history library entries loaded yet.";
+    target.className = "row-stack empty-state";
+    target.textContent = "No history library entries loaded yet.";
+    return;
+  }
+
+  const month = Number(state.selectedHistoryMonth || today.getMonth() + 1);
+  const day = Number(state.selectedHistoryDay || today.getDate());
+  const filtered = state.historyLibrary.filter((item) => item.month === month && item.day === day);
+  summary.textContent = `${state.historyLibrary.length} history item(s) loaded. Showing ${filtered.length} for ${formatHistoryMonth(month)} ${day}.`;
+  if (!filtered.length) {
+    target.className = "row-stack empty-state";
+    target.textContent = "No history entries are stored for that date yet.";
+    return;
+  }
+  target.className = "row-stack";
+  target.innerHTML = filtered
+    .map(
+      (item) => `
+        <article class="data-row">
+          <div class="data-row-head">
+            <span class="strip-label">${escapeHtml(item.year_label)}</span>
+            <strong>${escapeHtml(item.title)}</strong>
+          </div>
+          <p>${escapeHtml(item.summary)}</p>
+          ${
+            (item.references || []).length
+              ? `<p class="meta-inline">${escapeHtml(item.references[0])}</p>`
+              : ""
+          }
+        </article>
+      `,
+    )
+    .join("");
+}
+
 function renderReadingBooks(items) {
   const summary = document.getElementById("reading-summary");
   const selector = document.getElementById("reading-book-select");
@@ -1002,6 +1073,65 @@ function renderReadingBooks(items) {
       </div>
     </article>
   `;
+}
+
+function populateHistoryMonthOptions(select, selectedValue) {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  select.innerHTML = months
+    .map(
+      (label, index) =>
+        `<option value="${index + 1}" ${String(index + 1) === String(selectedValue) ? "selected" : ""}>${escapeHtml(label)}</option>`,
+    )
+    .join("");
+}
+
+function populateHistoryDayOptions(select, selectedValue) {
+  select.innerHTML = Array.from({ length: 31 }, (_, index) => index + 1)
+    .map(
+      (day) =>
+        `<option value="${day}" ${String(day) === String(selectedValue) ? "selected" : ""}>${day}</option>`,
+    )
+    .join("");
+}
+
+function setHistoryLibraryToToday() {
+  const today = new Date();
+  state.selectedHistoryMonth = String(today.getMonth() + 1);
+  state.selectedHistoryDay = String(today.getDate());
+  renderHistoryLibrary(state.historyLibrary);
+  setWorkspaceNote("History library set to today.");
+}
+
+function formatHistoryMonth(month) {
+  const months = [
+    "",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  return months[month] || "Unknown";
 }
 
 function renderDailyBrief(payload) {
