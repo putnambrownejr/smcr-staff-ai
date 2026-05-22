@@ -88,6 +88,7 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Command Snapshots" in response.text
     assert "Start Here" in response.text
     assert "Battle Rhythm Editor" in response.text
+    assert "Act Now" in response.text
     assert "Skip to dashboard content" in response.text
     assert "dashboard.js" in response.text
 

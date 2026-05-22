@@ -373,7 +373,7 @@ function renderChief(payload) {
   document.getElementById("chief-count").textContent = String((payload.top_priority_items || []).length);
   renderList("chief-summary", payload.summary_lines || []);
   const items = payload.top_priority_items || payload.action_items || [];
-  renderQueue(items);
+  renderQueue(items, payload.battle_rhythm_health?.hot_items || []);
 }
 
 function renderNextDrillReadiness(payload) {
@@ -1122,15 +1122,18 @@ function renderSourceUpdates(items) {
     .join("");
 }
 
-function renderQueue(items) {
+function renderQueue(items, hotItems = []) {
   const target = document.getElementById("priority-queue");
-  if (!items.length) {
+  const normalizedItems = Array.isArray(items) ? items : [];
+  const normalizedHotItems = Array.isArray(hotItems) ? hotItems : [];
+  const combined = buildActionStack(normalizedItems, normalizedHotItems);
+  if (!combined.length) {
     target.className = "row-stack empty-state";
     target.textContent = "No priority items returned yet.";
     return;
   }
   target.className = "row-stack";
-  target.innerHTML = items
+  target.innerHTML = combined
     .map(
       (item) => `
         <article class="data-row">
@@ -1138,11 +1141,44 @@ function renderQueue(items) {
             <span class="strip-label">${escapeHtml(item.category || "watch")}</span>
             <strong>${escapeHtml(item.title || "Untitled item")}</strong>
           </div>
-          <p>${escapeHtml(item.recommendation || item.notes || "")}</p>
+          <p>${escapeHtml(item.recommendation || item.notes || item.detail || "")}</p>
         </article>
       `,
     )
     .join("");
+}
+
+function buildActionStack(items, hotItems) {
+  const combined = [];
+  const seen = new Set();
+
+  for (const item of items.slice(0, 6)) {
+    const key = `${item.category || "watch"}::${item.title || ""}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    combined.push(item);
+  }
+
+  for (const hotItem of hotItems.slice(0, 4)) {
+    const title = String(hotItem || "").trim();
+    if (!title) {
+      continue;
+    }
+    const key = `continuity::${title}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    combined.push({
+      category: "continuity",
+      title,
+      detail: "Continuity drift from the battle rhythm board needs a direct look.",
+    });
+  }
+
+  return combined;
 }
 
 function renderEntryRows(targetId, items, emptyText) {
