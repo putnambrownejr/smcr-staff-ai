@@ -98,6 +98,19 @@ class DashboardCustomWatchFeed(BaseModel):
     preview_items: list[DashboardTickerItem] = Field(default_factory=list)
 
 
+class DashboardReferenceLink(BaseModel):
+    title: str
+    url: str
+
+
+class DashboardReferenceEntry(BaseModel):
+    slug: str
+    title: str
+    summary: str
+    note_path: str
+    official_links: list[DashboardReferenceLink] = Field(default_factory=list)
+
+
 class DashboardWorkspaceResponse(BaseModel):
     mode: str
     user_key: str | None = None
@@ -122,5 +135,6 @@ class DashboardWorkspaceResponse(BaseModel):
     custom_watch_feeds: list[DashboardCustomWatchFeed] = Field(default_factory=list)
     today_in_history: list[TodayInMarineHistoryItem] = Field(default_factory=list)
     history_library: list[TodayInMarineHistoryItem] = Field(default_factory=list)
+    reference_library: list[DashboardReferenceEntry] = Field(default_factory=list)
     reading_books: list[DashboardReadingBook] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

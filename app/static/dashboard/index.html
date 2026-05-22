@@ -663,6 +663,29 @@
 
           <article class="panel full-span">
             <div class="panel-header">
+              <h2>Doctrine / Reference Library</h2>
+              <p>Browse the repo’s curated source notes for doctrine, admin, planning, logistics, PME, and staff-reference grounding.</p>
+            </div>
+            <div id="reference-summary" class="meta-inline">No reference notes loaded yet.</div>
+            <details id="reference-library-drawer" class="panel-drawer reading-drawer">
+              <summary>
+                <span>Open reference library</span>
+                <span class="drawer-label">Select note</span>
+              </summary>
+              <div class="panel-drawer-body">
+                <label>
+                  <span>Reference note</span>
+                  <select id="reference-select">
+                    <option value="">No reference notes loaded yet.</option>
+                  </select>
+                </label>
+                <div id="reference-library" class="reading-detail empty-state">No reference notes loaded yet.</div>
+              </div>
+            </details>
+          </article>
+
+          <article class="panel full-span">
+            <div class="panel-header">
               <h2>Commandant's Reading List</h2>
               <p>Track what you’ve read, keep notes, and let future recommendations key off your reading history.</p>
             </div>
@@ -1110,7 +1133,7 @@
     <script>
       (function loadDashboardAssets() {
         const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
-        const assetVersion = "20260521d";
+        const assetVersion = "20260522a";
         const stylesheet = document.getElementById("dashboard-style");
         stylesheet.href = `${staticBase}/dashboard.css?v=${assetVersion}`;
 

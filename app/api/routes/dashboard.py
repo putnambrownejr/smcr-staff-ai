@@ -21,6 +21,8 @@ from app.schemas.dashboard import (
     DashboardCustomWatchFeed,
     DashboardDocumentDetail,
     DashboardReadingBook,
+    DashboardReferenceEntry,
+    DashboardReferenceLink,
     DashboardTemplateReference,
     DashboardTickerItem,
     DashboardWorkspaceResponse,
@@ -279,6 +281,7 @@ def get_dashboard_data(
         custom_watch_feeds=custom_watch_feeds,
         today_in_history=history_service.get_for_date(datetime.now(UTC).date()),
         history_library=history_library,
+        reference_library=_reference_library(),
         reading_books=_reading_books(
             reading_catalog=reading_catalog,
             reading_progress=reading_progress,
@@ -333,6 +336,7 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
         custom_watch_feeds=custom_watch_feeds,
         today_in_history=history_service.get_for_date(datetime.now(UTC).date()),
         history_library=history_service.list_items(),
+        reference_library=_reference_library(),
         reading_books=_reading_books(
             reading_catalog=reading_catalog,
             reading_progress={},
@@ -362,6 +366,7 @@ def _workspace_response(
     custom_watch_feeds: list[DashboardCustomWatchFeed],
     today_in_history: list[TodayInMarineHistoryItem],
     history_library: list[TodayInMarineHistoryItem],
+    reference_library: list[DashboardReferenceEntry],
     reading_books: list[DashboardReadingBook],
 ) -> DashboardWorkspaceResponse:
     summary_lines = [
@@ -414,6 +419,7 @@ def _workspace_response(
         custom_watch_feeds=custom_watch_feeds,
         today_in_history=today_in_history,
         history_library=history_library,
+        reference_library=reference_library,
         reading_books=reading_books,
         warnings=warnings,
     )
@@ -555,6 +561,83 @@ def _reading_books(
         )
         for book in books
     ]
+
+
+def _reference_library() -> list[DashboardReferenceEntry]:
+    source_dir = Path("docs/sources")
+    if not source_dir.exists():
+        return []
+    entries = [
+        _reference_entry_from_file(path)
+        for path in sorted(source_dir.glob("*.md"))
+        if path.name.lower() != "readme.md"
+    ]
+    return [entry for entry in entries if entry is not None]
+
+
+def _reference_entry_from_file(path: Path) -> DashboardReferenceEntry | None:
+    text = path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    title = next((line.removeprefix("#").strip() for line in lines if line.startswith("# ")), "")
+    if not title:
+        return None
+    summary = _extract_reference_summary(lines)
+    official_links = _extract_reference_links(lines)
+    return DashboardReferenceEntry(
+        slug=path.stem,
+        title=title,
+        summary=summary or "Curated source note for staff reference and future grounding.",
+        note_path=path.as_posix(),
+        official_links=official_links[:6],
+    )
+
+
+def _extract_reference_summary(lines: list[str]) -> str:
+    summary_parts: list[str] = []
+    capture = False
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            if capture and summary_parts:
+                break
+            continue
+        if stripped.startswith("# "):
+            capture = True
+            continue
+        if not capture:
+            continue
+        if stripped.startswith("## ") or stripped.startswith("- "):
+            break
+        summary_parts.append(stripped)
+    return " ".join(summary_parts).strip()
+
+
+def _extract_reference_links(lines: list[str]) -> list[DashboardReferenceLink]:
+    links: list[DashboardReferenceLink] = []
+    current_title = ""
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("- Title: "):
+            current_title = stripped.removeprefix("- Title: ").strip()
+            continue
+        if stripped.startswith("- Official URL: "):
+            url = stripped.removeprefix("- Official URL: ").strip()
+            if current_title and url:
+                links.append(DashboardReferenceLink(title=current_title, url=url))
+            continue
+        if stripped.startswith("url:"):
+            url = stripped.removeprefix("url:").strip()
+            if current_title and url:
+                links.append(DashboardReferenceLink(title=current_title, url=url))
+    deduped: list[DashboardReferenceLink] = []
+    seen: set[tuple[str, str]] = set()
+    for link in links:
+        key = (link.title, link.url)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(link)
+    return deduped
 
 
 def _admin_from_demo_brief(chief_brief: ChiefBriefResponse) -> AdminReadinessResponse:

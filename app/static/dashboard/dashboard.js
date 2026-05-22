@@ -6,6 +6,7 @@ const state = {
   workspace: null,
   selectedDocumentId: null,
   selectedReadingSlug: "",
+  selectedReferenceSlug: "",
   historyLibrary: [],
   selectedHistoryMonth: "",
   selectedHistoryDay: "",
@@ -224,6 +225,10 @@ document.getElementById("reading-book-select").addEventListener("change", (event
   state.selectedReadingSlug = event.target.value || "";
   renderReadingBooks(state.workspace?.reading_books || []);
 });
+document.getElementById("reference-select").addEventListener("change", (event) => {
+  state.selectedReferenceSlug = event.target.value || "";
+  renderReferenceLibrary(state.workspace?.reference_library || []);
+});
 document.getElementById("history-library-show-date").addEventListener("click", () => {
   renderHistoryLibrary(state.historyLibrary);
 });
@@ -374,6 +379,7 @@ function renderWorkspace(payload) {
   renderCustomWatchFeeds(payload.custom_watch_feeds || []);
   renderHistory(payload.today_in_history || []);
   renderHistoryLibrary(payload.history_library || []);
+  renderReferenceLibrary(payload.reference_library || []);
   renderReadingBooks(payload.reading_books || []);
   renderTrackedActions(payload.tracked_actions || []);
   renderOpportunities(payload.tracked_opportunities || payload.career_watch?.tracked_opportunities || []);
@@ -869,6 +875,66 @@ function renderSectionMemoryProfile(profile) {
       `;
     })
     .join("");
+}
+
+function renderReferenceLibrary(items) {
+  const summary = document.getElementById("reference-summary");
+  const selector = document.getElementById("reference-select");
+  const target = document.getElementById("reference-library");
+  if (!items.length) {
+    summary.textContent = "No reference notes loaded yet.";
+    selector.innerHTML = '<option value="">No reference notes loaded yet.</option>';
+    selector.disabled = true;
+    target.className = "reading-detail empty-state";
+    target.innerHTML = `
+      <p>No reference notes loaded yet.</p>
+      <p class="helper-text">Curated doctrine and staff-source notes from the repo will appear here.</p>
+    `;
+    return;
+  }
+  summary.textContent = `${items.length} curated reference note(s) loaded from the repo source bench.`;
+  if (!state.selectedReferenceSlug || !items.some((item) => item.slug === state.selectedReferenceSlug)) {
+    state.selectedReferenceSlug = items[0].slug;
+  }
+  selector.disabled = false;
+  selector.innerHTML = items
+    .map(
+      (item) =>
+        `<option value="${escapeHtml(item.slug)}" ${item.slug === state.selectedReferenceSlug ? "selected" : ""}>${escapeHtml(item.title)}</option>`,
+    )
+    .join("");
+  const selected = items.find((item) => item.slug === state.selectedReferenceSlug) || items[0];
+  const links = Array.isArray(selected.official_links) ? selected.official_links : [];
+  target.className = "reading-detail";
+  target.innerHTML = `
+    <article class="reading-item reading-focus-card">
+      <div class="data-row-head">
+        <span class="strip-label">Repo note</span>
+        <strong>${escapeHtml(selected.title)}</strong>
+      </div>
+      <p>${escapeHtml(selected.summary)}</p>
+      <p class="meta-inline">${escapeHtml(selected.note_path)}</p>
+      <div class="row-stack">
+        ${
+          links.length
+            ? links
+                .map(
+                  (link) => `
+                    <article class="data-row">
+                      <div class="data-row-head">
+                        <span class="strip-label">Official source</span>
+                        <strong>${escapeHtml(link.title)}</strong>
+                      </div>
+                      <p><a href="${escapeHtml(link.url)}" target="_blank" rel="noreferrer">${escapeHtml(link.url)}</a></p>
+                    </article>
+                  `,
+                )
+                .join("")
+            : '<p class="helper-text">No official source links were extracted from this note yet.</p>'
+        }
+      </div>
+    </article>
+  `;
 }
 
 function renderMaradminTicker(items) {

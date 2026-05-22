@@ -68,10 +68,13 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "MOS bench" in response.text
     assert "MOS advisor" in response.text
     assert "History Library" in response.text
+    assert "Doctrine / Reference Library" in response.text
     assert "Show date" in response.text
     assert "Use today" in response.text
     assert 'id="history-library-month"' in response.text
     assert 'id="history-library-day"' in response.text
+    assert 'id="reference-select"' in response.text
+    assert "Open reference library" in response.text
     assert "Save section memory" in response.text
     assert "Save battle rhythm board" in response.text
     assert "Open reading tracker" in response.text
@@ -190,10 +193,14 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'id="history-library-day"' in html
     assert 'id="history-library-summary"' in html
     assert 'id="history-library-results"' in html
+    assert 'id="reference-summary"' in html
+    assert 'id="reference-select"' in html
+    assert 'id="reference-library"' in html
     assert 'id="mos-advisor-output"' in html
     assert 'renderSectionMemoryProfile(' in js
     assert 'renderMosBenchLibrary(' in js
     assert 'renderHistoryLibrary(' in js
+    assert 'renderReferenceLibrary(' in js
     assert 'renderReadingBooks(' in js
     assert 'renderAgentAdvisoryOutput(' in js
     assert 'data-section-memory-edit' in js
@@ -214,6 +221,7 @@ def test_demo_dashboard_data_route_returns_workspace_payload() -> None:
     assert payload["daily_ops_brief"]["executive_snapshot"]
     assert payload["analyst_brief"]["kpi_summary"]
     assert "history_library" in payload
+    assert "reference_library" in payload
     assert "tracked_opportunities" in payload
 
 
@@ -452,6 +460,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["section_memory_profile"]["entries"][0]["section"] == "S-6"
         assert payload["chief_brief"]["battle_rhythm_summary"]
         assert "history_library" in payload
+        assert payload["reference_library"]
         assert payload["navadmin_ticker"][0]["status"] == "NAVADMIN"
         assert payload["alnav_ticker"][0]["status"] == "ALNAV"
         assert payload["dod_ticker"][0]["status"] == "DoD"
