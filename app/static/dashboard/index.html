@@ -430,70 +430,15 @@
             <div id="priority-queue" class="row-stack empty-state">Load the workspace to see current priorities.</div>
           </article>
 
-          <article class="panel full-span">
+          <article class="panel full-span battle-rhythm-overview-panel">
             <div class="panel-header">
               <h2>Battle Rhythm Board</h2>
               <p>Persistent assumptions, decisions, questions, and due-outs that should survive between drills.</p>
             </div>
-            <form id="battle-rhythm-form" class="tool-form">
-              <div class="form-row">
-                <label>
-                  <span>Board title</span>
-                  <input name="board_title" type="text" placeholder="June drill battle rhythm board" />
-                </label>
-                <label>
-                  <span>Next touchpoint</span>
-                  <input name="next_touchpoint" type="text" placeholder="Before next drill sync, confirm due-outs." />
-                </label>
-              </div>
-              <label>
-                <span>Commander focus (one per line)</span>
-                <textarea
-                  name="focus"
-                  rows="3"
-                  placeholder="Protect training value&#10;Keep supportability honest&#10;Leave with named owners"
-                ></textarea>
-              </label>
-              <div class="form-row">
-                <label>
-                  <span>Assumption log (one per line, optional `SECTION: text`)</span>
-                  <textarea
-                    name="assumption_log"
-                    rows="5"
-                    placeholder="S-4: Transport window remains workable.&#10;S-6: One simple reporting method is enough."
-                  ></textarea>
-                </label>
-                <label>
-                  <span>Commander decision log (one per line, optional `SECTION: text`)</span>
-                  <textarea
-                    name="commander_decision_log"
-                    rows="5"
-                    placeholder="Command: Approve one primary lane.&#10;XO: Confirm release criteria for support sections."
-                  ></textarea>
-                </label>
-              </div>
-              <div class="form-row">
-                <label>
-                  <span>Question log (one per line, optional `SECTION: text`)</span>
-                  <textarea
-                    name="question_log"
-                    rows="5"
-                    placeholder="S-1/Admin: Who still lacks orders coverage?&#10;S-6: What access problem is still implied?"
-                  ></textarea>
-                </label>
-                <label>
-                  <span>Due-out board (one per line, optional `SECTION: text`)</span>
-                  <textarea
-                    name="due_out_board"
-                    rows="5"
-                    placeholder="S-6: Confirm reporting method before next sync.&#10;S-4: Lock final transport timeline."
-                  ></textarea>
-                </label>
-              </div>
-              <div class="button-row">
-                <button type="submit">Save battle rhythm board</button>
-              </div>
-            </form>
+            <div class="button-row compact-controls">
+              <button type="button" class="secondary" id="battle-rhythm-open-editor">Open board editor</button>
+              <button type="button" class="secondary" id="battle-rhythm-open-planning-cell">Open planning cell</button>
+            </div>
             <div class="brief-grid">
               <section class="brief-block full-span">
                 <h3>Continuity watch</h3>
@@ -763,6 +708,71 @@
                 </div>
               </section>
             </div>
+          </article>
+          <article class="panel tool-panel full-span">
+            <div class="panel-header">
+              <h2>Battle Rhythm Editor</h2>
+              <p>Update the persistent board here when assumptions, decisions, questions, or due-outs need a real edit.</p>
+            </div>
+            <form id="battle-rhythm-form" class="tool-form">
+              <div class="form-row">
+                <label>
+                  <span>Board title</span>
+                  <input name="board_title" type="text" placeholder="June drill battle rhythm board" />
+                </label>
+                <label>
+                  <span>Next touchpoint</span>
+                  <input name="next_touchpoint" type="text" placeholder="Before next drill sync, confirm due-outs." />
+                </label>
+              </div>
+              <label>
+                <span>Commander focus (one per line)</span>
+                <textarea
+                  name="focus"
+                  rows="3"
+                  placeholder="Protect training value&#10;Keep supportability honest&#10;Leave with named owners"
+                ></textarea>
+              </label>
+              <div class="form-row">
+                <label>
+                  <span>Assumption log (one per line, optional `SECTION: text`)</span>
+                  <textarea
+                    name="assumption_log"
+                    rows="5"
+                    placeholder="S-4: Transport window remains workable.&#10;S-6: One simple reporting method is enough."
+                  ></textarea>
+                </label>
+                <label>
+                  <span>Commander decision log (one per line, optional `SECTION: text`)</span>
+                  <textarea
+                    name="commander_decision_log"
+                    rows="5"
+                    placeholder="Command: Approve one primary lane.&#10;XO: Confirm release criteria for support sections."
+                  ></textarea>
+                </label>
+              </div>
+              <div class="form-row">
+                <label>
+                  <span>Question log (one per line, optional `SECTION: text`)</span>
+                  <textarea
+                    name="question_log"
+                    rows="5"
+                    placeholder="S-1/Admin: Who still lacks orders coverage?&#10;S-6: What access problem is still implied?"
+                  ></textarea>
+                </label>
+                <label>
+                  <span>Due-out board (one per line, optional `SECTION: text`)</span>
+                  <textarea
+                    name="due_out_board"
+                    rows="5"
+                    placeholder="S-6: Confirm reporting method before next sync.&#10;S-4: Lock final transport timeline."
+                  ></textarea>
+                </label>
+              </div>
+              <div class="button-row">
+                <button type="submit">Save battle rhythm board</button>
+              </div>
+            </form>
           </article>
           <article class="panel tool-panel">
             <div class="panel-header">
@@ -1077,7 +1087,7 @@
     <script>
       (function loadDashboardAssets() {
         const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
-        const assetVersion = "20260521b";
+        const assetVersion = "20260521c";
         const stylesheet = document.getElementById("dashboard-style");
         stylesheet.href = `${staticBase}/dashboard.css?v=${assetVersion}`;
 

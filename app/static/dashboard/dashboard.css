@@ -313,6 +313,10 @@ body {
   border-top: 4px solid var(--amber);
 }
 
+.battle-rhythm-overview-panel {
+  border-top: 4px solid var(--field);
+}
+
 .workflow-priority-grid {
   display: grid;
   gap: 18px;

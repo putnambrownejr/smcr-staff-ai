@@ -253,6 +253,12 @@ document
 document
   .getElementById("workflow-open-brief-clinic")
   .addEventListener("click", () => launchWalkInWorkflow("brief-clinic"));
+document
+  .getElementById("battle-rhythm-open-editor")
+  .addEventListener("click", () => openBattleRhythmEditor());
+document
+  .getElementById("battle-rhythm-open-planning-cell")
+  .addEventListener("click", () => launchThinStaffWorkflow("planning-cell"));
 
 document.addEventListener("click", async (event) => {
   const documentButton = event.target.closest("[data-document-id]");
@@ -574,6 +580,13 @@ function launchWalkInWorkflow(mode) {
   }
   document.getElementById("run-lone-planner")?.scrollIntoView({ behavior: "smooth", block: "start" });
   setWorkspaceNote("Opened lone planner mode from the walk-in brief pack.");
+}
+
+function openBattleRhythmEditor() {
+  state.activeLane = "draft";
+  applyLaneVisibility();
+  document.getElementById("battle-rhythm-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  setWorkspaceNote("Opened the battle rhythm editor.");
 }
 
 function primeThinStaffForms() {
