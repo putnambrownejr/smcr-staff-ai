@@ -1,4 +1,4 @@
-# CLAUDE.md
+# GEMINI.md
 
 This repository is safe to reason about from GitHub, but not all local user data should be shared with hosted AI systems.
 
@@ -8,11 +8,10 @@ Before answering non-trivial capability questions, search:
 
 1. [C:\smcr-staff-ai\README.md](C:/smcr-staff-ai/README.md)
 2. [C:\smcr-staff-ai\AGENTS.md](C:/smcr-staff-ai/AGENTS.md)
-3. [C:\smcr-staff-ai\docs\project_purpose.md](C:/smcr-staff-ai/docs/project_purpose.md)
-4. [C:\smcr-staff-ai\docs\chatgpt_repo_mode.md](C:/smcr-staff-ai/docs/chatgpt_repo_mode.md)
+3. [C:\smcr-staff-ai\docs\core_documents\project_purpose.md](C:/smcr-staff-ai/docs/core_documents/project_purpose.md)
+4. [C:\smcr-staff-ai\docs\compatibility\chatgpt_repo_mode.md](C:/smcr-staff-ai/docs/compatibility/chatgpt_repo_mode.md)
 5. [C:\smcr-staff-ai\app\services\agents\registry.py](C:/smcr-staff-ai/app/services/agents/registry.py)
-6. [C:\smcr-staff-ai\chatgpt_app\main.py](C:/smcr-staff-ai/chatgpt_app/main.py)
-7. [C:\smcr-staff-ai\app\api\routes](C:/smcr-staff-ai/app/api/routes)
+6. [C:\smcr-staff-ai\app\api\routes](C:/smcr-staff-ai/app/api/routes)
 
 ## What Not To Assume You Can See
 
@@ -29,11 +28,11 @@ GitHub access does not include:
 
 Do not encourage users to paste raw local handoffs, raw document previews, filenames, context IDs, exact drill-event locations, or unnecessary identifying details into hosted AI tools.
 
-If a user wants to bring local context into Claude or another external model, prefer the share-safe packet route:
+If a user wants to bring local context into Gemini or another external model, prefer the share-safe packet route:
 
 - `POST /sharing/external-ai-packet`
 
-Use `target_platform: "claude"` when building the packet if the user wants Claude-specific prompt framing.
+Use `target_platform: "gemini"` when building the packet if the user wants Gemini-specific prompt framing.
 
 That route is designed to:
 

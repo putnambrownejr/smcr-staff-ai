@@ -30,8 +30,8 @@ Agents should prefer checklists, templates, and questions over authoritative out
 
 ## OSINT Trend Agent
 
-The OSINT agent is a public-source trend and evidence aggregation assistant. It should consume user-supplied trusted public source items, not perform unrestricted scraping. Outputs must include citations, counterarguments or alternative explanations, confidence weighting, source caveats, and human-review prompts.
+The OSINT agent is a public-source trend and evidence aggregation assistant. It should consume user-supplied trusted public source items before turning to outside sources. When utilizing outside sources it should prefer institutional/trusted and validated sources. Outputs must include citations, counterarguments or alternative explanations, confidence weighting, source caveats, and human-review prompts.
 
-It must not collect private personal data, bypass access controls, evade rate limits, or infer sensitive operational details from public chatter.
+It must not collect private personal data from the user, bypass access controls, evade rate limits, or infer sensitive operational details from public chatter.
 
 The vetted social connector at `/social/ingest` normalizes public news/social trend records into the `context.extra.source_items` shape. Future live platform adapters should be explicit, terms-aware, rate-limited, fixture-tested, and disabled by default unless configured.

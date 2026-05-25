@@ -18,4 +18,4 @@ Use official public sources where possible. Preserve effective dates and version
 
 Quick-reference Markdown files live in `docs/sources/`. These files should contain links, metadata, usage notes, and ingestion guidance only. They should not contain copied publication bodies.
 
-The repository also includes `docs/usmc_history_context.md` as a compact Marine Corps history and heritage study reference for agents and PME prompts. It is not official curriculum and should be verified against current training materials.
+The repository also includes `docs/sources/usmc_history_context.md` as a compact Marine Corps history and heritage study reference for agents and PME prompts. It is not official curriculum and should be verified against current training materials.

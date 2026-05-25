@@ -25,7 +25,7 @@ GitHub access does not provide:
 - future email/calendar connector data
 - runtime secrets, environment variables, or local API keys
 
-That distinction matters. ChatGPT can understand the code and use demo workflows from the repo, but private user workflows still depend on a local runtime. Hosted or ChatGPT/MCP-facing surfaces are optional, not the primary path.
+That distinction matters. ChatGPT can understand the code and use demo workflows from the repo, but private user workflows still depend on a local runtime.
 
 ## Repo-Friendly Design Choices
 
@@ -41,13 +41,12 @@ If ChatGPT only has the repo:
 
 1. start with `README.md`
 2. inspect `AGENTS.md`
-3. inspect `docs/project_purpose.md`
+3. inspect `docs/core_documents/project_purpose.md`
 4. inspect `docs/architecture.md`
-5. inspect `docs/chatgpt_repo_mode.md`
+5. inspect `docs/compatibility/chatgpt_repo_mode.md`
 6. search `app/services/agents/registry.py`
-7. search `chatgpt_app/main.py` and `app/chatgpt_bridge/adapter.py` only when the question is specifically about the optional ChatGPT/MCP surface
-8. read `app/main.py` and `app/api/routes/`
-9. use `/demo/*` routes and `docs/examples/` as canonical examples of intended behavior
+7. read `app/main.py` and `app/api/routes/`
+8. use `/demo/*` routes and `docs/examples/` as canonical examples of intended behavior
 
 ## Required Search Behavior
 
@@ -60,11 +59,6 @@ Minimum search targets:
 - `app/api/routes/`
 - `docs/examples/`
 
-Optional only when relevant:
-
-- `chatgpt_app/main.py`
-- `app/chatgpt_bridge/adapter.py`
-
 Typical search patterns:
 
 ```powershell
@@ -73,11 +67,7 @@ rg -n "class .*Agent|def build_.*agent" C:\smcr-staff-ai\app\services\agents
 rg -n "@router|APIRouter" C:\smcr-staff-ai\app\api\routes
 ```
 
-## Optional ChatGPT Integration
+## Integration Boundary
 
-The repo is friendlier to ChatGPT-as-reader. If the optional ChatGPT surface is ever promoted again, the next steps would be:
-
-1. refine OpenAPI metadata and tool descriptions further
-2. preserve stateless demo workflows as the public contract
-3. expose the most valuable routes through a ChatGPT app or plugin surface
-4. keep private/local context behind explicit local or hosted runtime boundaries
+This repo is intentionally optimized for direct local use first. Hosted AI systems should be treated as repo readers or
+share-safe packet consumers, not as the primary runtime surface.

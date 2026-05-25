@@ -55,7 +55,7 @@ Use `genai` when the target is a government-hosted or otherwise unspecified mode
 
 For provider-specific examples and starter prompts, see:
 
-- [C:\smcr-staff-ai\docs\external_ai_playbooks.md](C:/smcr-staff-ai/docs/external_ai_playbooks.md)
+- [C:\smcr-staff-ai\docs\compatibility\external_ai_playbooks.md](C:/smcr-staff-ai/docs/compatibility/external_ai_playbooks.md)
 
 ## Why This Exists
 
