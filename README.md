@@ -16,7 +16,7 @@ The project has a simple center of gravity:
 
 In plain language, `smcr-staff-ai` exists to help Marine Corps Reservists stay aware, stay sharp, and stay ahead of the friction of reserve service by turning scattered obligations, staff problems, and training demands into organized, advisory, usable outputs.
 
-For the fuller version, see [docs/project_purpose.md](/C:/smcr-staff-ai/docs/project_purpose.md).
+For the fuller version, see [docs/core_documents/project_purpose.md](/C:/smcr-staff-ai/docs/core_documents/project_purpose.md).
 
 ## Safety First
 
@@ -139,20 +139,14 @@ Open the lightweight dashboard:
 http://127.0.0.1:8000/dashboard
 ```
 
-For the current optional container path, see [docs/docker_local.md](/C:/smcr-staff-ai/docs/docker_local.md).
-For one-command local startup, use [scripts/start-local.cmd](/C:/smcr-staff-ai/scripts/start-local.cmd) or [scripts/start-local.ps1](/C:/smcr-staff-ai/scripts/start-local.ps1).
-
-For GitHub/ChatGPT-friendly orientation, also see [docs/chatgpt_repo_mode.md](/C:/smcr-staff-ai/docs/chatgpt_repo_mode.md).
-For the lowest-friction GitHub-plus-local workflow, see [docs/how_to_use_with_chatgpt.md](/C:/smcr-staff-ai/docs/how_to_use_with_chatgpt.md).
-For project purpose and scope, see [docs/project_purpose.md](/C:/smcr-staff-ai/docs/project_purpose.md).
-For Claude/Gemini/Grok/Copilot/GENAI-safe usage patterns, see [docs/external_ai_safe_use.md](/C:/smcr-staff-ai/docs/external_ai_safe_use.md) and [docs/external_ai_playbooks.md](/C:/smcr-staff-ai/docs/external_ai_playbooks.md).
-For the quarantined optional ChatGPT/MCP and Docker surfaces, see [docs/optional_legacy_surfaces.md](/C:/smcr-staff-ai/docs/optional_legacy_surfaces.md).
-For the first-pass ChatGPT-facing tool plan, see [docs/chatgpt_app_surface.md](/C:/smcr-staff-ai/docs/chatgpt_app_surface.md).
-For the current in-repo bridge scaffold, see [docs/chatgpt_app_scaffold.md](/C:/smcr-staff-ai/docs/chatgpt_app_scaffold.md).
-For the optional local ChatGPT app server layer, see [chatgpt_app/README.md](/C:/smcr-staff-ai/chatgpt_app/README.md).
-For one-command ChatGPT app startup, use [scripts/start-chatgpt-app.cmd](/C:/smcr-staff-ai/scripts/start-chatgpt-app.cmd) or [scripts/start-chatgpt-app.ps1](/C:/smcr-staff-ai/scripts/start-chatgpt-app.ps1).
-For the build-vs-reuse decision matrix, see [docs/capability_reuse_audit.md](/C:/smcr-staff-ai/docs/capability_reuse_audit.md).
-For a local-only offline note template, see [docs/offline_notes.example.md](/C:/smcr-staff-ai/docs/offline_notes.example.md); keep the real `docs/offline_notes.md` untracked.
+Run the local app with `uvicorn app.main:app --reload`.
+For a fast repo map, see [docs/README.md](/C:/smcr-staff-ai/docs/README.md).
+For hosted-AI/repo-only orientation, see [docs/compatibility/chatgpt_repo_mode.md](/C:/smcr-staff-ai/docs/compatibility/chatgpt_repo_mode.md).
+For the lowest-friction GitHub-plus-local workflow, see [docs/compatibility/how_to_use_with_chatgpt.md](/C:/smcr-staff-ai/docs/compatibility/how_to_use_with_chatgpt.md).
+For project purpose and scope, see [docs/core_documents/project_purpose.md](/C:/smcr-staff-ai/docs/core_documents/project_purpose.md).
+For Claude/Gemini/Grok/Copilot/GENAI-safe usage patterns, see [docs/compatibility/external_ai_safe_use.md](/C:/smcr-staff-ai/docs/compatibility/external_ai_safe_use.md) and [docs/compatibility/external_ai_playbooks.md](/C:/smcr-staff-ai/docs/compatibility/external_ai_playbooks.md).
+For the build-vs-reuse decision matrix, see [docs/compatibility/capability_reuse_audit.md](/C:/smcr-staff-ai/docs/compatibility/capability_reuse_audit.md).
+Working scratch notes currently live in [docs/core_documents/offline_notes.md](/C:/smcr-staff-ai/docs/core_documents/offline_notes.md); review before any public push.
 
 ## Calling The API
 
@@ -825,7 +819,7 @@ curl -X POST http://127.0.0.1:8000/sharing/external-ai-packet `
 
 This route is the preferred way to take local user context to an external AI. It withholds raw local file references, context IDs, and other fields that should usually stay on the machine, and it can tailor the recommended share prompt for `claude`, `gemini`, `grok`, `copilot`, `genai`, or a generic external model.
 
-For provider-specific defaults and starter prompts, see [docs/external_ai_playbooks.md](/C:/smcr-staff-ai/docs/external_ai_playbooks.md).
+For provider-specific defaults and starter prompts, see [docs/compatibility/external_ai_playbooks.md](/C:/smcr-staff-ai/docs/compatibility/external_ai_playbooks.md).
 
 Draft a proposed handoff update from notes:
 
@@ -1418,9 +1412,9 @@ Read these before expanding the project:
 - `docs/sources/correspondence_formatting.md`
 - `docs/sources/commandants_reading_list.md`
 - `docs/sources/tactical_handbooks_and_field_guides.md`
-- `docs/usmc_history_context.md`
-- `docs/staff_operating_model.md`
-- `docs/roadmap.md`
+- `docs/sources/usmc_history_context.md`
+- `docs/agents_setup/staff_operating_model.md`
+- `docs/core_documents/roadmap.md`
 
 The short version: keep it UNCLASSIFIED, public-source-oriented, citation-friendly, OPSEC-aware, and human-reviewed.
 
@@ -1432,10 +1426,8 @@ Start with:
 
 1. `README.md`
 2. `AGENTS.md`
-3. `docs/project_purpose.md`
-4. `docs/chatgpt_repo_mode.md`
+3. `docs/core_documents/project_purpose.md`
+4. `docs/compatibility/chatgpt_repo_mode.md`
 5. `app/services/agents/registry.py`
-6. `chatgpt_app/main.py`
-7. `app/chatgpt_bridge/adapter.py`
-8. `app/api/routes/`
-9. `docs/examples/`
+6. `app/api/routes/`
+7. `docs/examples/`

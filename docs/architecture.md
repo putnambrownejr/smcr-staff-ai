@@ -10,9 +10,8 @@ The primary product path is:
 2. local browser dashboard
 3. local-only continuity, memory, and document storage
 
-Optional surfaces such as the ChatGPT/MCP app layer and Docker/container path are kept available, but they are
-quarantined as secondary/legacy surfaces and should not drive default product decisions. See
-[optional_legacy_surfaces.md](/C:/smcr-staff-ai/docs/optional_legacy_surfaces.md).
+Older ChatGPT/MCP and Docker/container experiments have been removed. The repo should optimize for the direct local
+backend + dashboard path first.
 
 ## Layers
 
@@ -27,15 +26,9 @@ quarantined as secondary/legacy surfaces and should not drive default product de
 - `app/services/storage`: Local filesystem storage for user-provided working context.
 - `app/services/billets`: Advisory SMCR billet recommendation from parsed public-source listings.
 
-## Optional Legacy Surfaces
+## Compatibility Guidance
 
-These surfaces still exist, but are not the repo's center of gravity:
-
-- `chatgpt_app/`: optional local ChatGPT/MCP-facing surface
-- `app/chatgpt_bridge/`: optional bridge layer for that surface
-- `Dockerfile`, `docker-compose.yml`, `docs/docker_local.md`: optional container path
-
-They should be maintained only insofar as they do not distort the simpler local backend + dashboard workflow.
+Hosted-AI compatibility notes and repo-mode guidance live under `docs/compatibility/`.
 
 ## RAG Direction
 
@@ -45,7 +38,8 @@ Documents retain source identifiers, publication metadata, classification labels
 
 User-uploaded local context is stored separately and does not alter canonical document, doctrine, organization, exercise, or agent registry structure. Request models must explicitly name context IDs when a workflow should use local context.
 
-Deep research planning artifacts are stored under `docs/deep_research/` and summarized under `docs/sources/`. They are reference/planning material for ingestion design, not authoritative doctrine.
+Deep research planning artifacts are stored under `docs/deep_research/` and summarized under `docs/sources/`. They are
+reference/planning material for ingestion design, not authoritative doctrine.
 
 ## Source Storage Strategy
 

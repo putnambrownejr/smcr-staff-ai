@@ -79,7 +79,7 @@ class PrivacyHygieneAgent(Agent):
                 "Do you want the raw structured sweep from `/privacy/pre-push-review` too?",
                 "Should we add any more local-only path patterns to the high-risk list?",
             ],
-            citations=["README.md", ".gitignore", "docs/offline_notes.example.md"],
+            citations=["README.md", ".gitignore", "docs/core_documents/project_purpose.md"],
             confidence=Confidence.medium if result.safe_to_push else Confidence.low,
         )
 
