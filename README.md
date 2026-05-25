@@ -259,7 +259,7 @@ Import dated Marine Corps history notes from local markdown into the dashboard's
 ```powershell
 curl -X POST http://127.0.0.1:8000/history/import-markdown `
   -H "Content-Type: application/json" `
-  -d "{\"markdown_paths\":[\"C:\\Users\\putbr\\Downloads\\deep-research-reportUSMCHistory.md\",\"C:\\Users\\putbr\\Downloads\\deep-research-report.md\"],\"replace_existing\":false}"
+  -d "{\"markdown_paths\":[\"C:\\path\\to\\deep-research-reportUSMCHistory.md\",\"C:\\path\\to\\deep-research-report.md\"],\"replace_existing\":false}"
 ```
 
 This stores extracted date-linked history items under the local app-data path outside the repo and merges them with the built-in history seed for dashboard use.

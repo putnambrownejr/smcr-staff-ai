@@ -3,7 +3,7 @@
 ## Source
 
 - Source file: `docs/deep_research/plugin_architecture_recommendations.md`
-- Original user-provided file: `C:\Users\putbr\Downloads\deep-research-reportusmc5.md`
+- Original user-provided file: `C:\path\to\deep-research-reportusmc5.md`
 - Classification label: UNCLASSIFIED user-provided research note
 - Storage policy: Local repo research note; not canonical doctrine.
 
@@ -19,4 +19,3 @@
 - Added Chief/Aide orchestration service and `/chief/brief`.
 - Added personal document organizer over local context and `/personal-documents`.
 - Kept uploaded user documents separate from canonical doctrine/RAG source authority.
-
