@@ -9,6 +9,7 @@ Use this as the quick orientation point for human review.
 - [docs/sources](/C:/smcr-staff-ai/docs/sources): doctrine and reference notes
 - [data/seed](/C:/smcr-staff-ai/data/seed): example manifests and safe seed data
 - [tests](/C:/smcr-staff-ai/tests): offline verification coverage
+- [AGENTS.md](/C:/smcr-staff-ai/AGENTS.md): minimal tooling discovery shim that points back into `docs/`
 
 Review note:
 

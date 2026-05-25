@@ -36,7 +36,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | S-2 / intel advisor | Adds an explicit S-2 perspective for public-source estimates, information gaps, confidence-weighted staff support, and OSINT/public-source aggregation as a subordinate lane. | Working advisory agent |
 | S-3 / OpsO advisor | Adds an explicit S-3/OpsO perspective for reserve operations planning, training synchronization, battle rhythm, and decision support. | Working advisory agent |
 | S-4 / logistics advisor | Adds an explicit S-4/LogO perspective for reserve supportability, movement, sustainment, supply, maintenance, and logistics friction. | Working advisory agent |
-| S-6 / communications advisor | Adds an explicit S-6/CommO perspective for reserve C2 support, generic PACE framing, permissions, equipment, supportability friction, and PKI/CAC user-access issues as a subordinate lane. | Working advisory agent |
+| S-6 / communications advisor | Adds an explicit S-6/CommO perspective for reserve C2 support, PACE matrix planning, radio guard framing, permissions, equipment, supportability friction, and PKI/CAC user-access issues as a subordinate lane. | Working advisory agent |
 | G-9 / civil-military advisor | Adds an explicit G-9 perspective for civil considerations, partner coordination, external engagement continuity, and public context framing. | Working advisory agent |
 | Medical / Doc advisor | Adds a training-safe medical-support perspective for TCCC-aware planning, 9-line familiarity, CASEVAC structure, and event medical coordination. | Working advisory agent |
 | AirO advisor | Adds a generic aviation-support and air-ground coordination planning perspective for training and public staff-planning contexts. | Working advisory agent |
@@ -46,8 +46,8 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Repo privacy sweep | Reviews tracked paths, staged diffs, ignored local-only files, and likely PII/OPSEC backflow before push. | Working local review |
 | Chief/Aide orchestration brief | Combines session handoff, local personal docs, drill plans, MARADMIN-driven source updates, and reading suggestions into one advisory triage brief. | Working local orchestrator |
 | Text summarizer / checklist API | Turns pasted text into a local summary, due-outs, action items, checklist, and follow-up questions without storing the input. | Working local analysis |
-| Staff council | Vets ideas through company, battalion, and division/group staff roles, with S-2/G-2 tied to OSINT. Includes round-robin review. | Working scaffold |
-| Staff products | Builds advisory scaffolds for OPORDs, WARNOs, FRAGOs, SITREPs, AARs, naval letters, memos, and endorsements. | Working scaffold |
+| Staff council | Vets ideas through company, battalion, regiment/MEU/wing, division/group, MEF, and HQMC-adjacent staff roles with richer cross-staff critique and special-staff coverage. | Working advisory workflow |
+| Staff products | Builds advisory scaffolds for OPORDs, WARNOs, FRAGOs, CONOPs, SITREPs, IPBs, AARs, naval letters, memos, and endorsements. | Working advisory workflow |
 | Session handoffs | Stores minimum necessary local user context for PME, FitRep, annual drill dates, recurring checks, admin, drill, and preference reminders. | Working local storage |
 | Installation / base practical advisor | Helps with common Marine/joint-base access, sponsorship, REAL-ID, visitor-center, and command-event coordination friction while insisting on local verification. | Working advisory agent |
 | Local context storage | Lets users upload files/notes, RQS/BIO references, and drill templates as advisory local context without changing doctrine, org, exercise, agent, or canonical document structure. | Working local storage |
@@ -94,7 +94,7 @@ app/
   db/                  SQLModel database models and session setup
   schemas/             Pydantic request/response models
   services/
-    agents/            Agent interface, registry, placeholder agents
+    agents/            Agent interface, registry, and staff/MOS advisory agents
     analysis/          Local text summarization and checklist extraction
     admin/             Admin readiness digest and AdminO / S-1 support
     billets/           SMCR billet recommendation
@@ -141,6 +141,7 @@ http://127.0.0.1:8000/dashboard
 
 Run the local app with `uvicorn app.main:app --reload`.
 For a fast repo map, see [docs/README.md](/C:/smcr-staff-ai/docs/README.md).
+For tooling-oriented repo discovery, see [AGENTS.md](/C:/smcr-staff-ai/AGENTS.md).
 For hosted-AI/repo-only orientation, see [docs/compatibility/chatgpt_repo_mode.md](/C:/smcr-staff-ai/docs/compatibility/chatgpt_repo_mode.md).
 For the lowest-friction GitHub-plus-local workflow, see [docs/compatibility/how_to_use_with_chatgpt.md](/C:/smcr-staff-ai/docs/compatibility/how_to_use_with_chatgpt.md).
 For project purpose and scope, see [docs/core_documents/project_purpose.md](/C:/smcr-staff-ai/docs/core_documents/project_purpose.md).

@@ -18,17 +18,22 @@ backend + dashboard path first.
 - `app/api/routes`: FastAPI route handlers and request/response boundaries.
 - `app/schemas`: Pydantic API contracts.
 - `app/db`: SQLModel relational models and session setup. SQLite is the local default; Postgres is the target production-capable backend.
-- `app/services/agents`: Agent interface, registry, and placeholder agent implementations.
+- `app/services/agents`: Agent interface, registry, and staff/MOS advisory implementations.
 - `app/services/ingestion`: Public-source ingestion stubs for RSS/HTML, MCPEL manifests, and PDFs.
 - `app/services/rag`: Chunking, embedding, vector-store, and retriever abstractions.
 - `app/services/calendar`: Drill-prep planning and provider stubs.
 - `app/services/org_awareness`: Unit hierarchy and exercise cadence support.
 - `app/services/storage`: Local filesystem storage for user-provided working context.
 - `app/services/billets`: Advisory SMCR billet recommendation from parsed public-source listings.
+- `app/services/staff_products`: Advisory product scaffolds, section structures, and citation-grounded formatting logic.
+- `app/services/staff`: Planning-cell, council, estimate, and battle-rhythm support workflows.
+- `app/static/dashboard`: Local command-post style dashboard for continuity, watch functions, and workflow launch points.
 
 ## Compatibility Guidance
 
-Hosted-AI compatibility notes and repo-mode guidance live under `docs/compatibility/`.
+Hosted-AI compatibility notes and repo-mode guidance live under `docs/compatibility/`. Root-level
+`AGENTS.md` and `.github/copilot-instructions.md` remain only as conventional discovery points for tools
+that expect them there.
 
 ## RAG Direction
 
