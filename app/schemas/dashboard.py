@@ -47,6 +47,8 @@ class DashboardDocumentDetail(BaseModel):
     context_id: str
     filename: str
     document_type: str
+    suggested_document_type: str | None = None
+    suggestion_reason: str | None = None
     contains_pii: bool
     review_date: str | None = None
     expiration_date: str | None = None

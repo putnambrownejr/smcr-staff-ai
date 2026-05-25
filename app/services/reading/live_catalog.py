@@ -90,10 +90,32 @@ def load_effective_reading_catalog(
     seed_path: str | Path,
     store: ReadingListCatalogStore,
 ) -> ReadingListCatalogService:
+    seed_catalog = ReadingListCatalogService.from_yaml(seed_path).catalog
     snapshot = store.get()
     if snapshot is not None:
-        return ReadingListCatalogService(snapshot.catalog)
-    return ReadingListCatalogService.from_yaml(seed_path)
+        return ReadingListCatalogService(_merge_catalogs(seed_catalog, snapshot.catalog))
+    return ReadingListCatalogService(seed_catalog)
+
+
+def _merge_catalogs(seed_catalog: ReadingListCatalog, snapshot_catalog: ReadingListCatalog) -> ReadingListCatalog:
+    books_by_slug = {book.slug: book for book in snapshot_catalog.books}
+    for book in seed_catalog.books:
+        books_by_slug.setdefault(book.slug, book)
+
+    source_keys: set[tuple[str, str]] = set()
+    merged_sources: list[ReadingListSource] = []
+    for source in [*snapshot_catalog.sources, *seed_catalog.sources]:
+        key = (source.name, source.url)
+        if key in source_keys:
+            continue
+        source_keys.add(key)
+        merged_sources.append(source)
+
+    return ReadingListCatalog(
+        notice=snapshot_catalog.notice,
+        sources=merged_sources,
+        books=list(books_by_slug.values()),
+    )
 
 
 def _parse_current_books(

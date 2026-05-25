@@ -1,10 +1,13 @@
 import hashlib
 import re
+import zipfile
 from datetime import UTC, date, datetime
 from pathlib import Path
+from xml.etree import ElementTree
 
 from app.core.security import DEFAULT_WARNINGS, detect_pii_input, detect_sensitive_input, redact_pii
 from app.schemas.context import LocalContextMetadata
+from app.services.ingestion.pdf_extract import extract_pdf_text
 
 MAX_PREVIEW_CHARS = 4000
 CONTEXT_ID_PATTERN = re.compile(r"^[a-f0-9]{16}$")
@@ -47,7 +50,7 @@ class LocalContextStore:
         file_path.write_bytes(content)
 
         warnings = [*DEFAULT_WARNINGS]
-        text = _decode_preview(content) if _is_text_like(content_type, safe_name) else ""
+        text = _extract_preview_text(file_path, content_type, safe_name)
         warnings.extend(detect_sensitive_input(text))
         contains_pii = bool(detect_pii_input(text))
 
@@ -96,8 +99,9 @@ class LocalContextStore:
         file_path = self._file_path_for(metadata)
         if file_path is None:
             return None
-        if _is_text_like(metadata.content_type, metadata.filename):
-            return redact_pii(_decode_preview(file_path.read_bytes()))[:max_chars]
+        preview_text = _extract_preview_text(file_path, metadata.content_type, metadata.filename)
+        if preview_text:
+            return redact_pii(preview_text)[:max_chars]
         return _binary_preview(metadata)
 
     def delete(self, context_id: str) -> bool:
@@ -114,6 +118,14 @@ class LocalContextStore:
             file_path.unlink()
             found = True
         return found
+
+    def update_document_type(self, context_id: str, document_type: str) -> LocalContextMetadata | None:
+        metadata = self.get(context_id)
+        if metadata is None:
+            return None
+        updated = metadata.model_copy(update={"document_type": document_type})
+        self._metadata_path(context_id).write_text(updated.model_dump_json(indent=2), encoding="utf-8")
+        return updated
 
     def _metadata_path(self, context_id: str) -> Path:
         return self.metadata_dir / f"{context_id}.json"
@@ -152,6 +164,46 @@ def _is_text_like(content_type: str, filename: str) -> bool:
     lowered = content_type.lower()
     suffix = Path(filename).suffix.lower()
     return lowered.startswith("text/") or suffix in {".txt", ".md", ".json", ".yaml", ".yml", ".csv"}
+
+
+def _extract_preview_text(file_path: Path, content_type: str, filename: str) -> str:
+    suffix = Path(filename).suffix.lower()
+    if _is_text_like(content_type, filename):
+        return _decode_preview(file_path.read_bytes())
+    if suffix == ".pdf":
+        return _safe_extract_pdf(file_path)
+    if suffix == ".docx":
+        return _extract_docx_text(file_path)
+    return ""
+
+
+def _safe_extract_pdf(file_path: Path) -> str:
+    try:
+        return extract_pdf_text(file_path)
+    except Exception:
+        return ""
+
+
+def _extract_docx_text(file_path: Path) -> str:
+    try:
+        with zipfile.ZipFile(file_path) as archive:
+            xml_bytes = archive.read("word/document.xml")
+    except (FileNotFoundError, KeyError, zipfile.BadZipFile):
+        return ""
+
+    try:
+        root = ElementTree.fromstring(xml_bytes)
+    except ElementTree.ParseError:
+        return ""
+
+    namespace = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+    lines: list[str] = []
+    for paragraph in root.findall(".//w:p", namespace):
+        text_parts = [node.text or "" for node in paragraph.findall(".//w:t", namespace)]
+        line = "".join(text_parts).strip()
+        if line:
+            lines.append(line)
+    return "\n".join(lines)
 
 
 def _binary_preview(metadata: LocalContextMetadata) -> str:

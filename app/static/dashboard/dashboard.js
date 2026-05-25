@@ -17,6 +17,19 @@ const state = {
   clockTimer: null,
 };
 
+const DOCUMENT_TYPE_OPTIONS = [
+  "reference_note",
+  "doctrine",
+  "admin_reference",
+  "training_reference",
+  "uniform_photo",
+  "product_template",
+  "training_media",
+  "orders",
+  "fitrep",
+  "other",
+];
+
 const MOS_BENCH_CATALOG = [
   {
     id: "mos-adjutant-0102",
@@ -145,6 +158,11 @@ document.getElementById("brief-clinic-form").addEventListener("submit", async (e
   renderBriefClinicOutput("brief-clinic-output", data);
 });
 
+document.getElementById("uniform-photo-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await runUniformPhotoReview(event.currentTarget);
+});
+
 document.getElementById("mos-advisor-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   await runMosAdvisorFromForm();
@@ -234,6 +252,12 @@ document.getElementById("history-library-show-date").addEventListener("click", (
 });
 document.getElementById("history-library-use-today").addEventListener("click", () => {
   setHistoryLibraryToToday();
+});
+document.getElementById("save-document-type").addEventListener("click", () => {
+  saveSelectedDocumentType();
+});
+document.getElementById("apply-document-suggestion").addEventListener("click", () => {
+  applySuggestedDocumentType();
 });
 document.getElementById("history-library-month").addEventListener("change", (event) => {
   state.selectedHistoryMonth = event.target.value || "";
@@ -752,8 +776,25 @@ function renderDocumentsWatch(payload) {
 
 function renderDocumentLibrary(items) {
   const target = document.getElementById("document-library");
+  const typeSelect = document.getElementById("document-type-select");
+  const typeButton = document.getElementById("save-document-type");
+  const suggestionButton = document.getElementById("apply-document-suggestion");
+  const suggestionNote = document.getElementById("document-type-suggestion");
   if (!items.length) {
     target.className = "document-library empty-state";
+    if (typeSelect) {
+      typeSelect.value = "reference_note";
+      typeSelect.disabled = true;
+    }
+    if (typeButton) {
+      typeButton.disabled = true;
+    }
+    if (suggestionButton) {
+      suggestionButton.disabled = true;
+    }
+    if (suggestionNote) {
+      suggestionNote.textContent = "No category suggestion yet.";
+    }
     target.innerHTML = `
       <p>No local document previews loaded yet.</p>
       <p class="helper-text">Open your personal workspace to review orders, BIO, RQS, receipts, and other local references here.</p>
@@ -764,6 +805,23 @@ function renderDocumentLibrary(items) {
     state.selectedDocumentId = items[0].context_id;
   }
   const selected = items.find((item) => item.context_id === state.selectedDocumentId) || items[0];
+  if (typeSelect) {
+    typeSelect.disabled = false;
+    typeSelect.value = DOCUMENT_TYPE_OPTIONS.includes(selected.document_type) ? selected.document_type : "other";
+  }
+  if (typeButton) {
+    typeButton.disabled = state.mode !== "personal";
+  }
+  const hasSuggestion =
+    !!selected.suggested_document_type && selected.suggested_document_type !== selected.document_type;
+  if (suggestionButton) {
+    suggestionButton.disabled = state.mode !== "personal" || !hasSuggestion;
+  }
+  if (suggestionNote) {
+    suggestionNote.textContent = hasSuggestion
+      ? `Suggested: ${selected.suggested_document_type} — ${selected.suggestion_reason || "Based on filename and preview text."}`
+      : "No better category suggestion for the selected file.";
+  }
   target.className = "document-library";
   target.innerHTML = `
     <div class="document-list">
@@ -791,6 +849,53 @@ function renderDocumentLibrary(items) {
       <pre>${escapeHtml(selected.text_preview || "No preview available.")}</pre>
     </div>
   `;
+}
+
+async function saveSelectedDocumentType() {
+  if (state.mode !== "personal" || !state.selectedDocumentId) {
+    setWorkspaceNote("Open your personal workspace to reclassify local files.", true);
+    return;
+  }
+  const typeSelect = document.getElementById("document-type-select");
+  const documentType = typeSelect?.value || "";
+  if (!DOCUMENT_TYPE_OPTIONS.includes(documentType)) {
+    setWorkspaceNote("Choose a valid file category first.", true);
+    return;
+  }
+  try {
+    const data = await apiFetch(`/personal-documents/${encodeURIComponent(state.selectedDocumentId)}/type`, {
+      method: "PATCH",
+      auth: true,
+      body: JSON.stringify({ document_type: documentType }),
+    });
+    if (state.workspace?.document_details) {
+      state.workspace.document_details = state.workspace.document_details.map((item) =>
+        item.context_id === state.selectedDocumentId ? { ...item, document_type: data.record.document_type } : item,
+      );
+    }
+    if (state.workspace?.document_summary?.records) {
+      state.workspace.document_summary.records = state.workspace.document_summary.records.map((item) =>
+        item.context_id === state.selectedDocumentId ? { ...item, document_type: data.record.document_type } : item,
+      );
+    }
+    setWorkspaceNote(data.message || "File category updated.");
+    await loadWorkspace();
+  } catch (error) {
+    setWorkspaceNote(error.message, true);
+  }
+}
+
+function applySuggestedDocumentType() {
+  const selected = (state.workspace?.document_details || []).find((item) => item.context_id === state.selectedDocumentId);
+  if (!selected?.suggested_document_type) {
+    setWorkspaceNote("No category suggestion is available for this file.", true);
+    return;
+  }
+  const typeSelect = document.getElementById("document-type-select");
+  if (typeSelect) {
+    typeSelect.value = selected.suggested_document_type;
+  }
+  setWorkspaceNote(`Loaded suggested category: ${selected.suggested_document_type}. Save to apply it.`);
 }
 
 function renderTemplateLibrary(items) {
@@ -1545,8 +1650,8 @@ function renderStaffUpdateCycleOutput(targetId, payload) {
       <p class="meta-inline">Due-outs: ${escapeHtml((cub.due_outs || []).slice(0, 3).join(" | ") || "None recorded.")}</p>
     </section>
     <section>
-      <span class="strip-label">CPB</span>
-      <ul>${(cpb.decision_points || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No CPB decision points surfaced.</li>"}</ul>
+      <span class="strip-label">CPB (Civil Affairs)</span>
+      <ul>${(cpb.decision_points || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No civil-prep decision points surfaced.</li>"}</ul>
       <p class="meta-inline">Branches/sequels: ${escapeHtml((cpb.branches_and_sequels || []).slice(0, 2).join(" | ") || "None recorded.")}</p>
     </section>
     <section>
@@ -1595,7 +1700,7 @@ function renderPlanningCellOutput(targetId, payload) {
     <section>
       <span class="strip-label">Linked update cycle</span>
       <p class="meta-inline">CUB decisions: ${escapeHtml(((updateCycle.cub || {}).commander_decisions || []).slice(0, 3).join(" | ") || "None")}</p>
-      <p class="meta-inline">CPB branches: ${escapeHtml(((updateCycle.cpb || {}).branches_and_sequels || []).slice(0, 2).join(" | ") || "None")}</p>
+      <p class="meta-inline">Civil-prep branches: ${escapeHtml(((updateCycle.cpb || {}).branches_and_sequels || []).slice(0, 2).join(" | ") || "None")}</p>
       <p class="meta-inline">Next OPT actions: ${escapeHtml((payload.next_opt_actions || []).slice(0, 3).join(" | ") || "None")}</p>
     </section>
     <section>
@@ -1624,6 +1729,52 @@ function renderBriefClinicOutput(targetId, payload) {
     <section>
       <span class="strip-label">Citations</span>
       <ul>${(payload.citations || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No citations returned.</li>"}</ul>
+    </section>
+  `;
+}
+
+function renderUniformPhotoReviewOutput(targetId, payload) {
+  const target = document.getElementById(targetId);
+  target.className = "tool-output";
+  target.innerHTML = `
+    <section>
+      <span class="strip-label">${escapeHtml(payload.review_posture || "Uniform review")}</span>
+      <h3>${escapeHtml(payload.filename || "Uploaded photo")}</h3>
+      <p>${escapeHtml(`Uniform type: ${payload.uniform_type || "unknown"}${payload.event_context ? ` | Event: ${payload.event_context}` : ""}`)}</p>
+      <p class="meta-inline">Local context ID: ${escapeHtml(payload.photo_context_id || "not stored")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Summary</span>
+      <ul>${(payload.summary_lines || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No summary returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">What to verify in the image</span>
+      <ul>${(payload.what_to_verify_in_image || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No verification items returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Grooming checks</span>
+      <ul>${(payload.grooming_checks || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No grooming checks returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Likely issue areas</span>
+      <ul>${(payload.likely_issue_areas || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No issue areas returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Follow-up actions</span>
+      <ul>${(payload.follow_up_actions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No follow-up actions returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Warnings</span>
+      <ul>${(payload.warnings || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No warnings returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Official sources</span>
+      <ul>${(payload.structured_citations || [])
+        .map(
+          (item) =>
+            `<li><a href="${escapeAttribute(item.url || "#")}" target="_blank" rel="noreferrer">${escapeHtml(item.title || item.url || "Source")}</a></li>`,
+        )
+        .join("") || "<li>No sources returned.</li>"}</ul>
     </section>
   `;
 }
@@ -2006,6 +2157,40 @@ async function apiFetch(path, options = {}) {
   return response.json();
 }
 
+async function runUniformPhotoReview(formElement) {
+  if (state.mode !== "personal") {
+    setWorkspaceNote("Open your personal workspace to upload and review a uniform photo.", true);
+    return;
+  }
+  const form = new FormData(formElement);
+  const photo = form.get("uniform_photo");
+  if (!(photo instanceof File) || !photo.name) {
+    setWorkspaceNote("Choose a uniform photo first.", true);
+    return;
+  }
+  const headers = {};
+  if (state.apiKey) {
+    headers["X-Local-API-Key"] = state.apiKey;
+  }
+  try {
+    const response = await fetch(`${state.apiBase}/uniform/photo-review`, {
+      method: "POST",
+      headers,
+      body: form,
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Request failed (${response.status}): ${text}`);
+    }
+    const data = await response.json();
+    renderUniformPhotoReviewOutput("uniform-photo-output", data);
+    setWorkspaceNote("Uniform photo review completed and stored as local context.");
+    await loadWorkspace();
+  } catch (error) {
+    setWorkspaceNote(error.message, true);
+  }
+}
+
 function setWorkspaceNote(message, critical = false) {
   const note = document.getElementById("workspace-note");
   note.textContent = message;
@@ -2248,6 +2433,10 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value);
 }
 
 function normalizePosture(value) {

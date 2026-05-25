@@ -426,22 +426,28 @@ def _workspace_response(
 
 
 def _document_details(organizer: PersonalDocumentOrganizer) -> list[DashboardDocumentDetail]:
-    return [
-        DashboardDocumentDetail(
-            context_id=detail.record.context_id,
-            filename=detail.record.filename,
-            document_type=detail.record.document_type.value,
-            contains_pii=detail.record.contains_pii,
-            review_date=detail.record.review_date.isoformat() if detail.record.review_date else None,
-            expiration_date=detail.record.expiration_date.isoformat() if detail.record.expiration_date else None,
-            text_preview=detail.text_preview,
+    entries: list[DashboardDocumentDetail] = []
+    for detail in (
+        organizer.get_document(record.context_id)
+        for record in organizer.list_documents().records[:8]
+    ):
+        if detail is None:
+            continue
+        suggestion = organizer.suggest_document_type(detail)
+        entries.append(
+            DashboardDocumentDetail(
+                context_id=detail.record.context_id,
+                filename=detail.record.filename,
+                document_type=detail.record.document_type.value,
+                suggested_document_type=suggestion[0] if suggestion else None,
+                suggestion_reason=suggestion[1] if suggestion else None,
+                contains_pii=detail.record.contains_pii,
+                review_date=detail.record.review_date.isoformat() if detail.record.review_date else None,
+                expiration_date=detail.record.expiration_date.isoformat() if detail.record.expiration_date else None,
+                text_preview=detail.text_preview,
+            )
         )
-        for detail in (
-            organizer.get_document(record.context_id)
-            for record in organizer.list_documents().records[:8]
-        )
-        if detail is not None
-    ]
+    return entries
 
 
 def _template_library(

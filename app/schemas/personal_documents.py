@@ -7,6 +7,11 @@ from app.schemas.context import LocalContextMetadata
 
 
 class PersonalDocumentType(StrEnum):
+    reference_note = "reference_note"
+    doctrine = "doctrine"
+    admin_reference = "admin_reference"
+    training_reference = "training_reference"
+    uniform_photo = "uniform_photo"
     rqs = "rqs"
     bio = "bio"
     orders = "orders"
@@ -41,6 +46,15 @@ class PersonalDocumentRecord(BaseModel):
 class PersonalDocumentDetail(BaseModel):
     record: PersonalDocumentRecord
     text_preview: str
+
+
+class PersonalDocumentTypeUpdateRequest(BaseModel):
+    document_type: PersonalDocumentType
+
+
+class PersonalDocumentTypeUpdateResponse(BaseModel):
+    record: PersonalDocumentRecord
+    message: str
 
 
 class PersonalDocumentSummary(BaseModel):

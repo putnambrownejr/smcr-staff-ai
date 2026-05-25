@@ -40,3 +40,51 @@ def test_personal_document_organizer_summarizes_local_context(tmp_path: Path) ->
     assert detail is not None
     assert detail.record.review_date is not None or detail.record.expiration_date is not None
     assert detail.text_preview
+
+
+def test_personal_document_organizer_can_reclassify_document(tmp_path: Path) -> None:
+    store = LocalContextStore(tmp_path)
+    item = store.save(
+        filename="mco.md",
+        content=b"Uniform order note.",
+        content_type="text/markdown",
+        document_type="reference_note",
+    )
+
+    organizer = PersonalDocumentOrganizer(store)
+    updated = organizer.update_document_type(item.context_id, "doctrine")
+
+    assert updated is not None
+    assert updated.document_type.value == "doctrine"
+
+
+def test_personal_document_organizer_suggests_doctrine_for_mcwp(tmp_path: Path) -> None:
+    store = LocalContextStore(tmp_path)
+    item = store.save(
+        filename="MCWP 5-10 MCPP.txt",
+        content=b"Marine Corps Planning Process reference",
+        content_type="text/plain",
+        document_type="reference_note",
+    )
+
+    organizer = PersonalDocumentOrganizer(store)
+    detail = organizer.get_document(item.context_id)
+
+    assert detail is not None
+    assert organizer.suggest_document_type(detail) == ("doctrine", "Doctrine publication pattern detected.")
+
+
+def test_personal_document_organizer_suggests_fitrep_for_pes(tmp_path: Path) -> None:
+    store = LocalContextStore(tmp_path)
+    item = store.save(
+        filename="MCO 1610.7A PES.txt",
+        content=b"Performance Evaluation System reference",
+        content_type="text/plain",
+        document_type="reference_note",
+    )
+
+    organizer = PersonalDocumentOrganizer(store)
+    detail = organizer.get_document(item.context_id)
+
+    assert detail is not None
+    assert organizer.suggest_document_type(detail) == ("fitrep", "FitRep or PES wording detected.")

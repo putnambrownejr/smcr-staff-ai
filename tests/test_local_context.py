@@ -1,9 +1,11 @@
 from pathlib import Path
+import zipfile
 
 from fastapi.testclient import TestClient
 
 from app.api.routes.context import get_context_store
 from app.main import app
+from app.services.storage import local_context_store
 from app.services.storage.local_context_store import LocalContextStore
 
 
@@ -94,3 +96,68 @@ def test_binary_local_context_returns_metadata_preview(tmp_path: Path) -> None:
     assert "Binary local context item: demo.mp4" in preview
     assert "video/mp4" in preview
     assert "No text preview is available" in preview
+
+
+def test_docx_local_context_returns_extracted_preview(tmp_path: Path) -> None:
+    store = LocalContextStore(tmp_path)
+    docx_path = tmp_path / "outline.docx"
+    with zipfile.ZipFile(docx_path, "w") as archive:
+        archive.writestr(
+            "word/document.xml",
+            (
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                "<w:body>"
+                "<w:p><w:r><w:t>Comm format notes</w:t></w:r></w:p>"
+                "<w:p><w:r><w:t>PACE plan section</w:t></w:r></w:p>"
+                "</w:body>"
+                "</w:document>"
+            ),
+        )
+
+    item = store.save(
+        filename="outline.docx",
+        content=docx_path.read_bytes(),
+        content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        document_type="product_example",
+        consent_ack=True,
+    )
+
+    preview = store.read_preview(item.context_id)
+    assert preview is not None
+    assert "Comm format notes" in preview
+    assert "PACE plan section" in preview
+
+
+def test_pdf_local_context_uses_pdf_text_extractor(tmp_path: Path, monkeypatch) -> None:
+    store = LocalContextStore(tmp_path)
+
+    monkeypatch.setattr(local_context_store, "extract_pdf_text", lambda path: "Reserve admin order reference")
+
+    item = store.save(
+        filename="admin-order.pdf",
+        content=b"%PDF-1.4 fake",
+        content_type="application/pdf",
+        document_type="other",
+        consent_ack=True,
+    )
+
+    preview = store.read_preview(item.context_id)
+    assert preview is not None
+    assert "Reserve admin order reference" in preview
+
+
+def test_uniform_photo_local_context_returns_binary_preview(tmp_path: Path) -> None:
+    store = LocalContextStore(tmp_path)
+    item = store.save(
+        filename="uniform.jpg",
+        content=b"\xff\xd8\xff\xe0fakejpeg",
+        content_type="image/jpeg",
+        document_type="uniform_photo",
+        consent_ack=True,
+    )
+
+    preview = store.read_preview(item.context_id)
+    assert preview is not None
+    assert "Binary local context item: uniform.jpg" in preview
+    assert "image/jpeg" in preview

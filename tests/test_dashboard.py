@@ -60,6 +60,7 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Staff update cycle" in response.text
     assert "Planning Cell" in response.text
     assert "Brief Clinic" in response.text
+    assert "Uniform Photo Review" in response.text
     assert "Time watch" in response.text
     assert "Time zones" in response.text
     assert "Battle Rhythm Board" in response.text
@@ -69,6 +70,7 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "MOS advisor" in response.text
     assert "History Library" in response.text
     assert "Doctrine / Reference Library" in response.text
+    assert "Use suggestion" in response.text
     assert "Show date" in response.text
     assert "Use today" in response.text
     assert 'id="history-library-month"' in response.text
@@ -148,6 +150,8 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "run-lone-planner",
         "run-section-gap-cover",
         "save-planning-cell-board",
+        "save-document-type",
+        "apply-document-suggestion",
         "history-library-show-date",
         "history-library-use-today",
     ]
@@ -160,6 +164,7 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "personnel-form",
         "staff-form",
         "brief-clinic-form",
+        "uniform-photo-form",
         "staff-cycle-form",
         "planning-cell-form",
         "section-memory-form",
@@ -207,6 +212,13 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'data-section-memory-delete' in js
     assert 'data-section-memory-seed' in js
     assert 'data-mos-bench' in js
+    assert 'id="document-type-select"' in html
+    assert 'id="document-type-suggestion"' in html
+    assert 'id="uniform-photo-output"' in html
+    assert 'DOCUMENT_TYPE_OPTIONS' in js
+    assert 'saveSelectedDocumentType(' in js
+    assert 'applySuggestedDocumentType(' in js
+    assert 'runUniformPhotoReview(' in js
 
 
 def test_demo_dashboard_data_route_returns_workspace_payload() -> None:
@@ -246,6 +258,13 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         content=b"Training-only orders note.",
         content_type="text/plain",
         document_type="orders",
+        consent_ack=True,
+    )
+    context_store.save(
+        filename="MCWP 5-10 MCPP.txt",
+        content=b"Marine Corps Planning Process reference",
+        content_type="text/plain",
+        document_type="reference_note",
         consent_ack=True,
     )
     handoff_store.upsert(
@@ -453,7 +472,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["daily_ops_brief"]["must_do"]
         assert payload["analyst_brief"]["data_quality_notes"]
         assert payload["tracked_actions"][0]["title"] == "Finalize drill POAM"
-        assert payload["document_summary"]["total_documents"] == 1
+        assert payload["document_summary"]["total_documents"] == 2
         assert payload["tracked_opportunities"][0]["title"] == "ADOS Planner"
         assert payload["documentation_updates"][0]["tracked_title"] == "MCO 1610.7"
         assert payload["custom_watch_feeds"][0]["name"] == "Unit updates"
@@ -463,6 +482,9 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert "history_library" in payload
         assert payload["reference_library"]
         assert any(item["official_links"] for item in payload["reference_library"])
+        suggested = next(item for item in payload["document_details"] if item["filename"] == "MCWP_5-10_MCPP.txt")
+        assert suggested["suggested_document_type"] == "doctrine"
+        assert suggested["suggestion_reason"]
         assert payload["navadmin_ticker"][0]["status"] == "NAVADMIN"
         assert payload["alnav_ticker"][0]["status"] == "ALNAV"
         assert payload["dod_ticker"][0]["status"] == "DoD"

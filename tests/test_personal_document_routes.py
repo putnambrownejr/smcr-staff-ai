@@ -34,3 +34,30 @@ def test_personal_document_detail_route_returns_preview_and_dates(tmp_path: Path
         assert payload["text_preview"] == "Training-only orders placeholder."
     finally:
         app.dependency_overrides.clear()
+
+
+def test_personal_document_type_update_route_reclassifies_document(tmp_path: Path) -> None:
+    store = LocalContextStore(tmp_path)
+    item = store.save(
+        filename="reference.txt",
+        content=b"Reference note placeholder.",
+        content_type="text/plain",
+        document_type="reference_note",
+    )
+
+    def override_store() -> LocalContextStore:
+        return store
+
+    app.dependency_overrides[get_context_store] = override_store
+    client = TestClient(app)
+    try:
+        response = client.patch(
+            f"/personal-documents/{item.context_id}/type",
+            json={"document_type": "admin_reference"},
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["record"]["document_type"] == "admin_reference"
+        assert "reclassified as admin_reference" in payload["message"]
+    finally:
+        app.dependency_overrides.clear()

@@ -545,6 +545,26 @@
               <h2>Personal files</h2>
               <p>Stored local references with quick preview for orders, BIO, RQS, receipts, and support docs.</p>
             </div>
+            <div class="button-row compact">
+              <label class="inline-field">
+                <span>File category</span>
+                <select id="document-type-select">
+                  <option value="reference_note">Reference note</option>
+                  <option value="doctrine">Doctrine</option>
+                  <option value="admin_reference">Admin reference</option>
+                  <option value="training_reference">Training reference</option>
+                  <option value="uniform_photo">Uniform photo</option>
+                  <option value="product_template">Product template</option>
+                  <option value="training_media">Training media</option>
+                  <option value="orders">Orders</option>
+                  <option value="fitrep">FitRep</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+              <button type="button" class="secondary" id="save-document-type">Save category</button>
+              <button type="button" class="secondary" id="apply-document-suggestion">Use suggestion</button>
+            </div>
+            <p id="document-type-suggestion" class="helper-text">No category suggestion yet.</p>
             <div id="document-library" class="document-library empty-state">No local document previews loaded yet.</div>
           </article>
 
@@ -901,7 +921,7 @@
           <article class="panel tool-panel">
             <div class="panel-header">
               <h2>Brief Clinic</h2>
-              <p>Tighten a CUB, CPB, command update, or decision brief around audience, decision, evidence, and backup.</p>
+              <p>Tighten a CUB, decision brief, command update, or civil-affairs CPB around audience, decision, evidence, and backup.</p>
             </div>
             <form id="brief-clinic-form" class="tool-form">
               <div class="form-row">
@@ -936,6 +956,71 @@
               </div>
             </form>
             <div id="brief-clinic-output" class="tool-output empty-state">Brief-clinic feedback will appear here.</div>
+          </article>
+
+          <article class="panel tool-panel">
+            <div class="panel-header">
+              <h2>Uniform Photo Review</h2>
+              <p>Upload a local uniform photo and run a source-anchored advisory review against the uniform order.</p>
+            </div>
+            <form id="uniform-photo-form" class="tool-form">
+              <div class="form-row">
+                <label>
+                  <span>Uniform photo</span>
+                  <input name="uniform_photo" type="file" accept="image/*" />
+                </label>
+                <label>
+                  <span>Uniform type</span>
+                  <select name="uniform_type">
+                    <option value="service_alpha">Service Alpha</option>
+                    <option value="service_bravo">Service Bravo</option>
+                    <option value="service_charlie">Service Charlie</option>
+                    <option value="blue_dress">Blue Dress</option>
+                    <option value="utility_cammies">Utility / cammies</option>
+                    <option value="pt">PT</option>
+                    <option value="unknown">Unknown / need help identifying</option>
+                  </select>
+                </label>
+              </div>
+              <div class="form-row">
+                <label>
+                  <span>Event context</span>
+                  <input name="event_context" type="text" placeholder="Drill, ceremony, inspection, PME event" />
+                </label>
+                <label>
+                  <span>Visible items (comma-separated)</span>
+                  <input
+                    name="visible_items"
+                    type="text"
+                    placeholder="rank insignia, ribbons/badges, cover, belt/buckle, footwear, grooming/hair"
+                  />
+                </label>
+              </div>
+              <div class="form-row">
+                <label>
+                  <span>Observed concerns</span>
+                  <textarea
+                    name="observed_concerns"
+                    rows="4"
+                    placeholder="Collar device looks off, ribbon spacing unclear, haircut may be marginal"
+                  ></textarea>
+                </label>
+                <label>
+                  <span>Local guidance or notes</span>
+                  <textarea
+                    name="local_guidance"
+                    rows="4"
+                    placeholder="Unit requested sleeves down, event is a formal ceremony, seasonal variation in effect"
+                  ></textarea>
+                </label>
+              </div>
+              <div class="button-row">
+                <button type="submit">Review uniform photo</button>
+              </div>
+            </form>
+            <div id="uniform-photo-output" class="tool-output empty-state">
+              Photo-assisted uniform review will appear here, anchored to MCO 1020.34H and official follow-on links.
+            </div>
           </article>
 
           <article class="panel tool-panel">
@@ -977,7 +1062,7 @@
           <article class="panel tool-panel">
             <div class="panel-header">
               <h2>Staff update cycle</h2>
-              <p>Turn quick section updates into a running estimate, CUB, and CPB without rebuilding the frame.</p>
+              <p>Turn quick section updates into a running estimate, CUB, and decision brief without rebuilding the frame.</p>
             </div>
             <form id="staff-cycle-form" class="tool-form">
               <div class="form-row">
@@ -1019,7 +1104,7 @@
               </div>
             </form>
             <div id="staff-cycle-output" class="tool-output empty-state">
-              Running estimate, CUB, and CPB outputs will appear here.
+              Running estimate, CUB, and decision-brief outputs will appear here.
             </div>
           </article>
 
