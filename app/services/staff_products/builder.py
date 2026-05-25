@@ -7,6 +7,15 @@ from app.schemas.staff_products import (
     StaffProductSection,
     StaffProductType,
 )
+from app.services.agents.source_refs import (
+    CORRESPONDENCE_REFERENCES,
+    OPORD_REFERENCES,
+    STAFF_PRODUCT_REFERENCES,
+    TRAINING_REFERENCES,
+    SourceRef,
+    citation_titles,
+    structured_citations,
+)
 
 OPORD_SECTIONS = [
     StaffProductSection(
@@ -525,68 +534,31 @@ def _formatting_notes_for(
 
 
 def _citations_for(product_type: StaffProductType) -> list[str]:
-    citations = ["MCDP 5 Planning", "MCDP 6 Command and Control"]
-    if product_type in {StaffProductType.naval_letter, StaffProductType.memorandum, StaffProductType.endorsement}:
-        citations.extend(
-            [
-                "SECNAV M-5216.5 CH-1 Department of the Navy Correspondence Manual",
-                "MCO 5216.20B Marine Corps Supplement to the DON Correspondence Manual",
-            ]
-        )
-    if product_type == StaffProductType.aar:
-        citations.extend(
-            [
-                "MCO 1553.3C Unit Training Management",
-                "MCWP 5-10 Marine Corps Planning Process",
-            ]
-        )
-    return citations
+    return citation_titles(_source_refs_for(product_type))
 
 
 def _structured_citations_for(product_type: StaffProductType) -> list[StructuredCitation]:
-    citations = [
-        StructuredCitation(
-            title="MCDP 5 Planning",
-            url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899841/mcdp-5/",
-            publisher="Headquarters Marine Corps",
-            confidence=Confidence.low,
-            notes="Manifest citation; exact section citation requires RAG ingestion.",
-        ),
-        StructuredCitation(
-            title="MCDP 6 Command and Control",
-            url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899771/mcdp-6/",
-            publisher="Headquarters Marine Corps",
-            confidence=Confidence.low,
-            notes="Manifest citation; exact section citation requires RAG ingestion.",
-        ),
-    ]
-    if product_type in {StaffProductType.naval_letter, StaffProductType.memorandum, StaffProductType.endorsement}:
-        citations.append(
-            StructuredCitation(
-                title="SECNAV M-5216.5 CH-1 Department of the Navy Correspondence Manual",
-                url="https://www.secnav.navy.mil/doni/SECNAV%20Manuals1/5216.5%20%20CH-1.pdf",
-                publisher="Department of the Navy",
-                confidence=Confidence.low,
-                notes="Manifest citation; exact section citation requires RAG ingestion.",
-            )
-        )
-    if product_type == StaffProductType.aar:
-        citations.extend(
-            [
-                StructuredCitation(
-                    title="MCO 1553.3C Unit Training Management",
-                    url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899431/mco-15533c/",
-                    publisher="Headquarters Marine Corps",
-                    confidence=Confidence.low,
-                    notes="Manifest citation; exact section citation requires RAG ingestion.",
-                ),
-                StructuredCitation(
-                    title="MCWP 5-10 Marine Corps Planning Process",
-                    url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/",
-                    publisher="Headquarters Marine Corps",
-                    confidence=Confidence.low,
-                    notes="Manifest citation; exact section citation requires RAG ingestion.",
-                ),
-            ]
-        )
+    citations = structured_citations(_source_refs_for(product_type))
+    for citation in citations:
+        citation.confidence = Confidence.low
+        citation.notes = f"{citation.notes} Exact section citation requires RAG ingestion."
     return citations
+
+
+def _source_refs_for(product_type: StaffProductType) -> tuple[SourceRef, ...]:
+    if product_type in {StaffProductType.naval_letter, StaffProductType.memorandum, StaffProductType.endorsement}:
+        return (*CORRESPONDENCE_REFERENCES, *OPORD_REFERENCES)
+    if product_type == StaffProductType.aar:
+        return (*TRAINING_REFERENCES, *STAFF_PRODUCT_REFERENCES)
+    if product_type == StaffProductType.sitrep:
+        return STAFF_PRODUCT_REFERENCES
+    if product_type in {
+        StaffProductType.opord,
+        StaffProductType.warno,
+        StaffProductType.frago,
+        StaffProductType.conop,
+        StaffProductType.decision_brief,
+        StaffProductType.command_update_brief,
+    }:
+        return STAFF_PRODUCT_REFERENCES
+    return OPORD_REFERENCES

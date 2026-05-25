@@ -1,18 +1,22 @@
 from dataclasses import dataclass
 
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
-from app.schemas.staff import StaffEchelon, StaffRoleMetadata
+from app.schemas.staff import MagtfLens, StaffEchelon, StaffRoleMetadata
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.source_refs import (
     G9_REFERENCES,
+    LEGAL_REFERENCES,
     MEDICAL_REFERENCES,
+    ORM_REFERENCES,
     S1_REFERENCES,
     S2_REFERENCES,
     S3_REFERENCES,
     S4_REFERENCES,
     S6_REFERENCES,
     SEL_REFERENCES,
+    STAFF_PROCESS_REFERENCES,
+    STAFF_PRODUCT_REFERENCES,
     SourceRef,
     citation_titles,
     source_trust_markers,
@@ -28,6 +32,8 @@ class StaffRoleDefinition:
     maturity: str
     scope: str
     focus: tuple[str, ...]
+    magtf_lenses: tuple[MagtfLens, ...] = (MagtfLens.ce_c2,)
+    products: tuple[str, ...] = ()
     osint_enabled: bool = False
 
 
@@ -63,6 +69,18 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "tactical/company",
         "Medical support, casualty planning, and CASEVAC awareness",
         ("casualty response", "CASEVAC", "medical risk"),
+        (MagtfLens.gce, MagtfLens.lce),
+        ("Company casualty response plan", "CASEVAC rehearsal checklist", "medical risk note"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.company,
+        "safety",
+        "Company Safety Representative",
+        "tactical/company",
+        "Collateral-duty safety, ORM, and stop-training criteria",
+        ("ORM", "range/training safety", "stop-training criteria"),
+        (MagtfLens.gce, MagtfLens.ce_c2),
+        ("Company ORM worksheet", "stop-training criteria", "safety rehearsal checklist"),
     ),
     StaffRoleDefinition(
         StaffEchelon.battalion,
@@ -103,7 +121,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "battalion staff",
         "Intelligence and public-source context",
         ("assumptions", "information gaps", "source confidence"),
-        True,
+        osint_enabled=True,
     ),
     StaffRoleDefinition(
         StaffEchelon.battalion,
@@ -144,6 +162,208 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "battalion staff",
         "Medical support, TCCC awareness, and evacuation planning",
         ("medical support", "TCCC", "evacuation planning"),
+        (MagtfLens.lce, MagtfLens.gce),
+        ("Medical estimate", "CASEVAC plan", "health-service-support appendix"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.battalion,
+        "sja",
+        "Battalion SJA / Legal Officer",
+        "battalion special staff",
+        "Legal issue-spotting, ROE/RUF guardrails, investigations, and command legal routing",
+        ("legal review", "ROE/RUF", "investigation boundaries"),
+        (MagtfLens.ce_c2,),
+        ("Legal issue-spotter", "ROE/RUF guardrails", "legal review trigger list"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.battalion,
+        "pao",
+        "Battalion PAO / COMMSTRAT Representative",
+        "battalion special staff",
+        "Public affairs posture, release authority, media handling, and OPSEC coordination",
+        ("public posture", "release authority", "OPSEC coordination"),
+        (MagtfLens.ce_c2,),
+        ("Public affairs plan", "release approval matrix", "media query holding statement"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.battalion,
+        "chaplain",
+        "Battalion Chaplain",
+        "battalion special staff",
+        "Religious support, morale, ethical climate, and confidential support boundaries",
+        ("religious support", "morale", "confidentiality boundaries"),
+        (MagtfLens.ce_c2,),
+        ("Religious support plan", "morale and welfare estimate", "confidentiality boundary note"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.battalion,
+        "rp",
+        "Religious Program Specialist",
+        "battalion special staff",
+        "Religious-ministry logistics, schedule support, and chaplain support continuity",
+        ("service logistics", "schedule support", "continuity"),
+        (MagtfLens.ce_c2, MagtfLens.lce),
+        ("Religious support schedule", "RMT logistics checklist", "continuity note"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.battalion,
+        "safety",
+        "Battalion Safety Officer",
+        "battalion special staff",
+        "ORM, mishap prevention, risk acceptance, and stop-training criteria",
+        ("ORM", "risk acceptance", "mishap prevention"),
+        (MagtfLens.ce_c2, MagtfLens.gce),
+        ("Risk assessment worksheet", "no-go criteria", "residual-risk acceptance note"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.battalion,
+        "provost",
+        "Provost Marshal / Security Advisor",
+        "battalion special staff",
+        "Force protection, access control, traffic control, detainee/security planning",
+        ("force protection", "access control", "security coordination"),
+        (MagtfLens.ce_c2, MagtfLens.lce),
+        ("Security annex", "access-control plan", "traffic and movement-control checklist"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "meu_s3",
+        "MEU S-3",
+        "regiment/MEU/wing staff",
+        "MAGTF exercise architecture, execution rhythm, and integrated training objectives",
+        ("MAGTF scheme", "training objectives", "execution rhythm"),
+        (MagtfLens.ce_c2, MagtfLens.gce, MagtfLens.ace, MagtfLens.lce),
+        ("MAGTF exercise concept", "event synchronization matrix", "commander decision brief"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "meu_s4",
+        "MEU S-4",
+        "regiment/MEU/wing staff",
+        "MAGTF sustainment, embark, distribution, and supportability",
+        ("sustainment", "embark", "supportability"),
+        (MagtfLens.lce, MagtfLens.ce_c2),
+        ("MAGTF logistics estimate", "embark/support matrix", "recovery plan"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "blt",
+        "BLT / GCE Representative",
+        "regiment/MEU/wing staff",
+        "Ground combat element training value, scheme feasibility, and supported unit reality",
+        ("GCE scheme", "training realism", "supported-unit friction"),
+        (MagtfLens.gce, MagtfLens.ce_c2),
+        ("GCE estimate", "BLT training objectives", "ground-control checklist"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "ace",
+        "ACE Representative",
+        "regiment/MEU/wing staff",
+        "Aviation combat element integration, aviation supportability, and air-ground friction",
+        ("aviation supportability", "air-ground integration", "airspace/deconfliction"),
+        (MagtfLens.ace, MagtfLens.ce_c2),
+        ("ACE estimate", "air support coordination checklist", "aviation no-go criteria"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "airo",
+        "Air Officer",
+        "regiment/MEU/wing special staff",
+        "Air support requests, aviation effects, airspace/control coordination, and air-ground integration",
+        ("supported aviation effect", "airspace/control", "air-ground deconfliction"),
+        (MagtfLens.ace, MagtfLens.ce_c2, MagtfLens.gce),
+        ("Air support estimate", "air-ground coordination matrix", "airspace/control questions"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "lce",
+        "LCE Representative",
+        "regiment/MEU/wing staff",
+        "Logistics combat element sustainment, distribution, health services, and recovery",
+        ("sustainment", "distribution", "health services"),
+        (MagtfLens.lce, MagtfLens.ce_c2),
+        ("LCE estimate", "sustainment support matrix", "recovery and reconstitution checklist"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "sja",
+        "Regimental/MEU/Wing SJA",
+        "regiment/MEU/wing special staff",
+        "Legal review, ROE/RUF, ethics, investigations, claims, release coordination, and LOAC issue-spotting",
+        ("legal review", "ROE/RUF", "ethics and investigations"),
+        (MagtfLens.ce_c2,),
+        ("Legal estimate", "ROE/RUF guardrails", "legal review and claims trigger list"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "pao",
+        "Regimental/MEU/Wing PAO",
+        "regiment/MEU/wing special staff",
+        "Public affairs, media posture, release authority, imagery, and OPSEC coordination",
+        ("media posture", "release authority", "OPSEC coordination"),
+        (MagtfLens.ce_c2,),
+        ("Public affairs plan", "media engagement plan", "release approval matrix"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "commstrat",
+        "COMMSTRAT / Information Officer",
+        "regiment/MEU/wing special staff",
+        "Communication strategy, public impact, narrative coherence, and information effects coordination",
+        ("public impact", "narrative coherence", "information effects"),
+        (MagtfLens.ce_c2,),
+        ("COMMSTRAT estimate", "themes and messages", "information effects coordination matrix"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "ig",
+        "Inspector General",
+        "regiment/MEU/wing special staff",
+        "Inspection readiness, inquiry boundaries, impartiality, trends, and command climate signals",
+        ("inspection readiness", "inquiry boundaries", "impartiality"),
+        (MagtfLens.ce_c2,),
+        ("IG inspection touchpoints", "inquiry boundary note", "readiness trend memo"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "chaplain",
+        "Regimental/MEU/Wing Chaplain",
+        "regiment/MEU/wing special staff",
+        "Religious support planning, morale, ethical climate, and RMT integration",
+        ("religious support", "morale", "RMT integration"),
+        (MagtfLens.ce_c2,),
+        ("Religious support plan", "RMT support matrix", "morale and welfare estimate"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "surgeon",
+        "Regimental/MEU/Wing Surgeon",
+        "regiment/MEU/wing special staff",
+        "Health service support, casualty estimates, medical evacuation, and medical readiness",
+        ("health service support", "casualty estimates", "medical evacuation"),
+        (MagtfLens.lce, MagtfLens.ce_c2),
+        ("Medical estimate", "medical service support annex", "CASEVAC/MEDEVAC decision points"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "provost",
+        "Provost Marshal / Security Advisor",
+        "regiment/MEU/wing special staff",
+        "Security, force protection, law enforcement, traffic control, and detainee planning",
+        ("force protection", "security", "traffic control"),
+        (MagtfLens.ce_c2, MagtfLens.lce),
+        ("Security annex", "force-protection checklist", "detainee/security issue spotter"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.regiment_meu_wing,
+        "safety",
+        "Safety Officer",
+        "regiment/MEU/wing special staff",
+        "ORM, mishap prevention, range/training safety, and risk acceptance",
+        ("ORM", "mishap prevention", "risk acceptance"),
+        (MagtfLens.ce_c2, MagtfLens.gce, MagtfLens.ace, MagtfLens.lce),
+        ("Risk assessment worksheet", "no-go criteria", "residual-risk acceptance note"),
     ),
     StaffRoleDefinition(
         StaffEchelon.division_group,
@@ -160,7 +380,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "division/group staff",
         "Intelligence and public-source context",
         ("assumptions", "trends", "source confidence"),
-        True,
+        osint_enabled=True,
     ),
     StaffRoleDefinition(
         StaffEchelon.division_group,
@@ -209,6 +429,248 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "division/group staff",
         "Medical planning, health-service-support awareness, and evacuation oversight",
         ("medical planning", "CASEVAC", "supportability"),
+        (MagtfLens.lce, MagtfLens.ce_c2),
+        ("Medical estimate", "health service support annex", "medical readiness risks"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "g7",
+        "G-7 / Information",
+        "division/group staff",
+        "Information, COMMSTRAT, public impact, and information-environment integration",
+        ("information", "COMMSTRAT", "public impact"),
+        (MagtfLens.ce_c2,),
+        ("Information estimate", "COMMSTRAT guidance", "information effects coordination matrix"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "g8",
+        "G-8 / Resources",
+        "division/group staff",
+        "Resources, fiscal constraints, prioritization, and funding-risk tradeoffs",
+        ("resources", "prioritization", "funding risk"),
+        (MagtfLens.ce_c2,),
+        ("resource estimate", "funding risk note", "priority tradeoff brief"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "wing_ops",
+        "Wing Operations",
+        "division/group staff",
+        "MAW/ACE operations integration, sortie-generation constraints, and aviation exercise feasibility",
+        ("ACE operations", "sortie generation", "aviation feasibility"),
+        (MagtfLens.ace, MagtfLens.ce_c2),
+        ("wing operations estimate", "aviation supportability matrix", "airspace/deconfliction issues"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "mlg_log",
+        "MLG Logistics",
+        "division/group staff",
+        "MLG/LCE logistics, distribution, medical, maintenance, and sustainment realism",
+        ("LCE sustainment", "distribution", "maintenance"),
+        (MagtfLens.lce, MagtfLens.ce_c2),
+        ("MLG logistics estimate", "distribution support matrix", "sustainment risk note"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "sja",
+        "Division/Group SJA",
+        "division/group special staff",
+        "Legal review, ROE/RUF, ethics, investigations, claims, and command legal routing",
+        ("legal review", "ROE/RUF", "investigations"),
+        (MagtfLens.ce_c2,),
+        ("legal estimate", "ROE/RUF guardrails", "legal review trigger list"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "pao",
+        "Division/Group PAO",
+        "division/group special staff",
+        "Public affairs posture, release authority, media operations, imagery, and OPSEC coordination",
+        ("public affairs", "media operations", "OPSEC coordination"),
+        (MagtfLens.ce_c2,),
+        ("public affairs plan", "media operations plan", "release approval matrix"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "ig",
+        "Division/Group Inspector General",
+        "division/group special staff",
+        "Inspection readiness, inquiries, impartiality, and readiness trends",
+        ("inspection readiness", "inquiry boundaries", "readiness trends"),
+        (MagtfLens.ce_c2,),
+        ("inspection plan", "IG inquiry boundary note", "trend report"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "safety",
+        "Division/Group Safety Officer",
+        "division/group special staff",
+        "Risk management, mishap prevention, risk acceptance, and safety-program integration",
+        ("risk management", "mishap prevention", "risk acceptance"),
+        (MagtfLens.ce_c2, MagtfLens.gce, MagtfLens.ace, MagtfLens.lce),
+        ("risk management estimate", "no-go criteria", "residual-risk acceptance note"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "commstrat",
+        "Division/Group COMMSTRAT",
+        "division/group special staff",
+        "Communication strategy, public impact, narrative coherence, and information integration",
+        ("communication strategy", "public impact", "information integration"),
+        (MagtfLens.ce_c2,),
+        ("COMMSTRAT estimate", "themes and messages", "information coordination matrix"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.division_group,
+        "airo",
+        "Air Officer",
+        "division/group special staff",
+        "Air support requests, aviation effects, airspace/control coordination, and air-ground integration",
+        ("supported aviation effect", "airspace/control", "air-ground deconfliction"),
+        (MagtfLens.ace, MagtfLens.ce_c2, MagtfLens.gce),
+        ("air support estimate", "air-ground coordination matrix", "aviation assumptions/no-go list"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.mef,
+        "ace",
+        "ACE Representative",
+        "MEF staff",
+        "Aviation combat element integration, air supportability, and ACE exercise realism",
+        ("ACE integration", "aviation supportability", "airspace/deconfliction"),
+        (MagtfLens.ace, MagtfLens.ce_c2),
+        ("ACE estimate", "aviation supportability matrix", "airspace/control decision points"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.mef,
+        "lce",
+        "LCE Representative",
+        "MEF staff",
+        "Logistics combat element sustainment, distribution, HSS, and recovery",
+        ("LCE sustainment", "distribution", "recovery"),
+        (MagtfLens.lce, MagtfLens.ce_c2),
+        ("LCE estimate", "sustainment matrix", "recovery and reconstitution plan"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.mef,
+        "g7",
+        "MEF G-7 / Information",
+        "MEF staff",
+        "Information, COMMSTRAT, public impact, and information-environment coordination",
+        ("information", "COMMSTRAT", "public impact"),
+        (MagtfLens.ce_c2,),
+        ("information estimate", "information coordination matrix", "public-impact decision points"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.mef,
+        "g8",
+        "MEF G-8 / Resources",
+        "MEF staff",
+        "Resources, fiscal constraints, prioritization, and funding-risk tradeoffs",
+        ("resources", "prioritization", "funding risk"),
+        (MagtfLens.ce_c2,),
+        ("resource estimate", "funding risk note", "priority tradeoff brief"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.mef,
+        "sja",
+        "MEF SJA",
+        "MEF special staff",
+        "Legal review, ROE/RUF, ethics, investigations, claims, and LOAC issue-spotting",
+        ("legal review", "ROE/RUF", "ethics and investigations"),
+        (MagtfLens.ce_c2,),
+        ("legal estimate", "ROE/RUF guardrails", "legal review trigger list"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.mef,
+        "pao",
+        "MEF PAO",
+        "MEF special staff",
+        "Public affairs, media posture, release authority, imagery, and OPSEC coordination",
+        ("public affairs", "release authority", "media posture"),
+        (MagtfLens.ce_c2,),
+        ("public affairs plan", "media engagement plan", "release approval matrix"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.mef,
+        "surgeon",
+        "MEF Surgeon",
+        "MEF special staff",
+        "Health service support, casualty estimates, medical evacuation, and medical readiness",
+        ("health service support", "casualty estimates", "medical evacuation"),
+        (MagtfLens.lce, MagtfLens.ce_c2),
+        ("medical estimate", "health service support annex", "medical readiness risks"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.hqmc,
+        "hqmc_mra",
+        "HQMC M&RA",
+        "service-level staff",
+        "Manpower, reserve policy, personnel readiness, and assignment implications",
+        ("manpower", "reserve policy", "personnel readiness"),
+        (MagtfLens.ce_c2,),
+        ("manpower policy note", "reserve readiness implication", "personnel-risk tradeoff"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.hqmc,
+        "hqmc_ppo",
+        "HQMC PP&O",
+        "service-level staff",
+        "Plans, policy, operations, force employment, and service-level exercise alignment",
+        ("plans", "policy", "force employment"),
+        (MagtfLens.ce_c2,),
+        ("service-level planning note", "policy alignment check", "force-employment implication"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.hqmc,
+        "hqmc_pr",
+        "HQMC P&R",
+        "service-level staff",
+        "Programs, resources, fiscal feasibility, and budget tradeoffs",
+        ("programs", "resources", "budget tradeoffs"),
+        (MagtfLens.ce_c2,),
+        ("program/resource implication", "budget tradeoff note", "resourcing decision point"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.hqmc,
+        "hqmc_il",
+        "HQMC I&L",
+        "service-level staff",
+        "Installations, logistics, sustainment, mobility, and support policy",
+        ("installations", "logistics", "sustainment policy"),
+        (MagtfLens.lce, MagtfLens.ce_c2),
+        ("service logistics implication", "installation support issue", "sustainment policy note"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.hqmc,
+        "hqmc_aviation",
+        "HQMC Aviation",
+        "service-level staff",
+        "Aviation readiness, ACE policy, aviation resources, and air-domain implications",
+        ("aviation readiness", "ACE policy", "air-domain implications"),
+        (MagtfLens.ace, MagtfLens.ce_c2),
+        ("aviation readiness implication", "ACE policy note", "aviation resource issue"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.hqmc,
+        "hqmc_information",
+        "HQMC Information",
+        "service-level staff",
+        "Information, cyber, space, COMMSTRAT, and information-environment implications",
+        ("information", "COMMSTRAT", "information environment"),
+        (MagtfLens.ce_c2,),
+        ("information implication", "COMMSTRAT policy note", "information-environment risk"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.hqmc,
+        "hqmc_cdi",
+        "HQMC CD&I",
+        "service-level staff",
+        "Capability development, force design, doctrine, experimentation, and future-force implications",
+        ("capability development", "force design", "doctrine"),
+        (MagtfLens.ce_c2, MagtfLens.gce, MagtfLens.ace, MagtfLens.lce),
+        ("capability implication", "force-design note", "doctrine/experimentation question"),
     ),
 )
 
@@ -520,6 +982,169 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             f"{osint_note}"
         )
 
+    if definition.role in {"airo", "ace", "wing_ops", "hqmc_aviation"}:
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- Start with the supported effect, not the aircraft wish list.\n"
+            "- Air-ground integration becomes fragile when airspace, control, comm, fires, safety, and timelines "
+            "are handled as separate conversations.\n"
+            "- Keep real-world tasking details out of this tool; use this to build the generic staff questions and "
+            "coordination products for qualified aviation review.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What aviation effect supports the exercise objective or commander decision?\n"
+            "- What airspace, fires, comm, range-control, and safety deconfliction must be solved first?\n"
+            "- What request, approval, or support relationship has the longest lead time?\n"
+            "- What no-go condition should stop the aviation portion before it creates false training value?\n\n"
+            "Recommended next action:\n"
+            "- Build an air support estimate with supported effect, control method, comm/PACE, deconfliction "
+            "questions, required approvals, and branch/no-go criteria.\n"
+            "- Put the AirO, S-3, fires, S-6, safety, and supported GCE/LCE reps in the same coordination matrix."
+            f"{active_context_note}"
+            f"{osint_note}"
+        )
+
+    if definition.role == "sja":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- Legal review is useful early; late legal review only tells the commander which avoidable problem has "
+            "already become expensive.\n"
+            "- Treat this as issue-spotting, not legal advice. Real facts, real people, real investigations, or real "
+            "disciplinary action need the proper SJA channel.\n"
+            "- Exercise plans still need guardrails: ROE/RUF training injects, safety investigation boundaries, "
+            "claims, media release, detainee role-play, and ethics all need clean lanes.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What decision, authority, or legal review trigger is being assumed?\n"
+            "- Does the exercise include role-play detainees, escalation-of-force, investigations, claims, imagery, "
+            "or public-release issues?\n"
+            "- What should commanders, controllers, and evaluators say or avoid saying to prevent confusion?\n"
+            "- Where does the plan need SJA review before it is briefed as executable?\n\n"
+            "Recommended next action:\n"
+            "- Build a legal issue-spotter with ROE/RUF training guardrails, investigation boundaries, claims/release "
+            "checks, and a named SJA review point.\n"
+            "- Separate training inject fiction from real-world legal authorities and reporting requirements."
+            f"{active_context_note}"
+            f"{osint_note}"
+        )
+
+    if definition.role in {"pao", "commstrat", "g7", "hqmc_information"}:
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- Public posture is part of the plan, not garnish after the CONOP is done.\n"
+            "- OPSEC, release authority, imagery, media access, and the exercise narrative need one coherent owner "
+            "and one approval path.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What can be said publicly, by whom, and at what release point?\n"
+            "- What imagery, visitor, media, or community touchpoint creates OPSEC or reputation risk?\n"
+            "- What message should the exercise reinforce, and what accidental message might it send?\n"
+            "- How does PAO/COMMSTRAT coordinate with S-2, S-3, S-6, SJA, and G-9 before release?\n\n"
+            "Recommended next action:\n"
+            "- Build a public affairs/COMMSTRAT matrix covering release authority, OPSEC review, media posture, "
+            "imagery handling, themes, and response-to-query lines."
+            f"{active_context_note}"
+            f"{osint_note}"
+        )
+
+    if definition.role == "safety":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- ORM is not a signature block; it is how the commander decides what risk is worth taking.\n"
+            "- A realistic exercise plan needs hazards, controls, residual risk, risk owner, and stop-training "
+            "criteria in plain language.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What hazard is most likely, and what hazard is most severe?\n"
+            "- Who has authority to stop, pause, or modify training?\n"
+            "- What residual risk needs command acceptance instead of staff optimism?\n"
+            "- What rehearsal proves the control measure is executable?\n\n"
+            "Recommended next action:\n"
+            "- Build the ORM worksheet, no-go criteria, risk-owner list, and safety brief before the event "
+            "timeline hardens."
+            f"{active_context_note}"
+            f"{osint_note}"
+        )
+
+    if definition.role == "provost":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- Access, force protection, traffic flow, visitor control, and simulated detainee/security injects need "
+            "clear boundaries before they touch execution.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What access-control, traffic, or force-protection friction can delay the exercise?\n"
+            "- Are any detainee, search, law-enforcement, or security injects fictional and clearly bounded?\n"
+            "- What installation or local security coordination must happen before movement?\n"
+            "- What needs SJA or safety review because it crosses into authority or risk questions?\n\n"
+            "Recommended next action:\n"
+            "- Build a security annex with access-control, movement-control, force-protection, emergency action, "
+            "and SJA/safety coordination points."
+            f"{active_context_note}"
+            f"{osint_note}"
+        )
+
+    if definition.role in {"chaplain", "rp"}:
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- Religious support and morale planning are real readiness concerns, especially when the exercise has "
+            "casualty, hardship, memorial, or ethical-climate injects.\n"
+            "- Preserve confidential support boundaries. The staff can plan support access without exposing private "
+            "communications.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- How will Marines access religious, moral, or confidential support during the event?\n"
+            "- What casualty, memorial, family, or high-stress scenario needs RMT coordination?\n"
+            "- What should be reported as readiness or morale context without exposing confidential communications?\n"
+            "- What space, movement, schedule, and security support does the RMT need?\n\n"
+            "Recommended next action:\n"
+            "- Build the religious support plan, RMT movement/support checklist, morale estimate, and confidentiality "
+            "boundary note."
+            f"{active_context_note}"
+            f"{osint_note}"
+        )
+
+    if definition.role == "ig":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- IG value comes from impartiality. Do not turn this lane into a shortcut for command-directed "
+            "investigation or staff enforcement.\n"
+            "- For exercises, the useful IG contribution is inspection readiness, compliance trends, complaint "
+            "boundaries, and systemic friction.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What readiness or compliance issue is systemic rather than merely inconvenient?\n"
+            "- Is the staff trying to use IG language for something that belongs to command, SJA, or safety?\n"
+            "- What inspection or inquiry boundary must be protected?\n"
+            "- What trend should be briefed to the commander without compromising impartiality?\n\n"
+            "Recommended next action:\n"
+            "- Build an inspection/inquiry boundary note and readiness trend memo; route actual complaints through "
+            "proper IG channels."
+            f"{active_context_note}"
+            f"{osint_note}"
+        )
+
     return (
         f"{definition.title} staff-vetting perspective.\n\n"
         f"Scope: {definition.scope}\n\n"
@@ -540,20 +1165,45 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
 
 def _role_references(role: str) -> tuple[SourceRef, ...]:
     mapping = {
-        "xo": S3_REFERENCES,
-        "opso": S3_REFERENCES,
-        "s3": S3_REFERENCES,
+        "xo": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "opso": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "s3": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "s1": S1_REFERENCES,
-        "s2": S2_REFERENCES,
-        "g2": S2_REFERENCES,
-        "s4": S4_REFERENCES,
-        "g4": S4_REFERENCES,
-        "s6": S6_REFERENCES,
-        "g6": S6_REFERENCES,
+        "s2": S2_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "g2": S2_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "s4": S4_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "g4": S4_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "s6": S6_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "g6": S6_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "firstsgt": SEL_REFERENCES,
         "sgtmaj": SEL_REFERENCES,
-        "doc": MEDICAL_REFERENCES,
-        "surgeon": MEDICAL_REFERENCES,
-        "g9": G9_REFERENCES,
+        "doc": MEDICAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "surgeon": MEDICAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "g9": G9_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "g7": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "g8": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "meu_s3": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "meu_s4": S4_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "blt": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "ace": S3_REFERENCES + ORM_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "airo": S3_REFERENCES + ORM_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "lce": S4_REFERENCES + MEDICAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "wing_ops": S3_REFERENCES + ORM_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "mlg_log": S4_REFERENCES + MEDICAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "sja": LEGAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "pao": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "commstrat": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "ig": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "chaplain": STAFF_PROCESS_REFERENCES,
+        "rp": STAFF_PROCESS_REFERENCES,
+        "safety": ORM_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "provost": STAFF_PROCESS_REFERENCES + LEGAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "hqmc_mra": S1_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "hqmc_ppo": S3_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "hqmc_pr": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "hqmc_il": S4_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "hqmc_aviation": S3_REFERENCES + ORM_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "hqmc_information": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "hqmc_cdi": S3_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
     }
     return mapping.get(role, ())

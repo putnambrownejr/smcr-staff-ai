@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 class ProductTemplateType(StrEnum):
     cub_brief = "cub_brief"
+    civil_preparation_battlespace = "civil_preparation_battlespace"
     cpb = "cpb"
     opord = "opord"
     warno = "warno"
@@ -68,4 +69,3 @@ class ProductTemplateListResponse(BaseModel):
     total_templates: int
     by_type: dict[str, int]
     records: list[ProductTemplateRecord]
-

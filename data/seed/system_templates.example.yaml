@@ -15,20 +15,20 @@ templates:
     warnings:
       - "System template only. Adapt to local unit battle rhythm."
   - template_id: "sys-cpb"
-    template_name: "System CPB"
+    template_name: "System Civil Preparation of the Battlespace"
     template_type: "cpb"
-    description: "Commander's planning/briefing rhythm template for near-term operations and support synchronization."
-    tags: ["system", "cpb", "planning"]
-    audience_hint: "Commander and principal staff"
-    preferred_format: "briefing"
-    reusable_headings: ["Mission", "Intent", "Decisions", "Supportability", "Risk", "Next 72 hours"]
+    description: "Civil Affairs/G-9 Civil Preparation of the Battlespace template for civil factors, actors, information gaps, and civil-impact planning."
+    tags: ["system", "cpb", "civil_affairs", "g9"]
+    audience_hint: "G-9, Civil Affairs, commander, and principal staff"
+    preferred_format: "civil_affairs_estimate"
+    reusable_headings: ["Civil frame", "ASCOPE factors", "Civil actors", "Civil information gaps", "Civil risks", "Recommended CA actions"]
     reusable_guidance:
-      - "Lead with decisions, not staff updates."
-      - "Make support shortfalls and friction visible early."
-    example_excerpt: "Mission / intent / decisions / supportability / risk / next 72 hours."
+      - "Use CPB only for civil-affairs-relevant planning."
+      - "Do not use CPB as a generic commander planning brief."
+    example_excerpt: "Civil frame / ASCOPE / civil actors / civil information gaps / civil risks / CA actions."
     local_only: false
     warnings:
-      - "System template only. Validate against current commander preference."
+      - "System template only. Validate with G-9/Civil Affairs and current local SOP."
   - template_id: "sys-opord"
     template_name: "System OPORD"
     template_type: "opord"

@@ -728,7 +728,7 @@ def _thin_staff_assist(
             "Mission analysis worksheet",
             "Planning cell package",
             "Persistent battle rhythm board",
-            "Staff update cycle (running estimate -> CUB -> CPB)",
+            "Staff update cycle (running estimate -> CUB -> decision brief)",
             *(
                 ["FRAGO to CONOP package"]
                 if next_drill_readiness.anchor_drill_date is not None or drill_plans

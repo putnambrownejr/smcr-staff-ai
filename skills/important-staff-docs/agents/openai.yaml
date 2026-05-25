@@ -1,0 +1,4 @@
+interface:
+  display_name: "Important Staff Docs"
+  short_description: "Use core staff-product references and quick templates."
+  default_prompt: "Use the important staff docs skill to map this staff problem to the right product, owner, references, and quick scaffold."

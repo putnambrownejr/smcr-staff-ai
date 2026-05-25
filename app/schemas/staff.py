@@ -4,9 +4,20 @@ from pydantic import BaseModel, Field
 
 
 class StaffEchelon(StrEnum):
+    platoon = "platoon"
     company = "company"
     battalion = "battalion"
+    regiment_meu_wing = "regiment_meu_wing"
     division_group = "division_group"
+    mef = "mef"
+    hqmc = "hqmc"
+
+
+class MagtfLens(StrEnum):
+    ce_c2 = "ce_c2"
+    gce = "gce"
+    ace = "ace"
+    lce = "lce"
 
 
 class StaffRoleMetadata(BaseModel):
@@ -37,9 +48,23 @@ class StaffPerspective(BaseModel):
     agent_id: str
     role: str
     echelon: StaffEchelon
+    phase: str = "section_estimate"
+    magtf_lenses: list[MagtfLens] = Field(default_factory=list)
     answer: str
+    estimate: list[str] = Field(default_factory=list)
+    critical_questions: list[str] = Field(default_factory=list)
+    assumptions_to_test: list[str] = Field(default_factory=list)
     concerns: list[str] = Field(default_factory=list)
+    critique_points: list[str] = Field(default_factory=list)
+    cross_staff_risks: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
+    recommended_products: list[str] = Field(default_factory=list)
+    coordination_notes: list[str] = Field(default_factory=list)
+    branch_sequel_prompts: list[str] = Field(default_factory=list)
+    commander_decisions: list[str] = Field(default_factory=list)
+    mcpp_step: str | None = None
+    mcpp_discipline: str | None = None
+    pme_grounding: str | None = None
     citations: list[str] = Field(default_factory=list)
     structured_citations: list[dict[str, object]] = Field(default_factory=list)
     action_items: list[str] = Field(default_factory=list)

@@ -28,7 +28,7 @@ class StaffPlanningPackageRequest(BaseModel):
                 "title": "Reserve field training package",
                 "event_type": "field_training",
                 "mission_or_training_goal": "Build a one-day field event that improves staff and small-unit readiness.",
-                "audience": "Civil affairs company",
+                "audience": "infantry company",
                 "timeframe": "Next drill weekend",
                 "constraints": ["One field day", "Distributed Marines", "Travel required for some personnel"],
                 "coordinating_sections": ["S-1", "S-4", "S-6", "Safety / ORM"],

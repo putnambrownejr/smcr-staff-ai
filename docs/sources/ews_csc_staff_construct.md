@@ -72,7 +72,8 @@ staff bench think more like educated company-grade and field-grade Marines.
 
 - Red-team / assumptions challenge role
   - Tests weak logic, unexamined assumptions, and false COA differences
-  - Useful during mission analysis, wargaming, and CPB prep
+  - Useful during mission analysis and wargaming
+  - Useful during CPB only when the problem is Civil Affairs/G-9 related
 
 - Assessment and learning role
   - Connects MET/METL, measures, AARs, and next-drill follow-through

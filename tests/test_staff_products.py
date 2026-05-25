@@ -20,6 +20,8 @@ def test_staff_product_builder_creates_opord_sections() -> None:
     assert "5. Command and Signal" in headings
     assert response.review_checklist
     assert response.structured_citations
+    assert any("MCWP 5-10" in citation.title for citation in response.structured_citations)
+    assert any("3150.05F" in citation.title for citation in response.structured_citations)
 
 
 def test_staff_products_draft_route_supports_correspondence() -> None:
@@ -40,6 +42,18 @@ def test_staff_products_draft_route_supports_correspondence() -> None:
     assert payload["product_type"] == "memorandum"
     assert any("5216.5" in citation["title"] for citation in payload["structured_citations"])
     assert payload["formatting_notes"]
+    assert any("MCWP 5-10" in citation["title"] for citation in payload["structured_citations"])
+
+
+def test_staff_product_builder_cites_sitrep_reporting_reference() -> None:
+    response = StaffProductBuilder().build(
+        StaffProductDraftRequest(
+            product_type=StaffProductType.sitrep,
+            topic="Training-only battalion status update",
+        )
+    )
+
+    assert any("3150.05F" in citation.title for citation in response.structured_citations)
 
 
 def test_staff_product_builder_creates_conop_sections() -> None:

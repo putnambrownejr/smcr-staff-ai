@@ -791,6 +791,37 @@ OPORD_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+STAFF_PRODUCT_REFERENCES: tuple[SourceRef, ...] = (
+    *OPORD_REFERENCES,
+    SourceRef(
+        title="CJCSM 3150.05F Joint Reporting System Situation Monitoring Manual",
+        url="https://www.jcs.mil/Portals/36/Documents/Library/Manuals/CJCSM%203150.05F.pdf",
+        publisher="Joint Chiefs of Staff",
+        notes="Primary public joint reference for SITREP and operational report framing.",
+    ),
+    SourceRef(
+        title="MCO 1553.3C Unit Training Management",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899431/mco-15533c/",
+        publisher="United States Marine Corps",
+        notes="Training design, evaluation, AAR, and standards-based event discipline reference.",
+    ),
+)
+
+CORRESPONDENCE_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="SECNAV M-5216.5 CH-1 Department of the Navy Correspondence Manual",
+        url="https://www.secnav.navy.mil/doni/SECNAV%20Manuals1/5216.5%20%20CH-1.pdf",
+        publisher="Department of the Navy",
+        notes="Department-level naval correspondence format and routing reference.",
+    ),
+    SourceRef(
+        title="MCO 5216.20B Marine Corps Supplement to the Department of the Navy Correspondence Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2795618/mco-521620b-wadmin-ch-4/",
+        publisher="United States Marine Corps",
+        notes="Marine Corps supplement for official correspondence, endorsements, and routing discipline.",
+    ),
+)
+
 UNIFORM_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCO 1020.34H Marine Corps Uniform Regulations",

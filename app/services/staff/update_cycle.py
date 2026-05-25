@@ -124,6 +124,7 @@ class StaffUpdateCycleBuilder:
 
     def build_cpb(self, request: RunningEstimateRequest) -> CpbResponse:
         running_estimate = self.build_running_estimate(request)
+        is_civil_affairs_relevant = _is_civil_affairs_relevant(request)
         command_frame = _cpb_frame(request, running_estimate.running_estimates)
         key_assumptions = _unique_ordered(
             [item for estimate in running_estimate.running_estimates for item in estimate.assumptions]
@@ -135,30 +136,44 @@ class StaffUpdateCycleBuilder:
         brief = self._products.build(
             StaffProductDraftRequest(
                 product_type=StaffProductType.decision_brief,
-                topic=f"CPB for {request.title}",
+                topic=f"Civil Preparation of the Battlespace (CPB) for {request.title}",
                 audience=request.supported_unit,
                 echelon=request.supported_echelon.value,
                 facts=[
                     f"Mission/training goal: {request.mission_or_training_goal}",
                     *[f"Command frame: {item}" for item in command_frame[:4]],
+                    *[f"Civil consideration: {item}" for item in request.civil_considerations[:4]],
+                    *[f"Partner type: {item}" for item in request.partner_types[:4]],
                     *[f"Decision point: {item}" for item in decision_points[:4]],
                     *[f"Branch or sequel: {item}" for item in branches_and_sequels[:4]],
                 ],
                 constraints=[
-                    "Focus the CPB on decisions, assumptions, and branch planning instead of re-briefing stable detail."
+                    "Treat CPB as Civil Preparation of the Battlespace: a G-9/Civil Affairs product.",
+                    "For non-civil-affairs problems, use a CUB, decision brief, running estimate, or FRAGO instead.",
                 ],
                 training_or_fictional=request.training_only,
             )
         )
+        warnings = running_estimate.warnings
+        if not is_civil_affairs_relevant:
+            warnings = _unique_ordered(
+                [
+                    *warnings,
+                    (
+                        "CPB means Civil Preparation of the Battlespace and is Civil Affairs/G-9 specific; "
+                        "deprioritize it for non-civil-affairs planning."
+                    ),
+                ]
+            )
         return CpbResponse(
-            title=f"CPB package: {request.title}",
+            title=f"Civil Preparation of the Battlespace package: {request.title}",
             command_frame=command_frame,
             running_estimates=running_estimate.running_estimates,
             key_assumptions=key_assumptions,
             decision_points=decision_points,
             branches_and_sequels=branches_and_sequels,
             command_brief=brief,
-            warnings=running_estimate.warnings,
+            warnings=warnings,
         )
 
     def build_update_cycle(self, request: RunningEstimateRequest) -> StaffUpdateCycleResponse:
@@ -331,7 +346,7 @@ class StaffUpdateCycleBuilder:
             [
                 "Mission analysis worksheet",
                 "Planning cell package",
-                "Running estimate / CUB / CPB cycle",
+                "Running estimate / CUB / decision brief cycle",
                 *[
                     f"{item.section} running estimate scaffold"
                     for item in section_estimates
@@ -409,10 +424,13 @@ def _cpb_frame(
     estimates: list[RunningEstimateItem],
 ) -> list[str]:
     frame = [
-        f"Mission/training frame: {request.mission_or_training_goal}",
-        "Use the CPB to support a decision, branch, sequel, or risk call; do not just repackage the CUB.",
+        f"Civil frame: {request.mission_or_training_goal}",
+        "CPB is Civil Preparation of the Battlespace; keep it focused on civil actors, areas, structures, "
+        "capabilities, organizations, people, events, and civil information gaps.",
     ]
     frame.extend(f"Commander priority: {item}" for item in request.commander_priorities[:3])
+    frame.extend(f"Civil consideration: {item}" for item in request.civil_considerations[:4])
+    frame.extend(f"Partner type: {item}" for item in request.partner_types[:4])
     frame.extend(f"{estimate.section} risk: {estimate.risks[0]}" for estimate in estimates if estimate.risks[:1])
     return _unique_ordered(frame)
 
@@ -454,8 +472,7 @@ def _branches_and_sequels(
             "reduced-scope branch before burning execution time."
         ),
         (
-            "If section updates show stable supportability, preserve the current concept "
-            "and use the CPB to decide where to accept friction."
+            "If the problem is not civil-affairs related, use a decision brief or CUB instead of labeling it CPB."
         ),
     ]
     if request.met_tasks or request.metl_focus:
@@ -488,10 +505,42 @@ def _warnings_for(request: RunningEstimateRequest) -> list[str]:
             [
                 *DEFAULT_WARNINGS,
                 *detect_sensitive_input(text),
-                "Running estimates, CUBs, and CPBs are advisory staff products and require human review before use.",
+                "Running estimates, CUBs, and decision briefs are advisory staff products and require human review.",
             ]
         )
     )
+
+
+def _is_civil_affairs_relevant(request: RunningEstimateRequest) -> bool:
+    text = " ".join(
+        [
+            request.title,
+            request.supported_unit,
+            request.mission_or_training_goal,
+            request.event_type,
+            *request.partner_types,
+            *request.civil_considerations,
+            *request.coordinating_sections,
+            *[update.section for update in request.section_updates],
+            *[update.summary for update in request.section_updates],
+        ]
+    ).lower()
+    terms = {
+        "civil",
+        "civil affairs",
+        "g-9",
+        "g9",
+        "ascope",
+        "population",
+        "local authority",
+        "partner",
+        "ngo",
+        "interagency",
+        "host nation",
+        "community",
+        "civilian",
+    }
+    return any(term in text for term in terms)
 
 
 def _present_sections(request: RunningEstimateRequest) -> set[str]:
@@ -917,9 +966,11 @@ def _lone_planner_products(request: RunningEstimateRequest, planning_cell: Plann
         "Mission analysis worksheet",
         "Planning cell package with visible assumption, decision, and due-out logs",
         "Command update brief / CUB",
-        "Decision brief / CPB",
+        "Decision brief",
         "Battle rhythm board entry",
     ]
+    if _is_civil_affairs_relevant(request):
+        products.append("Civil Preparation of the Battlespace (G-9/CA)")
     if planning_cell.commander_decision_log:
         products.append("Commander decision list")
     if request.higher_guidance or planning_cell.update_cycle.cub.due_outs:

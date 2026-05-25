@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.schemas.staff import (
+    MagtfLens,
     S2EstimateRequest,
     S6PlanRequest,
     StaffCouncilRequest,
@@ -22,11 +23,28 @@ def test_registry_includes_chief_and_staff_agents() -> None:
     assert "chief-of-staff-aide" in ids
     assert "staff-company-xo" in ids
     assert "staff-company-doc" in ids
+    assert "staff-company-safety" in ids
     assert "staff-battalion-s2" in ids
     assert "staff-battalion-surgeon" in ids
+    assert "staff-battalion-sja" in ids
+    assert "staff-battalion-pao" in ids
+    assert "staff-battalion-safety" in ids
+    assert "staff-regiment_meu_wing-airo" in ids
+    assert "staff-regiment_meu_wing-sja" in ids
+    assert "staff-regiment_meu_wing-ace" in ids
+    assert "staff-regiment_meu_wing-lce" in ids
     assert "staff-division_group-g2" in ids
+    assert "staff-division_group-g7" in ids
+    assert "staff-division_group-g8" in ids
     assert "staff-division_group-g9" in ids
+    assert "staff-division_group-wing_ops" in ids
+    assert "staff-division_group-mlg_log" in ids
     assert "staff-division_group-surgeon" in ids
+    assert "staff-mef-ace" in ids
+    assert "staff-mef-lce" in ids
+    assert "staff-hqmc-hqmc_mra" in ids
+    assert "staff-hqmc-hqmc_ppo" in ids
+    assert "staff-hqmc-hqmc_aviation" in ids
 
 
 def test_chief_of_staff_agent_surfaces_handoff_watch_items() -> None:
@@ -87,8 +105,16 @@ def test_staff_round_robin_runs_all_default_echelons() -> None:
         request=StaffRoundRobinRequest(question="Should we change the drill weekend admin battle rhythm?")
     )
 
-    assert len(response.councils) == 3
-    assert response.phases == ["initial_estimate", "critique", "cross_staff_risks", "synthesis"]
+    assert len(response.councils) == 20
+    assert response.phases == [
+        "section_estimates",
+        "critique_other_sections",
+        "cross_staff_friction",
+        "commander_xo_synthesis",
+    ]
+    assert {perspective.phase for council in response.councils for perspective in council.perspectives} == set(
+        response.phases
+    )
     division_group_council = next(
         council for council in response.councils if council.echelon == StaffEchelon.division_group
     )
@@ -141,6 +167,108 @@ def test_staff_council_rejects_unknown_role() -> None:
         assert "Unknown roles" in str(exc)
     else:
         raise AssertionError("Expected invalid role to raise ValueError")
+
+
+def test_staff_council_special_staff_builds_exercise_products() -> None:
+    service = StaffCouncilService()
+    response = service.vet_idea(
+        StaffCouncilRequest(
+            question=(
+                "Build a realistic MEU exercise plan with aviation support, media presence, safety risk, "
+                "and legal review."
+            ),
+            echelon=StaffEchelon.regiment_meu_wing,
+            roles=["AirO", "SJA", "PAO", "safety", "provost", "chaplain"],
+        )
+    )
+
+    roles = {perspective.role for perspective in response.perspectives}
+    assert roles == {"airo", "sja", "pao", "safety", "provost", "chaplain"}
+    airo = next(perspective for perspective in response.perspectives if perspective.role == "airo")
+    sja = next(perspective for perspective in response.perspectives if perspective.role == "sja")
+
+    assert MagtfLens.ace in airo.magtf_lenses
+    assert "Air support estimate" in airo.recommended_products
+    assert any("airspace" in item.lower() for item in airo.critical_questions)
+    assert any("qualified aviation" in item.lower() for item in airo.assumptions_to_test)
+    assert "Legal estimate" in sja.recommended_products
+    assert any("not legal advice" in item.lower() for item in sja.assumptions_to_test)
+    assert all(perspective.structured_citations for perspective in response.perspectives)
+    assert any(
+        citation.get("title") == "MCWP 5-10 Marine Corps Planning Process"
+        for perspective in response.perspectives
+        for citation in perspective.structured_citations
+    )
+
+
+def test_staff_council_special_staff_aliases() -> None:
+    service = StaffCouncilService()
+    response = service.vet_idea(
+        StaffCouncilRequest(
+            question="Check public release and legal guardrails for a training exercise.",
+            echelon=StaffEchelon.regiment_meu_wing,
+            roles=["JAG", "public affairs", "provost marshal"],
+        )
+    )
+
+    assert [perspective.role for perspective in response.perspectives] == ["sja", "pao", "provost"]
+
+
+def test_staff_round_robin_runs_airo_sja_where_available() -> None:
+    service = StaffCouncilService()
+    response = service.round_robin(
+        StaffRoundRobinRequest(
+            question="Pressure-test a high-level MAGTF exercise with aviation and legal review.",
+            roles=["airo", "sja"],
+        )
+    )
+
+    roles_run = {role for council in response.councils for role in council.roles_run}
+    echelons_run = {council.echelon for council in response.councils}
+    assert {"airo", "sja"}.issubset(roles_run)
+    assert StaffEchelon.regiment_meu_wing in echelons_run
+    assert StaffEchelon.division_group in echelons_run
+    assert StaffEchelon.mef in echelons_run
+    assert all(council.roles_missing == [] for council in response.councils)
+
+
+def test_staff_council_route_serializes_special_staff_fields() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/staff/vet-idea",
+        json={
+            "question": "Build an exercise plan with aviation support and legal review.",
+            "echelon": "regiment_meu_wing",
+            "roles": ["airo", "sja"],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["roles_run"] == ["airo", "sja"]
+    assert payload["perspectives"][0]["recommended_products"]
+    assert payload["perspectives"][0]["magtf_lenses"]
+    assert payload["perspectives"][0]["mcpp_step"]
+
+
+def test_staff_council_staff_product_references_follow_numbered_staff() -> None:
+    service = StaffCouncilService()
+    response = service.vet_idea(
+        StaffCouncilRequest(
+            question="Build the base OPORD and running estimate requirements for a battalion exercise.",
+            echelon=StaffEchelon.battalion,
+            roles=["s3", "s4", "s6"],
+        )
+    )
+
+    assert all(
+        any(
+            citation.get("title") == "MCWP 5-10 Marine Corps Planning Process"
+            for citation in perspective.structured_citations
+        )
+        for perspective in response.perspectives
+    )
 
 
 def test_s2_estimator_returns_claims_and_gaps() -> None:

@@ -14,22 +14,22 @@ from app.services.templates.product_template_repository import ProductTemplateRe
 def test_product_template_repository_promotes_local_example(tmp_path: Path) -> None:
     context_store = LocalContextStore(tmp_path / "context")
     source = context_store.save(
-        filename="cpb-example.md",
+        filename="civil-prep-battlespace-example.md",
         content=(
-            b"# CPB\n\n## Enemy Situation\n- Placeholder\n\n"
-            b"## Friendly Situation\n- Placeholder\n\n"
-            b"## Decision Support Matrix\n"
+            b"# Civil Preparation of the Battlespace\n\n## ASCOPE Factors\n- Placeholder\n\n"
+            b"## Civil Actors\n- Placeholder\n\n"
+            b"## Civil Information Gaps\n"
         ),
         content_type="text/markdown",
         document_type="product_example",
-        tags=["intel", "briefing"],
+        tags=["civil-affairs", "g9"],
     )
     repository = ProductTemplateRepository(tmp_path / "templates")
 
     record = repository.create_from_context(
         request=CreateProductTemplateFromContextRequest(
             context_id=source.context_id,
-            template_name="Battalion CPB Example",
+            template_name="Civil Affairs CPB Example",
             template_type=ProductTemplateType.cpb,
         ),
         context_store=context_store,
@@ -37,6 +37,7 @@ def test_product_template_repository_promotes_local_example(tmp_path: Path) -> N
 
     assert record.source_context_id == source.context_id
     assert record.template_type.value == "cpb"
+    assert "ASCOPE Factors" in record.reusable_headings
     assert record.reusable_headings
     assert record.local_only is True
 

@@ -81,14 +81,33 @@ def test_staff_cub_builds_command_update_brief() -> None:
 def test_staff_cpb_builds_decision_brief() -> None:
     client = TestClient(app)
 
-    response = client.post("/staff/cpb", json=_sample_request())
+    payload = _sample_request()
+    payload["civil_considerations"] = ["Local community traffic near the training area."]
+    payload["partner_types"] = ["Local authorities"]
+    payload["coordinating_sections"] = ["G-9 Civil Affairs"]
+
+    response = client.post("/staff/cpb", json=payload)
 
     assert response.status_code == 200
-    payload = response.json()
-    assert payload["command_frame"]
-    assert payload["decision_points"]
-    assert payload["branches_and_sequels"]
-    assert payload["command_brief"]["product_type"] == "decision_brief"
+    body = response.json()
+    assert body["title"].startswith("Civil Preparation of the Battlespace")
+    assert any("ASCOPE" in item or "Civil" in item for item in body["command_frame"])
+    assert body["decision_points"]
+    assert body["branches_and_sequels"]
+    assert body["command_brief"]["product_type"] == "decision_brief"
+
+
+def test_staff_cpb_warns_when_not_civil_affairs_relevant() -> None:
+    client = TestClient(app)
+
+    payload = _sample_request()
+    payload["supported_unit"] = "Rifle company"
+
+    response = client.post("/staff/cpb", json=payload)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert any("Civil Preparation of the Battlespace" in warning for warning in body["warnings"])
 
 
 def test_staff_update_cycle_links_running_estimate_cub_and_cpb() -> None:
@@ -101,6 +120,7 @@ def test_staff_update_cycle_links_running_estimate_cub_and_cpb() -> None:
     assert payload["running_estimate"]["running_estimates"]
     assert payload["cub"]["update_brief"]["product_type"] == "command_update_brief"
     assert payload["cpb"]["command_brief"]["product_type"] == "decision_brief"
+    assert payload["cpb"]["title"].startswith("Civil Preparation")
 
 
 def test_staff_mission_analysis_builds_task_and_assumption_structure() -> None:

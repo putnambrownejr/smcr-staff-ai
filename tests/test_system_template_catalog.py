@@ -21,3 +21,7 @@ def test_system_template_catalog_includes_baseline_staff_library() -> None:
     assert "sys-naval-letter" in ids
     assert "sys-memorandum" in ids
     assert "sys-endorsement" in ids
+
+    cpb = next(record for record in catalog.list() if record.template_id == "sys-cpb")
+    assert "Civil Preparation of the Battlespace" in cpb.template_name
+    assert "civil_affairs" in cpb.tags

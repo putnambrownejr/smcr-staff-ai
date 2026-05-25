@@ -427,7 +427,9 @@ def test_airo_agent_returns_planning_structure() -> None:
         context=AgentContext(),
     )
 
-    assert "AirO advisory" in response.answer
+    assert "AirO exercise planning advisory" in response.answer
+    assert "Supported aviation effect" in response.answer
+    assert "Deconfliction and no-go questions" in response.answer
     assert response.structured_citations
 
 
@@ -440,6 +442,8 @@ def test_jag_agent_is_explicitly_non_authoritative() -> None:
 
     assert "not legal advice" in response.answer.lower()
     assert "SJA / military justice advisory" in response.answer
+    assert "Exercise legal issue spotter" in response.answer
+    assert "Legal review triggers" in response.answer
     assert any("Manual for Courts-Martial" in citation.title for citation in response.structured_citations)
     assert any("5800.16" in citation.title for citation in response.structured_citations)
     assert response.source_trust
