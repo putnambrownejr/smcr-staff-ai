@@ -20,6 +20,95 @@ class S6Planner:
             "Reduce reporting methods and windows until Marines can actually execute them under friction.",
         ]
 
+        pace_matrix = [
+            {
+                "level": "Primary",
+                "method": "Best authorized method for routine command-and-control reporting.",
+                "use": "Normal reports, accountability updates, and commander/XO synchronization.",
+                "failure_trigger": "Missed report window, unreachable key node, or degraded access.",
+                "owner": "S-6 validates method with S-3 and each reporting element before execution.",
+            },
+            {
+                "level": "Alternate",
+                "method": "Second authorized method that reaches the same decision-makers.",
+                "use": "Routine traffic when the primary path is unavailable or overloaded.",
+                "failure_trigger": "Alternate method cannot reach the required audience inside the reporting window.",
+                "owner": "S-6 and unit leaders confirm users know when to switch.",
+            },
+            {
+                "level": "Contingency",
+                "method": "Simpler fallback method for degraded reporting and accountability.",
+                "use": "Minimum essential reports, commander's critical information, and emergency coordination.",
+                "failure_trigger": "Contingency path cannot pass the minimum essential report.",
+                "owner": "S-3 defines minimum report content; S-6 confirms supportability.",
+            },
+            {
+                "level": "Emergency",
+                "method": "Last-resort authorized method for safety, accountability, or urgent command notification.",
+                "use": "Life, limb, accountability, force protection, or lost-communication recovery.",
+                "failure_trigger": "Emergency method fails or no acknowledgement is received.",
+                "owner": "Commander/XO sets escalation rule; S-6 validates the method is understood.",
+            },
+        ]
+
+        radio_guard_chart = [
+            {
+                "period": "Pre-execution comm check",
+                "net_or_group": "Generic training net or approved reporting group",
+                "station": "All reporting elements",
+                "guard_responsibility": (
+                    "Confirm reach-back, user access, and fallback method before movement or execution."
+                ),
+                "report_required": (
+                    "Ready / not ready, missing users, degraded equipment, and unresolved access issues."
+                ),
+            },
+            {
+                "period": "Execution window",
+                "net_or_group": "Primary reporting path",
+                "station": "Command post or designated control node",
+                "guard_responsibility": (
+                    "Maintain accountability, receive scheduled reports, and track missed-report triggers."
+                ),
+                "report_required": "Scheduled status, CCIR/PIR-relevant updates, support requests, and safety issues.",
+            },
+            {
+                "period": "Degraded comms",
+                "net_or_group": "Alternate or contingency reporting path",
+                "station": "Designated alternate guard station",
+                "guard_responsibility": "Acknowledge switch-over, simplify traffic, and report unresolved outages.",
+                "report_required": "Who is affected, what reports can still pass, and when the next check occurs.",
+            },
+            {
+                "period": "Closeout",
+                "net_or_group": "Primary or recovered reporting path",
+                "station": "Command post and element leaders",
+                "guard_responsibility": "Confirm accountability, collect comm friction, and capture AAR inputs.",
+                "report_required": "Final accountability, unresolved equipment/access issues, and next-action owners.",
+            },
+        ]
+
+        comm_plan_outline = [
+            "Purpose: what command-and-control effect the comm plan must support.",
+            "Supported event and audience: who must communicate, who must decide, and who must be informed.",
+            (
+                "Information flow: reports, CCIR/PIR linkage, report windows, acknowledgement rules, "
+                "and missed-report action."
+            ),
+            "PACE matrix: authorized methods only, with switch criteria and owners.",
+            "Radio guard / monitoring chart: periods, responsible stations, reports required, and escalation triggers.",
+            "Support plan: equipment issue, power, user access, permissions, rehearsals, and help-desk path.",
+            "Risk controls: lost-comm action, degraded reporting, sensitive-detail exclusion, and AAR capture.",
+        ]
+
+        information_management_checks = [
+            "Define the minimum essential report before choosing a tool or network.",
+            "Name the audience for each report and remove duplicate reporting paths.",
+            "Set acknowledgement and missed-report rules that leaders can execute under friction.",
+            "Keep real frequencies, COMSEC, call signs, sensitive network details, and current operational plans out.",
+            "Tie comm rehearsals to the S-3 timeline and S-4 equipment/power support.",
+        ]
+
         support_requirements = [
             "Equipment availability and issue plan",
             "Battery/power and sustainment support",
@@ -53,6 +142,10 @@ class S6Planner:
             title=f"S-6 planning support: {request.title}",
             c2_support_estimate=c2_support_estimate,
             pace_considerations=pace_considerations,
+            pace_matrix=pace_matrix,
+            radio_guard_chart=radio_guard_chart,
+            comm_plan_outline=comm_plan_outline,
+            information_management_checks=information_management_checks,
             support_requirements=support_requirements,
             permissions_and_dependencies=permissions_and_dependencies,
             reserve_friction_points=reserve_friction_points,

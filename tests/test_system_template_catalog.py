@@ -16,6 +16,7 @@ def test_system_template_catalog_includes_baseline_staff_library() -> None:
     assert "sys-conop" in ids
     assert "sys-sitrep" in ids
     assert "sys-aar" in ids
+    assert "sys-ipb" in ids
     assert "sys-decision-brief" in ids
     assert "sys-command-update" in ids
     assert "sys-naval-letter" in ids
@@ -25,3 +26,8 @@ def test_system_template_catalog_includes_baseline_staff_library() -> None:
     cpb = next(record for record in catalog.list() if record.template_id == "sys-cpb")
     assert "Civil Preparation of the Battlespace" in cpb.template_name
     assert "civil_affairs" in cpb.tags
+
+    ipb = next(record for record in catalog.list() if record.template_id == "sys-ipb")
+    assert ipb.template_type.value == "ipb"
+    assert "s2" in ipb.tags
+    assert ipb.preferred_format == "intelligence_estimate"

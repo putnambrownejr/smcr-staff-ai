@@ -46,6 +46,14 @@ def test_staff_planning_package_builds_cross_staff_output() -> None:
     assert payload["s3_plan"]["required_outputs"]
     assert payload["s4_plan"]["critical_support_requirements"]
     assert payload["s6_plan"]["pace_considerations"]
+    assert [row["level"] for row in payload["s6_plan"]["pace_matrix"]] == [
+        "Primary",
+        "Alternate",
+        "Contingency",
+        "Emergency",
+    ]
+    assert payload["s6_plan"]["radio_guard_chart"]
+    assert payload["s6_plan"]["comm_plan_outline"]
     assert payload["medical_plan"]["casevac_plan_elements"]
     assert payload["battalion_staff_review"]["roles_run"]
     assert payload["xo_vet"]["roles_run"] == ["xo"]

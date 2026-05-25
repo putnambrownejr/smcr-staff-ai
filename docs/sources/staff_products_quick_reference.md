@@ -156,3 +156,22 @@ Next event/rehearsal to verify:
 - `s2-intel`, `s4-logistics`, `s6-comms`, `medical-doc-advisor`, `airo-advisor`, `jag-legal-advisor`, `g9-civil-military`: provide section-specific estimate and annex inputs.
 
 Keep outputs advisory, source-cited, and training-safe unless the user provides an approved environment and confirms the work is appropriate for that environment.
+
+## S-6 Quick Product Standards
+
+PACE, radio guard, and comm plans should be decision-support products, not decorative annex filler.
+
+```text
+PACE matrix:
+Primary / Alternate / Contingency / Emergency.
+For each: method, use, switch trigger, acknowledgement rule, owner, missed-report action.
+No real frequencies, COMSEC, call signs, sensitive network details, or current operational plans.
+
+Radio guard chart:
+Period / net or group / guard station / report required / escalation trigger / closeout action.
+Tie guard periods to the S-3 timeline and to S-4 power/equipment support.
+
+Comm plan:
+Purpose, supported event, information flow, report windows, PACE, radio guard, support plan,
+lost-comm action, sensitive-detail exclusion, rehearsal plan, AAR capture.
+```

@@ -124,6 +124,23 @@ templates:
     local_only: false
     warnings:
       - "System template only. Keep it honest enough for the XO or S-3 to use."
+  - template_id: "sys-ipb"
+    template_name: "System IPB"
+    template_type: "ipb"
+    description: "Baseline S-2/G-2 Intelligence Preparation of the Battlespace scaffold for training-safe decision support."
+    tags: ["system", "ipb", "s2", "g2", "intelligence"]
+    audience_hint: "S-2/G-2, commander, S-3, and primary staff"
+    preferred_format: "intelligence_estimate"
+    reusable_headings:
+      ["Define the operational environment", "Describe environmental effects", "Evaluate the threat or relevant actor", "Determine threat COAs and indicators", "Staff use and recommended outputs"]
+    reusable_guidance:
+      - "Use IPB to support commander decisions, staff planning, collection, and exercise design."
+      - "Label assumptions, confidence, source gaps, and training-only fictional content clearly."
+      - "Keep CPB/civil-affairs content in CA/G-9 lanes unless civil factors directly affect the IPB."
+    example_excerpt: "OE / environmental effects / threat or actor evaluation / COAs and indicators / staff use."
+    local_only: false
+    warnings:
+      - "System template only. Use public or training-safe sources unless working in an approved environment."
   - template_id: "sys-decision-brief"
     template_name: "System Decision Brief"
     template_type: "decision_brief"

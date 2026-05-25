@@ -306,6 +306,13 @@ def test_s6_planner_returns_pace_and_support_requirements() -> None:
 
     assert response.c2_support_estimate
     assert response.pace_considerations
+    assert [row["level"] for row in response.pace_matrix] == ["Primary", "Alternate", "Contingency", "Emergency"]
+    assert all("failure_trigger" in row for row in response.pace_matrix)
+    assert response.radio_guard_chart
+    assert any("Pre-execution" in row["period"] for row in response.radio_guard_chart)
+    assert any("PACE matrix" in item for item in response.comm_plan_outline)
+    assert any("Radio guard" in item for item in response.comm_plan_outline)
+    assert any("real frequencies" in item for item in response.information_management_checks)
     assert response.support_requirements
 
 

@@ -14,6 +14,7 @@ class ProductTemplateType(StrEnum):
     conop = "conop"
     sitrep = "sitrep"
     aar = "aar"
+    ipb = "ipb"
     decision_brief = "decision_brief"
     command_update_brief = "command_update_brief"
     naval_letter = "naval_letter"

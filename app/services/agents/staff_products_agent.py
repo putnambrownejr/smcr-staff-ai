@@ -11,7 +11,7 @@ class StaffProductsAgent(Agent):
             name="Staff Products Assistant",
             description=(
                 "Builds advisory scaffolds for OPORDs, WARNOs, FRAGOs, SITREPs, AARs, "
-                "decision briefs, command-update briefs, and correspondence."
+                "IPBs, decision briefs, command-update briefs, and correspondence."
             ),
             domain="staff products",
             intended_users=["SMCR officers", "staff officers", "company and battalion staff"],
@@ -61,7 +61,7 @@ class StaffProductsAgent(Agent):
             follow_up_questions=[
                 (
                     "What product type do you need: OPORD, WARNO, FRAGO, SITREP, AAR, "
-                    "decision brief, command update brief, letter, memo, or endorsement?"
+                    "IPB, decision brief, command update brief, letter, memo, or endorsement?"
                 ),
                 "Is this fictional/training-only or a real administrative workflow?",
                 "What audience, echelon, and required format should it follow?",
@@ -87,6 +87,13 @@ def _product_type_from_context(context: AgentContext, input_text: str) -> StaffP
         return StaffProductType.command_update_brief
     if "aar" in text or "after action" in text:
         return StaffProductType.aar
+    if (
+        "ipb" in text
+        or "intelligence preparation" in text
+        or "intelligence prep" in text
+        or "prep of the battlespace" in text
+    ):
+        return StaffProductType.ipb
     if "slides" in text or "slide deck" in text or "powerpoint" in text or "briefing deck" in text:
         return StaffProductType.decision_brief
     if "letter" in text:

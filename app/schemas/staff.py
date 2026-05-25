@@ -125,6 +125,10 @@ class S6PlanResponse(BaseModel):
     title: str
     c2_support_estimate: list[str] = Field(default_factory=list)
     pace_considerations: list[str] = Field(default_factory=list)
+    pace_matrix: list[dict[str, str]] = Field(default_factory=list)
+    radio_guard_chart: list[dict[str, str]] = Field(default_factory=list)
+    comm_plan_outline: list[str] = Field(default_factory=list)
+    information_management_checks: list[str] = Field(default_factory=list)
     support_requirements: list[str] = Field(default_factory=list)
     permissions_and_dependencies: list[str] = Field(default_factory=list)
     reserve_friction_points: list[str] = Field(default_factory=list)

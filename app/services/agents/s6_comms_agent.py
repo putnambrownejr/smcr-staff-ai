@@ -71,7 +71,12 @@ class S6CommunicationsAdvisorAgent(Agent):
             "- Keep the plan commercial/training-safe, simple enough to brief, and easy enough to rehearse.\n\n"
             "Checklist:\n"
             "- Define the supported event and essential C2 effect.\n"
-            "- Build a generic PACE planning frame without real frequencies or sensitive identifiers.\n"
+            "- Build a generic PACE matrix with primary, alternate, contingency, and emergency methods;\n"
+            "  include switch criteria, owner, acknowledgement rule, and missed-report action.\n"
+            "- Build a radio guard chart that names guard periods, responsible stations, report windows,\n"
+            "  escalation triggers, and closeout/AAR capture without real frequencies or call signs.\n"
+            "- Build the comm plan around information flow first: who reports what, to whom, by when,\n"
+            "  with what acknowledgement and fallback.\n"
             "- Identify what information must move, who must receive it, and how long delay is acceptable.\n"
             "- Check equipment access, licensing, permissions, and training currency early.\n"
             "- Reduce reporting methods before the event; too many methods usually means\n"
@@ -96,6 +101,7 @@ class S6CommunicationsAdvisorAgent(Agent):
             follow_up_questions=[
                 "What supported event or commander decision needs communications support?",
                 "What reserve friction matters most here: equipment, permissions, support time, or training currency?",
+                "What report windows and missed-report triggers should the radio guard chart enforce?",
                 "Is there a CAC, certificate, or portal-access issue that should be handled in the S-6 lane first?",
                 "What generic fallback methods exist if the primary approach fails?",
             ],

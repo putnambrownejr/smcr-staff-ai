@@ -102,6 +102,25 @@ def test_staff_product_builder_strengthens_aar_sections_and_notes() -> None:
     assert any("1553.3C" in citation.title for citation in response.structured_citations)
 
 
+def test_staff_product_builder_creates_baseline_ipb_sections() -> None:
+    response = StaffProductBuilder().build(
+        StaffProductDraftRequest(
+            product_type=StaffProductType.ipb,
+            topic="Training-only public-source IPB for a field exercise",
+            facts=["Scenario actors and injects are fictional."],
+        )
+    )
+
+    headings = [section.heading for section in response.sections]
+    assert "1. Define The Operational Environment" in headings
+    assert "4. Determine Threat COAs And Indicators" in headings
+    assert any("MCRP 2-10B.1" in citation.title for citation in response.structured_citations)
+    assert any("USGS" in citation.title for citation in response.structured_citations)
+    assert any("S-2/G-2" in warning for warning in response.warnings)
+    assert any("assumptions" in item.lower() for item in response.review_checklist)
+    assert any("generic terrain" in note for note in response.formatting_notes)
+
+
 def test_staff_product_builder_creates_decision_brief_slide_structure() -> None:
     response = StaffProductBuilder().build(
         StaffProductDraftRequest(
@@ -153,3 +172,17 @@ def test_staff_products_agent_defaults_slide_requests_to_decision_brief() -> Non
     )
 
     assert "DECISION_BRIEF draft scaffold" in response.answer
+
+
+def test_staff_products_agent_detects_ipb_requests() -> None:
+    from app.services.agents.base import AgentContext
+    from app.services.agents.staff_products_agent import build_staff_products_agent
+
+    agent = build_staff_products_agent()
+    response = agent.run(
+        "Build a baseline IPB for a training-only field exercise.",
+        context=AgentContext(),
+    )
+
+    assert "IPB draft scaffold" in response.answer
+    assert "1. Define The Operational Environment" in response.answer

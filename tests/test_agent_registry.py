@@ -329,6 +329,8 @@ def test_s6_comms_agent_returns_c2_structure() -> None:
 
     assert "S-6 advisory" in response.answer
     assert "CommO" in response.answer or "operator lane" in response.answer
+    assert "PACE matrix" in response.answer
+    assert "radio guard chart" in response.answer
     assert response.structured_citations
     assert response.source_trust
 

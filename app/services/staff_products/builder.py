@@ -9,7 +9,9 @@ from app.schemas.staff_products import (
 )
 from app.services.agents.source_refs import (
     CORRESPONDENCE_REFERENCES,
+    MAP_REFERENCES,
     OPORD_REFERENCES,
+    S2_REFERENCES,
     STAFF_PRODUCT_REFERENCES,
     TRAINING_REFERENCES,
     SourceRef,
@@ -257,6 +259,57 @@ AAR_SECTIONS = [
     ),
 ]
 
+IPB_SECTIONS = [
+    StaffProductSection(
+        heading="1. Define The Operational Environment",
+        prompts=[
+            "Area of operations, area of interest, and time horizon",
+            "Supported mission or training problem",
+            "Relevant physical, informational, and civil boundaries",
+            "Known facts, assumptions, source caveats, and information gaps",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Describe Environmental Effects",
+        prompts=[
+            "Terrain, weather, infrastructure, and civil considerations that affect operations",
+            "Observation, fields of fire, cover, concealment, obstacles, key terrain, and avenues of approach",
+            "Effects on mobility, sustainment, communications, casualty response, and force protection",
+            "What the environment enables, restricts, or makes uncertain for friendly and opposing actors",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Evaluate The Threat Or Relevant Actor",
+        prompts=[
+            "Composition, disposition, capabilities, limitations, and likely intent",
+            "Doctrine, TTP, or behavior patterns only when sourced or explicitly assumed for training",
+            "Critical vulnerabilities, dependencies, and decision requirements",
+            "Confidence level and what collection or staff input would change the assessment",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Determine Threat COAs And Indicators",
+        prompts=[
+            "Most likely and most dangerous COA or actor behavior",
+            "Named indicators and warnings that would confirm or disconfirm each COA",
+            "Priority intelligence requirements, information requirements, and collection gaps",
+            "Decision points, triggers, and branches the commander or S-3 may need to plan against",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Staff Use And Recommended Outputs",
+        prompts=[
+            "Commander implications, risk to mission, and recommended focus areas",
+            (
+                "Specific products or graphics needed: overlays, event template, COA sketch, collection matrix, "
+                "or annex input"
+            ),
+            "Cross-staff friction for S-3, S-4, S-6, medical, force protection, and CA/G-9",
+            "What must be verified before this IPB can support an order, brief, or exercise design",
+        ],
+    ),
+]
+
 CORRESPONDENCE_SECTIONS = [
     StaffProductSection(
         heading="Header / Routing",
@@ -313,8 +366,14 @@ class StaffProductBuilder:
             StaffProductType.warno,
             StaffProductType.frago,
             StaffProductType.conop,
+            StaffProductType.ipb,
         }:
             warnings.append("Use fictional/training-only data unless working in an approved environment.")
+        if request.product_type == StaffProductType.ipb:
+            warnings.append(
+                "Treat IPB as an S-2/G-2 decision-support product; use public or training-safe sources unless "
+                "working in an approved environment."
+            )
         if request.product_type in {
             StaffProductType.naval_letter,
             StaffProductType.memorandum,
@@ -352,6 +411,8 @@ def _sections_for(product_type: StaffProductType) -> list[StaffProductSection]:
         return COMMAND_UPDATE_BRIEF_SECTIONS
     if product_type == StaffProductType.aar:
         return AAR_SECTIONS
+    if product_type == StaffProductType.ipb:
+        return IPB_SECTIONS
     return CORRESPONDENCE_SECTIONS
 
 
@@ -414,8 +475,17 @@ def _review_checklist(request: StaffProductDraftRequest, templates: list[Product
         StaffProductType.warno,
         StaffProductType.frago,
         StaffProductType.conop,
+        StaffProductType.ipb,
     }:
         checklist.append("Confirm the scenario is fictional/training-only or handled in an approved environment.")
+    if request.product_type == StaffProductType.ipb:
+        checklist.extend(
+            [
+                "Confirm S-2/G-2 review before using the IPB to drive commander decisions or exercise injects.",
+                "Label assumptions, confidence, and source gaps instead of presenting estimates as settled facts.",
+                "Separate public-source environmental context from threat or actor assessments.",
+            ]
+        )
     if request.product_type in {StaffProductType.decision_brief, StaffProductType.command_update_brief}:
         checklist.extend(
             [
@@ -530,6 +600,23 @@ def _formatting_notes_for(
             "Lead with what mattered, what held, where the standard broke, and what changes before the next event.",
             "Avoid diary language. Capture judgment, friction, and decisions that shape the next cycle.",
         ]
+    if request.product_type == StaffProductType.ipb:
+        return [
+            *shared_notes,
+            "IPB should support decisions and planning, not become a generic terrain, weather, or country brief.",
+            (
+                "Keep each estimate tied to commander decisions, S-3 planning, collection needs, "
+                "or exercise inject design."
+            ),
+            (
+                "Use most-likely and most-dangerous COAs only when they are sourced, explicitly fictional, "
+                "or clearly assumed."
+            ),
+            (
+                "Label assumptions, confidence, and information gaps so the staff knows what still needs "
+                "collection or review."
+            ),
+        ]
     return shared_notes
 
 
@@ -552,6 +639,8 @@ def _source_refs_for(product_type: StaffProductType) -> tuple[SourceRef, ...]:
         return (*TRAINING_REFERENCES, *STAFF_PRODUCT_REFERENCES)
     if product_type == StaffProductType.sitrep:
         return STAFF_PRODUCT_REFERENCES
+    if product_type == StaffProductType.ipb:
+        return (*S2_REFERENCES, *MAP_REFERENCES, *STAFF_PRODUCT_REFERENCES)
     if product_type in {
         StaffProductType.opord,
         StaffProductType.warno,
