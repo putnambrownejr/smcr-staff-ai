@@ -233,6 +233,11 @@ def _build_critical_questions(role: str) -> list[str]:
             "What message should the exercise reinforce?",
             "How do PAO, S-2, S-3, S-6, SJA, and G-9 synchronize information actions?",
         ],
+        "g8": [
+            "What resource or funding assumption is most likely to break first?",
+            "What should be cut, deferred, or rephased if full resourcing is not available?",
+            "What resourcing decision belongs to command instead of staying at staff level?",
+        ],
         "safety": [
             "What is the most likely hazard and the most severe hazard?",
             "Who accepts residual risk?",
@@ -268,8 +273,12 @@ def _build_assumptions(role: str) -> list[str]:
         return [*base, "This is issue-spotting only and not legal advice."]
     if role in {"pao", "commstrat", "g7", "hqmc_information"}:
         return [*base, "Public release authority and OPSEC review must be verified."]
+    if role in {"g8", "hqmc_pr"}:
+        return [*base, "Resource availability, fiscal controls, and comptroller review must be verified locally."]
     if role in {"chaplain", "rp"}:
         return [*base, "Confidential communications are not exposed to the staff estimate."]
+    if role == "ig":
+        return [*base, "IG independence, complaint routing, and inspection authorities must remain protected."]
     return base
 
 
@@ -287,6 +296,7 @@ def _build_cross_staff_risks(role: str) -> list[str]:
         "sja": ["Legal review is delayed until after the plan has already shaped behavior."],
         "pao": ["Public affairs, OPSEC, SJA, and G-9 tell different stories externally."],
         "commstrat": ["Information effects are detached from the actual scheme of maneuver."],
+        "g8": ["The staff builds a plan whose cost, lead time, or controls were never tested honestly."],
         "safety": ["ORM exists as a form but not as command-owned risk acceptance."],
         "provost": ["Access control or force protection blocks movement after the schedule hardens."],
         "chaplain": ["Support access is planned too late for high-stress or casualty injects."],
@@ -304,6 +314,7 @@ def _build_coordination_notes(role: str) -> list[str]:
         "airo": ["Coordinate with S-3, fires, S-6, safety, ACE, GCE, LCE, and range/control authorities."],
         "sja": ["Coordinate with commander/XO, S-3, PAO/COMMSTRAT, safety, provost, and IG as applicable."],
         "pao": ["Coordinate with S-2, S-3, S-6, SJA, COMMSTRAT, G-9, and release authority."],
+        "g8": ["Coordinate with commander/XO, S-3, S-4, S-1, and comptroller/resource reviewers as applicable."],
         "safety": ["Coordinate with S-3, S-4, medical, AirO/ACE, range control, and the risk-acceptance authority."],
         "provost": ["Coordinate with S-2, S-3, S-4, SJA, safety, installation access, and local security partners."],
         "chaplain": ["Coordinate with commander, S-1, medical, RP, PAO for public ceremonies, and SJA for boundaries."],
@@ -326,6 +337,8 @@ def _build_commander_decisions(role: str) -> list[str]:
         return ["Approve the desired aviation effect, control method, and no-go criteria for planning."]
     if role == "sja":
         return ["Direct formal SJA review before the plan is briefed as executable."]
+    if role == "g8":
+        return ["Approve the cut, defer, fund, or rephase decision before the staff overpromises execution."]
     return ["Assign owner, suspense, and review authority for this lane."]
 
 
@@ -348,6 +361,10 @@ def _mcpp_discipline_for_role(role: str) -> str:
         return "Issue-spot authorities, review triggers, and boundaries before execution."
     if role in {"pao", "commstrat", "g7", "hqmc_information"}:
         return "Connect public posture, OPSEC, release authority, and information effects."
+    if role in {"g8", "hqmc_pr"}:
+        return "Translate resource posture into command tradeoffs, controls, and decisions."
+    if role == "ig":
+        return "Protect inquiry boundaries while surfacing readiness trends and inspection friction."
     return "Maintain a running estimate with assumptions, risks, coordination, and decision points."
 
 

@@ -9,9 +9,18 @@ from app.schemas.staff_products import (
 )
 from app.services.agents.source_refs import (
     CORRESPONDENCE_REFERENCES,
+    FORCE_PROTECTION_REFERENCES,
+    G8_REFERENCES,
+    IG_REFERENCES,
+    LEGAL_REFERENCES,
     MAP_REFERENCES,
+    MEDICAL_REFERENCES,
     OPORD_REFERENCES,
+    PAO_REFERENCES,
+    S1_REFERENCES,
     S2_REFERENCES,
+    S4_REFERENCES,
+    STAFF_PROCESS_REFERENCES,
     STAFF_PRODUCT_REFERENCES,
     TRAINING_REFERENCES,
     SourceRef,
@@ -110,6 +119,651 @@ SITREP_SECTIONS = [
     StaffProductSection(heading="Significant Events", prompts=["What changed since the last report?"]),
     StaffProductSection(heading="Issues / Risks", prompts=["What needs command or staff attention?"]),
     StaffProductSection(heading="Next 24-72 Hours", prompts=["Expected activity, decisions, and support requirements"]),
+]
+
+RUNNING_ESTIMATE_SECTIONS = [
+    StaffProductSection(
+        heading="1. Current Situation",
+        prompts=[
+            "What is true now in this staff lane",
+            "What command problem, event, or decision this estimate supports",
+            "What part of the plan is stable versus still moving",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Changes Since Last Update",
+        prompts=[
+            "What changed since the last estimate or brief",
+            "What assumption, support status, or timeline moved",
+            "What changed command understanding rather than just adding noise",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Assumptions And Risks",
+        prompts=[
+            "Which assumptions still carry the plan",
+            "Which risk is most likely and which risk is most severe",
+            "What requires verification before this estimate drives action",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Supportability And Coordination",
+        prompts=[
+            "What this lane can support now",
+            "What adjacent staff section support is required",
+            "What friction point or unresolved dependency will break execution first",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Decisions Needed And Next 24-72 Hours",
+        prompts=[
+            "What decision, approval, or reprioritization is needed now",
+            "What due-outs, owners, and suspenses are next",
+            "What should happen in the next 24-72 hours before the estimate is refreshed",
+        ],
+    ),
+]
+
+SYNCHRONIZATION_MATRIX_SECTIONS = [
+    StaffProductSection(
+        heading="1. Event Frame And Command Focus",
+        prompts=[
+            "Supported event, command focus, and planning horizon",
+            "Main effort, supporting effort, and what is being protected first",
+            "What this matrix is supposed to synchronize rather than merely list",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Timeline And Battle Rhythm",
+        prompts=[
+            "Key phases, suspenses, and review points",
+            "What must happen before drill, during drill, before execution, and at closeout",
+            "Which timeline point is most likely to slip first",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Staff Lanes And Required Actions",
+        prompts=[
+            "Lane-by-lane tasks for S-1, S-3, S-4, S-6, safety, medical, and other required sections",
+            "Owner, suspense, command touchpoint, and required report for each action",
+            "What adjacent coordination is required before each task is considered complete",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Decision Points And Friction",
+        prompts=[
+            "What commander or XO decisions must occur at each key point",
+            "What friction is most likely to break the timeline or change scope",
+            "What gets cut or deferred if time or support collapses",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Closeout And Follow-Through",
+        prompts=[
+            "What must be complete before the matrix can be closed",
+            "What due-outs survive to the next drill or next planning cycle",
+            "What AAR or turnover item must be captured while the facts are still fresh",
+        ],
+    ),
+]
+
+ADMIN_ESTIMATE_SECTIONS = [
+    StaffProductSection(
+        heading="1. Admin Frame And Supported Event",
+        prompts=[
+            "Supported event, command problem, and what the S-1/admin lane must protect first",
+            "What part of the admin picture is stable and what is still moving",
+            "What admin fact changes execution reality instead of remaining background noise",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Accountability, Rosters, And Orders",
+        prompts=[
+            "Roster and accountability posture",
+            "Orders coverage, routing posture, and signature status",
+            "What attendance, orders, or manpower assumption is still too optimistic",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Travel, DTS, GTCC, And Records",
+        prompts=[
+            "Travel-admin posture, DTS/GTCC friction, and records or continuity requirements",
+            "What voucher, authorization, receipt, or card issue still needs visibility",
+            "Which admin file, tracker, or report must be refreshed before next drill",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Risks, Dependencies, And Suspenses",
+        prompts=[
+            "What admin risk or late package can still hijack the event",
+            "What adjacent section support or commander decision is required",
+            "Which suspense matters most to the next command touchpoint",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Decisions And Next 24-72 Hours",
+        prompts=[
+            "What decision, reprioritization, or escalation is needed now",
+            "What due-outs survive into the next drill or next admin cycle",
+            "What the S-1 lane must do in the next 24-72 hours to stay ahead of drift",
+        ],
+    ),
+]
+
+ADMIN_TASK_TRACKER_SECTIONS = [
+    StaffProductSection(
+        heading="1. Tracking Standard And Command Focus",
+        prompts=[
+            "Supported event, command focus, and what this tracker exists to protect",
+            "What qualifies as a real admin task versus a background reminder",
+            "What owner, suspense, and status standard each line must meet",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Critical Admin Tasks",
+        prompts=[
+            "Roster, orders, travel, DTS/GTCC, accountability, awards, FitRep, or readiness tasks due this cycle",
+            "Owner, suspense, status, and command review point for each line",
+            "Which admin task matters most to the next drill or command brief",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Slippage, Friction, And Escalation",
+        prompts=[
+            "What is late, blocked, or being quietly assumed complete",
+            "What admin issue requires direct S-1 chief, XO, or commander visibility",
+            "What missed suspense changes event feasibility or command posture",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Continuity And Turnover",
+        prompts=[
+            "What the next drill cycle or relieving admin lead must inherit clearly",
+            "What has already been elevated and should not be rediscovered from scratch",
+            "What item is waiting on command signature versus staff action",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Closeout And Follow-Through",
+        prompts=[
+            "What makes a task actually complete",
+            "What evidence, routing confirmation, or receipt closes the line",
+            "What unfinished item survives to the next cycle and under whose ownership",
+        ],
+    ),
+]
+
+ROUTING_MATRIX_SECTIONS = [
+    StaffProductSection(
+        heading="1. Routing Frame",
+        prompts=[
+            "What packages are being routed and why they matter to this event or command cycle",
+            "What routing chain, reviewer, and signature authority apply",
+            "What package is most likely to slip first",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Package Inventory And Owners",
+        prompts=[
+            "Orders, awards, FitReps, travel documents, correspondence, or other formal packages in scope",
+            "Owner, reviewer, routing chain, and suspense for each package",
+            "What package depends on outside inputs before it can move",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Bottlenecks, Dependencies, And Risk",
+        prompts=[
+            "What stale roster, missing signature, or missing attachment will stop routing cold",
+            "What must be coordinated with S-3, S-4, XO, or command group before routing",
+            "What package delay changes execution or command visibility",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Status, Escalation, And Turnover",
+        prompts=[
+            "Current status by package",
+            "What gets elevated if a suspense slips",
+            "What turnover note keeps the next admin cycle from restarting the routing fight",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Closeout Criteria",
+        prompts=[
+            "What proof closes each routing line",
+            "What package is complete, pending command action, or still blocked",
+            "What routing burden survives to the next drill or reporting cycle",
+        ],
+    ),
+]
+
+PRE_DRILL_ADMIN_READINESS_CHECK_SECTIONS = [
+    StaffProductSection(
+        heading="1. Pre-Drill Admin Posture",
+        prompts=[
+            "What the admin lane must have true before drill begins",
+            "What roster, orders, routing, or travel fact is most likely to surprise the unit late",
+            "What the commander or XO should know before Marines arrive",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Accountability And Roster Checks",
+        prompts=[
+            "Attendance, accountability, and contact-data checks",
+            "What roster issue still needs resolution",
+            "What must be confirmed before the first formation or planning event",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Orders, Routing, And Travel Checks",
+        prompts=[
+            "Orders, routing packages, signatures, DTS, vouchers, GTCC, and travel-admin checks",
+            "What is complete, what is pending, and what is blocked",
+            "What admin item becomes visible only after Marines disperse if not caught now",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Continuity, Records, And Suspenses",
+        prompts=[
+            "Records, trackers, continuity files, and required references to verify before drill",
+            "What suspense is nearest or easiest to miss",
+            "What note must survive into after-drill follow-through",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. No-Surprise Standard",
+        prompts=[
+            "What must be true for the admin lane to call itself ready",
+            "What issue gets elevated before drill rather than explained during drill",
+            "What immediate follow-up happens if a check fails",
+        ],
+    ),
+]
+
+DECISION_SUPPORT_MATRIX_SECTIONS = [
+    StaffProductSection(
+        heading="1. Decision Frame",
+        prompts=[
+            "Supported event, command problem, and why a decision is needed now",
+            "What the commander or XO is actually deciding instead of what the staff wishes they would notice",
+            "What happens if the decision slips to the next review point",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Current Picture And Friction",
+        prompts=[
+            "What changed, what is stable, and what friction is forcing the decision",
+            "Which staff assumption is still carrying too much weight",
+            "What branch condition, shortfall, or timing issue is driving command attention",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Options, Cuts, And Tradeoffs",
+        prompts=[
+            "What options, cuts, deferrals, or risk-acceptance choices exist",
+            "What each option protects and what each option gives up",
+            "Which option is most supportable inside the reserve timeline",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Recommendation And Decision Triggers",
+        prompts=[
+            "What the staff recommends and why",
+            "What trigger elevates the issue immediately instead of waiting for the next huddle",
+            "What information would change the recommendation",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Immediate Actions After Decision",
+        prompts=[
+            "What must happen in the first hour after a decision is made",
+            "Who gets tasked, informed, or redirected",
+            "What product, brief, or turnover note must be updated immediately",
+        ],
+    ),
+]
+
+DUE_OUT_TRACKER_SECTIONS = [
+    StaffProductSection(
+        heading="1. Command Focus And Tracking Standard",
+        prompts=[
+            "Supported event, command focus, and what this tracker exists to protect",
+            "What qualifies as a real due-out versus background noise",
+            "What ownership, suspense, and command-touchpoint standard every line must meet",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Critical Due-Outs",
+        prompts=[
+            "What products, asks, or coordination actions are due this cycle",
+            "Owner, suspense, status, and command review point for each line",
+            "Which due-out matters most to the next commander or XO touchpoint",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Drift, Slippage, And Escalation",
+        prompts=[
+            "What is late, at risk, or being quietly assumed complete",
+            "What shortfall requires chief or battle-captain intervention now",
+            "What missed suspense changes scope, risk, or briefing posture",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Turnover And Continuity",
+        prompts=[
+            "What the relieving watch or next drill cycle must inherit clearly",
+            "What has already been elevated and should not be re-litigated from zero",
+            "What item is waiting on command decision versus staff action",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Closeout Criteria",
+        prompts=[
+            "What makes a due-out actually complete",
+            "What evidence, review, or confirmation closes the line",
+            "What unfinished item survives into the next cycle and under whose ownership",
+        ],
+    ),
+]
+
+COLLECTION_MATRIX_SECTIONS = [
+    StaffProductSection(
+        heading="1. Intelligence Problem Frame",
+        prompts=[
+            "Command question, planning problem, and supported decision",
+            "What the staff needs to know that it does not know yet",
+            "What public-source, training, or approved collection boundaries apply",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. PIR, IR, And Indicators",
+        prompts=[
+            "Priority intelligence requirements and information requirements",
+            "Indicators or warnings that confirm or disconfirm the assessment",
+            "Which indicator matters most to the next commander decision",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Collection Tasks And Owners",
+        prompts=[
+            "What must be collected, by whom, and by when",
+            "Which lane owns each collection task or source check",
+            "What report, update, or estimate the collection will feed",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Gaps, Caveats, And Confidence",
+        prompts=[
+            "Which gaps remain unresolved",
+            "What source caveat or confidence limit applies",
+            "What assumption changes if the collection comes back differently than expected",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Decision Support And Refresh",
+        prompts=[
+            "What decision point this matrix supports",
+            "When the collection picture must be refreshed",
+            "What should be elevated to the commander, XO, or S-3 immediately",
+        ],
+    ),
+]
+
+SUSTAINMENT_MATRIX_SECTIONS = [
+    StaffProductSection(
+        heading="1. Sustainment Frame",
+        prompts=[
+            "Supported event, concept, and sustainment objective",
+            "What support must work for the event to remain executable",
+            "What resource is most likely to become the critical path",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Movement And Distribution",
+        prompts=[
+            "Who moves, when, by what means, and under what accountability method",
+            "Movement table or distribution flow by phase",
+            "What assumptions exist about drivers, vehicles, recovery, or return-to-home-station timing",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Supply, Maintenance, And Services",
+        prompts=[
+            "Equipment, supply, maintenance, chow, billeting, water, and issue/turn-in requirements",
+            "Which support request has the longest lead time",
+            "What mandatory support cannot be replaced by local improvisation",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Coordination, Dependencies, And Risk",
+        prompts=[
+            "What S-1, S-3, S-6, medical, safety, or external coordination is required",
+            "What shortfall changes scope versus cancels the event",
+            "What unresolved logistics risk needs command visibility",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Recovery, Reset, And Follow-Through",
+        prompts=[
+            "Recovery timeline, reset burden, and remaining support debt",
+            "What must be closed before the event is truly complete",
+            "What follow-on sustainment due-outs survive into the next drill",
+        ],
+    ),
+]
+
+MEDICAL_ESTIMATE_SECTIONS = [
+    StaffProductSection(
+        heading="1. Medical Support Frame",
+        prompts=[
+            "Supported event, casualty profile, and medical support objective",
+            "What medical reality most affects the plan right now",
+            "What qualified coverage, equipment, or authority assumption still needs confirmation",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Risks, Treatment, And TCCC Considerations",
+        prompts=[
+            "Most likely casualty or injury scenarios",
+            "Immediate life-threat, treatment, and trauma-gear considerations at a training-safe level",
+            "What medical risk is most severe even if it is less likely",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. CASEVAC, MEDEVAC, And Reporting",
+        prompts=[
+            "Casualty collection points, handoff points, and movement methods",
+            "9-line or casualty reporting responsibilities at a generic planning level",
+            "What comm, terrain, transport, or timing assumption weakens the evacuation concept",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Command Decisions And Rehearsal Checks",
+        prompts=[
+            "What stop-training, movement, or escalation decision needs command visibility",
+            "What must be rehearsed before this estimate is treated as executable",
+            "Who makes the first hard call and who receives the report",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Coordination And Follow-Through",
+        prompts=[
+            "What coordination is required with S-3, S-4, S-6, safety, and command",
+            "What due-outs remain before execution",
+            "What medical lesson or corrective action should carry into the next event",
+        ],
+    ),
+]
+
+PUBLIC_AFFAIRS_PLAN_SECTIONS = [
+    StaffProductSection(
+        heading="1. Command Frame And Release Authority",
+        prompts=[
+            "Supported event, command intent, and public posture for the event or issue",
+            "What release authority, approval chain, and commander guidance apply",
+            "What public question or media interest is most likely to force a decision first",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Audience, Media, And Visitor Posture",
+        prompts=[
+            "Primary internal and external audiences",
+            "Expected media, visitor, or VIP presence and what level of access is acceptable",
+            "What escort, imagery, or timeline friction will matter to PAO, S-3, and force protection",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Themes, Messages, And Response Lines",
+        prompts=[
+            "Approved themes and messages",
+            "Likely media, public, or higher-headquarters questions and response-to-query lines",
+            "What should be said, what should be deferred, and what needs commander review first",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. OPSEC, Imagery, And Approval Controls",
+        prompts=[
+            "What information, imagery, locations, or timelines require extra control",
+            "How OPSEC, legal, and release review will occur before public release",
+            "What imagery-handling, social-media, or visitor-boundary rule must be explicit",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Execution, Contingencies, And Follow-Through",
+        prompts=[
+            "Who speaks, who escorts, who approves, and who captures the event",
+            "What to do if facts change, an incident occurs, or media attention spikes",
+            "What after-action, archive, or next-touchpoint requirement remains after execution",
+        ],
+    ),
+]
+
+SECURITY_ANNEX_SECTIONS = [
+    StaffProductSection(
+        heading="1. Security Frame And Supported Event",
+        prompts=[
+            "Supported event, security objective, and command posture",
+            "What the annex is protecting first: people, access, equipment, information, or movement",
+            "What security assumption most threatens execution if it proves false",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Access Control And Visitor Management",
+        prompts=[
+            "Entry points, control measures, badge or roster checks, and escort requirements",
+            "Visitor, VIP, contractor, media, or partner access rules",
+            "What force-protection, legal, and commander approval boundaries apply",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Movement, Traffic, And Parking Control",
+        prompts=[
+            "Vehicle flow, parking control, staging, pedestrian safety, and choke points",
+            "Who controls arrival, departure, overflow, and emergency access",
+            "What timing or terrain friction will create the first real access problem",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Force Protection And Emergency Actions",
+        prompts=[
+            "Immediate actions for incident response, escalation, shelter, medical handoff, or site lockdown",
+            "What suspicious-activity, disturbance, or lost-accountability trigger requires rapid reporting",
+            "What coordination is required with safety, medical, S-6, and the chain of command",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Legal Boundaries, Rehearsals, And AAR Capture",
+        prompts=[
+            "Authorities, limits, notifications, and documentation requirements",
+            "What must be rehearsed before the annex is treated as executable",
+            "What incident log, turnover, or after-action capture requirement survives the event",
+        ],
+    ),
+]
+
+RESOURCE_ESTIMATE_SECTIONS = [
+    StaffProductSection(
+        heading="1. Resource Frame And Supported Decision",
+        prompts=[
+            "Supported event, command problem, and what resource decision this estimate must support",
+            "What resourcing posture is known now and what remains tentative",
+            "What timeline or lead-time issue most threatens supportability",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Available Resources And Constraints",
+        prompts=[
+            "Known funds, authorities, support lines, or fiscal limits relevant to the decision",
+            "What cannot be assumed, obligated, or moved without higher review",
+            "What control, audit, or stewardship rule matters most here",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Prioritization And Tradeoffs",
+        prompts=[
+            "What must be protected first and what can be cut, deferred, or rephased",
+            "What option gives the best effect for the resource burden",
+            "What risk is created if the staff chooses the cheaper or faster path",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Execution, Controls, And Friction",
+        prompts=[
+            "Who owns execution, tracking, and review of the resource decision",
+            "What coordination is required with operations, logistics, admin, or higher headquarters",
+            "What friction point is most likely to surface after the decision is made",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Command Decision And Next Resourcing Window",
+        prompts=[
+            "What exact command decision or reprioritization is needed now",
+            "What suspense, review point, or next budget window matters next",
+            "What needs to be briefed upward or preserved for the next drill or cycle",
+        ],
+    ),
+]
+
+INSPECTION_READINESS_PLAN_SECTIONS = [
+    StaffProductSection(
+        heading="1. Inspection Frame And Scope",
+        prompts=[
+            "Supported inspection, assessment, or readiness concern and why it matters now",
+            "What command concern is being addressed without compromising IG independence",
+            "What is in scope and what must stay out of scope",
+        ],
+    ),
+    StaffProductSection(
+        heading="2. Standards, Functional Areas, And Evidence",
+        prompts=[
+            "Applicable functional areas, standards, or checklists",
+            "What evidence, records, or observations should be reviewed",
+            "What area is most likely to show recurring friction instead of a one-off mistake",
+        ],
+    ),
+    StaffProductSection(
+        heading="3. Gaps, Trends, And Boundary Notes",
+        prompts=[
+            "What trend, compliance gap, or readiness pattern should be elevated",
+            "What belongs in command channels, what belongs in IG channels, and what belongs elsewhere",
+            "What inquiry, complaint, or independence boundary must be protected explicitly",
+        ],
+    ),
+    StaffProductSection(
+        heading="4. Remediation Owners And Follow-Through",
+        prompts=[
+            "What corrective actions, owners, and suspenses would improve readiness",
+            "What evidence should be preserved to show closure or trend movement",
+            "What issue needs commander attention versus routine staff correction",
+        ],
+    ),
+    StaffProductSection(
+        heading="5. Command Decisions, Referrals, And Next Review",
+        prompts=[
+            "What should be briefed to the commander without compromising impartiality",
+            "What must be referred to IG, SJA, safety, or other proper channels",
+            "What next inspection, review, or follow-up point keeps this from becoming a forgotten note",
+        ],
+    ),
 ]
 
 DECISION_BRIEF_SECTIONS = [
@@ -367,12 +1021,33 @@ class StaffProductBuilder:
             StaffProductType.frago,
             StaffProductType.conop,
             StaffProductType.ipb,
+            StaffProductType.admin_estimate,
+            StaffProductType.admin_task_tracker,
+            StaffProductType.routing_matrix,
+            StaffProductType.pre_drill_admin_readiness_check,
+            StaffProductType.decision_support_matrix,
+            StaffProductType.due_out_tracker,
+            StaffProductType.collection_matrix,
+            StaffProductType.sustainment_matrix,
+            StaffProductType.medical_estimate,
+            StaffProductType.public_affairs_plan,
+            StaffProductType.security_annex,
         }:
             warnings.append("Use fictional/training-only data unless working in an approved environment.")
         if request.product_type == StaffProductType.ipb:
             warnings.append(
                 "Treat IPB as an S-2/G-2 decision-support product; use public or training-safe sources unless "
                 "working in an approved environment."
+            )
+        if request.product_type == StaffProductType.public_affairs_plan:
+            warnings.append(
+                "Treat public affairs outputs as release-planning aids only; confirm OPSEC, legal, and command "
+                "approval before any public use."
+            )
+        if request.product_type == StaffProductType.security_annex:
+            warnings.append(
+                "Treat security annexes as planning aids only; confirm local authorities, installation rules, and "
+                "emergency procedures before execution."
             )
         if request.product_type in {
             StaffProductType.naval_letter,
@@ -405,6 +1080,36 @@ def _sections_for(product_type: StaffProductType) -> list[StaffProductSection]:
         return CONOP_SECTIONS
     if product_type == StaffProductType.sitrep:
         return SITREP_SECTIONS
+    if product_type == StaffProductType.running_estimate:
+        return RUNNING_ESTIMATE_SECTIONS
+    if product_type == StaffProductType.synchronization_matrix:
+        return SYNCHRONIZATION_MATRIX_SECTIONS
+    if product_type == StaffProductType.admin_estimate:
+        return ADMIN_ESTIMATE_SECTIONS
+    if product_type == StaffProductType.admin_task_tracker:
+        return ADMIN_TASK_TRACKER_SECTIONS
+    if product_type == StaffProductType.routing_matrix:
+        return ROUTING_MATRIX_SECTIONS
+    if product_type == StaffProductType.pre_drill_admin_readiness_check:
+        return PRE_DRILL_ADMIN_READINESS_CHECK_SECTIONS
+    if product_type == StaffProductType.decision_support_matrix:
+        return DECISION_SUPPORT_MATRIX_SECTIONS
+    if product_type == StaffProductType.due_out_tracker:
+        return DUE_OUT_TRACKER_SECTIONS
+    if product_type == StaffProductType.collection_matrix:
+        return COLLECTION_MATRIX_SECTIONS
+    if product_type == StaffProductType.sustainment_matrix:
+        return SUSTAINMENT_MATRIX_SECTIONS
+    if product_type == StaffProductType.medical_estimate:
+        return MEDICAL_ESTIMATE_SECTIONS
+    if product_type == StaffProductType.public_affairs_plan:
+        return PUBLIC_AFFAIRS_PLAN_SECTIONS
+    if product_type == StaffProductType.security_annex:
+        return SECURITY_ANNEX_SECTIONS
+    if product_type == StaffProductType.resource_estimate:
+        return RESOURCE_ESTIMATE_SECTIONS
+    if product_type == StaffProductType.inspection_readiness_plan:
+        return INSPECTION_READINESS_PLAN_SECTIONS
     if product_type == StaffProductType.decision_brief:
         return DECISION_BRIEF_SECTIONS
     if product_type == StaffProductType.command_update_brief:
@@ -476,8 +1181,145 @@ def _review_checklist(request: StaffProductDraftRequest, templates: list[Product
         StaffProductType.frago,
         StaffProductType.conop,
         StaffProductType.ipb,
+        StaffProductType.admin_estimate,
+        StaffProductType.admin_task_tracker,
+        StaffProductType.routing_matrix,
+        StaffProductType.pre_drill_admin_readiness_check,
+        StaffProductType.decision_support_matrix,
+        StaffProductType.due_out_tracker,
+        StaffProductType.collection_matrix,
+        StaffProductType.sustainment_matrix,
+        StaffProductType.medical_estimate,
+        StaffProductType.public_affairs_plan,
+        StaffProductType.security_annex,
     }:
         checklist.append("Confirm the scenario is fictional/training-only or handled in an approved environment.")
+    if request.product_type == StaffProductType.running_estimate:
+        checklist.extend(
+            [
+                "State what changed since the last update instead of rebuilding the whole estimate from zero.",
+                "Tie each risk, support ask, and due-out to an owner or adjacent section.",
+                "Name the command decision or next refresh point before sending the estimate up the chain.",
+            ]
+        )
+    if request.product_type == StaffProductType.synchronization_matrix:
+        checklist.extend(
+            [
+                "Give every row an owner, suspense, and command touchpoint.",
+                "Make the friction point and cut/defer rule explicit instead of assuming the staff remembers it.",
+                "Keep the matrix tied to actual decision points, not just task accumulation.",
+            ]
+        )
+    if request.product_type == StaffProductType.admin_estimate:
+        checklist.extend(
+            [
+                "Show which admin fact changes execution and which remains continuity background.",
+                "Keep roster, orders, travel-admin, and records lanes distinct enough to own separately.",
+                "Tie the estimate to a real suspense, command touchpoint, or decision instead of admin narration.",
+            ]
+        )
+    if request.product_type == StaffProductType.admin_task_tracker:
+        checklist.extend(
+            [
+                "Give every admin line one owner, one suspense, one status, and one command touchpoint.",
+                "Separate late items, blocked items, and complete items clearly.",
+                "Preserve turnover notes so the next drill cycle can continue the tracker without guessing.",
+            ]
+        )
+    if request.product_type == StaffProductType.routing_matrix:
+        checklist.extend(
+            [
+                "Make routing chain, reviewer, signature authority, and suspense explicit for each package.",
+                "Show what document, attachment, or outside input still blocks movement.",
+                "Keep routing closeout evidence visible instead of assuming a package is done because it moved once.",
+            ]
+        )
+    if request.product_type == StaffProductType.pre_drill_admin_readiness_check:
+        checklist.extend(
+            [
+                "Use the check to catch no-surprise admin failures before drill, not to admire a checklist.",
+                "Elevate any roster, orders, or travel-admin gap that will still matter once Marines disperse.",
+                "Tie every failed check to an owner and immediate follow-up action.",
+            ]
+        )
+    if request.product_type == StaffProductType.decision_support_matrix:
+        checklist.extend(
+            [
+                "State the actual decision in one line before adding context.",
+                "Show what changes if the commander approves, defers, cuts, or redirects the issue.",
+                "Keep triggers, tradeoffs, and immediate follow-on actions explicit.",
+            ]
+        )
+    if request.product_type == StaffProductType.due_out_tracker:
+        checklist.extend(
+            [
+                "Give every due-out one owner, one suspense, and one command touchpoint.",
+                "Separate late items, waiting-on-decision items, and complete items clearly.",
+                "Preserve turnover notes so the next watch or drill cycle can pick up without guesswork.",
+            ]
+        )
+    if request.product_type == StaffProductType.collection_matrix:
+        checklist.extend(
+            [
+                "Separate PIR, IR, indicators, collection tasks, and source caveats clearly.",
+                "Assign an owner and refresh point for each collection task.",
+                (
+                    "Confirm the matrix supports a real commander or S-3 decision "
+                    "instead of generic intelligence curiosity."
+                ),
+            ]
+        )
+    if request.product_type == StaffProductType.sustainment_matrix:
+        checklist.extend(
+            [
+                "Identify which support shortfall changes scope and which one cancels the event.",
+                "Give movement and recovery assumptions explicit owners and suspense points.",
+                "Keep the matrix honest about reset burden and support debt after execution.",
+            ]
+        )
+    if request.product_type == StaffProductType.medical_estimate:
+        checklist.extend(
+            [
+                "Confirm qualified medical review before treating the estimate as executable.",
+                "Name stop-training, CASEVAC, and higher-care assumptions explicitly.",
+                "Tie casualty scenarios, rehearsal checks, and command decisions to the actual event.",
+            ]
+        )
+    if request.product_type == StaffProductType.public_affairs_plan:
+        checklist.extend(
+            [
+                "Confirm release authority, OPSEC review, and legal review boundaries before public use.",
+                "Make themes, response lines, and visitor/media choreography specific to the event.",
+                "State who may speak, who approves content, and what changes require command reapproval.",
+            ]
+        )
+    if request.product_type == StaffProductType.security_annex:
+        checklist.extend(
+            [
+                "Confirm installation or local physical-security rules before treating the annex as executable.",
+                "Make access control, traffic flow, and incident escalation owners explicit.",
+                "Tie emergency actions, rehearsals, and incident logging to actual site conditions and authorities.",
+            ]
+        )
+    if request.product_type == StaffProductType.resource_estimate:
+        checklist.extend(
+            [
+                (
+                    "Verify fiscal controls, lead times, and local comptroller review before treating "
+                    "the estimate as executable."
+                ),
+                "State what gets funded, cut, deferred, or rephased in plain command language.",
+                "Make the command decision and next resource-review window explicit.",
+            ]
+        )
+    if request.product_type == StaffProductType.inspection_readiness_plan:
+        checklist.extend(
+            [
+                "Protect IG independence and do not use the plan to shortcut complaint or investigation channels.",
+                "Tie each readiness gap to evidence, owner, suspense, and proper referral path.",
+                "State what belongs to command correction, what belongs to IG, and what belongs elsewhere.",
+            ]
+        )
     if request.product_type == StaffProductType.ipb:
         checklist.extend(
             [
@@ -570,6 +1412,123 @@ def _formatting_notes_for(
             "Tie assessment language to task standards, decision points, and AAR capture rather than generic "
             "enthusiasm.",
         ]
+    if request.product_type == StaffProductType.running_estimate:
+        return [
+            *shared_notes,
+            "A running estimate should show what changed, what matters now, and what decision or due-out follows.",
+            "Keep the estimate lane-specific and decision-support focused; do not let it become a diary entry.",
+            "Use short bullets with explicit assumptions, risks, adjacent asks, and next-24-72-hour actions.",
+        ]
+    if request.product_type == StaffProductType.synchronization_matrix:
+        return [
+            *shared_notes,
+            "A synchronization matrix should make timing, ownership, and review points visible at a glance.",
+            "Do not let it become a long parking lot of tasks with no friction logic or decision support.",
+            "Show what gets cut, elevated, or re-sequenced when the timeline starts to slip.",
+        ]
+    if request.product_type == StaffProductType.admin_estimate:
+        return [
+            *shared_notes,
+            "An admin estimate should show what matters now in rosters, orders, travel-admin, and continuity.",
+            "Keep it tied to execution impact, not generic admin housekeeping.",
+            "Use short bullets with explicit risks, suspenses, and adjacent staff dependencies.",
+        ]
+    if request.product_type == StaffProductType.admin_task_tracker:
+        return [
+            *shared_notes,
+            "An admin task tracker should read like a real S-1 battle board, not a miscellaneous to-do list.",
+            "Status, owner, suspense, and next command look should be easier to see than explanation.",
+            "Keep DTS, GTCC, orders, rosters, and readiness tasks distinct enough to hand off cleanly.",
+        ]
+    if request.product_type == StaffProductType.routing_matrix:
+        return [
+            *shared_notes,
+            "A routing matrix should make chain, reviewer, signature authority, and suspense obvious at a glance.",
+            "Do not mix package status, admin commentary, and unrelated action items in the same line.",
+            "Show the first routing bottleneck before it surprises the staff close to drill.",
+        ]
+    if request.product_type == StaffProductType.pre_drill_admin_readiness_check:
+        return [
+            *shared_notes,
+            "A pre-drill admin readiness check should surface likely failures before Marines arrive or disperse.",
+            (
+                "Keep it practical: roster truth, routing truth, and travel-admin truth matter "
+                "more than perfect formatting."
+            ),
+            "Write it so an S-1 chief or XO can scan it quickly and know what still needs intervention.",
+        ]
+    if request.product_type == StaffProductType.decision_support_matrix:
+        return [
+            *shared_notes,
+            "A decision-support matrix should make the decision, triggers, and tradeoffs obvious in seconds.",
+            "Keep background short and preserve most of the space for options, recommendations, and consequences.",
+            "Write it so the XO, chief, or battle captain can brief it quickly without reconstructing the logic aloud.",
+        ]
+    if request.product_type == StaffProductType.due_out_tracker:
+        return [
+            *shared_notes,
+            "A due-out tracker should read like a command-cell watchboard, not an unlabeled task dump.",
+            "Status, owner, suspense, and next command look should be easier to see than narrative explanation.",
+            "Keep turnover and continuity visible so the staff does not restart the same tracking fight each cycle.",
+        ]
+    if request.product_type == StaffProductType.collection_matrix:
+        return [
+            *shared_notes,
+            "A collection matrix should tie PIR, IR, indicators, owners, and refresh points to a real decision.",
+            "Label source caveats and confidence so the staff does not over-read weak information.",
+            "Keep collection tasks narrow enough that someone can actually close them inside the planning window.",
+        ]
+    if request.product_type == StaffProductType.sustainment_matrix:
+        return [
+            *shared_notes,
+            "A sustainment matrix should show movement, support flow, dependencies, and recovery, not just supplies.",
+            "Make the longest lead-time support ask and event-canceling shortfall easy to spot.",
+            "Do not hide reset burden or post-event sustainment debt.",
+        ]
+    if request.product_type == StaffProductType.medical_estimate:
+        return [
+            *shared_notes,
+            (
+                "A medical estimate should support command judgment on risk, coverage, evacuation, "
+                "and stop-training authority."
+            ),
+            "Keep casualty scenarios, CASEVAC logic, rehearsal checks, and decision points explicit.",
+            "Do not confuse a template with qualified medical direction or local emergency procedures.",
+        ]
+    if request.product_type == StaffProductType.public_affairs_plan:
+        return [
+            *shared_notes,
+            "A public affairs plan should make release authority, audiences, and response lines easy to use fast.",
+            "Keep OPSEC, imagery controls, visitor/media choreography, and approval triggers explicit.",
+            "Do not let themes and messages drift away from the commander's actual event and risk posture.",
+        ]
+    if request.product_type == StaffProductType.security_annex:
+        return [
+            *shared_notes,
+            "A security annex should make access, movement, escalation, and emergency actions readable at a glance.",
+            "Keep local authorities, installation rules, and legal boundaries visible instead of assuming them.",
+            (
+                "Show the first likely choke point in traffic, visitor flow, or incident response "
+                "before it surprises the staff."
+            ),
+        ]
+    if request.product_type == StaffProductType.resource_estimate:
+        return [
+            *shared_notes,
+            "A resource estimate should frame a decision, not just list financial constraints in the abstract.",
+            "Show what can be funded, what must wait, and what tradeoff the commander is actually being asked to make.",
+            "Keep controls, stewardship, and next review windows visible so the estimate stays executable.",
+        ]
+    if request.product_type == StaffProductType.inspection_readiness_plan:
+        return [
+            *shared_notes,
+            "An inspection readiness plan should surface standards, evidence, trends, and referral boundaries cleanly.",
+            "Do not confuse inspection preparation with complaint handling, legal review, or command-directed inquiry.",
+            (
+                "Make independence boundaries and next follow-through points visible before the issue turns "
+                "political or vague."
+            ),
+        ]
     if request.product_type == StaffProductType.decision_brief:
         return [
             *shared_notes,
@@ -639,6 +1598,35 @@ def _source_refs_for(product_type: StaffProductType) -> tuple[SourceRef, ...]:
         return (*TRAINING_REFERENCES, *STAFF_PRODUCT_REFERENCES)
     if product_type == StaffProductType.sitrep:
         return STAFF_PRODUCT_REFERENCES
+    if product_type == StaffProductType.running_estimate:
+        return STAFF_PRODUCT_REFERENCES
+    if product_type == StaffProductType.synchronization_matrix:
+        return STAFF_PRODUCT_REFERENCES
+    if product_type in {
+        StaffProductType.admin_estimate,
+        StaffProductType.admin_task_tracker,
+        StaffProductType.routing_matrix,
+        StaffProductType.pre_drill_admin_readiness_check,
+    }:
+        return (*S1_REFERENCES, *STAFF_PRODUCT_REFERENCES)
+    if product_type == StaffProductType.decision_support_matrix:
+        return STAFF_PRODUCT_REFERENCES
+    if product_type == StaffProductType.due_out_tracker:
+        return STAFF_PRODUCT_REFERENCES
+    if product_type == StaffProductType.collection_matrix:
+        return (*S2_REFERENCES, *STAFF_PRODUCT_REFERENCES)
+    if product_type == StaffProductType.sustainment_matrix:
+        return (*S4_REFERENCES, *STAFF_PRODUCT_REFERENCES)
+    if product_type == StaffProductType.medical_estimate:
+        return (*MEDICAL_REFERENCES, *STAFF_PRODUCT_REFERENCES)
+    if product_type == StaffProductType.public_affairs_plan:
+        return (*PAO_REFERENCES, *STAFF_PROCESS_REFERENCES, *STAFF_PRODUCT_REFERENCES)
+    if product_type == StaffProductType.security_annex:
+        return (*FORCE_PROTECTION_REFERENCES, *LEGAL_REFERENCES, *STAFF_PRODUCT_REFERENCES)
+    if product_type == StaffProductType.resource_estimate:
+        return (*G8_REFERENCES, *STAFF_PROCESS_REFERENCES, *STAFF_PRODUCT_REFERENCES)
+    if product_type == StaffProductType.inspection_readiness_plan:
+        return (*IG_REFERENCES, *STAFF_PROCESS_REFERENCES, *STAFF_PRODUCT_REFERENCES)
     if product_type == StaffProductType.ipb:
         return (*S2_REFERENCES, *MAP_REFERENCES, *STAFF_PRODUCT_REFERENCES)
     if product_type in {

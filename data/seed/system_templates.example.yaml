@@ -108,6 +108,246 @@ templates:
     local_only: false
     warnings:
       - "System template only. Keep reporting generic in unapproved environments."
+  - template_id: "sys-running-estimate"
+    template_name: "System Running Estimate"
+    template_type: "running_estimate"
+    description: "A universal staff running-estimate scaffold for assumptions, risks, supportability, and decisions."
+    tags: ["system", "running_estimate", "staff", "estimate"]
+    audience_hint: "Commander, XO, primary staff, and section leads"
+    preferred_format: "estimate"
+    reusable_headings:
+      ["Current situation", "Changes since last update", "Assumptions and risks", "Supportability and coordination", "Decisions needed and next 24-72 hours"]
+    reusable_guidance:
+      - "State what changed, what matters now, and what decision or due-out follows."
+      - "Keep the estimate lane-specific and tied to adjacent staff coordination."
+    example_excerpt: "Current situation / changes / assumptions and risks / supportability / decisions and next 24-72."
+    local_only: false
+    warnings:
+      - "System template only. Refresh rather than rewrite; keep owners and suspenses visible."
+  - template_id: "sys-admin-estimate"
+    template_name: "System Admin Estimate"
+    template_type: "admin_estimate"
+    description: "An S-1/admin estimate scaffold for rosters, orders, travel-admin friction, continuity, and suspenses."
+    tags: ["system", "admin_estimate", "s1", "admin"]
+    audience_hint: "S-1/admin chief, XO, commander, and section leads"
+    preferred_format: "estimate"
+    reusable_headings:
+      ["Admin frame and supported event", "Accountability, rosters, and orders", "Travel, DTS, GTCC, and records", "Risks, dependencies, and suspenses", "Decisions and next 24-72 hours"]
+    reusable_guidance:
+      - "Show which admin fact changes execution and which can remain continuity background."
+      - "Keep rosters, routing, travel-admin, and records lanes distinct enough to own."
+    example_excerpt: "Admin frame / rosters and orders / DTS-GTCC and records / risks and suspenses / next 24-72."
+    local_only: false
+    warnings:
+      - "System template only. Confirm actual rosters, routing chains, and travel-admin status locally."
+  - template_id: "sys-admin-task-tracker"
+    template_name: "System Admin Task Tracker"
+    template_type: "admin_task_tracker"
+    description: "An S-1/admin task tracker for owners, suspenses, slippage, continuity, and closeout."
+    tags: ["system", "admin_task_tracker", "s1", "admin"]
+    audience_hint: "S-1/admin chief, XO, and admin support lanes"
+    preferred_format: "tracker"
+    reusable_headings:
+      ["Tracking standard and command focus", "Critical admin tasks", "Slippage, friction, and escalation", "Continuity and turnover", "Closeout and follow-through"]
+    reusable_guidance:
+      - "Give every admin line one owner, one suspense, one status, and one command touchpoint."
+      - "Separate late, blocked, and complete items clearly."
+    example_excerpt: "Tracking standard / critical tasks / slippage / continuity / closeout."
+    local_only: false
+    warnings:
+      - "System template only. Keep turnover context visible so the next drill cycle can continue the tracker cleanly."
+  - template_id: "sys-routing-matrix"
+    template_name: "System Routing Matrix"
+    template_type: "routing_matrix"
+    description: "An admin routing matrix for packages, reviewers, signature chains, bottlenecks, and closeout."
+    tags: ["system", "routing_matrix", "s1", "admin"]
+    audience_hint: "S-1/admin chief, XO, and command-signature lanes"
+    preferred_format: "matrix"
+    reusable_headings:
+      ["Routing frame", "Package inventory and owners", "Bottlenecks, dependencies, and risk", "Status, escalation, and turnover", "Closeout criteria"]
+    reusable_guidance:
+      - "Make routing chain, reviewer, signature authority, and suspense explicit for each package."
+      - "Show the first routing bottleneck before it surprises the staff."
+    example_excerpt: "Routing frame / package inventory / bottlenecks / status and escalation / closeout."
+    local_only: false
+    warnings:
+      - "System template only. Validate actual routing chains and signature authorities locally."
+  - template_id: "sys-pre-drill-admin-readiness-check"
+    template_name: "System Pre-Drill Admin Readiness Check"
+    template_type: "pre_drill_admin_readiness_check"
+    description: "A pre-drill admin readiness check for roster truth, routing truth, travel-admin truth, and no-surprise standards."
+    tags: ["system", "pre_drill_admin_readiness_check", "s1", "admin"]
+    audience_hint: "S-1/admin chief, XO, commander, and pre-drill support team"
+    preferred_format: "checklist"
+    reusable_headings:
+      ["Pre-drill admin posture", "Accountability and roster checks", "Orders, routing, and travel checks", "Continuity, records, and suspenses", "No-surprise standard"]
+    reusable_guidance:
+      - "Use the check to catch failures before drill, not to admire a checklist."
+      - "Elevate any roster, routing, or travel-admin gap that will still matter once Marines disperse."
+    example_excerpt: "Pre-drill posture / roster checks / routing and travel / continuity and suspenses / no-surprise standard."
+    local_only: false
+    warnings:
+      - "System template only. Tie every failed check to an owner and immediate follow-up action."
+  - template_id: "sys-synchronization-matrix"
+    template_name: "System Synchronization Matrix"
+    template_type: "synchronization_matrix"
+    description: "A cross-staff synchronization matrix for timing, ownership, decisions, and due-outs."
+    tags: ["system", "synchronization_matrix", "staff", "execution"]
+    audience_hint: "Commander, XO, and primary staff"
+    preferred_format: "matrix"
+    reusable_headings:
+      ["Event frame and command focus", "Timeline and battle rhythm", "Staff lanes and required actions", "Decision points and friction", "Closeout and follow-through"]
+    reusable_guidance:
+      - "Give every line an owner, suspense, and command touchpoint."
+      - "Show what gets cut or elevated when time or support collapses."
+    example_excerpt: "Event frame / timeline / lane actions / decision points / closeout."
+    local_only: false
+    warnings:
+      - "System template only. Keep it decision-support focused, not a parking lot of tasks."
+  - template_id: "sys-decision-support-matrix"
+    template_name: "System Decision Support Matrix"
+    template_type: "decision_support_matrix"
+    description: "A command-cell decision-support matrix for options, triggers, tradeoffs, and immediate follow-on actions."
+    tags: ["system", "decision_support_matrix", "xo", "command_cell"]
+    audience_hint: "Commander, XO, chief, battle captain, and primary staff"
+    preferred_format: "matrix"
+    reusable_headings:
+      ["Decision frame", "Current picture and friction", "Options, cuts, and tradeoffs", "Recommendation and decision triggers", "Immediate actions after decision"]
+    reusable_guidance:
+      - "State the actual decision in one line before adding context."
+      - "Keep triggers, tradeoffs, and follow-on actions visible at a glance."
+    example_excerpt: "Decision frame / current friction / options / recommendation / immediate actions."
+    local_only: false
+    warnings:
+      - "System template only. Keep background short and the decision explicit."
+  - template_id: "sys-due-out-tracker"
+    template_name: "System Due-Out Tracker"
+    template_type: "due_out_tracker"
+    description: "A command-cell due-out tracker for owners, suspenses, slippage, continuity, and closeout."
+    tags: ["system", "due_out_tracker", "xo", "command_cell"]
+    audience_hint: "XO, chief, battle captain, and staff leads"
+    preferred_format: "tracker"
+    reusable_headings:
+      ["Command focus and tracking standard", "Critical due-outs", "Drift, slippage, and escalation", "Turnover and continuity", "Closeout criteria"]
+    reusable_guidance:
+      - "Give every due-out one owner, one suspense, and one command touchpoint."
+      - "Separate late items, waiting-on-decision items, and complete items clearly."
+    example_excerpt: "Tracking standard / critical due-outs / slippage / turnover / closeout."
+    local_only: false
+    warnings:
+      - "System template only. Preserve turnover context so the next watch can continue without guesswork."
+  - template_id: "sys-collection-matrix"
+    template_name: "System PIR/IR Collection Matrix"
+    template_type: "collection_matrix"
+    description: "A collection matrix for PIR, IR, indicators, owners, gaps, and refresh points."
+    tags: ["system", "collection_matrix", "s2", "intelligence"]
+    audience_hint: "S-2/G-2, commander, XO, and S-3"
+    preferred_format: "matrix"
+    reusable_headings:
+      ["Intelligence problem frame", "PIR, IR, and indicators", "Collection tasks and owners", "Gaps, caveats, and confidence", "Decision support and refresh"]
+    reusable_guidance:
+      - "Tie collection directly to a commander or S-3 decision."
+      - "Keep source caveats and confidence visible."
+    example_excerpt: "Problem frame / PIR-IR / collection tasks / caveats / decision support."
+    local_only: false
+    warnings:
+      - "System template only. Use public or training-safe collection framing unless working in an approved environment."
+  - template_id: "sys-sustainment-matrix"
+    template_name: "System Sustainment Matrix"
+    template_type: "sustainment_matrix"
+    description: "A sustainment and movement matrix for support flow, dependencies, recovery, and supportability risk."
+    tags: ["system", "sustainment_matrix", "s4", "logistics"]
+    audience_hint: "S-4/G-4/LCE, XO, and supported leaders"
+    preferred_format: "matrix"
+    reusable_headings:
+      ["Sustainment frame", "Movement and distribution", "Supply, maintenance, and services", "Coordination, dependencies, and risk", "Recovery, reset, and follow-through"]
+    reusable_guidance:
+      - "Make event-canceling shortfalls and longest lead-time asks easy to spot."
+      - "Do not hide recovery and reset burden."
+    example_excerpt: "Sustainment frame / movement / support / dependencies / recovery."
+    local_only: false
+    warnings:
+      - "System template only. Validate support availability and lead times locally."
+  - template_id: "sys-medical-estimate"
+    template_name: "System Medical Estimate"
+    template_type: "medical_estimate"
+    description: "A medical estimate scaffold for casualty scenarios, CASEVAC logic, rehearsal checks, and command risk decisions."
+    tags: ["system", "medical_estimate", "medical", "surgeon"]
+    audience_hint: "Surgeon/doc, commander, XO, S-3, and safety"
+    preferred_format: "estimate"
+    reusable_headings:
+      ["Medical support frame", "Risks, treatment, and TCCC considerations", "CASEVAC, MEDEVAC, and reporting", "Command decisions and rehearsal checks", "Coordination and follow-through"]
+    reusable_guidance:
+      - "Keep casualty scenarios, movement logic, and stop-training authority explicit."
+      - "Do not treat the estimate as medical direction or local emergency procedure."
+    example_excerpt: "Medical frame / risks / CASEVAC / decisions and rehearsal / coordination."
+    local_only: false
+    warnings:
+      - "System template only. Requires qualified medical and command review before execution."
+  - template_id: "sys-public-affairs-plan"
+    template_name: "System Public Affairs Plan"
+    template_type: "public_affairs_plan"
+    description: "A release-discipline public affairs and COMMSTRAT scaffold for media, visitor, and response-line planning."
+    tags: ["system", "public_affairs_plan", "pao", "commstrat", "g7"]
+    audience_hint: "PAO/COMMSTRAT, commander, XO, S-3, and releasing authority"
+    preferred_format: "plan"
+    reusable_headings:
+      ["Command frame and release authority", "Audience, media, and visitor posture", "Themes, messages, and response lines", "OPSEC, imagery, and approval controls", "Execution, contingencies, and follow-through"]
+    reusable_guidance:
+      - "Treat the plan as release discipline, not branding."
+      - "Keep approval chain, OPSEC review, and who may speak explicit."
+    example_excerpt: "Command frame / audience and visitor posture / themes and messages / OPSEC controls / execution."
+    local_only: false
+    warnings:
+      - "System template only. Confirm legal, OPSEC, and command approval before public use."
+  - template_id: "sys-security-annex"
+    template_name: "System Security Annex"
+    template_type: "security_annex"
+    description: "A force-protection and access-control annex scaffold for installations, events, and visitor-heavy evolutions."
+    tags: ["system", "security_annex", "provost", "force_protection", "security"]
+    audience_hint: "Provost, commander, XO, safety, medical, and site-control leads"
+    preferred_format: "annex"
+    reusable_headings:
+      ["Security frame and supported event", "Access control and visitor management", "Movement, traffic, and parking control", "Force protection and emergency actions", "Legal boundaries, rehearsals, and AAR capture"]
+    reusable_guidance:
+      - "Show who controls access, vehicle flow, and incident escalation."
+      - "Make local authority and emergency-action limits visible before execution."
+    example_excerpt: "Security frame / access control / traffic and parking / emergency actions / legal boundaries."
+    local_only: false
+    warnings:
+      - "System template only. Confirm installation and local-site procedures before execution."
+  - template_id: "sys-resource-estimate"
+    template_name: "System Resource Estimate"
+    template_type: "resource_estimate"
+    description: "A resourcing decision scaffold for fiscal constraints, tradeoffs, and command decision support."
+    tags: ["system", "resource_estimate", "g8", "resources", "budget"]
+    audience_hint: "G-8/comptroller, commander, XO, and primary staff"
+    preferred_format: "estimate"
+    reusable_headings:
+      ["Resource frame and supported decision", "Available resources and constraints", "Prioritization and tradeoffs", "Execution, controls, and friction", "Command decision and next resourcing window"]
+    reusable_guidance:
+      - "Use plain command language for cut, defer, fund, or rephase decisions."
+      - "Keep controls, stewardship, and next review windows explicit."
+    example_excerpt: "Resource frame / constraints / tradeoffs / controls / decision and next window."
+    local_only: false
+    warnings:
+      - "System template only. Requires local fiscal and command review before execution."
+  - template_id: "sys-inspection-readiness-plan"
+    template_name: "System Inspection Readiness Plan"
+    template_type: "inspection_readiness_plan"
+    description: "An IG-adjacent readiness and boundary scaffold for trends, evidence, and proper referral paths."
+    tags: ["system", "inspection_readiness_plan", "ig", "inspection", "readiness"]
+    audience_hint: "IG, commander, XO, and senior staff"
+    preferred_format: "plan"
+    reusable_headings:
+      ["Inspection frame and scope", "Standards, functional areas, and evidence", "Gaps, trends, and boundary notes", "Remediation owners and follow-through", "Command decisions, referrals, and next review"]
+    reusable_guidance:
+      - "Keep IG independence and referral boundaries explicit."
+      - "Use evidence, owners, and trend language instead of vague complaints."
+    example_excerpt: "Inspection frame / standards and evidence / trends and boundaries / remediation / next review."
+    local_only: false
+    warnings:
+      - "System template only. Do not use it to shortcut proper IG, legal, or complaint channels."
   - template_id: "sys-aar"
     template_name: "System AAR"
     template_type: "aar"

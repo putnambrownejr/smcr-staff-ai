@@ -54,10 +54,31 @@ def test_staff_planning_package_builds_cross_staff_output() -> None:
     ]
     assert payload["s6_plan"]["radio_guard_chart"]
     assert payload["s6_plan"]["comm_plan_outline"]
+    assert payload["xo_sync"]["synchronization_matrix"]
+    assert payload["command_cell"]["chief_focus_board"]
+    assert payload["s1_readiness"]["routing_matrix"]
+    assert payload["s1_readiness"]["admin_task_tracker"]
+    assert payload["s1_readiness"]["pre_drill_admin_readiness_check"]
+    assert payload["safety_plan"]["no_go_criteria"]
+    assert payload["sel_plan"]["leader_touchpoints"]
     assert payload["medical_plan"]["casevac_plan_elements"]
+    assert payload["medical_plan"]["medical_decision_points"]
     assert payload["battalion_staff_review"]["roles_run"]
     assert payload["xo_vet"]["roles_run"] == ["xo"]
     assert payload["product_package"]
+    product_types = [item["product_type"] for item in payload["product_package"]]
+    assert product_types[:3] == ["warno", "frago", "aar"]
+    assert "running_estimate" in product_types
+    assert "synchronization_matrix" in product_types
+    assert "admin_estimate" in product_types
+    assert "admin_task_tracker" in product_types
+    assert "routing_matrix" in product_types
+    assert "pre_drill_admin_readiness_check" in product_types
+    assert "decision_support_matrix" in product_types
+    assert "due_out_tracker" in product_types
+    assert "collection_matrix" in product_types
+    assert "sustainment_matrix" in product_types
+    assert "medical_estimate" in product_types
     assert payload["g9_plan"] is not None
 
 
@@ -81,6 +102,46 @@ def test_staff_planning_package_skips_g9_when_not_relevant() -> None:
     payload = response.json()
     assert payload["g9_plan"] is None
     assert payload["general_staff_review"] is None
+    product_types = [item["product_type"] for item in payload["product_package"]]
+    assert product_types[:3] == ["warno", "running_estimate", "synchronization_matrix"]
+    assert set(product_types[3:]) == {
+        "admin_estimate",
+        "admin_task_tracker",
+        "routing_matrix",
+        "pre_drill_admin_readiness_check",
+        "decision_support_matrix",
+        "due_out_tracker",
+        "sustainment_matrix",
+    }
+
+
+def test_staff_planning_package_adds_supporting_products_without_overadding_collection_or_medical() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/planning/staff-package",
+        json={
+            "title": "Staff drill synchronization package",
+            "event_type": "staff_drill",
+            "mission_or_training_goal": "Tighten internal staff battle rhythm and due-out discipline.",
+            "coordinating_sections": ["S-1", "S-3", "S-4", "S-6"],
+            "product_types": ["warno"],
+            "training_only": True,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    product_types = [item["product_type"] for item in payload["product_package"]]
+    assert product_types[:3] == ["warno", "running_estimate", "synchronization_matrix"]
+    assert set(product_types[3:]) == {
+        "admin_estimate",
+        "admin_task_tracker",
+        "routing_matrix",
+        "pre_drill_admin_readiness_check",
+        "decision_support_matrix",
+        "due_out_tracker",
+    }
 
 
 def test_frago_to_conop_builds_unit_relationship_framework() -> None:

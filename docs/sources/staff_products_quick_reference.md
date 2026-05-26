@@ -89,6 +89,90 @@ Decisions needed:
 Next 24-72 hours:
 ```
 
+### Synchronization Matrix
+
+```text
+Event frame and command focus:
+Timeline and battle rhythm:
+Staff lane / owner / suspense / command touchpoint:
+Decision point and friction:
+Cut/defer rule:
+Closeout and follow-through:
+```
+
+### PIR / IR Collection Matrix
+
+```text
+Command question:
+PIR / IR:
+Indicator or warning:
+Collection task / owner / suspense:
+Gap / caveat / confidence:
+Decision support / refresh point:
+```
+
+### Sustainment Matrix
+
+```text
+Supported event and sustainment objective:
+Movement and distribution flow:
+Supply / maintenance / services:
+Dependency and risk:
+Event-canceling shortfall:
+Recovery / reset / follow-through:
+```
+
+### Medical Estimate
+
+```text
+Medical support frame:
+Likely casualty scenarios:
+TCCC considerations:
+CASEVAC / MEDEVAC / reporting:
+Command decisions and rehearsal checks:
+Coordination and follow-through:
+```
+
+### Public Affairs Plan
+
+```text
+Command frame and release authority:
+Audience / media / visitor posture:
+Themes, messages, and response lines:
+OPSEC / imagery / approval controls:
+Execution / contingencies / follow-through:
+```
+
+### Security Annex
+
+```text
+Security frame and supported event:
+Access control and visitor management:
+Movement / traffic / parking control:
+Force protection and emergency actions:
+Legal boundaries / rehearsals / AAR capture:
+```
+
+### Resource Estimate
+
+```text
+Resource frame and supported decision:
+Available resources and constraints:
+Prioritization and tradeoffs:
+Execution / controls / friction:
+Command decision / next resourcing window:
+```
+
+### Inspection Readiness Plan
+
+```text
+Inspection frame and scope:
+Standards / functional areas / evidence:
+Gaps / trends / boundary notes:
+Remediation owners / follow-through:
+Command decisions / referrals / next review:
+```
+
 ### CUB
 
 ```text
@@ -133,20 +217,23 @@ Next event/rehearsal to verify:
 
 | Role | Products |
 | --- | --- |
-| Commander/XO | Guidance, decision brief, transition brief, approval/signature |
+| Commander/XO | Guidance, decision brief, transition brief, XO sync matrix, decision support matrix, due-out tracker |
+| S-1/Admin | Admin readiness estimate, routing matrix, critical suspense tracker, orders/travel/admin continuity |
 | S-3/G-3/OpsO | WARNO, OPORD, FRAGO, CONOP, Annex C, synchronization matrix |
-| S-2/G-2 | Intelligence estimate, Annex B, PIR/IR list, IPB notes |
+| S-2/G-2 | Intelligence estimate, Annex B, PIR/IR collection matrix, IPB notes |
 | S-4/G-4/LCE | Logistics estimate, Annex F, movement table, sustainment matrix |
 | S-6/G-6 | Signal/communications plan, PACE matrix, information-management checks |
+| SEL / 1stSgt / SgtMaj | Troop flow plan, accountability scheme, leader touchpoint checklist, standards checks |
 | Surgeon/Doc | Medical estimate, casualty plan, CASEVAC/MEDEVAC checks |
 | AirO/ACE | Air support estimate, air-ground coordination matrix, airspace/control questions |
 | SJA | Legal issue spotter, ROE/RUF guardrails, legal review trigger list |
-| PAO/COMMSTRAT/G-7 | Public affairs plan, release matrix, themes/messages, OPSEC review |
+| PAO/COMMSTRAT/G-7 | Public affairs plan, release approval matrix, themes/messages, response-to-query lines |
+| G-8 / Comptroller | Resource estimate, funding risk note, priority tradeoff brief, resourcing decision point |
 | G-9/CA | Civil Preparation of the Battlespace, civil affairs/civil considerations annex, partner coordination, ASCOPE notes |
-| Safety | ORM worksheet, no-go criteria, residual-risk acceptance note |
-| Provost | Security annex, access-control plan, traffic/force-protection checks |
+| Safety | ORM worksheet, no-go criteria, residual-risk acceptance note, stop-training triggers |
+| Provost | Security annex, access-control plan, traffic/parking control plan, visitor-control checklist |
 | Chaplain/RP | Religious support plan, RMT logistics, morale/confidentiality boundary note |
-| IG | Inspection/inquiry boundary note, readiness trend memo |
+| IG | Inspection readiness plan, inquiry boundary note, readiness trend memo |
 
 ## Agent Usage
 
@@ -156,6 +243,20 @@ Next event/rehearsal to verify:
 - `s2-intel`, `s4-logistics`, `s6-comms`, `medical-doc-advisor`, `airo-advisor`, `jag-legal-advisor`, `g9-civil-military`: provide section-specific estimate and annex inputs.
 
 Keep outputs advisory, source-cited, and training-safe unless the user provides an approved environment and confirms the work is appropriate for that environment.
+
+## Running Estimate Standard
+
+This is the universal parent product for most staff lanes.
+
+```text
+Current situation:
+Changes since last update:
+Assumptions and risks:
+Supportability and coordination:
+Decisions needed:
+Next 24-72 hours:
+Owners / due-outs / adjacent asks:
+```
 
 ## S-6 Quick Product Standards
 

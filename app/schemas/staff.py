@@ -135,6 +135,120 @@ class S6PlanResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class XoSyncRequest(BaseModel):
+    title: str
+    supported_event: str
+    command_focus: str
+    audience: str | None = None
+    coordinating_sections: list[str] = Field(default_factory=list)
+    critical_decisions: list[str] = Field(default_factory=list)
+    due_outs: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+    training_only: bool = True
+
+
+class XoSyncResponse(BaseModel):
+    title: str
+    command_sync_frame: list[str] = Field(default_factory=list)
+    synchronization_matrix: list[str] = Field(default_factory=list)
+    decision_support_matrix: list[str] = Field(default_factory=list)
+    due_out_tracker: list[str] = Field(default_factory=list)
+    command_review_points: list[str] = Field(default_factory=list)
+    friction_checks: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class CommandCellRequest(BaseModel):
+    title: str
+    supported_event: str
+    command_focus: str
+    audience: str | None = None
+    coordinating_sections: list[str] = Field(default_factory=list)
+    critical_decisions: list[str] = Field(default_factory=list)
+    due_outs: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+    training_only: bool = True
+
+
+class CommandCellResponse(BaseModel):
+    title: str
+    command_cell_frame: list[str] = Field(default_factory=list)
+    chief_focus_board: list[str] = Field(default_factory=list)
+    battle_captain_watchboard: list[str] = Field(default_factory=list)
+    command_update_lines: list[str] = Field(default_factory=list)
+    turnover_handoff_notes: list[str] = Field(default_factory=list)
+    ccir_and_decision_triggers: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class S1ReadinessRequest(BaseModel):
+    title: str
+    supported_event: str
+    audience: str | None = None
+    admin_priorities: list[str] = Field(default_factory=list)
+    admin_risks: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+    travel_required: bool = True
+    training_only: bool = True
+
+
+class S1ReadinessResponse(BaseModel):
+    title: str
+    readiness_estimate: list[str] = Field(default_factory=list)
+    admin_status_board: list[str] = Field(default_factory=list)
+    admin_task_tracker: list[str] = Field(default_factory=list)
+    routing_matrix: list[str] = Field(default_factory=list)
+    pre_drill_admin_readiness_check: list[str] = Field(default_factory=list)
+    continuity_notes: list[str] = Field(default_factory=list)
+    critical_suspenses: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class SafetyPlanningRequest(BaseModel):
+    title: str
+    supported_event: str
+    audience: str | None = None
+    hazards: list[str] = Field(default_factory=list)
+    controls: list[str] = Field(default_factory=list)
+    risk_decisions: list[str] = Field(default_factory=list)
+    live_fire: bool = False
+    vehicle_ops: bool = False
+    overnight: bool = False
+    constraints: list[str] = Field(default_factory=list)
+    training_only: bool = True
+
+
+class SafetyPlanningResponse(BaseModel):
+    title: str
+    orm_framework: list[str] = Field(default_factory=list)
+    no_go_criteria: list[str] = Field(default_factory=list)
+    residual_risk_decisions: list[str] = Field(default_factory=list)
+    rehearsal_checks: list[str] = Field(default_factory=list)
+    stop_training_triggers: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class SelExecutionRequest(BaseModel):
+    title: str
+    supported_event: str
+    audience: str | None = None
+    accountability_risks: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+    formal_event: bool = False
+    overnight: bool = False
+    training_only: bool = True
+
+
+class SelExecutionResponse(BaseModel):
+    title: str
+    troop_flow_plan: list[str] = Field(default_factory=list)
+    accountability_scheme: list[str] = Field(default_factory=list)
+    leader_touchpoints: list[str] = Field(default_factory=list)
+    standards_checks: list[str] = Field(default_factory=list)
+    marine_welfare_checks: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
 class G9PlanningRequest(BaseModel):
     title: str
     supported_problem: str
@@ -172,5 +286,7 @@ class MedicalPlanningResponse(BaseModel):
     tccc_considerations: list[str] = Field(default_factory=list)
     nine_line_considerations: list[str] = Field(default_factory=list)
     casevac_plan_elements: list[str] = Field(default_factory=list)
+    medical_decision_points: list[str] = Field(default_factory=list)
+    medical_rehearsal_checks: list[str] = Field(default_factory=list)
     coordination_requirements: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

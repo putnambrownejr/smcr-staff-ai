@@ -13,19 +13,29 @@ from app.schemas.admin_workflows import (
 from app.schemas.agents import AgentRunRequest, AgentRunResponse
 from app.schemas.pki import PkiTroubleshootingRequest, PkiTroubleshootingResponse
 from app.schemas.staff import (
+    CommandCellRequest,
+    CommandCellResponse,
     G9PlanningRequest,
     G9PlanningResponse,
     MedicalPlanningRequest,
     MedicalPlanningResponse,
+    S1ReadinessRequest,
+    S1ReadinessResponse,
     S2EstimateRequest,
     S2EstimateResponse,
     S6PlanRequest,
     S6PlanResponse,
+    SafetyPlanningRequest,
+    SafetyPlanningResponse,
+    SelExecutionRequest,
+    SelExecutionResponse,
     StaffCouncilRequest,
     StaffCouncilResponse,
     StaffRoleMetadata,
     StaffRoundRobinRequest,
     StaffRoundRobinResponse,
+    XoSyncRequest,
+    XoSyncResponse,
 )
 from app.schemas.staff_updates import (
     AssistedSectionEstimateRequest,
@@ -43,25 +53,35 @@ from app.services.admin.pki_support import PkiTroubleshootingService
 from app.services.admin.workflow_builder import AdminWorkflowBuilder
 from app.services.agents.base import AgentContext
 from app.services.agents.osint_agent import build_osint_agent
+from app.services.staff.command_cell_planner import CommandCellPlanner
 from app.services.staff.council import StaffCouncilService
 from app.services.staff.g9_planner import G9Planner
 from app.services.staff.medical_planner import MedicalPlanner
+from app.services.staff.s1_readiness_planner import S1ReadinessPlanner
 from app.services.staff.s2_estimator import S2Estimator
 from app.services.staff.s6_planner import S6Planner
+from app.services.staff.safety_planner import SafetyPlanner
 from app.services.staff.section_memory_store import SectionMemoryStore
+from app.services.staff.sel_execution_planner import SelExecutionPlanner
 from app.services.staff.update_cycle import StaffUpdateCycleBuilder
+from app.services.staff.xo_sync_planner import XoSyncPlanner
 
 router = APIRouter(prefix="/staff", tags=["staff council"])
 
 _service = StaffCouncilService()
+_command_cell_planner = CommandCellPlanner()
 _g9_planner = G9Planner()
 _medical_planner = MedicalPlanner()
+_s1_readiness_planner = S1ReadinessPlanner()
+_safety_planner = SafetyPlanner()
 _s2_estimator = S2Estimator()
+_sel_execution_planner = SelExecutionPlanner()
 _s6_planner = S6Planner()
 _pki_service = PkiTroubleshootingService()
 _admin_workflow_builder = AdminWorkflowBuilder()
 _osint_agent = build_osint_agent()
 _update_cycle = StaffUpdateCycleBuilder()
+_xo_sync_planner = XoSyncPlanner()
 
 
 def get_section_memory_store() -> Iterator[SectionMemoryStore]:
@@ -95,9 +115,34 @@ def build_s2_estimate(request: S2EstimateRequest) -> S2EstimateResponse:
     return _s2_estimator.build(request)
 
 
+@router.post("/xo-sync", response_model=XoSyncResponse)
+def build_xo_sync(request: XoSyncRequest) -> XoSyncResponse:
+    return _xo_sync_planner.build(request)
+
+
+@router.post("/command-cell", response_model=CommandCellResponse)
+def build_command_cell(request: CommandCellRequest) -> CommandCellResponse:
+    return _command_cell_planner.build(request)
+
+
+@router.post("/s1-readiness", response_model=S1ReadinessResponse)
+def build_s1_readiness(request: S1ReadinessRequest) -> S1ReadinessResponse:
+    return _s1_readiness_planner.build(request)
+
+
 @router.post("/s6-plan", response_model=S6PlanResponse)
 def build_s6_plan(request: S6PlanRequest) -> S6PlanResponse:
     return _s6_planner.build(request)
+
+
+@router.post("/safety-plan", response_model=SafetyPlanningResponse)
+def build_safety_plan(request: SafetyPlanningRequest) -> SafetyPlanningResponse:
+    return _safety_planner.build(request)
+
+
+@router.post("/sel-execution", response_model=SelExecutionResponse)
+def build_sel_execution(request: SelExecutionRequest) -> SelExecutionResponse:
+    return _sel_execution_planner.build(request)
 
 
 @router.post("/g9-plan", response_model=G9PlanningResponse)

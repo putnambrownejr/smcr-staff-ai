@@ -11,7 +11,12 @@ class StaffProductsAgent(Agent):
             name="Staff Products Assistant",
             description=(
                 "Builds advisory scaffolds for OPORDs, WARNOs, FRAGOs, SITREPs, AARs, "
-                "IPBs, decision briefs, command-update briefs, and correspondence."
+                "running estimates, synchronization matrices, admin estimates, admin task trackers, routing matrices, "
+                "pre-drill admin readiness checks, decision support matrices, due-out trackers, "
+                "collection matrices, sustainment matrices, "
+                "medical estimates, public affairs plans, security annexes, resource estimates, inspection "
+                "readiness plans, IPBs, decision briefs, "
+                "command-update briefs, and correspondence."
             ),
             domain="staff products",
             intended_users=["SMCR officers", "staff officers", "company and battalion staff"],
@@ -61,7 +66,12 @@ class StaffProductsAgent(Agent):
             follow_up_questions=[
                 (
                     "What product type do you need: OPORD, WARNO, FRAGO, SITREP, AAR, "
-                    "IPB, decision brief, command update brief, letter, memo, or endorsement?"
+                    "running estimate, synchronization matrix, admin estimate, admin task tracker, routing matrix, "
+                    "pre-drill admin readiness check, decision support matrix, due-out tracker, "
+                    "collection matrix, sustainment matrix, medical "
+                    "estimate, public affairs plan, security annex, resource estimate, inspection readiness plan, "
+                    "IPB, decision brief, command update brief, "
+                    "letter, memo, or endorsement?"
                 ),
                 "Is this fictional/training-only or a real administrative workflow?",
                 "What audience, echelon, and required format should it follow?",
@@ -81,6 +91,62 @@ def _product_type_from_context(context: AgentContext, input_text: str) -> StaffP
         return StaffProductType.frago
     if "sitrep" in text:
         return StaffProductType.sitrep
+    if "running estimate" in text or "staff estimate" in text:
+        return StaffProductType.running_estimate
+    if "synchronization matrix" in text or "sync matrix" in text or "synchronization board" in text:
+        return StaffProductType.synchronization_matrix
+    if "admin estimate" in text or ("s-1" in text and "estimate" in text):
+        return StaffProductType.admin_estimate
+    if "admin task tracker" in text or ("s-1" in text and "task tracker" in text):
+        return StaffProductType.admin_task_tracker
+    if "routing matrix" in text and ("admin" in text or "orders" in text or "s-1" in text):
+        return StaffProductType.routing_matrix
+    if "pre-drill admin readiness check" in text or "pre drill admin readiness check" in text:
+        return StaffProductType.pre_drill_admin_readiness_check
+    if "decision support matrix" in text or "decision matrix" in text:
+        return StaffProductType.decision_support_matrix
+    if "due-out tracker" in text or "due out tracker" in text or "suspense tracker" in text:
+        return StaffProductType.due_out_tracker
+    if "collection matrix" in text or "pir/ir" in text or "pir ir" in text or "collection plan" in text:
+        return StaffProductType.collection_matrix
+    if "sustainment matrix" in text or "movement table" in text or "movement matrix" in text:
+        return StaffProductType.sustainment_matrix
+    if "medical estimate" in text:
+        return StaffProductType.medical_estimate
+    if (
+        "public affairs plan" in text
+        or "commstrat plan" in text
+        or "communication strategy plan" in text
+        or "release approval matrix" in text
+        or "release matrix" in text
+        or "themes and messages" in text
+        or "response to query" in text
+    ):
+        return StaffProductType.public_affairs_plan
+    if (
+        "security annex" in text
+        or "force protection" in text
+        or "access control plan" in text
+        or "visitor control" in text
+        or "traffic control plan" in text
+    ):
+        return StaffProductType.security_annex
+    if (
+        "resource estimate" in text
+        or "funding risk" in text
+        or "priority tradeoff brief" in text
+        or "resourcing decision point" in text
+        or "budget tradeoff" in text
+    ):
+        return StaffProductType.resource_estimate
+    if (
+        "inspection readiness plan" in text
+        or "readiness trend memo" in text
+        or "ig inquiry boundary" in text
+        or "inspection plan" in text
+        or "inspector general" in text
+    ):
+        return StaffProductType.inspection_readiness_plan
     if "decision brief" in text or ("decision" in text and ("brief" in text or "slides" in text or "deck" in text)):
         return StaffProductType.decision_brief
     if "command update" in text or "update brief" in text:

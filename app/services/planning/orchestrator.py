@@ -1,25 +1,44 @@
 from app.core.security import DEFAULT_WARNINGS, detect_sensitive_input
-from app.schemas.planning import StaffPlanningPackageRequest, StaffPlanningPackageResponse
+from app.schemas.planning import (
+    PlanningApproachAssessment,
+    StaffPlanningPackageRequest,
+    StaffPlanningPackageResponse,
+)
 from app.schemas.staff import (
+    CommandCellRequest,
+    CommandCellResponse,
     G9PlanningRequest,
     MedicalPlanningRequest,
     MedicalPlanningResponse,
+    S1ReadinessRequest,
+    S1ReadinessResponse,
     S2EstimateRequest,
     S2EstimateResponse,
     S6PlanRequest,
     S6PlanResponse,
+    SafetyPlanningRequest,
+    SafetyPlanningResponse,
+    SelExecutionRequest,
+    SelExecutionResponse,
     StaffCouncilRequest,
     StaffCouncilResponse,
     StaffEchelon,
+    XoSyncRequest,
+    XoSyncResponse,
 )
-from app.schemas.staff_products import StaffProductDraftRequest
+from app.schemas.staff_products import StaffProductDraftRequest, StaffProductType
 from app.schemas.training import S3PlanningRequest, S3PlanningResponse, S4PlanningRequest, S4PlanningResponse
 from app.services.planning.approach import assess_planning_approach
+from app.services.staff.command_cell_planner import CommandCellPlanner
 from app.services.staff.council import StaffCouncilService
 from app.services.staff.g9_planner import G9Planner
 from app.services.staff.medical_planner import MedicalPlanner
+from app.services.staff.s1_readiness_planner import S1ReadinessPlanner
 from app.services.staff.s2_estimator import S2Estimator
 from app.services.staff.s6_planner import S6Planner
+from app.services.staff.safety_planner import SafetyPlanner
+from app.services.staff.sel_execution_planner import SelExecutionPlanner
+from app.services.staff.xo_sync_planner import XoSyncPlanner
 from app.services.staff_products.builder import StaffProductBuilder
 from app.services.training.s3_planner import S3Planner
 from app.services.training.s4_planner import S4Planner
@@ -31,6 +50,11 @@ class StaffPlanningOrchestrator:
         self._s3 = S3Planner()
         self._s4 = S4Planner()
         self._s6 = S6Planner()
+        self._xo = XoSyncPlanner()
+        self._command_cell = CommandCellPlanner()
+        self._s1 = S1ReadinessPlanner()
+        self._safety = SafetyPlanner()
+        self._sel = SelExecutionPlanner()
         self._medical = MedicalPlanner()
         self._g9 = G9Planner()
         self._council = StaffCouncilService()
@@ -89,6 +113,100 @@ class StaffPlanningOrchestrator:
                 audience=request.audience,
                 constraints=request.constraints,
                 support_requirements=request.support_requirements,
+                training_only=request.training_only,
+            )
+        )
+        xo_sync = self._xo.build(
+            XoSyncRequest(
+                title=request.title,
+                supported_event=request.event_type,
+                command_focus=request.mission_or_training_goal,
+                audience=request.audience,
+                coordinating_sections=request.coordinating_sections,
+                critical_decisions=_commander_decisions(request, s3_plan, s4_plan)[:4],
+                due_outs=[
+                    *s3_plan.required_outputs[:2],
+                    *s4_plan.coordination_points[:2],
+                    *s6_plan.comm_plan_outline[:1],
+                ],
+                constraints=request.constraints,
+                training_only=request.training_only,
+            )
+        )
+        command_cell = self._command_cell.build(
+            CommandCellRequest(
+                title=request.title,
+                supported_event=request.event_type,
+                command_focus=request.mission_or_training_goal,
+                audience=request.audience,
+                coordinating_sections=["XO", "Chief", "Battle Captain", *request.coordinating_sections[:4]],
+                critical_decisions=_commander_decisions(request, s3_plan, s4_plan)[:4],
+                due_outs=[
+                    *xo_sync.due_out_tracker[:2],
+                    *s3_plan.required_outputs[:2],
+                    *s4_plan.coordination_points[:2],
+                    *s6_plan.comm_plan_outline[:1],
+                ],
+                constraints=request.constraints,
+                training_only=request.training_only,
+            )
+        )
+        s1_readiness = self._s1.build(
+            S1ReadinessRequest(
+                title=request.title,
+                supported_event=request.event_type,
+                audience=request.audience,
+                admin_priorities=[
+                    "Roster and accountability visibility",
+                    "Orders and routing ownership",
+                    "Travel/admin suspense discipline",
+                    *request.coordinating_sections[:2],
+                ],
+                admin_risks=[
+                    "Late routing or stale rosters can quietly displace execution focus.",
+                    "Travel/admin friction can consume the next planning cycle if left verbal.",
+                    *request.constraints[:2],
+                ],
+                constraints=request.constraints,
+                travel_required=_has_travel_indicator(request),
+                training_only=request.training_only,
+            )
+        )
+        safety_plan = self._safety.build(
+            SafetyPlanningRequest(
+                title=request.title,
+                supported_event=request.event_type,
+                audience=request.audience,
+                hazards=request.medical_risk_context or _default_safety_hazards(request),
+                controls=[
+                    "Named stop-training authority",
+                    "Medical response and accountability check",
+                    "Communications/reporting fallback",
+                ],
+                risk_decisions=[
+                    "What risk is acceptable versus event-canceling?",
+                    "What control measure must be rehearsed before execution?",
+                ],
+                live_fire=_looks_like_live_fire(request),
+                vehicle_ops=_looks_like_vehicle_ops(request),
+                overnight=_has_overnight_indicator(request),
+                constraints=request.constraints,
+                training_only=request.training_only,
+            )
+        )
+        sel_plan = self._sel.build(
+            SelExecutionRequest(
+                title=request.title,
+                supported_event=request.event_type,
+                audience=request.audience,
+                accountability_risks=[
+                    "Distributed Marines create handoff and accountability drift between drills.",
+                    "Sequence control breaks when leaders assume everyone understands the same flow.",
+                    *request.constraints[:2],
+                ],
+                constraints=request.constraints,
+                formal_event=_looks_like_formal_event(request),
+                overnight=_has_overnight_indicator(request),
                 training_only=request.training_only,
             )
         )
@@ -158,18 +276,27 @@ class StaffPlanningOrchestrator:
                     audience=request.audience,
                     echelon="battalion",
                     preferred_format=request.preferred_format,
-                    facts=[
-                        f"Training goal: {request.mission_or_training_goal}",
-                        f"Event type: {request.event_type}",
-                        f"Recommended planning method: {planning_approach.recommended_method.upper()}",
-                        f"Planning decision: {planning_approach.decision}",
-                        *[f"Support requirement: {item}" for item in request.support_requirements[:3]],
-                    ],
+                    facts=_product_facts(
+                        request=request,
+                        product_type=product_type,
+                        planning_approach=planning_approach,
+                        s2_estimate=s2_estimate,
+                        s3_plan=s3_plan,
+                        s4_plan=s4_plan,
+                        s6_plan=s6_plan,
+                        xo_sync=xo_sync,
+                        command_cell=command_cell,
+                        s1_readiness=s1_readiness,
+                        safety_plan=safety_plan,
+                        sel_plan=sel_plan,
+                        medical_plan=medical_plan,
+                        include_g9=include_g9,
+                    ),
                     constraints=request.constraints,
                     training_or_fictional=request.training_only,
                 )
             )
-            for product_type in request.product_types
+            for product_type in _resolved_product_types(request, s2_estimate)
         ]
 
         return StaffPlanningPackageResponse(
@@ -186,6 +313,11 @@ class StaffPlanningOrchestrator:
             s3_plan=s3_plan,
             s4_plan=s4_plan,
             s6_plan=s6_plan,
+            xo_sync=xo_sync,
+            command_cell=command_cell,
+            s1_readiness=s1_readiness,
+            safety_plan=safety_plan,
+            sel_plan=sel_plan,
             medical_plan=medical_plan,
             g9_plan=g9_plan,
             battalion_staff_review=battalion_review,
@@ -213,6 +345,31 @@ class StaffPlanningOrchestrator:
                 planning_only=request.training_only,
             )
         )
+
+
+def _resolved_product_types(
+    request: StaffPlanningPackageRequest, s2_estimate: S2EstimateResponse | None
+) -> list[StaffProductType]:
+    product_types = list(request.product_types)
+    product_types.append(StaffProductType.running_estimate)
+
+    if _needs_synchronization_matrix(request):
+        product_types.append(StaffProductType.synchronization_matrix)
+        product_types.append(StaffProductType.decision_support_matrix)
+        product_types.append(StaffProductType.due_out_tracker)
+    if _needs_admin_products(request):
+        product_types.append(StaffProductType.admin_estimate)
+        product_types.append(StaffProductType.admin_task_tracker)
+        product_types.append(StaffProductType.routing_matrix)
+        product_types.append(StaffProductType.pre_drill_admin_readiness_check)
+    if s2_estimate is not None:
+        product_types.append(StaffProductType.collection_matrix)
+    if _needs_sustainment_matrix(request):
+        product_types.append(StaffProductType.sustainment_matrix)
+    if _needs_medical_estimate(request):
+        product_types.append(StaffProductType.medical_estimate)
+
+    return list(dict.fromkeys(product_types))
 
 
 def _planning_question(request: StaffPlanningPackageRequest) -> str:
@@ -261,6 +418,44 @@ def _needs_g9(request: StaffPlanningPackageRequest) -> bool:
     )
 
 
+def _needs_synchronization_matrix(request: StaffPlanningPackageRequest) -> bool:
+    return bool(
+        request.coordinating_sections
+        or request.support_requirements
+        or _has_travel_indicator(request)
+        or _has_overnight_indicator(request)
+    )
+
+
+def _needs_sustainment_matrix(request: StaffPlanningPackageRequest) -> bool:
+    return bool(
+        request.support_requirements
+        or _has_travel_indicator(request)
+        or _has_overnight_indicator(request)
+        or _looks_like_vehicle_ops(request)
+    )
+
+
+def _needs_admin_products(request: StaffPlanningPackageRequest) -> bool:
+    return bool(
+        request.coordinating_sections
+        or _has_travel_indicator(request)
+        or request.event_type
+        or request.audience
+    )
+
+
+def _needs_medical_estimate(request: StaffPlanningPackageRequest) -> bool:
+    return bool(
+        request.medical_risk_context
+        or request.casualty_scenarios
+        or _looks_like_live_fire(request)
+        or _looks_like_vehicle_ops(request)
+        or _has_overnight_indicator(request)
+        or _has_travel_indicator(request)
+    )
+
+
 def _default_medical_risks(request: StaffPlanningPackageRequest) -> list[str]:
     return [
         "Heat, dehydration, fatigue, and field-injury assumptions must be validated.",
@@ -268,8 +463,34 @@ def _default_medical_risks(request: StaffPlanningPackageRequest) -> list[str]:
     ]
 
 
+def _default_safety_hazards(request: StaffPlanningPackageRequest) -> list[str]:
+    return [
+        "Loss of positive control or accountability under compressed timelines.",
+        "Medical or communications support assumptions breaking under friction.",
+        f"Event context hazard: {request.event_type}",
+    ]
+
+
 def _default_casualty_scenarios(request: StaffPlanningPackageRequest) -> list[str]:
     return ["Heat casualty", "Vehicle mishap", "Training injury during movement or field activity"]
+
+
+def _looks_like_live_fire(request: StaffPlanningPackageRequest) -> bool:
+    text = " ".join([request.title, request.event_type, request.mission_or_training_goal, *request.constraints]).lower()
+    return any(term in text for term in {"live fire", "range", "weapons", "ammo", "sdz"})
+
+
+def _looks_like_vehicle_ops(request: StaffPlanningPackageRequest) -> bool:
+    text = " ".join([request.title, request.event_type, *request.constraints, *request.support_requirements]).lower()
+    return any(term in text for term in {"vehicle", "convoy", "movement", "bus", "driver"})
+
+
+def _looks_like_formal_event(request: StaffPlanningPackageRequest) -> bool:
+    text = " ".join([request.title, request.event_type, request.mission_or_training_goal]).lower()
+    return any(
+        term in text
+        for term in {"ceremony", "change of command", "formal", "parade", "honors", "memorial", "public-facing"}
+    )
 
 
 def _summary_lines(request: StaffPlanningPackageRequest, include_g9: bool) -> list[str]:
@@ -399,6 +620,135 @@ def _recommended_actions(
     if include_g9:
         actions.append("Capture external coordination and continuity notes in a turnover format before dismissal.")
     return actions
+
+
+def _product_facts(
+    request: StaffPlanningPackageRequest,
+    product_type: StaffProductType,
+    planning_approach: PlanningApproachAssessment,
+    s2_estimate: S2EstimateResponse | None,
+    s3_plan: S3PlanningResponse,
+    s4_plan: S4PlanningResponse,
+    s6_plan: S6PlanResponse,
+    xo_sync: XoSyncResponse,
+    command_cell: CommandCellResponse,
+    s1_readiness: S1ReadinessResponse,
+    safety_plan: SafetyPlanningResponse,
+    sel_plan: SelExecutionResponse,
+    medical_plan: MedicalPlanningResponse,
+    include_g9: bool,
+) -> list[str]:
+    facts = [
+        f"Training goal: {request.mission_or_training_goal}",
+        f"Event type: {request.event_type}",
+        f"Recommended planning method: {planning_approach.recommended_method.upper()}",
+        f"Planning decision: {planning_approach.decision}",
+        *[f"Support requirement: {item}" for item in request.support_requirements[:3]],
+    ]
+
+    if product_type == StaffProductType.running_estimate:
+        facts.extend(
+            [
+                f"Primary staff friction: {s3_plan.reserve_friction_points[0]}",
+                f"Supportability friction: {s4_plan.reserve_friction_points[0]}",
+                f"C2 friction: {s6_plan.reserve_friction_points[0]}",
+                f"Admin focus: {s1_readiness.readiness_estimate[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.synchronization_matrix:
+        facts.extend(
+            [
+                f"Battle rhythm checkpoint: {s3_plan.battle_rhythm[0]}",
+                f"Coordination point: {s4_plan.coordination_points[0]}",
+                f"Command synchronization focus: {xo_sync.command_sync_frame[0]}",
+                f"Leader touchpoint: {sel_plan.leader_touchpoints[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.admin_estimate:
+        facts.extend(
+            [
+                f"Admin estimate focus: {s1_readiness.readiness_estimate[0]}",
+                f"Admin status board item: {s1_readiness.admin_status_board[0]}",
+                f"Critical suspense: {s1_readiness.critical_suspenses[0]}",
+                f"Continuity note: {s1_readiness.continuity_notes[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.admin_task_tracker:
+        facts.extend(
+            [
+                f"Admin task tracker focus: {s1_readiness.admin_task_tracker[0]}",
+                f"Admin status board item: {s1_readiness.admin_status_board[1]}",
+                f"Chief focus support: {command_cell.chief_focus_board[0]}",
+                f"Turnover note: {command_cell.turnover_handoff_notes[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.routing_matrix:
+        facts.extend(
+            [
+                f"Routing matrix focus: {s1_readiness.routing_matrix[0]}",
+                f"Routing dependency: {s1_readiness.routing_matrix[-1]}",
+                f"Command touchpoint: {xo_sync.due_out_tracker[0]}",
+                f"Constraint to manage: {s1_readiness.critical_suspenses[-1]}",
+            ]
+        )
+    elif product_type == StaffProductType.pre_drill_admin_readiness_check:
+        facts.extend(
+            [
+                f"Pre-drill check focus: {s1_readiness.pre_drill_admin_readiness_check[0]}",
+                f"Roster or accountability check: {s1_readiness.admin_status_board[0]}",
+                f"Travel-admin check: {s1_readiness.pre_drill_admin_readiness_check[-1]}",
+                f"Immediate suspense: {s1_readiness.critical_suspenses[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.decision_support_matrix:
+        facts.extend(
+            [
+                f"Command decision support: {xo_sync.decision_support_matrix[0]}",
+                f"Command update line: {command_cell.command_update_lines[0]}",
+                f"CCIR or escalation trigger: {command_cell.ccir_and_decision_triggers[0]}",
+                f"Support reality check: {s4_plan.coordination_points[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.due_out_tracker:
+        facts.extend(
+            [
+                f"Due-out tracker focus: {xo_sync.due_out_tracker[0]}",
+                f"Chief focus board item: {command_cell.chief_focus_board[0]}",
+                f"Battle captain watchboard item: {command_cell.battle_captain_watchboard[0]}",
+                f"Turnover note: {command_cell.turnover_handoff_notes[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.collection_matrix and s2_estimate is not None:
+        facts.extend(
+            [
+                f"Intelligence summary: {s2_estimate.summary_assessment[0]}",
+                f"Assessment focus: {s2_estimate.assessed_claims[0]}",
+                f"Collection gap: {s2_estimate.collection_gaps[0]}",
+                f"Decision support: {s2_estimate.command_considerations[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.sustainment_matrix:
+        facts.extend(
+            [
+                f"Critical support requirement: {s4_plan.critical_support_requirements[0]}",
+                f"Movement or billeting note: {s4_plan.movement_and_billeting[0]}",
+                f"Report and comm dependency: {s6_plan.comm_plan_outline[0]}",
+                f"Safety control: {safety_plan.orm_framework[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.medical_estimate:
+        facts.extend(
+            [
+                f"Medical estimate focus: {medical_plan.medical_support_estimate[0]}",
+                f"CASEVAC planning element: {medical_plan.casevac_plan_elements[0]}",
+                f"Medical decision point: {medical_plan.medical_decision_points[0]}",
+                f"Medical coordination requirement: {medical_plan.coordination_requirements[0]}",
+            ]
+        )
+
+    if include_g9:
+        facts.append("Civil or partner coordination is relevant enough to remain visible in staff integration.")
+    return facts
 
 
 def _request_text(request: StaffPlanningPackageRequest) -> str:

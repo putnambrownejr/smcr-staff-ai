@@ -88,3 +88,24 @@ def test_product_template_routes_create_list_and_reuse(tmp_path: Path) -> None:
         assert any("Local template reference" in prompt for prompt in first_section_prompts)
     finally:
         app.dependency_overrides.clear()
+
+
+def test_product_template_running_estimate_type_is_supported() -> None:
+    assert ProductTemplateType.running_estimate.value == "running_estimate"
+
+
+def test_product_template_new_matrix_and_estimate_types_are_supported() -> None:
+    assert ProductTemplateType.public_affairs_plan.value == "public_affairs_plan"
+    assert ProductTemplateType.security_annex.value == "security_annex"
+    assert ProductTemplateType.admin_estimate.value == "admin_estimate"
+    assert ProductTemplateType.admin_task_tracker.value == "admin_task_tracker"
+    assert ProductTemplateType.routing_matrix.value == "routing_matrix"
+    assert ProductTemplateType.pre_drill_admin_readiness_check.value == "pre_drill_admin_readiness_check"
+    assert ProductTemplateType.resource_estimate.value == "resource_estimate"
+    assert ProductTemplateType.inspection_readiness_plan.value == "inspection_readiness_plan"
+    assert ProductTemplateType.synchronization_matrix.value == "synchronization_matrix"
+    assert ProductTemplateType.decision_support_matrix.value == "decision_support_matrix"
+    assert ProductTemplateType.due_out_tracker.value == "due_out_tracker"
+    assert ProductTemplateType.collection_matrix.value == "collection_matrix"
+    assert ProductTemplateType.sustainment_matrix.value == "sustainment_matrix"
+    assert ProductTemplateType.medical_estimate.value == "medical_estimate"

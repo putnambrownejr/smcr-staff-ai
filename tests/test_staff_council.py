@@ -2,18 +2,28 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.schemas.staff import (
+    CommandCellRequest,
     MagtfLens,
+    S1ReadinessRequest,
     S2EstimateRequest,
     S6PlanRequest,
+    SafetyPlanningRequest,
+    SelExecutionRequest,
     StaffCouncilRequest,
     StaffEchelon,
     StaffRoundRobinRequest,
+    XoSyncRequest,
 )
 from app.services.agents.base import AgentContext
 from app.services.agents.registry import AgentRegistry
+from app.services.staff.command_cell_planner import CommandCellPlanner
 from app.services.staff.council import StaffCouncilService
+from app.services.staff.s1_readiness_planner import S1ReadinessPlanner
 from app.services.staff.s2_estimator import S2Estimator
 from app.services.staff.s6_planner import S6Planner
+from app.services.staff.safety_planner import SafetyPlanner
+from app.services.staff.sel_execution_planner import SelExecutionPlanner
+from app.services.staff.xo_sync_planner import XoSyncPlanner
 
 
 def test_registry_includes_chief_and_staff_agents() -> None:
@@ -22,6 +32,8 @@ def test_registry_includes_chief_and_staff_agents() -> None:
 
     assert "chief-of-staff-aide" in ids
     assert "staff-company-xo" in ids
+    assert "staff-battalion-chief" in ids
+    assert "staff-battalion-battle_captain" in ids
     assert "staff-company-doc" in ids
     assert "staff-company-safety" in ids
     assert "staff-battalion-s2" in ids
@@ -214,6 +226,47 @@ def test_staff_council_special_staff_aliases() -> None:
     assert [perspective.role for perspective in response.perspectives] == ["sja", "pao", "provost"]
 
 
+def test_staff_council_pao_and_provost_recommend_new_products() -> None:
+    service = StaffCouncilService()
+    response = service.vet_idea(
+        StaffCouncilRequest(
+            question="Build a battalion training event with guest access, media interest, and tight site control.",
+            echelon=StaffEchelon.battalion,
+            roles=["pao", "provost"],
+        )
+    )
+
+    pao = next(perspective for perspective in response.perspectives if perspective.role == "pao")
+    provost = next(perspective for perspective in response.perspectives if perspective.role == "provost")
+
+    assert "Public affairs plan" in pao.recommended_products
+    assert "response-to-query lines" in pao.recommended_products
+    assert "Security annex" in provost.recommended_products
+    assert "visitor control checklist" in provost.recommended_products
+
+
+def test_staff_council_g8_and_ig_recommend_new_products() -> None:
+    service = StaffCouncilService()
+    response = service.vet_idea(
+        StaffCouncilRequest(
+            question=(
+                "Pressure-test a reserve event with constrained support dollars and recurring "
+                "inspection friction."
+            ),
+            echelon=StaffEchelon.division_group,
+            roles=["g8", "ig"],
+        )
+    )
+
+    g8 = next(perspective for perspective in response.perspectives if perspective.role == "g8")
+    ig = next(perspective for perspective in response.perspectives if perspective.role == "ig")
+
+    assert "resource estimate" in [item.lower() for item in g8.recommended_products]
+    assert "resourcing decision point" in [item.lower() for item in g8.recommended_products]
+    assert "inspection readiness plan" in [item.lower() for item in ig.recommended_products]
+    assert "readiness trend memo" in [item.lower() for item in ig.recommended_products]
+
+
 def test_staff_round_robin_runs_airo_sja_where_available() -> None:
     service = StaffCouncilService()
     response = service.round_robin(
@@ -270,6 +323,35 @@ def test_staff_council_staff_product_references_follow_numbered_staff() -> None:
         for perspective in response.perspectives
     )
 
+    xo = service.vet_idea(
+        StaffCouncilRequest(
+            question="Tighten staff synchronization for a battalion field exercise.",
+            echelon=StaffEchelon.battalion,
+            roles=["xo"],
+        )
+    )
+    assert "XO sync matrix" in xo.perspectives[0].recommended_products
+
+    s1 = service.vet_idea(
+        StaffCouncilRequest(
+            question="Clean up admin readiness and routing for next drill.",
+            echelon=StaffEchelon.battalion,
+            roles=["s1"],
+        )
+    )
+    assert "admin estimate" in s1.perspectives[0].recommended_products
+    assert "admin task tracker" in s1.perspectives[0].recommended_products
+    assert "pre-drill admin readiness check" in s1.perspectives[0].recommended_products
+
+    sgtmaj = service.vet_idea(
+        StaffCouncilRequest(
+            question="Tighten accountability and standards for a formal battalion event.",
+            echelon=StaffEchelon.battalion,
+            roles=["sgtmaj"],
+        )
+    )
+    assert "troop flow plan" in sgtmaj.perspectives[0].recommended_products
+
 
 def test_s2_estimator_returns_claims_and_gaps() -> None:
     service = S2Estimator()
@@ -316,6 +398,101 @@ def test_s6_planner_returns_pace_and_support_requirements() -> None:
     assert response.support_requirements
 
 
+def test_xo_sync_planner_returns_sync_and_due_out_products() -> None:
+    service = XoSyncPlanner()
+    response = service.build(
+        XoSyncRequest(
+            title="Battalion drill sync",
+            supported_event="drill weekend",
+            command_focus="Protect the training standard and tighten staff handoffs.",
+            coordinating_sections=["S-1", "S-3", "S-4", "S-6"],
+            critical_decisions=["Cut one lane to protect quality."],
+            due_outs=["Publish support suspense list."],
+        )
+    )
+
+    assert response.command_sync_frame
+    assert response.synchronization_matrix
+    assert response.decision_support_matrix
+    assert response.due_out_tracker
+
+
+def test_command_cell_planner_returns_chief_and_battle_captain_outputs() -> None:
+    service = CommandCellPlanner()
+    response = service.build(
+        CommandCellRequest(
+            title="Battalion command cell prep",
+            supported_event="drill weekend",
+            command_focus="Protect the commander's picture and clean handoffs.",
+            coordinating_sections=["S-3", "S-4", "S-6"],
+            critical_decisions=["Cut one lane to preserve execution quality."],
+            due_outs=["Publish final support suspense tracker."],
+        )
+    )
+
+    assert response.command_cell_frame
+    assert response.chief_focus_board
+    assert response.battle_captain_watchboard
+    assert response.command_update_lines
+    assert response.turnover_handoff_notes
+    assert response.ccir_and_decision_triggers
+
+
+def test_s1_readiness_planner_returns_admin_products() -> None:
+    service = S1ReadinessPlanner()
+    response = service.build(
+        S1ReadinessRequest(
+            title="Next drill admin prep",
+            supported_event="drill weekend",
+            admin_priorities=["Roster scrub", "DTS suspense"],
+            admin_risks=["Late routing"],
+        )
+    )
+
+    assert response.readiness_estimate
+    assert response.admin_status_board
+    assert response.admin_task_tracker
+    assert response.routing_matrix
+    assert response.pre_drill_admin_readiness_check
+    assert response.critical_suspenses
+
+
+def test_safety_planner_returns_orm_and_no_go_structure() -> None:
+    service = SafetyPlanner()
+    response = service.build(
+        SafetyPlanningRequest(
+            title="Field event risk review",
+            supported_event="field exercise",
+            hazards=["Heat injury"],
+            live_fire=True,
+            vehicle_ops=True,
+        )
+    )
+
+    assert response.orm_framework
+    assert response.no_go_criteria
+    assert response.residual_risk_decisions
+    assert response.stop_training_triggers
+
+
+def test_sel_execution_planner_returns_accountability_and_standards_outputs() -> None:
+    service = SelExecutionPlanner()
+    response = service.build(
+        SelExecutionRequest(
+            title="Company formal event",
+            supported_event="change of command rehearsal",
+            accountability_risks=["Sequence confusion"],
+            formal_event=True,
+        )
+    )
+
+    assert response.troop_flow_plan
+    assert response.accountability_scheme
+    assert response.leader_touchpoints
+    assert response.standards_checks
+    assert response.marine_welfare_checks
+
+
 def test_g9_planner_returns_partner_and_continuity_elements() -> None:
     client = TestClient(app)
 
@@ -335,6 +512,65 @@ def test_g9_planner_returns_partner_and_continuity_elements() -> None:
     assert payload["civil_situation_frame"]
     assert payload["partner_coordination"]
     assert payload["continuity_and_transition"]
+
+
+def test_staff_routes_return_xo_s1_safety_and_sel_outputs() -> None:
+    client = TestClient(app)
+
+    xo_response = client.post(
+        "/staff/xo-sync",
+        json={
+            "title": "Battalion sync",
+            "supported_event": "drill weekend",
+            "command_focus": "Resolve the first real friction point and assign owners.",
+        },
+    )
+    assert xo_response.status_code == 200
+    assert xo_response.json()["synchronization_matrix"]
+
+    command_cell_response = client.post(
+        "/staff/command-cell",
+        json={
+            "title": "Command cell prep",
+            "supported_event": "drill weekend",
+            "command_focus": "Keep the commander's picture current and assign owners.",
+        },
+    )
+    assert command_cell_response.status_code == 200
+    assert command_cell_response.json()["chief_focus_board"]
+
+    s1_response = client.post(
+        "/staff/s1-readiness",
+        json={
+            "title": "S-1 prep",
+            "supported_event": "drill weekend",
+            "admin_priorities": ["Roster scrub"],
+        },
+    )
+    assert s1_response.status_code == 200
+    assert s1_response.json()["routing_matrix"]
+
+    safety_response = client.post(
+        "/staff/safety-plan",
+        json={
+            "title": "Safety prep",
+            "supported_event": "field exercise",
+            "hazards": ["Heat injury"],
+        },
+    )
+    assert safety_response.status_code == 200
+    assert safety_response.json()["no_go_criteria"]
+
+    sel_response = client.post(
+        "/staff/sel-execution",
+        json={
+            "title": "SEL prep",
+            "supported_event": "drill weekend",
+            "accountability_risks": ["Late accountability"],
+        },
+    )
+    assert sel_response.status_code == 200
+    assert sel_response.json()["leader_touchpoints"]
 
 
 def test_medical_planner_returns_tccc_and_casevac_elements() -> None:
@@ -357,6 +593,8 @@ def test_medical_planner_returns_tccc_and_casevac_elements() -> None:
     assert payload["tccc_considerations"]
     assert payload["nine_line_considerations"]
     assert payload["casevac_plan_elements"]
+    assert payload["medical_decision_points"]
+    assert payload["medical_rehearsal_checks"]
 
 
 def test_staff_council_normalizes_doc_alias() -> None:

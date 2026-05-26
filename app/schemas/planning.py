@@ -1,12 +1,17 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.staff import (
+    CommandCellResponse,
     G9PlanningResponse,
     MedicalPlanningResponse,
+    S1ReadinessResponse,
     S2EstimateResponse,
     S6PlanResponse,
+    SafetyPlanningResponse,
+    SelExecutionResponse,
     StaffCouncilResponse,
     StaffEchelon,
+    XoSyncResponse,
 )
 from app.schemas.staff_products import StaffProductDraftResponse, StaffProductType
 from app.schemas.tdg import TdgGenerationResponse
@@ -76,6 +81,11 @@ class StaffPlanningPackageResponse(BaseModel):
     s3_plan: S3PlanningResponse
     s4_plan: S4PlanningResponse
     s6_plan: S6PlanResponse
+    xo_sync: XoSyncResponse
+    command_cell: CommandCellResponse
+    s1_readiness: S1ReadinessResponse
+    safety_plan: SafetyPlanningResponse
+    sel_plan: SelExecutionResponse
     medical_plan: MedicalPlanningResponse
     g9_plan: G9PlanningResponse | None = None
     battalion_staff_review: StaffCouncilResponse

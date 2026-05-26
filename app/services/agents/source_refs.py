@@ -559,6 +559,136 @@ INSTALLATION_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+PAO_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCDP 8 Information",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3077947/mcdp-8/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Capstone doctrine for the information warfighting function and the broader role of information in "
+            "Marine planning, public posture, and influence."
+        ),
+    ),
+    SourceRef(
+        title="USMC Communication Strategy",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3389350/usmc-communication-strategy/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Service-level communication priorities and enduring guidance for themes, messages, public engagement, "
+            "and support to commanders."
+        ),
+    ),
+    SourceRef(
+        title="Communication Directorate",
+        url="https://www.cd.marines.mil/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Official Marine Corps communication and COMMSTRAT hub describing the mission, posture, and public "
+            "information responsibilities of the force."
+        ),
+    ),
+)
+
+FORCE_PROTECTION_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCO 5530.14A Marine Corps Physical Security Program Manual",
+        url="https://www.marines.mil/Portals/1/Publications/MCO%205530_14A.pdf",
+        publisher="United States Marine Corps",
+        notes=(
+            "Primary Marine Corps physical-security and access-control baseline for protecting personnel, "
+            "facilities, and installation entry points."
+        ),
+    ),
+    SourceRef(
+        title="Release of Marine Corps Order 5530.13 Marine Corps Site Perimeter Access Control",
+        url="https://www.marines.mil/News/Messages/Messages-Display/Article/2622028/release-of-marine-corps-order-553013-marine-corps-site-perimeter-access-control/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Official message announcing site perimeter access-control policy and its relationship to the physical "
+            "security program."
+        ),
+    ),
+    SourceRef(
+        title="HQMC Physical Security",
+        url="https://www.ar.marines.mil/Branches/ARS-Security-Programs-and-Information-Management/Physical-Security/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Official public page describing HQMC physical-security responsibilities, access-control requirements, "
+            "and force-protection support functions."
+        ),
+    ),
+    *INSTALLATION_REFERENCES,
+)
+
+G8_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCO 7300.21B",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900441/mco-730021b/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Primary Marine Corps financial-management order for effective and efficient financial principles, "
+            "operations, controls, and stewardship."
+        ),
+    ),
+    SourceRef(
+        title="MARFORRES G-8 Comptroller Resources",
+        url="https://www.marforres.marines.mil/Staff-Sections/General-Staff/G-8-Comptroller/Resources/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Reserve-focused G-8 mission framing for financial resource management, internal control, audit support, "
+            "and decision support for limited resources."
+        ),
+    ),
+    SourceRef(
+        title="Marine Corps Logistics Command G-8 Comptroller",
+        url="https://www.logcom.marines.mil/Staff-Offices/G-8-Comptroller/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Useful public framing for PPBE, appropriated-fund budgeting, execution oversight, and fiscal "
+            "stewardship in support of the force."
+        ),
+    ),
+)
+
+IG_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="Inspector General of the Marine Corps",
+        url="https://www.igmc.marines.mil/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Official IGMC mission and public entry point for objective, independent assistance, assessments, "
+            "inspections, and investigations."
+        ),
+    ),
+    SourceRef(
+        title="MCO 5430.1A W/ADMIN CH-2",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/4062347/mco-54301a-wadmin-ch-2/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Primary Marine Corps Inspector General Program order defining scope, authorities, independence, and "
+            "command relationships."
+        ),
+    ),
+    SourceRef(
+        title="MCO 5370.8A W/ADMIN CH-1",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1924487/mco-53708a/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Marine Corps Hotline Program order useful for complaint-routing boundaries, fraud/waste/abuse logic, "
+            "and IG channel discipline."
+        ),
+    ),
+    SourceRef(
+        title="IGMC Functional Area Checklists",
+        url="https://www.igmc.marines.mil/Divisions/Inspections-Division/Checklists/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Current inspection checklists and update rhythm for readiness, compliance, and functional-area "
+            "inspection preparation."
+        ),
+    ),
+)
+
 TRAINING_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCO 1553.3C Unit Training Management",

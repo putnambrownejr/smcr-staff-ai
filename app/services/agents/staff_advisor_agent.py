@@ -5,10 +5,14 @@ from app.schemas.staff import MagtfLens, StaffEchelon, StaffRoleMetadata
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.source_refs import (
+    FORCE_PROTECTION_REFERENCES,
+    G8_REFERENCES,
     G9_REFERENCES,
+    IG_REFERENCES,
     LEGAL_REFERENCES,
     MEDICAL_REFERENCES,
     ORM_REFERENCES,
+    PAO_REFERENCES,
     S1_REFERENCES,
     S2_REFERENCES,
     S3_REFERENCES,
@@ -45,6 +49,8 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "tactical/company",
         "Company execution and coordination",
         ("feasibility", "task ownership", "timeline"),
+        (MagtfLens.ce_c2,),
+        ("XO sync matrix", "decision support matrix", "due-out tracker"),
     ),
     StaffRoleDefinition(
         StaffEchelon.company,
@@ -53,6 +59,8 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "tactical/company",
         "Discipline, accountability, welfare, admin reality",
         ("Marine impact", "accountability", "admin friction"),
+        (MagtfLens.ce_c2,),
+        ("troop flow plan", "accountability scheme", "leader touchpoint checklist"),
     ),
     StaffRoleDefinition(
         StaffEchelon.company,
@@ -89,6 +97,28 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "battalion staff",
         "Staff synchronization and commander decision support",
         ("staff integration", "risk", "decision points"),
+        (MagtfLens.ce_c2,),
+        ("XO sync matrix", "decision support matrix", "due-out tracker"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.battalion,
+        "chief",
+        "Battalion Chief / Chief of Staff Aide",
+        "battalion staff",
+        "Command-group continuity, due-out discipline, and turnover quality",
+        ("continuity", "due-outs", "brief posture"),
+        (MagtfLens.ce_c2,),
+        ("due-out tracker", "command update brief", "turnover handoff notes"),
+    ),
+    StaffRoleDefinition(
+        StaffEchelon.battalion,
+        "battle_captain",
+        "Battalion Battle Captain",
+        "battalion staff",
+        "Watchfloor control, command-post picture, and escalation discipline",
+        ("watchstanding", "status picture", "escalation"),
+        (MagtfLens.ce_c2,),
+        ("decision support matrix", "battle captain watchboard", "command update brief"),
     ),
     StaffRoleDefinition(
         StaffEchelon.battalion,
@@ -105,6 +135,8 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "battalion command team",
         "Senior enlisted perspective",
         ("standards", "welfare", "discipline"),
+        (MagtfLens.ce_c2,),
+        ("troop flow plan", "accountability scheme", "leader touchpoint checklist"),
     ),
     StaffRoleDefinition(
         StaffEchelon.battalion,
@@ -113,6 +145,13 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "battalion staff",
         "Administration and manpower",
         ("rosters", "orders", "FitReps", "awards"),
+        (MagtfLens.ce_c2,),
+        (
+            "admin estimate",
+            "admin task tracker",
+            "routing matrix",
+            "pre-drill admin readiness check",
+        ),
     ),
     StaffRoleDefinition(
         StaffEchelon.battalion,
@@ -183,7 +222,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Public affairs posture, release authority, media handling, and OPSEC coordination",
         ("public posture", "release authority", "OPSEC coordination"),
         (MagtfLens.ce_c2,),
-        ("Public affairs plan", "release approval matrix", "media query holding statement"),
+        ("Public affairs plan", "release approval matrix", "media and visitor playbook", "response-to-query lines"),
     ),
     StaffRoleDefinition(
         StaffEchelon.battalion,
@@ -223,7 +262,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Force protection, access control, traffic control, detainee/security planning",
         ("force protection", "access control", "security coordination"),
         (MagtfLens.ce_c2, MagtfLens.lce),
-        ("Security annex", "access-control plan", "traffic and movement-control checklist"),
+        ("Security annex", "access-control plan", "traffic and parking control plan", "visitor control checklist"),
     ),
     StaffRoleDefinition(
         StaffEchelon.regiment_meu_wing,
@@ -303,7 +342,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Public affairs, media posture, release authority, imagery, and OPSEC coordination",
         ("media posture", "release authority", "OPSEC coordination"),
         (MagtfLens.ce_c2,),
-        ("Public affairs plan", "media engagement plan", "release approval matrix"),
+        ("Public affairs plan", "media engagement plan", "release approval matrix", "response-to-query lines"),
     ),
     StaffRoleDefinition(
         StaffEchelon.regiment_meu_wing,
@@ -313,7 +352,12 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Communication strategy, public impact, narrative coherence, and information effects coordination",
         ("public impact", "narrative coherence", "information effects"),
         (MagtfLens.ce_c2,),
-        ("COMMSTRAT estimate", "themes and messages", "information effects coordination matrix"),
+        (
+            "COMMSTRAT estimate",
+            "themes and messages",
+            "response-to-query lines",
+            "information effects coordination matrix",
+        ),
     ),
     StaffRoleDefinition(
         StaffEchelon.regiment_meu_wing,
@@ -353,7 +397,12 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Security, force protection, law enforcement, traffic control, and detainee planning",
         ("force protection", "security", "traffic control"),
         (MagtfLens.ce_c2, MagtfLens.lce),
-        ("Security annex", "force-protection checklist", "detainee/security issue spotter"),
+        (
+            "Security annex",
+            "force-protection checklist",
+            "traffic and parking control plan",
+            "visitor control checklist",
+        ),
     ),
     StaffRoleDefinition(
         StaffEchelon.regiment_meu_wing,
@@ -440,7 +489,12 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Information, COMMSTRAT, public impact, and information-environment integration",
         ("information", "COMMSTRAT", "public impact"),
         (MagtfLens.ce_c2,),
-        ("Information estimate", "COMMSTRAT guidance", "information effects coordination matrix"),
+        (
+            "Information estimate",
+            "COMMSTRAT guidance",
+            "themes and messages",
+            "information effects coordination matrix",
+        ),
     ),
     StaffRoleDefinition(
         StaffEchelon.division_group,
@@ -450,7 +504,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Resources, fiscal constraints, prioritization, and funding-risk tradeoffs",
         ("resources", "prioritization", "funding risk"),
         (MagtfLens.ce_c2,),
-        ("resource estimate", "funding risk note", "priority tradeoff brief"),
+        ("resource estimate", "funding risk note", "priority tradeoff brief", "resourcing decision point"),
     ),
     StaffRoleDefinition(
         StaffEchelon.division_group,
@@ -490,7 +544,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Public affairs posture, release authority, media operations, imagery, and OPSEC coordination",
         ("public affairs", "media operations", "OPSEC coordination"),
         (MagtfLens.ce_c2,),
-        ("public affairs plan", "media operations plan", "release approval matrix"),
+        ("public affairs plan", "media operations plan", "release approval matrix", "response-to-query lines"),
     ),
     StaffRoleDefinition(
         StaffEchelon.division_group,
@@ -500,7 +554,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Inspection readiness, inquiries, impartiality, and readiness trends",
         ("inspection readiness", "inquiry boundaries", "readiness trends"),
         (MagtfLens.ce_c2,),
-        ("inspection plan", "IG inquiry boundary note", "trend report"),
+        ("inspection readiness plan", "IG inquiry boundary note", "readiness trend memo"),
     ),
     StaffRoleDefinition(
         StaffEchelon.division_group,
@@ -520,7 +574,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Communication strategy, public impact, narrative coherence, and information integration",
         ("communication strategy", "public impact", "information integration"),
         (MagtfLens.ce_c2,),
-        ("COMMSTRAT estimate", "themes and messages", "information coordination matrix"),
+        ("COMMSTRAT estimate", "themes and messages", "response-to-query lines", "information coordination matrix"),
     ),
     StaffRoleDefinition(
         StaffEchelon.division_group,
@@ -570,7 +624,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Resources, fiscal constraints, prioritization, and funding-risk tradeoffs",
         ("resources", "prioritization", "funding risk"),
         (MagtfLens.ce_c2,),
-        ("resource estimate", "funding risk note", "priority tradeoff brief"),
+        ("resource estimate", "funding risk note", "priority tradeoff brief", "resourcing decision point"),
     ),
     StaffRoleDefinition(
         StaffEchelon.mef,
@@ -630,7 +684,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Programs, resources, fiscal feasibility, and budget tradeoffs",
         ("programs", "resources", "budget tradeoffs"),
         (MagtfLens.ce_c2,),
-        ("program/resource implication", "budget tradeoff note", "resourcing decision point"),
+        ("resource estimate", "budget tradeoff note", "resourcing decision point"),
     ),
     StaffRoleDefinition(
         StaffEchelon.hqmc,
@@ -796,6 +850,55 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             f"{osint_note}"
         )
 
+    if definition.role == "chief":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- My job is continuity and pressure, not theater.\n"
+            "- If the due-out tracker lies, the whole command picture lies a little behind it.\n"
+            "- Every suspense needs an owner, every late item needs a disposition, and every turnover "
+            "needs the truth.\n"
+            "- If the brief posture and the actual staff posture differ, fix the staff posture first.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What is actually late right now?\n"
+            "- What has drifted because nobody wanted to reassign it clearly?\n"
+            "- What must the next commander or XO touchpoint understand in one minute?\n"
+            "- What is still being carried verbally instead of on a tracker or turnover note?\n"
+            "- Which staff lane needs pressure, not another polite reminder?\n\n"
+            "Recommended next action:\n"
+            "- Clean the due-out tracker, strip it to real suspense items, and mark every line owner and status.\n"
+            "- Rewrite the turnover note so the relieving watch inherits one true picture, not three versions of it."
+            f"{active_context_note}"
+            f"{osint_note}"
+        )
+
+    if definition.role == "battle_captain":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- The watchboard is the fight. If it is stale, the command cell is stale.\n"
+            "- I do not need every detail; I need what changed, what matters, and what escalates next.\n"
+            "- If a trigger is not written down, the command post will discover it late and call that surprise.\n"
+            "- Turnover quality is operational quality in smaller clothing.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What changed since the last huddle?\n"
+            "- What is the next decision trigger and who gets called when it trips?\n"
+            "- What watch item is being mistaken for a solved problem?\n"
+            "- What will the relieving watch misunderstand first if we hand this over right now?\n"
+            "- What belongs on the command update brief and what belongs off to the side?\n\n"
+            "Recommended next action:\n"
+            "- Build a watchboard with current status, next suspense, next decision, and next escalation trigger.\n"
+            "- Force turnover notes to capture what changed, what was elevated, and what the next watch must verify."
+            f"{active_context_note}"
+            f"{osint_note}"
+        )
+
     if definition.role in {"opso", "s3"}:
         return (
             f"{definition.title} staff-vetting perspective.\n\n"
@@ -883,8 +986,10 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "- What will be forgotten between drills if it is not written down today?\n"
             "- What travel-admin issue will hijack the next planning cycle if ignored?\n\n"
             "Recommended next action:\n"
-            "- Publish one suspense list with owner, due date, source reference, and command touchpoint.\n"
-            "- Separate travel, orders, roster, FitRep, readiness, and awards lanes before they contaminate each other."
+            "- Publish one admin task tracker with owner, due date, source reference, and command touchpoint.\n"
+            "- Separate travel, orders, roster, FitRep, readiness, and awards lanes "
+            "before they contaminate each other.\n"
+            "- Run a pre-drill admin readiness check before dismissal so the next cycle does not start cold."
             f"{active_context_note}"
             f"{osint_note}"
         )
@@ -1050,8 +1155,8 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "- What message should the exercise reinforce, and what accidental message might it send?\n"
             "- How does PAO/COMMSTRAT coordinate with S-2, S-3, S-6, SJA, and G-9 before release?\n\n"
             "Recommended next action:\n"
-            "- Build a public affairs/COMMSTRAT matrix covering release authority, OPSEC review, media posture, "
-            "imagery handling, themes, and response-to-query lines."
+            "- Build a public affairs/COMMSTRAT package covering release authority, OPSEC review, imagery handling, "
+            "visitor/media choreography, themes and messages, and response-to-query lines."
             f"{active_context_note}"
             f"{osint_note}"
         )
@@ -1093,8 +1198,8 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "- What installation or local security coordination must happen before movement?\n"
             "- What needs SJA or safety review because it crosses into authority or risk questions?\n\n"
             "Recommended next action:\n"
-            "- Build a security annex with access-control, movement-control, force-protection, emergency action, "
-            "and SJA/safety coordination points."
+            "- Build a security annex with access-control, movement-control, traffic/parking control, visitor "
+            "processing, force-protection, emergency action, and SJA/safety coordination points."
             f"{active_context_note}"
             f"{osint_note}"
         )
@@ -1122,6 +1227,28 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             f"{osint_note}"
         )
 
+    if definition.role == "g8":
+        return (
+            f"{definition.title} staff-vetting perspective.\n\n"
+            f"Scope: {definition.scope}\n\n"
+            "My read:\n"
+            "- G-8 matters when the plan outruns the money, authorities, or execution window.\n"
+            "- The useful output here is not abstract budgeting language; it is a clear tradeoff frame the "
+            "commander or XO can actually use.\n\n"
+            "Primary lenses:\n"
+            f"{focus_lines}\n\n"
+            "Concerns to test:\n"
+            "- What resource assumption is carrying too much of the plan?\n"
+            "- What can be funded, what can be absorbed, and what needs to be cut or deferred?\n"
+            "- What control, audit, or stewardship issue changes the recommendation?\n"
+            "- What resourcing decision belongs to command rather than staying buried in staff churn?\n\n"
+            "Recommended next action:\n"
+            "- Build a resource estimate, priority tradeoff brief, and resourcing decision point with explicit "
+            "owners, limits, and next review window."
+            f"{active_context_note}"
+            f"{osint_note}"
+        )
+
     if definition.role == "ig":
         return (
             f"{definition.title} staff-vetting perspective.\n\n"
@@ -1139,8 +1266,8 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "- What inspection or inquiry boundary must be protected?\n"
             "- What trend should be briefed to the commander without compromising impartiality?\n\n"
             "Recommended next action:\n"
-            "- Build an inspection/inquiry boundary note and readiness trend memo; route actual complaints through "
-            "proper IG channels."
+            "- Build an inspection readiness plan, inquiry boundary note, and readiness trend memo; route actual "
+            "complaints through proper IG channels."
             f"{active_context_note}"
             f"{osint_note}"
         )
@@ -1166,6 +1293,8 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
 def _role_references(role: str) -> tuple[SourceRef, ...]:
     mapping = {
         "xo": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "chief": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "battle_captain": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "opso": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "s3": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "s1": S1_REFERENCES,
@@ -1180,8 +1309,8 @@ def _role_references(role: str) -> tuple[SourceRef, ...]:
         "doc": MEDICAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "surgeon": MEDICAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "g9": G9_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "g7": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "g8": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "g7": PAO_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "g8": G8_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "meu_s3": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "meu_s4": S4_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "blt": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
@@ -1191,13 +1320,13 @@ def _role_references(role: str) -> tuple[SourceRef, ...]:
         "wing_ops": S3_REFERENCES + ORM_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "mlg_log": S4_REFERENCES + MEDICAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "sja": LEGAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "pao": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "commstrat": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "ig": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "pao": PAO_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "commstrat": PAO_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "ig": IG_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "chaplain": STAFF_PROCESS_REFERENCES,
         "rp": STAFF_PROCESS_REFERENCES,
         "safety": ORM_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "provost": STAFF_PROCESS_REFERENCES + LEGAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "provost": FORCE_PROTECTION_REFERENCES + LEGAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "hqmc_mra": S1_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "hqmc_ppo": S3_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "hqmc_pr": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
