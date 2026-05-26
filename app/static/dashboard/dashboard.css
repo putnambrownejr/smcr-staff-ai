@@ -582,7 +582,7 @@ textarea {
 .document-library {
   display: grid;
   gap: 14px;
-  grid-template-columns: minmax(240px, 0.95fr) minmax(0, 1.55fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .document-list {
@@ -619,6 +619,14 @@ textarea {
   word-break: break-word;
   color: var(--text);
   font: 0.88rem/1.5 "Cascadia Code", "Consolas", monospace;
+}
+
+.document-preview-full {
+  min-width: 0;
+}
+
+.compact-panel-stack {
+  margin-top: 12px;
 }
 
 .reading-item {

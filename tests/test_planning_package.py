@@ -60,9 +60,16 @@ def test_staff_planning_package_builds_cross_staff_output() -> None:
     assert payload["s1_readiness"]["admin_task_tracker"]
     assert payload["s1_readiness"]["pre_drill_admin_readiness_check"]
     assert payload["safety_plan"]["no_go_criteria"]
+    assert payload["safety_plan"]["rehearsal_checks"]
     assert payload["sel_plan"]["leader_touchpoints"]
+    assert payload["sel_plan"]["troop_flow_checklist"]
+    assert payload["sel_plan"]["formation_transition_matrix"]
+    assert payload["sel_plan"]["leader_touchpoint_plan"]
     assert payload["medical_plan"]["casevac_plan_elements"]
+    assert payload["medical_plan"]["casevac_medevac_check"]
+    assert payload["medical_plan"]["casualty_collection_logic"]
     assert payload["medical_plan"]["medical_decision_points"]
+    assert payload["medical_plan"]["coordination_trigger_list"]
     assert payload["battalion_staff_review"]["roles_run"]
     assert payload["xo_vet"]["roles_run"] == ["xo"]
     assert payload["product_package"]
@@ -70,15 +77,25 @@ def test_staff_planning_package_builds_cross_staff_output() -> None:
     assert product_types[:3] == ["warno", "frago", "aar"]
     assert "running_estimate" in product_types
     assert "synchronization_matrix" in product_types
+    assert "orm_worksheet" in product_types
+    assert "no_go_criteria" in product_types
+    assert "residual_risk_decision_note" in product_types
+    assert "rehearsal_safety_brief" in product_types
     assert "admin_estimate" in product_types
     assert "admin_task_tracker" in product_types
     assert "routing_matrix" in product_types
     assert "pre_drill_admin_readiness_check" in product_types
+    assert "troop_flow_checklist" in product_types
+    assert "formation_transition_matrix" in product_types
+    assert "leader_touchpoint_plan" in product_types
     assert "decision_support_matrix" in product_types
     assert "due_out_tracker" in product_types
+    assert "road_to_war_brief" in product_types
     assert "collection_matrix" in product_types
     assert "sustainment_matrix" in product_types
+    assert "movement_table" in product_types
     assert "medical_estimate" in product_types
+    assert "casevac_quick_card" in product_types
     assert payload["g9_plan"] is not None
 
 
@@ -105,13 +122,21 @@ def test_staff_planning_package_skips_g9_when_not_relevant() -> None:
     product_types = [item["product_type"] for item in payload["product_package"]]
     assert product_types[:3] == ["warno", "running_estimate", "synchronization_matrix"]
     assert set(product_types[3:]) == {
+        "orm_worksheet",
+        "no_go_criteria",
+        "residual_risk_decision_note",
+        "rehearsal_safety_brief",
         "admin_estimate",
         "admin_task_tracker",
         "routing_matrix",
         "pre_drill_admin_readiness_check",
+        "troop_flow_checklist",
+        "formation_transition_matrix",
+        "leader_touchpoint_plan",
         "decision_support_matrix",
         "due_out_tracker",
         "sustainment_matrix",
+        "movement_table",
     }
 
 
@@ -135,13 +160,45 @@ def test_staff_planning_package_adds_supporting_products_without_overadding_coll
     product_types = [item["product_type"] for item in payload["product_package"]]
     assert product_types[:3] == ["warno", "running_estimate", "synchronization_matrix"]
     assert set(product_types[3:]) == {
+        "orm_worksheet",
+        "no_go_criteria",
+        "residual_risk_decision_note",
+        "rehearsal_safety_brief",
         "admin_estimate",
         "admin_task_tracker",
         "routing_matrix",
         "pre_drill_admin_readiness_check",
+        "troop_flow_checklist",
+        "formation_transition_matrix",
+        "leader_touchpoint_plan",
         "decision_support_matrix",
         "due_out_tracker",
     }
+
+
+def test_staff_planning_package_adds_road_to_war_brief_for_scenario_driven_request_without_s2_sources() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/planning/staff-package",
+        json={
+            "title": "Littoral crisis rehearsal package",
+            "event_type": "scenario_rehearsal",
+            "mission_or_training_goal": (
+                "Level-set a regional crisis scenario before mission analysis and staff estimates."
+            ),
+            "partner_types": ["Partner force"],
+            "civil_considerations": ["Population displacement concerns"],
+            "product_types": ["warno"],
+            "training_only": True,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    product_types = [item["product_type"] for item in payload["product_package"]]
+    assert "road_to_war_brief" in product_types
+    assert "collection_matrix" not in product_types
 
 
 def test_frago_to_conop_builds_unit_relationship_framework() -> None:

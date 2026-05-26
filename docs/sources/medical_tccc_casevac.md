@@ -41,7 +41,11 @@ This lane should emphasize:
 
 - stop-training criteria
 - casualty movement ownership
+- CASEVAC / MEDEVAC check discipline
+- casualty collection logic
+- coordination triggers for command, S-4, S-6, safety, and qualified medical review
 - broad 9-line familiarity
+- TCCC knowledge refresh for leaders and support personnel
 - CASEVAC structure
 - qualified medical review before execution
 

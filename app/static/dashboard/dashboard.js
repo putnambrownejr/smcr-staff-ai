@@ -239,6 +239,7 @@ document.getElementById("toggle-timezone-panel").addEventListener("click", toggl
 document.getElementById("save-planning-cell-board").addEventListener("click", savePlanningCellToBattleRhythm);
 document.getElementById("run-lone-planner").addEventListener("click", runLonePlannerMode);
 document.getElementById("run-section-gap-cover").addEventListener("click", runSectionGapCover);
+document.getElementById("run-staff-package").addEventListener("click", runStaffPlanningPackage);
 document.getElementById("reading-book-select").addEventListener("change", (event) => {
   state.selectedReadingSlug = event.target.value || "";
   renderReadingBooks(state.workspace?.reading_books || []);
@@ -264,6 +265,10 @@ document.getElementById("history-library-month").addEventListener("change", (eve
 });
 document.getElementById("history-library-day").addEventListener("change", (event) => {
   state.selectedHistoryDay = event.target.value || "";
+});
+document.getElementById("document-select")?.addEventListener("change", (event) => {
+  state.selectedDocumentId = event.target.value || null;
+  renderDocumentLibrary(state.workspace?.document_details || []);
 });
 document.getElementById("quick-open-watch").addEventListener("click", () => openLane("watch", "Opened the watch lane."));
 document
@@ -294,6 +299,9 @@ document
 document
   .getElementById("workflow-open-planning-cell")
   .addEventListener("click", () => launchThinStaffWorkflow("planning-cell"));
+document
+  .getElementById("workflow-run-staff-package")
+  .addEventListener("click", runStaffPlanningPackage);
 document
   .getElementById("workflow-open-brief-clinic")
   .addEventListener("click", () => launchWalkInWorkflow("brief-clinic"));
@@ -776,12 +784,21 @@ function renderDocumentsWatch(payload) {
 
 function renderDocumentLibrary(items) {
   const target = document.getElementById("document-library");
+  const summary = document.getElementById("document-library-summary");
+  const selector = document.getElementById("document-select");
   const typeSelect = document.getElementById("document-type-select");
   const typeButton = document.getElementById("save-document-type");
   const suggestionButton = document.getElementById("apply-document-suggestion");
   const suggestionNote = document.getElementById("document-type-suggestion");
   if (!items.length) {
     target.className = "document-library empty-state";
+    if (summary) {
+      summary.textContent = "No local file previews loaded yet.";
+    }
+    if (selector) {
+      selector.innerHTML = '<option value="">No local files loaded yet.</option>';
+      selector.disabled = true;
+    }
     if (typeSelect) {
       typeSelect.value = "reference_note";
       typeSelect.disabled = true;
@@ -805,6 +822,18 @@ function renderDocumentLibrary(items) {
     state.selectedDocumentId = items[0].context_id;
   }
   const selected = items.find((item) => item.context_id === state.selectedDocumentId) || items[0];
+  if (summary) {
+    summary.textContent = `${items.length} local file(s) loaded. Showing ${selected.filename}.`;
+  }
+  if (selector) {
+    selector.disabled = false;
+    selector.innerHTML = items
+      .map(
+        (item) =>
+          `<option value="${escapeHtml(item.context_id)}" ${item.context_id === state.selectedDocumentId ? "selected" : ""}>${escapeHtml(item.filename)}</option>`,
+      )
+      .join("");
+  }
   if (typeSelect) {
     typeSelect.disabled = false;
     typeSelect.value = DOCUMENT_TYPE_OPTIONS.includes(selected.document_type) ? selected.document_type : "other";
@@ -824,23 +853,7 @@ function renderDocumentLibrary(items) {
   }
   target.className = "document-library";
   target.innerHTML = `
-    <div class="document-list">
-      ${items
-        .map(
-          (item) => `
-            <button
-              type="button"
-              class="document-row ${item.context_id === state.selectedDocumentId ? "active" : ""}"
-              data-document-id="${escapeHtml(item.context_id)}"
-            >
-              <span class="document-row-title">${escapeHtml(item.filename)}</span>
-              <span class="document-row-meta">${escapeHtml(item.document_type)}${item.contains_pii ? " | PII" : ""}</span>
-            </button>
-          `,
-        )
-        .join("")}
-    </div>
-    <div class="document-preview">
+    <div class="document-preview document-preview-full">
       <div class="preview-meta">
         <span class="strip-label">${escapeHtml(selected.document_type)}</span>
         <h3>${escapeHtml(selected.filename)}</h3>
@@ -1110,24 +1123,22 @@ function renderHistory(items) {
   const target = document.getElementById("history-feed");
   if (!items.length) {
     target.className = "row-stack empty-state";
-    target.textContent = "No history entry is loaded for today.";
+    target.textContent = "No Marine Corps history fact is loaded for today.";
     return;
   }
+  const item = items[0];
+  const significance = (item.significance || []).slice(0, 2);
   target.className = "row-stack";
-  target.innerHTML = items
-    .map(
-      (item) => `
-        <article class="data-row">
-          <div class="data-row-head">
-            <span class="strip-label">${escapeHtml(item.year_label)}</span>
-            <strong>${escapeHtml(item.title)}</strong>
-          </div>
-          <p>${escapeHtml(item.summary)}</p>
-          <ul>${(item.significance || []).map((entry) => `<li>${escapeHtml(entry)}</li>`).join("")}</ul>
-        </article>
-      `,
-    )
-    .join("");
+  target.innerHTML = `
+    <article class="data-row">
+      <div class="data-row-head">
+        <span class="strip-label">${escapeHtml(item.year_label)}</span>
+        <strong>${escapeHtml(item.title)}</strong>
+      </div>
+      <p>${escapeHtml(item.summary)}</p>
+      <ul>${significance.map((entry) => `<li>${escapeHtml(entry)}</li>`).join("")}</ul>
+    </article>
+  `;
 }
 
 function renderHistoryLibrary(items) {
@@ -1149,19 +1160,19 @@ function renderHistoryLibrary(items) {
   populateHistoryDayOptions(daySelect, state.selectedHistoryDay);
 
   if (!state.historyLibrary.length) {
-    summary.textContent = "No history library entries loaded yet.";
+    summary.textContent = "No history facts loaded yet.";
     target.className = "row-stack empty-state";
-    target.textContent = "No history library entries loaded yet.";
+    target.textContent = "No history facts loaded yet.";
     return;
   }
 
   const month = Number(state.selectedHistoryMonth || today.getMonth() + 1);
   const day = Number(state.selectedHistoryDay || today.getDate());
   const filtered = state.historyLibrary.filter((item) => item.month === month && item.day === day);
-  summary.textContent = `${state.historyLibrary.length} history item(s) loaded. Showing ${filtered.length} for ${formatHistoryMonth(month)} ${day}.`;
+  summary.textContent = `${state.historyLibrary.length} history fact(s) loaded. Showing ${filtered.length} for ${formatHistoryMonth(month)} ${day}.`;
   if (!filtered.length) {
     target.className = "row-stack empty-state";
-    target.textContent = "No history entries are stored for that date yet.";
+    target.textContent = "No history facts are stored for that date yet.";
     return;
   }
   target.className = "row-stack";
@@ -1907,6 +1918,60 @@ function renderSectionGapCoverOutput(targetId, payload) {
   `;
 }
 
+function renderStaffPlanningPackageOutput(targetId, payload) {
+  const target = document.getElementById(targetId);
+  const planningApproach = payload.planning_approach || {};
+  const productPackage = payload.product_package || [];
+  const commandCell = payload.command_cell || {};
+  const xoSync = payload.xo_sync || {};
+  const s1Readiness = payload.s1_readiness || {};
+  const safetyPlan = payload.safety_plan || {};
+  const selPlan = payload.sel_plan || {};
+  const medicalPlan = payload.medical_plan || {};
+  target.className = "tool-output";
+  target.innerHTML = `
+    <section>
+      <span class="strip-label">Package posture</span>
+      <h3>${escapeHtml(payload.title || "No staff package title returned.")}</h3>
+      <p class="meta-inline">Approach: ${escapeHtml(planningApproach.recommended_method || "Not stated")}</p>
+      <p class="meta-inline">Decision: ${escapeHtml(planningApproach.decision || "Not stated")}</p>
+      <ul>${(payload.summary || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No package summary returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Commander decisions now</span>
+      <ul>${(payload.commander_decisions_now || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No commander decisions returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Top risks and cuts</span>
+      <p><strong>Top risks:</strong> ${escapeHtml((payload.top_risks || []).join(" | ") || "None returned")}</p>
+      <p><strong>Cuts / deferments:</strong> ${escapeHtml((payload.cuts_and_deferments || []).join(" | ") || "None returned")}</p>
+      <p><strong>Recommended actions:</strong> ${escapeHtml((payload.recommended_actions || []).join(" | ") || "None returned")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Command cell and XO</span>
+      <p><strong>XO sync:</strong> ${escapeHtml((xoSync.command_sync_frame || []).join(" | ") || "None returned")}</p>
+      <p><strong>Decision support:</strong> ${escapeHtml((xoSync.decision_support_matrix || []).join(" | ") || "None returned")}</p>
+      <p><strong>Chief focus:</strong> ${escapeHtml((commandCell.chief_focus_board || []).join(" | ") || "None returned")}</p>
+      <p><strong>Battle captain watch:</strong> ${escapeHtml((commandCell.battle_captain_watchboard || []).join(" | ") || "None returned")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Admin, safety, SEL, and medical</span>
+      <p><strong>S-1 readiness:</strong> ${escapeHtml((s1Readiness.readiness_estimate || []).join(" | ") || "None returned")}</p>
+      <p><strong>Safety plan:</strong> ${escapeHtml((safetyPlan.no_go_criteria || []).join(" | ") || "None returned")}</p>
+      <p><strong>SEL plan:</strong> ${escapeHtml((selPlan.leader_touchpoints || []).join(" | ") || "None returned")}</p>
+      <p><strong>Medical plan:</strong> ${escapeHtml((medicalPlan.medical_decision_points || []).join(" | ") || "None returned")}</p>
+    </section>
+    <section>
+      <span class="strip-label">Linked staff products</span>
+      <ul>${productPackage.map((item) => `<li>${escapeHtml(item.title || item.product_type || "product")}</li>`).join("") || "<li>No staff products returned.</li>"}</ul>
+    </section>
+    <section>
+      <span class="strip-label">Warnings</span>
+      <ul>${(payload.warnings || []).slice(0, 6).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No warnings returned.</li>"}</ul>
+    </section>
+  `;
+}
+
 function renderMissionAnalysisOutput(targetId, payload) {
   const target = document.getElementById(targetId);
   target.className = "tool-output";
@@ -2036,6 +2101,37 @@ async function runSectionGapCover() {
     applyLaneVisibility();
     document.getElementById("section-gap-cover-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
     setWorkspaceNote("Built assisted section estimates from the current planning context.");
+  } catch (error) {
+    setWorkspaceNote(error.message, true);
+  }
+}
+
+async function runStaffPlanningPackage() {
+  try {
+    const planning = buildPlanningCellPayloadFromForm();
+    const payload = {
+      title: planning.title,
+      event_type: planning.event_type,
+      mission_or_training_goal: planning.mission_or_training_goal,
+      audience: planning.supported_unit,
+      timeframe: planning.time_available,
+      constraints: planning.constraints || [],
+      coordinating_sections: planning.coordinating_sections || [],
+      support_requirements: planning.support_requirements || [],
+      civil_considerations: planning.civil_considerations || [],
+      include_g9: (planning.civil_considerations || []).length > 0,
+      product_types: ["warno", "frago", "aar"],
+      training_only: true,
+    };
+    const data = await apiFetch("/planning/staff-package", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    renderStaffPlanningPackageOutput("staff-package-output", data);
+    state.activeLane = "draft";
+    applyLaneVisibility();
+    document.getElementById("staff-package-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setWorkspaceNote("Built the integrated staff package from the current planning context.");
   } catch (error) {
     setWorkspaceNote(error.message, true);
   }

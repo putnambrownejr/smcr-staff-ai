@@ -31,10 +31,35 @@ class SelExecutionPlanner:
             f"Accountability risk to manage: {item}" for item in request.accountability_risks[:4]
         )
 
+        troop_flow_checklist = [
+            "Confirm first formation time, location, uniform, and release criteria before Marines arrive.",
+            "Name who controls muster, movement release, holding areas, and final accountability closeout.",
+            "Verify the troop flow sequence shows where Marines form, move, wait, report, and recover.",
+            "Tie chow, transport, medical, and comm dependencies to the same troop flow "
+            "instead of briefing them separately.",
+        ]
+
+        formation_transition_matrix = [
+            "Opening formation: who forms the unit, verifies standards, and reports readiness upward.",
+            "Movement transition: who releases, who receives, and how accountability is re-established on arrival.",
+            "Execution transition: who controls the shift between phases, safety posture, and reporting rhythm.",
+            "Dismissal transition: who confirms unresolved issues, release authority, and final accountability.",
+        ]
+
         leader_touchpoints = [
             "Before movement or execution: leader confirmation of standards, accountability, and support posture.",
             "At each phase change: confirm headcount, support status, and any Marine issue requiring action.",
             "Before dismissal: confirm unresolved issues, turnover notes, and who owns the next follow-up.",
+        ]
+        leader_touchpoint_plan = [
+            "Pre-event touchpoint: 1stSgt/SgtMaj confirms standards, troop flow, "
+            "and accountability owners with the chain.",
+            "Pre-movement touchpoint: leaders confirm headcount, transport posture, "
+            "and any Marine issue requiring action.",
+            "Mid-event touchpoint: leaders check welfare, discipline, and whether "
+            "the schedule still matches Marine capacity.",
+            "Pre-dismissal touchpoint: leaders resolve stragglers, unresolved "
+            "welfare issues, and next-follow-up ownership.",
         ]
 
         standards_checks = [
@@ -53,8 +78,11 @@ class SelExecutionPlanner:
         return SelExecutionResponse(
             title=f"SEL execution support: {request.title}",
             troop_flow_plan=troop_flow_plan,
+            troop_flow_checklist=troop_flow_checklist,
             accountability_scheme=accountability_scheme,
+            formation_transition_matrix=formation_transition_matrix,
             leader_touchpoints=leader_touchpoints,
+            leader_touchpoint_plan=leader_touchpoint_plan,
             standards_checks=standards_checks,
             marine_welfare_checks=marine_welfare_checks,
             warnings=[

@@ -108,6 +108,54 @@ templates:
     local_only: false
     warnings:
       - "System template only. Keep reporting generic in unapproved environments."
+  - template_id: "sys-air-support-estimate"
+    template_name: "System Air Support Estimate"
+    template_type: "air_support_estimate"
+    description: "An aviation-support estimate for supported effect, deconfliction, risk, and qualified review."
+    tags: ["system", "air_support_estimate", "airo", "ace", "aviation"]
+    audience_hint: "AirO, ACE, S-3, commander, and safety"
+    preferred_format: "estimate"
+    reusable_headings:
+      ["Supported aviation effect and event frame", "Supported scheme, control, and timing", "Airspace, comms, and deconfliction", "Risk, supportability, and fallbacks", "Review, rehearsal, and follow-through"]
+    reusable_guidance:
+      - "Lead with the supported effect, not aviation jargon."
+      - "Keep no-go conditions, deconfliction, and fallback value obvious."
+    example_excerpt: "Supported effect / scheme and timing / deconfliction / risks and fallbacks / review."
+    local_only: false
+    warnings:
+      - "System template only. Requires qualified aviation review before execution."
+  - template_id: "sys-air-ground-coordination-matrix"
+    template_name: "System Air-Ground Coordination Matrix"
+    template_type: "air_ground_coordination_matrix"
+    description: "A matrix for phase-by-phase air-ground coordination, comms, control methods, and deconfliction."
+    tags: ["system", "air_ground_coordination_matrix", "airo", "ace", "aviation"]
+    audience_hint: "AirO, ACE, S-3, S-6, safety, and supported leaders"
+    preferred_format: "matrix"
+    reusable_headings:
+      ["Coordination frame", "Coordination rows", "Comms, control, and deconfliction checks", "Risk and branch conditions", "Rehearsal and closeout"]
+    reusable_guidance:
+      - "Give each row an owner, control method, report, and branch condition."
+      - "Keep comm and deconfliction triggers visible at a glance."
+    example_excerpt: "Coordination frame / rows / comms and control / risk and branches / closeout."
+    local_only: false
+    warnings:
+      - "System template only. Validate actual airspace, range, and control procedures locally."
+  - template_id: "sys-aviation-supportability-matrix"
+    template_name: "System Aviation Supportability Matrix"
+    template_type: "aviation_supportability_matrix"
+    description: "An ACE-style supportability matrix for aviation readiness, support windows, dependencies, and branch logic."
+    tags: ["system", "aviation_supportability_matrix", "ace", "aviation"]
+    audience_hint: "ACE, wing ops, AirO, commander, and planners"
+    preferred_format: "matrix"
+    reusable_headings:
+      ["Supportability frame", "Sortie, platform, and crew assumptions", "Ground integration and support dependencies", "Risk, no-go, and branch logic", "Review and decision support"]
+    reusable_guidance:
+      - "Show what aviation support is plausible, not merely desired."
+      - "Keep readiness, maintenance, and branch logic more visible than enthusiasm."
+    example_excerpt: "Supportability frame / sortie assumptions / dependencies / risk and no-go / decision support."
+    local_only: false
+    warnings:
+      - "System template only. Confirm readiness, maintenance, and supportability through qualified aviation channels."
   - template_id: "sys-running-estimate"
     template_name: "System Running Estimate"
     template_type: "running_estimate"
@@ -124,6 +172,70 @@ templates:
     local_only: false
     warnings:
       - "System template only. Refresh rather than rewrite; keep owners and suspenses visible."
+  - template_id: "sys-orm-worksheet"
+    template_name: "System ORM Worksheet"
+    template_type: "orm_worksheet"
+    description: "An ORM worksheet scaffold for hazards, controls, residual risk, and commander decision points."
+    tags: ["system", "orm_worksheet", "safety", "orm"]
+    audience_hint: "Safety officer, commander, XO, and event leads"
+    preferred_format: "worksheet"
+    reusable_headings:
+      ["Event frame and hazard context", "Hazards and initial assessment", "Controls and owners", "Residual risk and decision points", "Rehearsal and verification"]
+    reusable_guidance:
+      - "Treat ORM as a commander decision tool, not a signature sheet."
+      - "Make hazards, controls, owners, and residual risk visible at a glance."
+    example_excerpt: "Event frame / hazards / controls / residual risk / rehearsal and verification."
+    local_only: false
+    warnings:
+      - "System template only. Confirm local ORM requirements, commander authority, and site conditions."
+  - template_id: "sys-no-go-criteria"
+    template_name: "System No-Go Criteria"
+    template_type: "no_go_criteria"
+    description: "A no-go criteria scaffold for stop conditions, authority, escalation, and restart thresholds."
+    tags: ["system", "no_go_criteria", "safety", "orm"]
+    audience_hint: "Commander, XO, safety officer, OIC, and key leaders"
+    preferred_format: "criteria"
+    reusable_headings:
+      ["Command no-go frame", "Universal stop conditions", "Event-specific no-go conditions", "Decision authority and escalation", "Revalidation and restart conditions"]
+    reusable_guidance:
+      - "Make stop, pause, modify, and resume authority explicit."
+      - "Write restart conditions so the staff does not improvise them under pressure."
+    example_excerpt: "No-go frame / universal stops / event-specific stops / authority / restart."
+    local_only: false
+    warnings:
+      - "System template only. Validate site-specific and event-specific thresholds locally."
+  - template_id: "sys-residual-risk-decision-note"
+    template_name: "System Residual-Risk Decision Note"
+    template_type: "residual_risk_decision_note"
+    description: "A short note for residual-risk acceptance, tradeoffs, and command authority."
+    tags: ["system", "residual_risk_decision_note", "safety", "orm"]
+    audience_hint: "Commander, XO, safety officer, and primary staff"
+    preferred_format: "decision_note"
+    reusable_headings:
+      ["Decision problem", "Residual risk summary", "Options, limits, and tradeoffs", "Recommendation and authority", "Follow-through"]
+    reusable_guidance:
+      - "State the residual-risk decision in one line before adding context."
+      - "Show what remains risky after controls and who must accept it."
+    example_excerpt: "Decision problem / residual risk / options / recommendation / follow-through."
+    local_only: false
+    warnings:
+      - "System template only. Tie acceptance authority to actual command policy and event conditions."
+  - template_id: "sys-rehearsal-safety-brief"
+    template_name: "System Rehearsal Safety Brief"
+    template_type: "rehearsal_safety_brief"
+    description: "A rehearsal safety brief for hazards, controls, emergency actions, and verification checks."
+    tags: ["system", "rehearsal_safety_brief", "safety", "orm"]
+    audience_hint: "Safety officer, OIC, leaders, controllers, and participants"
+    preferred_format: "brief"
+    reusable_headings:
+      ["Event and safety frame", "Hazards, controls, and watch items", "Emergency and stop-training actions", "Rehearsal checks and verification", "Command notes and revalidation"]
+    reusable_guidance:
+      - "Keep emergency actions, stop-training calls, and verification checks more visible than background detail."
+      - "Tie the brief directly to no-go criteria and residual-risk decisions."
+    example_excerpt: "Safety frame / hazards and controls / emergency actions / rehearsal checks / command notes."
+    local_only: false
+    warnings:
+      - "System template only. Confirm local emergency procedures and stop-training authorities."
   - template_id: "sys-admin-estimate"
     template_name: "System Admin Estimate"
     template_type: "admin_estimate"
@@ -188,6 +300,54 @@ templates:
     local_only: false
     warnings:
       - "System template only. Tie every failed check to an owner and immediate follow-up action."
+  - template_id: "sys-troop-flow-checklist"
+    template_name: "System Troop-Flow Checklist"
+    template_type: "troop_flow_checklist"
+    description: "A SEL-facing troop-flow checklist for accountability, movement control, holding points, and release discipline."
+    tags: ["system", "troop_flow_checklist", "sel", "firstsgt", "sgtmaj"]
+    audience_hint: "SEL, 1stSgt, SgtMaj, XO, and platoon leadership"
+    preferred_format: "checklist"
+    reusable_headings:
+      ["Event frame and Marine flow", "Formation and muster checks", "Movement, holding, and release checks", "Standards, welfare, and intervention points", "Final accountability and follow-through"]
+    reusable_guidance:
+      - "Make the first formation, main movement, and release logic readable in seconds."
+      - "Keep accountability ownership explicit at every phase instead of relying on habit."
+    example_excerpt: "Event frame / muster checks / movement and release / standards and welfare / final accountability."
+    local_only: false
+    warnings:
+      - "System template only. Validate actual unit sequence, locations, and release criteria locally."
+  - template_id: "sys-formation-transition-matrix"
+    template_name: "System Formation / Transition Matrix"
+    template_type: "formation_transition_matrix"
+    description: "A SEL control matrix for formations, phase changes, handoffs, and transition discipline."
+    tags: ["system", "formation_transition_matrix", "sel", "standards"]
+    audience_hint: "SEL, 1stSgt, SgtMaj, XO, and event leaders"
+    preferred_format: "matrix"
+    reusable_headings:
+      ["Transition frame", "Formation control rows", "Movement and handoff rows", "Standards and Marine-impact checks", "Release and reset"]
+    reusable_guidance:
+      - "Give each formation and transition an owner, trigger, standard, and required report."
+      - "Keep handoff and fallback logic visible enough to use under time pressure."
+    example_excerpt: "Transition frame / formation rows / handoff rows / standards checks / release and reset."
+    local_only: false
+    warnings:
+      - "System template only. Reconcile the matrix with local SOP, protocol, and event control measures."
+  - template_id: "sys-leader-touchpoint-plan"
+    template_name: "System Leader Touchpoint Plan"
+    template_type: "leader_touchpoint_plan"
+    description: "A SEL leader-touchpoint plan for pre-execution checks, phase-change interventions, welfare, and release follow-through."
+    tags: ["system", "leader_touchpoint_plan", "sel", "leadership"]
+    audience_hint: "SEL, 1stSgt, SgtMaj, platoon sergeants, and command teams"
+    preferred_format: "checklist"
+    reusable_headings:
+      ["Leader touchpoint frame", "Pre-execution touchpoints", "Phase-change touchpoints", "Welfare, discipline, and capacity checks", "Release, turnover, and next follow-through"]
+    reusable_guidance:
+      - "Tie each touchpoint to a real leader action, not a generic reminder to check in."
+      - "Keep welfare, standards, and reserve-capacity checks explicit enough to preserve across drills."
+    example_excerpt: "Touchpoint frame / pre-execution / phase changes / welfare and discipline / release and follow-through."
+    local_only: false
+    warnings:
+      - "System template only. Tailor leader actions and escalation paths to the actual chain of command."
   - template_id: "sys-synchronization-matrix"
     template_name: "System Synchronization Matrix"
     template_type: "synchronization_matrix"
@@ -268,6 +428,22 @@ templates:
     local_only: false
     warnings:
       - "System template only. Validate support availability and lead times locally."
+  - template_id: "sys-movement-table"
+    template_name: "System Movement Table"
+    template_type: "movement_table"
+    description: "A movement table for sequence, transport method, accountability, fallback actions, and recovery."
+    tags: ["system", "movement_table", "s4", "logistics"]
+    audience_hint: "S-4/G-4/LCE, XO, and supported leaders"
+    preferred_format: "matrix"
+    reusable_headings:
+      ["Movement frame", "Movement rows", "Support and coordination dependencies", "Friction, fallbacks, and reporting", "Recovery and reset"]
+    reusable_guidance:
+      - "Give every move an element, origin, destination, time, transport method, and owner."
+      - "Make accountability confirmation and fallback movement logic visible at a glance."
+    example_excerpt: "Movement frame / movement rows / dependencies / friction and reporting / recovery."
+    local_only: false
+    warnings:
+      - "System template only. Validate routes, drivers, transport availability, and reporting procedures locally."
   - template_id: "sys-medical-estimate"
     template_name: "System Medical Estimate"
     template_type: "medical_estimate"
@@ -284,6 +460,86 @@ templates:
     local_only: false
     warnings:
       - "System template only. Requires qualified medical and command review before execution."
+  - template_id: "sys-casevac-quick-card"
+    template_name: "System CASEVAC Quick Card"
+    template_type: "casevac_quick_card"
+    description: "A training-safe CASEVAC quick card for first-call flow, casualty movement, accountability, and command triggers."
+    tags: ["system", "casevac_quick_card", "medical", "casevac"]
+    audience_hint: "Doc, surgeon, OIC/RSO, XO, and leaders who must react quickly"
+    preferred_format: "card"
+    reusable_headings:
+      ["Event and casualty frame", "Immediate actions", "CASEVAC / MEDEVAC call and movement", "Accountability and command triggers", "Rehearsal and use notes"]
+    reusable_guidance:
+      - "Keep first call, movement path, accountability owner, and stop-training trigger briefable in seconds."
+      - "Treat the quick card as a training-safe aid, not as clinical direction or a substitute for local emergency SOP."
+    example_excerpt: "Event frame / immediate actions / call and movement / command triggers / rehearsal notes."
+    local_only: false
+    warnings:
+      - "System template only. Confirm local emergency procedures and qualified medical review before execution."
+  - template_id: "sys-religious-support-plan"
+    template_name: "System Religious Support Plan"
+    template_type: "religious_support_plan"
+    description: "A chaplain support plan for access, referral boundaries, morale touchpoints, and event support continuity."
+    tags: ["system", "religious_support_plan", "chaplain", "rp", "morale"]
+    audience_hint: "Chaplain, RP, commander, XO, and support staff"
+    preferred_format: "plan"
+    reusable_headings:
+      ["Religious support frame", "Support access and coverage", "Confidentiality, referral, and boundaries", "Command, ceremony, and casualty-adjacent touchpoints", "Follow-through and continuity"]
+    reusable_guidance:
+      - "Keep support access, referral boundaries, and confidentiality explicit."
+      - "Treat the plan as support coordination, not counseling."
+    example_excerpt: "Support frame / access and coverage / boundaries / event touchpoints / continuity."
+    local_only: false
+    warnings:
+      - "System template only. Do not use it to replace chaplain, medical, behavioral-health, or command channels."
+  - template_id: "sys-rmt-support-matrix"
+    template_name: "System RMT Support Matrix"
+    template_type: "rmt_support_matrix"
+    description: "An RP/chaplain support matrix for schedule, movement, support dependencies, and continuity."
+    tags: ["system", "rmt_support_matrix", "chaplain", "rp"]
+    audience_hint: "RP, chaplain, commander, XO, and support leads"
+    preferred_format: "matrix"
+    reusable_headings:
+      ["RMT support frame", "Support rows and schedule", "Logistics, movement, and access checks", "Welfare, referral, and continuity triggers", "Review and follow-through"]
+    reusable_guidance:
+      - "Give each support row an owner, time, location, and support dependency."
+      - "Keep continuity and casualty-or-memorial branch conditions visible."
+    example_excerpt: "RMT frame / rows and schedule / logistics and access / triggers / follow-through."
+    local_only: false
+    warnings:
+      - "System template only. Validate real support demand and command coordination locally."
+  - template_id: "sys-morale-welfare-estimate"
+    template_name: "System Morale And Welfare Estimate"
+    template_type: "morale_welfare_estimate"
+    description: "A morale and welfare estimate for command-relevant stress signals, support channels, and leader interventions."
+    tags: ["system", "morale_welfare_estimate", "chaplain", "morale", "welfare"]
+    audience_hint: "Chaplain, RP, commander, XO, SEL, and support staff"
+    preferred_format: "estimate"
+    reusable_headings:
+      ["Morale and welfare frame", "Marine-impact indicators", "Support, referral, and boundary notes", "Command considerations and interventions", "Continuity and follow-through"]
+    reusable_guidance:
+      - "Surface support signals without oversharing private detail."
+      - "Keep referral boundaries and leader actions more visible than diagnosis-like language."
+    example_excerpt: "Morale frame / indicators / support boundaries / interventions / continuity."
+    local_only: false
+    warnings:
+      - "System template only. This is leader awareness and support planning, not counseling."
+  - template_id: "sys-road-to-war-brief"
+    template_name: "System Road To War Brief"
+    template_type: "road_to_war_brief"
+    description: "A scenario-background level-set brief for regional context, actors, escalation, MAGTF framing, and first-look implications."
+    tags: ["system", "road_to_war_brief", "s2", "scenario", "briefing"]
+    audience_hint: "Commander, XO, primary staff, and unit leaders entering a new scenario"
+    preferred_format: "briefing"
+    reusable_headings:
+      ["Strategic setting and why this scenario matters", "Historical and political context", "Key actors, interests, and alignment", "Operational environment and civil frame", "Adversary, threat methods, and escalation pattern", "Friendly posture, MAGTF frame, and constraints", "What this means for the unit"]
+    reusable_guidance:
+      - "Use it to level-set the unit before mission analysis, not to replace IPB."
+      - "End with what matters in the first 24-72 hours for the entering force."
+    example_excerpt: "Strategic setting / historical context / key actors / OE and civil frame / threat pattern / MAGTF frame / unit implications."
+    local_only: false
+    warnings:
+      - "System template only. Verify regional background and actor assessments against current public sources."
   - template_id: "sys-public-affairs-plan"
     template_name: "System Public Affairs Plan"
     template_type: "public_affairs_plan"
@@ -316,6 +572,38 @@ templates:
     local_only: false
     warnings:
       - "System template only. Confirm installation and local-site procedures before execution."
+  - template_id: "sys-visitor-control-checklist"
+    template_name: "System Visitor-Control Checklist"
+    template_type: "visitor_control_checklist"
+    description: "A provost-facing checklist for visitor access, escort rules, restricted areas, incidents, and closeout."
+    tags: ["system", "visitor_control_checklist", "provost", "force_protection", "security"]
+    audience_hint: "Provost, site control, event leads, and escorts"
+    preferred_format: "checklist"
+    reusable_headings:
+      ["Visitor-control frame", "Entry and verification checks", "Movement, escort, and restricted-area checks", "Incident and escalation checks", "Departure, accountability, and follow-through"]
+    reusable_guidance:
+      - "Keep sponsor, escort, and restricted-area rules obvious at a glance."
+      - "Make incident and lost-visitor actions explicit enough to use under stress."
+    example_excerpt: "Visitor frame / entry and verification / movement and escort / incident checks / departure and follow-through."
+    local_only: false
+    warnings:
+      - "System template only. Validate local installation access processes before execution."
+  - template_id: "sys-traffic-parking-control-plan"
+    template_name: "System Traffic And Parking Control Plan"
+    template_type: "traffic_parking_control_plan"
+    description: "A traffic-control plan for vehicle flow, parking, choke points, emergency access, and reset."
+    tags: ["system", "traffic_parking_control_plan", "provost", "force_protection", "safety"]
+    audience_hint: "Provost, site control, safety, XO, and event leads"
+    preferred_format: "plan"
+    reusable_headings:
+      ["Traffic-control frame", "Vehicle flow and parking scheme", "Control measures and support dependencies", "Incident, delay, and emergency actions", "Reset and after-action notes"]
+    reusable_guidance:
+      - "Show ingress, egress, overflow, and emergency-access logic clearly."
+      - "Keep the first choke point and fallback action visible at a glance."
+    example_excerpt: "Traffic frame / flow and parking / control measures / incident and emergency actions / reset."
+    local_only: false
+    warnings:
+      - "System template only. Confirm local traffic-control and emergency-access procedures before execution."
   - template_id: "sys-resource-estimate"
     template_name: "System Resource Estimate"
     template_type: "resource_estimate"

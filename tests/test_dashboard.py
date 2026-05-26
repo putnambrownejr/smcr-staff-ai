@@ -68,10 +68,10 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Section Bench Notebook" in response.text
     assert "MOS bench" in response.text
     assert "MOS advisor" in response.text
-    assert "History Library" in response.text
+    assert "Marine Corps History Facts" in response.text
     assert "Doctrine / Reference Library" in response.text
     assert "Use suggestion" in response.text
-    assert "Show date" in response.text
+    assert "Show facts" in response.text
     assert "Use today" in response.text
     assert 'id="history-library-month"' in response.text
     assert 'id="history-library-day"' in response.text
@@ -87,16 +87,19 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Run lone planner mode" in response.text
     assert "Build section gap cover" in response.text
     assert "Refresh MARADMIN feed" in response.text
-    assert "Second-tier awareness" in response.text
+    assert "Open second-tier watch" in response.text
     assert "Open watch lane" in response.text
     assert "Open bench / files" in response.text
     assert "Open workflows" in response.text
     assert "Run lone planner" in response.text
     assert "Watch lane" in response.text
     assert "Bench / Files lane" in response.text
+    assert "Data Check" in response.text
+    assert "Marine Corps History Fact" in response.text
     assert "Workflow lane" in response.text
     assert "Command Snapshots" in response.text
     assert "Start Here" in response.text
+    assert "Integrated staff package" in response.text
     assert "Battle Rhythm Editor" in response.text
     assert "Act Now" in response.text
     assert "Skip to dashboard content" in response.text
@@ -137,6 +140,7 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "draft-open-brief-clinic",
         "workflow-open-lone-planner",
         "workflow-open-planning-cell",
+        "workflow-run-staff-package",
         "workflow-open-brief-clinic",
         "battle-rhythm-open-editor",
         "battle-rhythm-open-planning-cell",
@@ -149,6 +153,7 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "walk-in-open-brief-clinic",
         "run-lone-planner",
         "run-section-gap-cover",
+        "run-staff-package",
         "save-planning-cell-board",
         "save-document-type",
         "apply-document-suggestion",
@@ -190,7 +195,9 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'id="battle-rhythm-hot-items"' in html
     assert 'renderBattleRhythmHealth(' in js
     assert 'id="section-gap-cover-output"' in html
+    assert 'id="staff-package-output"' in html
     assert 'renderSectionGapCoverOutput(' in js
+    assert 'renderStaffPlanningPackageOutput(' in js
     assert 'id="section-memory-library"' in html
     assert 'id="mos-bench-library"' in html
     assert 'id="reading-book-select"' in html
@@ -200,6 +207,7 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'id="history-library-results"' in html
     assert 'id="reference-summary"' in html
     assert 'id="reference-select"' in html
+    assert 'id="document-select"' in html
     assert 'id="reference-library"' in html
     assert 'id="mos-advisor-output"' in html
     assert 'renderSectionMemoryProfile(' in js
@@ -219,6 +227,7 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'saveSelectedDocumentType(' in js
     assert 'applySuggestedDocumentType(' in js
     assert 'runUniformPhotoReview(' in js
+    assert 'runStaffPlanningPackage(' in js
 
 
 def test_demo_dashboard_data_route_returns_workspace_payload() -> None:

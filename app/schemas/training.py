@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
@@ -10,6 +12,25 @@ class TrainingScenarioType(StrEnum):
     pme = "pme"
     civil_support = "civil_support"
     annual_training = "annual_training"
+
+
+class ScenarioArchetype(StrEnum):
+    littoral_hybrid = "littoral_hybrid"
+    urban_unrest = "urban_unrest"
+    disaster_unrest = "disaster_unrest"
+    border_proxy = "border_proxy"
+    expeditionary_coercion = "expeditionary_coercion"
+
+
+class ScenarioInjectTag(StrEnum):
+    comms_degraded = "comms_degraded"
+    casualty = "casualty"
+    logistics_failure = "logistics_failure"
+    disinformation = "disinformation"
+    civil_unrest = "civil_unrest"
+    partner_force_failure = "partner_force_failure"
+    legal_gray_zone = "legal_gray_zone"
+    media_pressure = "media_pressure"
 
 
 class TrainingCaseStudyRequest(BaseModel):
@@ -44,6 +65,13 @@ class TrainingScenarioRequest(BaseModel):
     title: str
     training_objective: str
     audience: str | None = None
+    scenario_archetype: ScenarioArchetype | None = None
+    inject_tags: list[ScenarioInjectTag] = Field(default_factory=list)
+    primary_scenario_input: str | None = None
+    secondary_scenario_input: str | None = None
+    current_event_context: list[str] = Field(default_factory=list)
+    source_items: list[dict[str, str]] = Field(default_factory=list)
+    coordinating_sections: list[str] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
     training_only: bool = True
 
@@ -51,7 +79,14 @@ class TrainingScenarioRequest(BaseModel):
 class TrainingScenarioResponse(BaseModel):
     title: str
     scenario_type: TrainingScenarioType
+    scenario_archetype_used: ScenarioArchetype
+    inject_tags_used: list[ScenarioInjectTag] = Field(default_factory=list)
     concept: list[str] = Field(default_factory=list)
+    scenario_setting: list[str] = Field(default_factory=list)
+    adversary_profile: list[ScenarioActorProfile] = Field(default_factory=list)
+    narrative_beats: list[ScenarioNarrativeBeat] = Field(default_factory=list)
+    inject_matrix: list[ScenarioInjectCard] = Field(default_factory=list)
+    facilitator_notes: list[str] = Field(default_factory=list)
     support_requirements: list[str] = Field(default_factory=list)
     admin_requirements: list[str] = Field(default_factory=list)
     orm_considerations: list[str] = Field(default_factory=list)
@@ -141,12 +176,39 @@ class S3SubordinatePromptPacket(BaseModel):
     reporting_requirements: list[str] = Field(default_factory=list)
 
 
+class ScenarioActorProfile(BaseModel):
+    name: str
+    role: str
+    disposition: str
+    objectives: list[str] = Field(default_factory=list)
+    capabilities: list[str] = Field(default_factory=list)
+    signature_tactics: list[str] = Field(default_factory=list)
+
+
+class ScenarioNarrativeBeat(BaseModel):
+    phase: str
+    summary: str
+    command_problem: str
+
+
+class ScenarioInjectCard(BaseModel):
+    phase: str
+    title: str
+    trigger: str
+    inject: str
+    training_purpose: str
+    expected_actions: list[str] = Field(default_factory=list)
+    primary_sections: list[str] = Field(default_factory=list)
+
+
 class S3PlanningRequest(BaseModel):
     title: str
     mission_or_training_goal: str
     event_type: str = "drill_weekend"
     audience: str | None = None
     timeframe: str | None = None
+    scenario_archetype: ScenarioArchetype | None = None
+    inject_tags: list[ScenarioInjectTag] = Field(default_factory=list)
     primary_scenario_input: str | None = None
     secondary_scenario_input: str | None = None
     current_event_context: list[str] = Field(default_factory=list)
@@ -162,9 +224,16 @@ class S3PlanningRequest(BaseModel):
 class S3PlanningResponse(BaseModel):
     title: str
     mission_analysis: list[str] = Field(default_factory=list)
+    scenario_archetype_used: ScenarioArchetype
+    inject_tags_used: list[ScenarioInjectTag] = Field(default_factory=list)
+    scenario_setting: list[str] = Field(default_factory=list)
     scenario_frame: list[str] = Field(default_factory=list)
+    adversary_profile: list[ScenarioActorProfile] = Field(default_factory=list)
     scenario_escalation: list[str] = Field(default_factory=list)
+    narrative_beats: list[ScenarioNarrativeBeat] = Field(default_factory=list)
     injects: list[str] = Field(default_factory=list)
+    inject_matrix: list[ScenarioInjectCard] = Field(default_factory=list)
+    facilitator_notes: list[str] = Field(default_factory=list)
     met_alignment: list[str] = Field(default_factory=list)
     critical_tasks: list[str] = Field(default_factory=list)
     coordination_matrix: list[str] = Field(default_factory=list)

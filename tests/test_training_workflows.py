@@ -12,6 +12,18 @@ def test_training_scenario_builder_returns_admin_and_orm_requirements() -> None:
             "scenario_type": "staff_drill",
             "title": "Battalion planning drill",
             "training_objective": "Practice decision-making and product flow.",
+            "scenario_archetype": "littoral_hybrid",
+            "inject_tags": ["comms_degraded", "media_pressure"],
+            "primary_scenario_input": (
+                "A partner force in a fictional coastal city requests support as access degrades."
+            ),
+            "secondary_scenario_input": (
+                "A hostile proxy group exploits port congestion and rumor to delay movement."
+            ),
+            "current_event_context": [
+                "Use real-world-style littoral instability without copying a live conflict."
+            ],
+            "coordinating_sections": ["S-3", "S-4", "S-6", "Medical"],
             "constraints": ["Three-hour window"],
         },
     )
@@ -21,6 +33,15 @@ def test_training_scenario_builder_returns_admin_and_orm_requirements() -> None:
     assert payload["admin_requirements"]
     assert payload["orm_considerations"]
     assert payload["aar_prompts"]
+    assert payload["scenario_setting"]
+    assert payload["adversary_profile"]
+    assert payload["inject_matrix"]
+    assert payload["facilitator_notes"]
+    assert payload["scenario_archetype_used"] == "littoral_hybrid"
+    assert payload["inject_tags_used"] == ["comms_degraded", "media_pressure"]
+    assert "fictional" in payload["scenario_setting"][0].lower()
+    assert payload["adversary_profile"][0]["name"]
+    assert any(item["title"] == "Comms blackout window" for item in payload["inject_matrix"])
 
 
 def test_training_case_study_route_returns_s2_and_conop_implications() -> None:
@@ -131,6 +152,8 @@ def test_s3_planner_returns_battle_rhythm_and_outputs() -> None:
             "title": "Battalion drill planning sync",
             "mission_or_training_goal": "Align staff outputs and support requirements for next drill weekend.",
             "event_type": "drill_weekend",
+            "scenario_archetype": "disaster_unrest",
+            "inject_tags": ["casualty", "logistics_failure", "disinformation"],
             "primary_scenario_input": "Urban flooding disrupts movement and accountability.",
             "secondary_scenario_input": "A reporting delay and support shortfall force a branch plan.",
             "current_event_context": ["Recent heavy-rain and public-service disruption in a metro area."],
@@ -165,9 +188,20 @@ def test_s3_planner_returns_battle_rhythm_and_outputs() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["mission_analysis"]
+    assert payload["scenario_archetype_used"] == "disaster_unrest"
+    assert payload["inject_tags_used"] == ["casualty", "logistics_failure", "disinformation"]
+    assert payload["scenario_setting"]
     assert payload["scenario_frame"]
+    assert payload["adversary_profile"]
     assert payload["scenario_escalation"]
+    assert payload["narrative_beats"]
     assert payload["injects"]
+    assert payload["inject_matrix"]
+    assert payload["facilitator_notes"]
+    assert payload["adversary_profile"][0]["signature_tactics"]
+    assert any("Phase II" in item["phase"] or "Phase III" in item["phase"] for item in payload["inject_matrix"])
+    assert any(item["title"] == "Casualty inject" for item in payload["inject_matrix"])
+    assert any(item["title"] == "Support collapse" for item in payload["inject_matrix"])
     assert payload["met_alignment"]
     assert payload["coordination_matrix"]
     assert payload["battle_rhythm"]

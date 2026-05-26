@@ -8,6 +8,7 @@ from app.schemas.training import (
     TrainingScenarioResponse,
     TrainingScenarioType,
 )
+from app.services.training.scenario_engine import build_s3_scenario_design
 
 
 class TrainingScenarioBuilder:
@@ -16,11 +17,38 @@ class TrainingScenarioBuilder:
         concept = [f"Objective: {request.training_objective}", *concept]
         if request.audience:
             concept.append(f"Audience: {request.audience}")
+        scenario_design = build_s3_scenario_design(
+            title=request.title,
+            mission_or_training_goal=request.training_objective,
+            event_type=request.scenario_type.value,
+            audience=request.audience,
+            scenario_archetype=request.scenario_archetype,
+            inject_tags=request.inject_tags,
+            primary_scenario_input=request.primary_scenario_input,
+            secondary_scenario_input=request.secondary_scenario_input,
+            current_event_context=request.current_event_context,
+            source_items=request.source_items,
+            coordinating_sections=request.coordinating_sections,
+            constraints=request.constraints,
+        )
+        concept.extend(
+            [
+                "Use a fictionalized but recognizable conflict logic rather than a generic good-guys/bad-guys setup.",
+                "Keep the adversary name fictional, but make the environment, friction, and escalation feel plausible.",
+            ]
+        )
         admin_requirements.extend(f"Constraint to account for: {item}" for item in request.constraints)
         return TrainingScenarioResponse(
             title=f"{request.scenario_type.value.replace('_', ' ').title()} scenario: {request.title}",
             scenario_type=request.scenario_type,
+            scenario_archetype_used=scenario_design.archetype,
+            inject_tags_used=scenario_design.inject_tags_used,
             concept=concept,
+            scenario_setting=scenario_design.setting,
+            adversary_profile=scenario_design.actors,
+            narrative_beats=scenario_design.beats,
+            inject_matrix=scenario_design.injects,
+            facilitator_notes=scenario_design.facilitator_notes,
             support_requirements=support_requirements,
             admin_requirements=admin_requirements,
             orm_considerations=orm_considerations,

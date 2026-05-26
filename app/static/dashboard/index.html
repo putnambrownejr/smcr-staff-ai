@@ -192,8 +192,8 @@
         <section class="two-column overview-priority-grid" data-section-group="overview">
           <article class="panel full-span">
             <div class="panel-header">
-              <h2>MARADMIN / Source Watch</h2>
-              <p>Source-change ticker for items that may alter local products or assumptions.</p>
+              <h2>Source Watch</h2>
+              <p>The compact watch strip for source changes that may alter products, assumptions, or next-drill prep.</p>
             </div>
             <div class="button-row compact-controls">
               <button type="button" class="secondary" id="refresh-maradmins">Refresh MARADMIN feed</button>
@@ -201,28 +201,33 @@
               <button type="button" class="secondary" id="refresh-source-watch">Refresh all watches</button>
             </div>
             <div id="maradmin-ticker" class="row-stack empty-state">No source-watch items loaded yet.</div>
-            <div class="watch-subsection">
-              <span class="strip-label">Second-tier awareness</span>
-              <div class="button-row compact-controls">
-                <button type="button" class="secondary" id="refresh-navadmins">Refresh NAVADMINs</button>
-                <button type="button" class="secondary" id="refresh-alnavs">Refresh ALNAVs</button>
-                <button type="button" class="secondary" id="refresh-dod-watch">Refresh DoD watch</button>
+            <details class="panel-drawer watch-subsection">
+              <summary>
+                <span>Open second-tier watch</span>
+                <span class="drawer-label">NAVADMIN / ALNAV / DoD</span>
+              </summary>
+              <div class="panel-drawer-body">
+                <div class="button-row compact-controls">
+                  <button type="button" class="secondary" id="refresh-navadmins">Refresh NAVADMINs</button>
+                  <button type="button" class="secondary" id="refresh-alnavs">Refresh ALNAVs</button>
+                  <button type="button" class="secondary" id="refresh-dod-watch">Refresh DoD watch</button>
+                </div>
+                <div class="brief-grid">
+                  <section class="brief-block">
+                    <h3>NAVADMIN</h3>
+                    <div id="navadmin-ticker" class="row-stack empty-state">No NAVADMIN items loaded yet.</div>
+                  </section>
+                  <section class="brief-block">
+                    <h3>ALNAV</h3>
+                    <div id="alnav-ticker" class="row-stack empty-state">No ALNAV items loaded yet.</div>
+                  </section>
+                  <section class="brief-block">
+                    <h3>DoD</h3>
+                    <div id="dod-ticker" class="row-stack empty-state">No DoD watch items loaded yet.</div>
+                  </section>
+                </div>
               </div>
-              <div class="brief-grid">
-                <section class="brief-block">
-                  <h3>NAVADMIN</h3>
-                  <div id="navadmin-ticker" class="row-stack empty-state">No NAVADMIN items loaded yet.</div>
-                </section>
-                <section class="brief-block">
-                  <h3>ALNAV</h3>
-                  <div id="alnav-ticker" class="row-stack empty-state">No ALNAV items loaded yet.</div>
-                </section>
-                <section class="brief-block">
-                  <h3>DoD</h3>
-                  <div id="dod-ticker" class="row-stack empty-state">No DoD watch items loaded yet.</div>
-                </section>
-              </div>
-            </div>
+            </details>
           </article>
 
         </section>
@@ -281,8 +286,8 @@
               <summary>
                 <div class="panel-header">
                   <div>
-                    <h2>Analyst Brief</h2>
-                    <p>Data quality first, then signal health, anomalies, assumptions, and follow-up checks.</p>
+                    <h2>Data Check</h2>
+                    <p>Only useful when you are tracking imported metrics, counts, or trend signals.</p>
                   </div>
                   <span class="drawer-label">Open</span>
                 </div>
@@ -327,8 +332,8 @@
               <summary>
                 <div class="panel-header">
                   <div>
-                    <h2>Today in Marine Corps History</h2>
-                    <p>Heritage context for PME, command climate, and ceremony framing when you want it.</p>
+                    <h2>Marine Corps History Fact</h2>
+                    <p>A quick fact for PME, ceremony, or command context when you want one.</p>
                   </div>
                   <span class="drawer-label">Open</span>
                 </div>
@@ -341,85 +346,103 @@
         </section>
 
         <section class="two-column" data-section-group="overview">
-          <article class="panel">
-            <div class="panel-header">
-              <h2>Thin Staff Assist</h2>
-              <p>For the off-drill reality: one person, thin bench, and still expected to cover down above their lane.</p>
-            </div>
-            <div class="button-row compact-controls">
-              <button type="button" class="secondary" id="thin-staff-run-lone-planner">Run lone planner mode</button>
-              <button type="button" class="secondary" id="thin-staff-open-mission-analysis">Run mission analysis</button>
-              <button type="button" class="secondary" id="thin-staff-open-planning-cell">Open planning cell</button>
-              <button type="button" class="secondary" id="thin-staff-open-update-cycle">Open update cycle</button>
-              <button type="button" class="secondary" id="thin-staff-open-admin">Jump to admin readiness</button>
-            </div>
-            <div class="brief-grid">
-              <section class="brief-block">
-                <h3>Walk-in brief</h3>
-                <ul id="thin-staff-walk-in" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>Likely blind spots</h3>
-                <ul id="thin-staff-blind-spots" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>Missing section questions</h3>
-                <ul id="thin-staff-questions" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>Recommended products</h3>
-                <ul id="thin-staff-products" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>What changed</h3>
-                <ul id="thin-staff-changes" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>Next touchpoint</h3>
-                <div id="thin-staff-next-touchpoint" class="row-stack empty-state">No touchpoint loaded yet.</div>
-              </section>
-            </div>
+          <article class="panel collapsible-panel">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header">
+                  <div>
+                    <h2>Thin Staff Assist</h2>
+                    <p>Use this when you need the lone-planner help, not all day every day.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
+                <div class="button-row compact-controls">
+                  <button type="button" class="secondary" id="thin-staff-run-lone-planner">Run lone planner mode</button>
+                  <button type="button" class="secondary" id="thin-staff-open-mission-analysis">Run mission analysis</button>
+                  <button type="button" class="secondary" id="thin-staff-open-planning-cell">Open planning cell</button>
+                  <button type="button" class="secondary" id="thin-staff-open-update-cycle">Open update cycle</button>
+                  <button type="button" class="secondary" id="thin-staff-open-admin">Jump to admin readiness</button>
+                </div>
+                <div class="brief-grid">
+                  <section class="brief-block">
+                    <h3>Walk-in brief</h3>
+                    <ul id="thin-staff-walk-in" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Likely blind spots</h3>
+                    <ul id="thin-staff-blind-spots" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Missing section questions</h3>
+                    <ul id="thin-staff-questions" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Recommended products</h3>
+                    <ul id="thin-staff-products" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>What changed</h3>
+                    <ul id="thin-staff-changes" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Next touchpoint</h3>
+                    <div id="thin-staff-next-touchpoint" class="row-stack empty-state">No touchpoint loaded yet.</div>
+                  </section>
+                </div>
+              </div>
+            </details>
           </article>
 
-          <article class="panel">
-            <div class="panel-header">
-              <h2>Walk-In Brief Pack</h2>
-              <p>What changed, what is stale, and what still needs a decision before you walk into the next sync.</p>
-            </div>
-            <div class="button-row compact-controls">
-              <button type="button" class="secondary" id="walk-in-open-lone-planner">Open lone planner mode</button>
-              <button type="button" class="secondary" id="walk-in-open-brief-clinic">Open brief clinic</button>
-            </div>
-            <div class="brief-grid">
-              <section class="brief-block">
-                <h3>Current state</h3>
-                <ul id="walk-in-current-state" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>Delta since last drill</h3>
-                <ul id="walk-in-delta-drill" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>Delta since last touchpoint</h3>
-                <ul id="walk-in-delta-touch" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>Open decisions</h3>
-                <ul id="walk-in-open-decisions" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>Stale assumptions</h3>
-                <ul id="walk-in-stale-assumptions" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>Source watch hits</h3>
-                <ul id="walk-in-source-hits" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block full-span">
-                <h3>Before you walk in</h3>
-                <ul id="walk-in-before" class="bullet-list"></ul>
-              </section>
-            </div>
+          <article class="panel collapsible-panel">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header">
+                  <div>
+                    <h2>Walk-In Brief Pack</h2>
+                    <p>Use this when you need the delta, not as permanent wallpaper.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
+                <div class="button-row compact-controls">
+                  <button type="button" class="secondary" id="walk-in-open-lone-planner">Open lone planner mode</button>
+                  <button type="button" class="secondary" id="walk-in-open-brief-clinic">Open brief clinic</button>
+                </div>
+                <div class="brief-grid">
+                  <section class="brief-block">
+                    <h3>Current state</h3>
+                    <ul id="walk-in-current-state" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Delta since last drill</h3>
+                    <ul id="walk-in-delta-drill" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Delta since last touchpoint</h3>
+                    <ul id="walk-in-delta-touch" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Open decisions</h3>
+                    <ul id="walk-in-open-decisions" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Stale assumptions</h3>
+                    <ul id="walk-in-stale-assumptions" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Source watch hits</h3>
+                    <ul id="walk-in-source-hits" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block full-span">
+                    <h3>Before you walk in</h3>
+                    <ul id="walk-in-before" class="bullet-list"></ul>
+                  </section>
+                </div>
+              </div>
+            </details>
           </article>
 
           <article class="panel">
@@ -430,60 +453,59 @@
             <div id="priority-queue" class="row-stack empty-state">Load the workspace to see current priorities.</div>
           </article>
 
-          <article class="panel full-span battle-rhythm-overview-panel">
-            <div class="panel-header">
-              <h2>Battle Rhythm Board</h2>
-              <p>Persistent assumptions, decisions, questions, and due-outs that should survive between drills.</p>
-            </div>
-            <div class="button-row compact-controls">
-              <button type="button" class="secondary" id="battle-rhythm-open-editor">Open board editor</button>
-              <button type="button" class="secondary" id="battle-rhythm-open-planning-cell">Open planning cell</button>
-            </div>
-            <div class="brief-grid">
-              <section class="brief-block full-span">
-                <h3>Continuity watch</h3>
-                <p id="battle-rhythm-health-posture" class="meta-inline">
-                  No continuity watch is loaded yet.
-                </p>
-                <ul id="battle-rhythm-health-summary" class="bullet-list"></ul>
-                <h4>Hot items</h4>
-                <ul id="battle-rhythm-hot-items" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>Commander focus</h3>
-                <ul id="battle-rhythm-focus" class="bullet-list"></ul>
-              </section>
-              <section class="brief-block">
-                <h3>Next touchpoint</h3>
-                <div id="battle-rhythm-touchpoint" class="row-stack empty-state">No next touchpoint stored yet.</div>
-              </section>
-              <section class="brief-block">
-                <h3>Assumption log</h3>
-                <div id="battle-rhythm-assumptions" class="row-stack empty-state">No assumptions stored yet.</div>
-              </section>
-              <section class="brief-block">
-                <h3>Commander decision log</h3>
-                <div id="battle-rhythm-decisions" class="row-stack empty-state">No decision items stored yet.</div>
-              </section>
-              <section class="brief-block">
-                <h3>Question log</h3>
-                <div id="battle-rhythm-questions" class="row-stack empty-state">No question log stored yet.</div>
-              </section>
-              <section class="brief-block">
-                <h3>Due-out board</h3>
-                <div id="battle-rhythm-dueouts" class="row-stack empty-state">No due-outs stored yet.</div>
-              </section>
-            </div>
-          </article>
-
-          <article class="panel">
-            <div class="panel-header">
-              <h2>Local document watch</h2>
-              <p>Quick inventory of personal support docs that live only on this machine.</p>
-            </div>
-            <div id="document-watch" class="row-stack empty-state">
-              Personal mode can show RQS, BIO, orders, PME, and other local references.
-            </div>
+          <article class="panel full-span battle-rhythm-overview-panel collapsible-panel">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header">
+                  <div>
+                    <h2>Battle Rhythm Board</h2>
+                    <p>Keep this nearby when you need continuity, closed when you do not.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
+                <div class="button-row compact-controls">
+                  <button type="button" class="secondary" id="battle-rhythm-open-editor">Open board editor</button>
+                  <button type="button" class="secondary" id="battle-rhythm-open-planning-cell">Open planning cell</button>
+                </div>
+                <div class="brief-grid">
+                  <section class="brief-block full-span">
+                    <h3>Continuity watch</h3>
+                    <p id="battle-rhythm-health-posture" class="meta-inline">
+                      No continuity watch is loaded yet.
+                    </p>
+                    <ul id="battle-rhythm-health-summary" class="bullet-list"></ul>
+                    <h4>Hot items</h4>
+                    <ul id="battle-rhythm-hot-items" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Commander focus</h3>
+                    <ul id="battle-rhythm-focus" class="bullet-list"></ul>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Next touchpoint</h3>
+                    <div id="battle-rhythm-touchpoint" class="row-stack empty-state">No next touchpoint stored yet.</div>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Assumption log</h3>
+                    <div id="battle-rhythm-assumptions" class="row-stack empty-state">No assumptions stored yet.</div>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Commander decision log</h3>
+                    <div id="battle-rhythm-decisions" class="row-stack empty-state">No decision items stored yet.</div>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Question log</h3>
+                    <div id="battle-rhythm-questions" class="row-stack empty-state">No question log stored yet.</div>
+                  </section>
+                  <section class="brief-block">
+                    <h3>Due-out board</h3>
+                    <div id="battle-rhythm-dueouts" class="row-stack empty-state">No due-outs stored yet.</div>
+                  </section>
+                </div>
+              </div>
+            </details>
           </article>
         </section>
 
@@ -540,78 +562,139 @@
               <button type="button" class="secondary" id="library-open-workspace">Open workspace setup</button>
             </div>
           </article>
-          <article class="panel">
-            <div class="panel-header">
-              <h2>Personal files</h2>
-              <p>Stored local references with quick preview for orders, BIO, RQS, receipts, and support docs.</p>
-            </div>
-            <div class="button-row compact">
-              <label class="inline-field">
-                <span>File category</span>
-                <select id="document-type-select">
-                  <option value="reference_note">Reference note</option>
-                  <option value="doctrine">Doctrine</option>
-                  <option value="admin_reference">Admin reference</option>
-                  <option value="training_reference">Training reference</option>
-                  <option value="uniform_photo">Uniform photo</option>
-                  <option value="product_template">Product template</option>
-                  <option value="training_media">Training media</option>
-                  <option value="orders">Orders</option>
-                  <option value="fitrep">FitRep</option>
-                  <option value="other">Other</option>
-                </select>
-              </label>
-              <button type="button" class="secondary" id="save-document-type">Save category</button>
-              <button type="button" class="secondary" id="apply-document-suggestion">Use suggestion</button>
-            </div>
-            <p id="document-type-suggestion" class="helper-text">No category suggestion yet.</p>
-            <div id="document-library" class="document-library empty-state">No local document previews loaded yet.</div>
+          <article class="panel collapsible-panel">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header">
+                  <div>
+                    <h2>Personal files</h2>
+                    <p>Local-only references, but in a smaller picker instead of a giant wall.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
+                <div id="document-library-summary" class="meta-inline">No local file previews loaded yet.</div>
+                <div class="button-row compact">
+                  <label class="inline-field">
+                    <span>File</span>
+                    <select id="document-select">
+                      <option value="">No local files loaded yet.</option>
+                    </select>
+                  </label>
+                  <label class="inline-field">
+                    <span>File category</span>
+                    <select id="document-type-select">
+                      <option value="reference_note">Reference note</option>
+                      <option value="doctrine">Doctrine</option>
+                      <option value="admin_reference">Admin reference</option>
+                      <option value="training_reference">Training reference</option>
+                      <option value="uniform_photo">Uniform photo</option>
+                      <option value="product_template">Product template</option>
+                      <option value="training_media">Training media</option>
+                      <option value="orders">Orders</option>
+                      <option value="fitrep">FitRep</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </label>
+                  <button type="button" class="secondary" id="save-document-type">Save category</button>
+                  <button type="button" class="secondary" id="apply-document-suggestion">Use suggestion</button>
+                </div>
+                <p id="document-type-suggestion" class="helper-text">No category suggestion yet.</p>
+                <div id="document-library" class="document-library empty-state">No local document previews loaded yet.</div>
+                <div class="row-stack compact-panel-stack">
+                  <article class="data-row compact-row">
+                    <div class="data-row-head">
+                      <span class="strip-label">Local document watch</span>
+                      <strong>Current file inventory</strong>
+                    </div>
+                    <div id="document-watch" class="row-stack empty-state">
+                      Personal mode can show RQS, BIO, orders, PME, and other local references.
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </details>
           </article>
 
-          <article class="panel">
-            <div class="panel-header">
-              <h2>Template library</h2>
-              <p>User-stored and system templates for FRAGOs, CPBs, briefs, and reusable staff structure.</p>
-            </div>
-            <div id="template-library" class="row-stack empty-state">No templates are loaded yet.</div>
+          <article class="panel collapsible-panel">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header">
+                  <div>
+                    <h2>Template library</h2>
+                    <p>Reusable structures when you need them, not a permanent open shelf.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
+                <div id="template-library" class="row-stack empty-state">No templates are loaded yet.</div>
+              </div>
+            </details>
           </article>
 
-          <article class="panel">
-            <div class="panel-header">
-              <h2>MOS bench</h2>
-              <p>Quick access to the MOS slices that sit under the staff sections and help thin-bench officers cover down faster.</p>
-            </div>
-            <div id="mos-bench-library" class="row-stack empty-state">MOS lane shortcuts will appear here.</div>
+          <article class="panel collapsible-panel">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header">
+                  <div>
+                    <h2>MOS bench</h2>
+                    <p>Quick MOS shortcuts when you need to cover down outside your lane.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
+                <div id="mos-bench-library" class="row-stack empty-state">MOS lane shortcuts will appear here.</div>
+              </div>
+            </details>
           </article>
 
-          <article class="panel full-span">
-            <div class="panel-header">
-              <h2>History Library</h2>
-              <p>Browse imported and seeded Marine Corps history by date so the material is useful beyond whatever happens to match today.</p>
-            </div>
-            <div class="form-row">
-              <label>
-                <span>Month</span>
-                <select id="history-library-month"></select>
-              </label>
-              <label>
-                <span>Day</span>
-                <select id="history-library-day"></select>
-              </label>
-            </div>
-            <div class="button-row">
-              <button type="button" class="secondary" id="history-library-show-date">Show date</button>
-              <button type="button" class="secondary" id="history-library-use-today">Use today</button>
-            </div>
-            <div id="history-library-summary" class="meta-inline">No history library entries loaded yet.</div>
-            <div id="history-library-results" class="row-stack empty-state">No history library entries loaded yet.</div>
+          <article class="panel full-span collapsible-panel">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header">
+                  <div>
+                    <h2>Marine Corps History Facts</h2>
+                    <p>Quick facts by date, not a giant library panel pretending to be something bigger.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
+                <div class="form-row">
+                  <label>
+                    <span>Month</span>
+                    <select id="history-library-month"></select>
+                  </label>
+                  <label>
+                    <span>Day</span>
+                    <select id="history-library-day"></select>
+                  </label>
+                </div>
+                <div class="button-row">
+                  <button type="button" class="secondary" id="history-library-show-date">Show facts</button>
+                  <button type="button" class="secondary" id="history-library-use-today">Use today</button>
+                </div>
+                <div id="history-library-summary" class="meta-inline">No history facts loaded yet.</div>
+                <div id="history-library-results" class="row-stack empty-state">No history facts loaded yet.</div>
+              </div>
+            </details>
           </article>
 
-          <article class="panel full-span">
-            <div class="panel-header">
-              <h2>Section Bench Notebook</h2>
-              <p>Local-only recurring staff memory for what your reserve bench usually misses, asks, or needs checked.</p>
-            </div>
+          <article class="panel full-span collapsible-panel">
+            <details class="panel-drawer">
+              <summary>
+                <div class="panel-header">
+                  <div>
+                    <h2>Section Bench Notebook</h2>
+                    <p>Recurring reserve-bench memory, but behind a drawer until you actually need to edit it.</p>
+                  </div>
+                  <span class="drawer-label">Open</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
             <form id="section-memory-form" class="tool-form">
               <div class="form-row">
                 <label>
@@ -679,6 +762,8 @@
             <div id="section-memory-library" class="row-stack empty-state">
               No recurring section memory is stored yet.
             </div>
+              </div>
+            </details>
           </article>
 
           <article class="panel full-span">
@@ -763,6 +848,14 @@
                 <p class="helper-text">Use when you need mission analysis, assumptions, decisions, and due-outs in one working package.</p>
                 <div class="button-row">
                   <button type="button" id="workflow-open-planning-cell">Open planning cell</button>
+                </div>
+              </section>
+              <section class="brief-block workflow-priority-card">
+                <span class="strip-label">Primary</span>
+                <h3>Integrated staff package</h3>
+                <p class="helper-text">Use when you want XO, command-cell, admin, safety, SEL, medical, and core staff products in one package.</p>
+                <div class="button-row">
+                  <button type="button" id="workflow-run-staff-package">Build staff package</button>
                 </div>
               </section>
               <section class="brief-block workflow-priority-card">
@@ -1198,6 +1291,7 @@
                 <button type="submit">Build planning cell package</button>
                 <button type="button" class="secondary" id="run-lone-planner">Run lone planner mode</button>
                 <button type="button" class="secondary" id="run-section-gap-cover">Build section gap cover</button>
+                <button type="button" class="secondary" id="run-staff-package">Build staff package</button>
                 <button type="button" class="secondary" id="save-planning-cell-board">Save to battle rhythm board</button>
               </div>
             </form>
@@ -1210,6 +1304,9 @@
             <div id="section-gap-cover-output" class="tool-output empty-state">
               Assisted section estimates will surface likely questions, support facts, coordination, and XO-ready walk-in lines here.
             </div>
+            <div id="staff-package-output" class="tool-output empty-state">
+              The integrated staff package will surface planning posture, command decisions, risk cuts, section outputs, and linked staff products here.
+            </div>
           </article>
         </section>
       </main>
@@ -1218,7 +1315,7 @@
     <script>
       (function loadDashboardAssets() {
         const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
-        const assetVersion = "20260522a";
+        const assetVersion = "20260526a";
         const stylesheet = document.getElementById("dashboard-style");
         stylesheet.href = `${staticBase}/dashboard.css?v=${assetVersion}`;
 

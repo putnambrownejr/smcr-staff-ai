@@ -343,6 +343,16 @@ def test_staff_council_staff_product_references_follow_numbered_staff() -> None:
     assert "admin task tracker" in s1.perspectives[0].recommended_products
     assert "pre-drill admin readiness check" in s1.perspectives[0].recommended_products
 
+    safety = service.vet_idea(
+        StaffCouncilRequest(
+            question="Build a realistic ORM posture for a field event with convoy movement and overnight sustainment.",
+            echelon=StaffEchelon.battalion,
+            roles=["safety"],
+        )
+    )
+    assert "ORM worksheet" in safety.perspectives[0].recommended_products
+    assert "residual-risk decision note" in safety.perspectives[0].recommended_products
+
     sgtmaj = service.vet_idea(
         StaffCouncilRequest(
             question="Tighten accountability and standards for a formal battalion event.",
@@ -350,7 +360,8 @@ def test_staff_council_staff_product_references_follow_numbered_staff() -> None:
             roles=["sgtmaj"],
         )
     )
-    assert "troop flow plan" in sgtmaj.perspectives[0].recommended_products
+    assert "troop-flow checklist" in sgtmaj.perspectives[0].recommended_products
+    assert "formation/transition matrix" in sgtmaj.perspectives[0].recommended_products
 
 
 def test_s2_estimator_returns_claims_and_gaps() -> None:
@@ -472,6 +483,7 @@ def test_safety_planner_returns_orm_and_no_go_structure() -> None:
     assert response.orm_framework
     assert response.no_go_criteria
     assert response.residual_risk_decisions
+    assert response.rehearsal_checks
     assert response.stop_training_triggers
 
 
@@ -487,8 +499,11 @@ def test_sel_execution_planner_returns_accountability_and_standards_outputs() ->
     )
 
     assert response.troop_flow_plan
+    assert response.troop_flow_checklist
     assert response.accountability_scheme
+    assert response.formation_transition_matrix
     assert response.leader_touchpoints
+    assert response.leader_touchpoint_plan
     assert response.standards_checks
     assert response.marine_welfare_checks
 
@@ -591,10 +606,14 @@ def test_medical_planner_returns_tccc_and_casevac_elements() -> None:
     payload = response.json()
     assert payload["medical_support_estimate"]
     assert payload["tccc_considerations"]
+    assert payload["tccc_knowledge_points"]
     assert payload["nine_line_considerations"]
     assert payload["casevac_plan_elements"]
+    assert payload["casevac_medevac_check"]
+    assert payload["casualty_collection_logic"]
     assert payload["medical_decision_points"]
     assert payload["medical_rehearsal_checks"]
+    assert payload["coordination_trigger_list"]
 
 
 def test_staff_council_normalizes_doc_alias() -> None:

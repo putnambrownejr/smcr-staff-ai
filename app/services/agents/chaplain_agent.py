@@ -1,6 +1,11 @@
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
-from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
+from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.source_refs import (
+    LEADERSHIP_REFERENCES,
+    citation_titles,
+    source_trust_markers,
+    structured_citations,
+)
 
 
 class ChaplainAdvisorAgent(Agent):
@@ -49,21 +54,15 @@ class ChaplainAdvisorAgent(Agent):
         return self._response(
             answer=answer,
             input_text=input_text,
-            citations=["Public resilience references", "Public leadership/ethics references"],
-            structured_citations=[
-                StructuredCitation(
-                    title="Public resilience references",
-                    confidence=Confidence.low,
-                    notes="Use for leader awareness only; route real care needs to the proper professionals.",
-                )
-            ],
-            source_trust=[
-                SourceTrustMarker(
-                    tracked_title="Public resilience references",
-                    status=VerifiedSourceStatus.needs_review,
-                    notes="These references do not replace chaplain or professional care channels.",
-                )
-            ],
+            citations=citation_titles(LEADERSHIP_REFERENCES),
+            structured_citations=structured_citations(LEADERSHIP_REFERENCES),
+            source_trust=source_trust_markers(
+                LEADERSHIP_REFERENCES,
+                notes_prefix=(
+                    "Use for leader awareness only; these references do not replace "
+                    "chaplain or professional care channels."
+                ),
+            ),
             confidence=Confidence.low,
             follow_up_questions=[
                 "Is this a morale/welfare concern, an ethical issue, or a referral question?",

@@ -5,13 +5,25 @@ from app.schemas.training import (
     S3SubordinatePromptPacket,
     S3SubordinateUnitInput,
 )
+from app.services.training.scenario_engine import build_s3_scenario_design
 
 
 class S3Planner:
     def build(self, request: S3PlanningRequest) -> S3PlanningResponse:
-        scenario_frame = _scenario_frame(request)
-        scenario_escalation = _scenario_escalation(request)
-        injects = _scenario_injects(request)
+        scenario_design = build_s3_scenario_design(
+            title=request.title,
+            mission_or_training_goal=request.mission_or_training_goal,
+            event_type=request.event_type,
+            audience=request.audience,
+            scenario_archetype=request.scenario_archetype,
+            inject_tags=request.inject_tags,
+            primary_scenario_input=request.primary_scenario_input,
+            secondary_scenario_input=request.secondary_scenario_input,
+            current_event_context=request.current_event_context,
+            source_items=request.source_items,
+            coordinating_sections=request.coordinating_sections,
+            constraints=request.constraints,
+        )
         met_alignment = _met_alignment(request)
         subordinate_packets = _subordinate_prompt_packets(request)
 
@@ -93,9 +105,16 @@ class S3Planner:
         return S3PlanningResponse(
             title=f"S-3 planning support: {request.title}",
             mission_analysis=mission_analysis,
-            scenario_frame=scenario_frame,
-            scenario_escalation=scenario_escalation,
-            injects=injects,
+            scenario_archetype_used=scenario_design.archetype,
+            inject_tags_used=scenario_design.inject_tags_used,
+            scenario_setting=scenario_design.setting,
+            scenario_frame=scenario_design.frame,
+            adversary_profile=scenario_design.actors,
+            scenario_escalation=scenario_design.escalation,
+            narrative_beats=scenario_design.beats,
+            injects=[f"{inject.phase}: {inject.title} - {inject.inject}" for inject in scenario_design.injects],
+            inject_matrix=scenario_design.injects,
+            facilitator_notes=scenario_design.facilitator_notes,
             met_alignment=met_alignment,
             critical_tasks=critical_tasks,
             coordination_matrix=coordination_matrix,
@@ -113,64 +132,6 @@ class S3Planner:
                 ),
             ],
         )
-
-
-def _scenario_frame(request: S3PlanningRequest) -> list[str]:
-    frame = [
-        "Build a scenario that pressures command relationships, reporting, and standards instead of only adding noise.",
-        f"Parent training problem: {request.mission_or_training_goal}",
-    ]
-    if request.primary_scenario_input:
-        frame.append(f"Primary scenario driver: {request.primary_scenario_input}")
-    if request.secondary_scenario_input:
-        frame.append(
-            f"Secondary complication to turn it up: {request.secondary_scenario_input}"
-        )
-    if request.current_event_context:
-        frame.append(f"Current-event grounding: {request.current_event_context[0]}")
-    if request.source_items:
-        frame.append(
-            f"Public-source grounding: {request.source_items[0].get('title', 'Source item')}"
-        )
-    frame.append(
-        "Keep the scenario nested with the training standard: every inject should force a decision, report, or branch."
-    )
-    return frame
-
-
-def _scenario_escalation(request: S3PlanningRequest) -> list[str]:
-    opening = request.primary_scenario_input or "A routine training event with one clear operational problem."
-    complication = request.secondary_scenario_input or "A second friction point that stresses timing and support."
-    return [
-        f"Phase I - establish the baseline: {opening}",
-        (
-            "Phase II - raise complexity: "
-            f"{complication} and force the parent unit to re-prioritize, push guidance, or cut scope."
-        ),
-        (
-            "Phase III - convergence: require subordinate units to report, adapt, "
-            "and recommend the next command decision "
-            "before the event closes."
-        ),
-    ]
-
-
-def _scenario_injects(request: S3PlanningRequest) -> list[str]:
-    base_injects = [
-        "Initial inject: establish the baseline situation and the report required from each subordinate element.",
-        "Friction inject: degrade one support, reporting, or movement assumption and force a branch decision.",
-        "Convergence inject: require a final recommendation, updated report, or reprioritization by the parent unit.",
-    ]
-    if request.primary_scenario_input:
-        base_injects.append(
-            f"Primary-theme inject: use {request.primary_scenario_input} to make the first decision feel real."
-        )
-    if request.secondary_scenario_input:
-        base_injects.append(
-            f"Escalation inject: use {request.secondary_scenario_input} "
-            "to stress the first plan rather than replace it."
-        )
-    return base_injects
 
 
 def _met_alignment(request: S3PlanningRequest) -> list[str]:

@@ -415,6 +415,8 @@ def test_medical_doc_agent_returns_casevac_structure() -> None:
 
     assert "Medical / Doc advisory" in response.answer
     assert "CASEVAC" in response.answer
+    assert "TCCC knowledge to refresh" in response.answer
+    assert "coordination trigger list" in response.answer
     assert response.structured_citations
     assert response.source_trust
 

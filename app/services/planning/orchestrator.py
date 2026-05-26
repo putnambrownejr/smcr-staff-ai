@@ -357,17 +357,31 @@ def _resolved_product_types(
         product_types.append(StaffProductType.synchronization_matrix)
         product_types.append(StaffProductType.decision_support_matrix)
         product_types.append(StaffProductType.due_out_tracker)
+    if _needs_safety_products(request):
+        product_types.append(StaffProductType.orm_worksheet)
+        product_types.append(StaffProductType.no_go_criteria)
+        product_types.append(StaffProductType.residual_risk_decision_note)
+        product_types.append(StaffProductType.rehearsal_safety_brief)
     if _needs_admin_products(request):
         product_types.append(StaffProductType.admin_estimate)
         product_types.append(StaffProductType.admin_task_tracker)
         product_types.append(StaffProductType.routing_matrix)
         product_types.append(StaffProductType.pre_drill_admin_readiness_check)
+    if _needs_sel_products(request):
+        product_types.append(StaffProductType.troop_flow_checklist)
+        product_types.append(StaffProductType.formation_transition_matrix)
+        product_types.append(StaffProductType.leader_touchpoint_plan)
     if s2_estimate is not None:
+        product_types.append(StaffProductType.road_to_war_brief)
         product_types.append(StaffProductType.collection_matrix)
+    elif _needs_road_to_war_brief(request):
+        product_types.append(StaffProductType.road_to_war_brief)
     if _needs_sustainment_matrix(request):
         product_types.append(StaffProductType.sustainment_matrix)
+        product_types.append(StaffProductType.movement_table)
     if _needs_medical_estimate(request):
         product_types.append(StaffProductType.medical_estimate)
+        product_types.append(StaffProductType.casevac_quick_card)
 
     return list(dict.fromkeys(product_types))
 
@@ -445,6 +459,29 @@ def _needs_admin_products(request: StaffPlanningPackageRequest) -> bool:
     )
 
 
+def _needs_safety_products(request: StaffPlanningPackageRequest) -> bool:
+    return bool(
+        request.medical_risk_context
+        or _looks_like_live_fire(request)
+        or _looks_like_vehicle_ops(request)
+        or _has_overnight_indicator(request)
+        or _has_travel_indicator(request)
+        or request.support_requirements
+        or request.coordinating_sections
+    )
+
+
+def _needs_sel_products(request: StaffPlanningPackageRequest) -> bool:
+    return bool(
+        request.event_type
+        or request.audience
+        or request.coordinating_sections
+        or _has_travel_indicator(request)
+        or _has_overnight_indicator(request)
+        or _looks_like_formal_event(request)
+    )
+
+
 def _needs_medical_estimate(request: StaffPlanningPackageRequest) -> bool:
     return bool(
         request.medical_risk_context
@@ -453,6 +490,45 @@ def _needs_medical_estimate(request: StaffPlanningPackageRequest) -> bool:
         or _looks_like_vehicle_ops(request)
         or _has_overnight_indicator(request)
         or _has_travel_indicator(request)
+    )
+
+
+def _needs_road_to_war_brief(request: StaffPlanningPackageRequest) -> bool:
+    text = " ".join(
+        [
+            request.title,
+            request.event_type,
+            request.mission_or_training_goal,
+            request.audience or "",
+            request.timeframe or "",
+            request.intelligence_question or "",
+            *request.partner_types,
+            *request.civil_considerations,
+            *request.constraints,
+            *request.support_requirements,
+        ]
+    ).lower()
+    return bool(
+        request.source_items
+        or request.intelligence_question
+        or request.partner_types
+        or request.civil_considerations
+        or any(
+            term in text
+            for term in {
+                "scenario",
+                "region",
+                "regional",
+                "theater",
+                "crisis",
+                "contingency",
+                "littoral",
+                "country",
+                "adversary",
+                "threat",
+                "road to war",
+            }
+        )
     )
 
 
@@ -664,6 +740,42 @@ def _product_facts(
                 f"Leader touchpoint: {sel_plan.leader_touchpoints[0]}",
             ]
         )
+    elif product_type == StaffProductType.orm_worksheet:
+        facts.extend(
+            [
+                f"ORM frame: {safety_plan.orm_framework[0]}",
+                f"Named hazard or control: {safety_plan.orm_framework[-1]}",
+                f"Residual-risk focus: {safety_plan.residual_risk_decisions[0]}",
+                f"Rehearsal check: {safety_plan.rehearsal_checks[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.no_go_criteria:
+        facts.extend(
+            [
+                f"No-go baseline: {safety_plan.no_go_criteria[0]}",
+                f"Event-specific stop condition: {safety_plan.no_go_criteria[-1]}",
+                f"Stop-training trigger: {safety_plan.stop_training_triggers[0]}",
+                f"Command review point: {xo_sync.command_review_points[2]}",
+            ]
+        )
+    elif product_type == StaffProductType.residual_risk_decision_note:
+        facts.extend(
+            [
+                f"Residual-risk decision focus: {safety_plan.residual_risk_decisions[0]}",
+                f"Named risk decision: {safety_plan.residual_risk_decisions[-1]}",
+                f"Commander decision support: {xo_sync.decision_support_matrix[0]}",
+                f"No-go threshold: {safety_plan.no_go_criteria[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.rehearsal_safety_brief:
+        facts.extend(
+            [
+                f"Rehearsal safety focus: {safety_plan.rehearsal_checks[0]}",
+                f"Stop-training authority trigger: {safety_plan.stop_training_triggers[0]}",
+                f"ORM frame: {safety_plan.orm_framework[1]}",
+                f"Command-cell brief line: {command_cell.command_update_lines[0]}",
+            ]
+        )
     elif product_type == StaffProductType.admin_estimate:
         facts.extend(
             [
@@ -700,6 +812,33 @@ def _product_facts(
                 f"Immediate suspense: {s1_readiness.critical_suspenses[0]}",
             ]
         )
+    elif product_type == StaffProductType.troop_flow_checklist:
+        facts.extend(
+            [
+                f"Troop-flow focus: {sel_plan.troop_flow_plan[0]}",
+                f"Troop-flow checklist item: {sel_plan.troop_flow_checklist[0]}",
+                f"Accountability scheme: {sel_plan.accountability_scheme[0]}",
+                f"Leader touchpoint: {sel_plan.leader_touchpoint_plan[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.formation_transition_matrix:
+        facts.extend(
+            [
+                f"Formation/transition focus: {sel_plan.formation_transition_matrix[0]}",
+                f"Transition control item: {sel_plan.formation_transition_matrix[1]}",
+                f"Standards check: {sel_plan.standards_checks[0]}",
+                f"Marine-impact check: {sel_plan.marine_welfare_checks[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.leader_touchpoint_plan:
+        facts.extend(
+            [
+                f"Leader touchpoint focus: {sel_plan.leader_touchpoint_plan[0]}",
+                f"Phase-change touchpoint: {sel_plan.leader_touchpoint_plan[1]}",
+                f"Welfare check: {sel_plan.marine_welfare_checks[0]}",
+                f"Accountability owner note: {sel_plan.accountability_scheme[1]}",
+            ]
+        )
     elif product_type == StaffProductType.decision_support_matrix:
         facts.extend(
             [
@@ -727,6 +866,32 @@ def _product_facts(
                 f"Decision support: {s2_estimate.command_considerations[0]}",
             ]
         )
+    elif product_type == StaffProductType.road_to_war_brief:
+        partner_or_civil = (
+            request.partner_types[0]
+            if request.partner_types
+            else request.civil_considerations[0] if request.civil_considerations else "None stated"
+        )
+        first_unit_concern = (
+            s2_estimate.command_considerations[0] if s2_estimate is not None else planning_approach.decision
+        )
+        facts.extend(
+            [
+                (
+                    f"Scenario framing question: "
+                    f"{request.intelligence_question or f'What unit-entry context matters most for {request.title}?'}"
+                ),
+                (
+                    f"Public-source context available: "
+                    f"{'yes' if request.source_items else 'no, build from stated scenario cues and verify before use'}"
+                ),
+                (
+                    f"Partner or civil frame: "
+                    f"{partner_or_civil}"
+                ),
+                (f"First-unit concern: " f"{first_unit_concern}"),
+            ]
+        )
     elif product_type == StaffProductType.sustainment_matrix:
         facts.extend(
             [
@@ -736,13 +901,35 @@ def _product_facts(
                 f"Safety control: {safety_plan.orm_framework[0]}",
             ]
         )
+    elif product_type == StaffProductType.movement_table:
+        facts.extend(
+            [
+                f"Movement-table focus: {s4_plan.movement_and_billeting[0]}",
+                f"Critical support requirement: {s4_plan.critical_support_requirements[0]}",
+                f"Coordination point: {s4_plan.coordination_points[0]}",
+                f"Accountability touchpoint: {sel_plan.accountability_scheme[0]}",
+            ]
+        )
     elif product_type == StaffProductType.medical_estimate:
         facts.extend(
             [
                 f"Medical estimate focus: {medical_plan.medical_support_estimate[0]}",
+                f"TCCC knowledge point: {medical_plan.tccc_knowledge_points[0]}",
                 f"CASEVAC planning element: {medical_plan.casevac_plan_elements[0]}",
+                f"CASEVAC/MEDEVAC check: {medical_plan.casevac_medevac_check[0]}",
+                f"Casualty collection logic: {medical_plan.casualty_collection_logic[0]}",
                 f"Medical decision point: {medical_plan.medical_decision_points[0]}",
                 f"Medical coordination requirement: {medical_plan.coordination_requirements[0]}",
+                f"Medical coordination trigger: {medical_plan.coordination_trigger_list[0]}",
+            ]
+        )
+    elif product_type == StaffProductType.casevac_quick_card:
+        facts.extend(
+            [
+                f"CASEVAC quick-card focus: {medical_plan.casevac_plan_elements[0]}",
+                f"CASEVAC/MEDEVAC check: {medical_plan.casevac_medevac_check[0]}",
+                f"Casualty collection logic: {medical_plan.casualty_collection_logic[0]}",
+                f"Stop-training or decision trigger: {medical_plan.medical_decision_points[0]}",
             ]
         )
 

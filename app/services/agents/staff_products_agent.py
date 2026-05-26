@@ -11,11 +11,18 @@ class StaffProductsAgent(Agent):
             name="Staff Products Assistant",
             description=(
                 "Builds advisory scaffolds for OPORDs, WARNOs, FRAGOs, SITREPs, AARs, "
-                "running estimates, synchronization matrices, admin estimates, admin task trackers, routing matrices, "
-                "pre-drill admin readiness checks, decision support matrices, due-out trackers, "
-                "collection matrices, sustainment matrices, "
-                "medical estimates, public affairs plans, security annexes, resource estimates, inspection "
-                "readiness plans, IPBs, decision briefs, "
+                "air-support estimates, air-ground coordination matrices, aviation supportability matrices, "
+                "running estimates, synchronization matrices, ORM worksheets, no-go criteria, "
+                "residual-risk decision notes, "
+                "rehearsal safety briefs, admin estimates, admin task trackers, routing matrices, "
+                "pre-drill admin readiness checks, troop-flow checklists, formation/transition matrices, "
+                "leader touchpoint plans, decision support matrices, due-out trackers, "
+                "collection matrices, sustainment matrices, movement tables, "
+                "medical estimates, CASEVAC quick cards, religious support plans, RMT support matrices, "
+                "morale and welfare estimates, road-to-war briefs, public affairs plans, security annexes, "
+                "visitor-control checklists, traffic and parking control plans, "
+                "resource estimates, inspection readiness plans, "
+                "IPBs, decision briefs, "
                 "command-update briefs, and correspondence."
             ),
             domain="staff products",
@@ -66,10 +73,17 @@ class StaffProductsAgent(Agent):
             follow_up_questions=[
                 (
                     "What product type do you need: OPORD, WARNO, FRAGO, SITREP, AAR, "
-                    "running estimate, synchronization matrix, admin estimate, admin task tracker, routing matrix, "
-                    "pre-drill admin readiness check, decision support matrix, due-out tracker, "
-                    "collection matrix, sustainment matrix, medical "
-                    "estimate, public affairs plan, security annex, resource estimate, inspection readiness plan, "
+                    "air support estimate, air-ground coordination matrix, aviation supportability matrix, "
+                    "running estimate, synchronization matrix, ORM worksheet, no-go criteria, "
+                    "residual-risk decision note, "
+                    "rehearsal safety brief, admin estimate, admin task tracker, routing matrix, "
+                    "pre-drill admin readiness check, troop-flow checklist, formation/transition matrix, "
+                    "leader touchpoint plan, decision support matrix, due-out tracker, "
+                    "collection matrix, sustainment matrix, movement table, medical "
+                    "estimate, CASEVAC quick card, religious support plan, RMT support matrix, "
+                    "morale and welfare estimate, road-to-war brief, public affairs plan, security annex, "
+                    "visitor-control checklist, traffic and parking control plan, "
+                    "resource estimate, inspection readiness plan, "
                     "IPB, decision brief, command update brief, "
                     "letter, memo, or endorsement?"
                 ),
@@ -82,6 +96,10 @@ class StaffProductsAgent(Agent):
 def _product_type_from_context(context: AgentContext, input_text: str) -> StaffProductType:
     raw = str(context.extra.get("product_type") or "").lower()
     text = f"{raw} {input_text}".lower()
+    if "visitor-control checklist" in text or "visitor control checklist" in text:
+        return StaffProductType.visitor_control_checklist
+    if "traffic and parking control plan" in text or "traffic control plan" in text or "parking control" in text:
+        return StaffProductType.traffic_parking_control_plan
     for product_type in StaffProductType:
         if product_type.value in text or product_type.value.replace("_", " ") in text:
             return product_type
@@ -91,10 +109,24 @@ def _product_type_from_context(context: AgentContext, input_text: str) -> StaffP
         return StaffProductType.frago
     if "sitrep" in text:
         return StaffProductType.sitrep
+    if "air support estimate" in text:
+        return StaffProductType.air_support_estimate
+    if "air-ground coordination matrix" in text or "air ground coordination matrix" in text:
+        return StaffProductType.air_ground_coordination_matrix
+    if "aviation supportability matrix" in text:
+        return StaffProductType.aviation_supportability_matrix
     if "running estimate" in text or "staff estimate" in text:
         return StaffProductType.running_estimate
     if "synchronization matrix" in text or "sync matrix" in text or "synchronization board" in text:
         return StaffProductType.synchronization_matrix
+    if "orm worksheet" in text or ("orm" in text and "worksheet" in text):
+        return StaffProductType.orm_worksheet
+    if "no-go criteria" in text or "no go criteria" in text:
+        return StaffProductType.no_go_criteria
+    if "residual-risk decision note" in text or "residual risk decision note" in text:
+        return StaffProductType.residual_risk_decision_note
+    if "rehearsal safety brief" in text or ("safety brief" in text and "rehearsal" in text):
+        return StaffProductType.rehearsal_safety_brief
     if "admin estimate" in text or ("s-1" in text and "estimate" in text):
         return StaffProductType.admin_estimate
     if "admin task tracker" in text or ("s-1" in text and "task tracker" in text):
@@ -103,6 +135,12 @@ def _product_type_from_context(context: AgentContext, input_text: str) -> StaffP
         return StaffProductType.routing_matrix
     if "pre-drill admin readiness check" in text or "pre drill admin readiness check" in text:
         return StaffProductType.pre_drill_admin_readiness_check
+    if "troop-flow checklist" in text or "troop flow checklist" in text:
+        return StaffProductType.troop_flow_checklist
+    if "formation/transition matrix" in text or "formation transition matrix" in text:
+        return StaffProductType.formation_transition_matrix
+    if "leader touchpoint plan" in text or "leader touchpoint checklist" in text:
+        return StaffProductType.leader_touchpoint_plan
     if "decision support matrix" in text or "decision matrix" in text:
         return StaffProductType.decision_support_matrix
     if "due-out tracker" in text or "due out tracker" in text or "suspense tracker" in text:
@@ -110,9 +148,26 @@ def _product_type_from_context(context: AgentContext, input_text: str) -> StaffP
     if "collection matrix" in text or "pir/ir" in text or "pir ir" in text or "collection plan" in text:
         return StaffProductType.collection_matrix
     if "sustainment matrix" in text or "movement table" in text or "movement matrix" in text:
+        if "movement table" in text:
+            return StaffProductType.movement_table
         return StaffProductType.sustainment_matrix
     if "medical estimate" in text:
         return StaffProductType.medical_estimate
+    if "casevac quick card" in text or "medevac quick card" in text or "casevac card" in text:
+        return StaffProductType.casevac_quick_card
+    if "religious support plan" in text:
+        return StaffProductType.religious_support_plan
+    if "rmt support matrix" in text or "religious ministry team support matrix" in text:
+        return StaffProductType.rmt_support_matrix
+    if "morale and welfare estimate" in text or "morale welfare estimate" in text:
+        return StaffProductType.morale_welfare_estimate
+    if (
+        "road to war" in text
+        or "road-to-war" in text
+        or "levelset brief" in text
+        or "scenario background brief" in text
+    ):
+        return StaffProductType.road_to_war_brief
     if (
         "public affairs plan" in text
         or "commstrat plan" in text
@@ -130,6 +185,10 @@ def _product_type_from_context(context: AgentContext, input_text: str) -> StaffP
         or "visitor control" in text
         or "traffic control plan" in text
     ):
+        if "visitor control" in text or "visitor-control" in text:
+            return StaffProductType.visitor_control_checklist
+        if "traffic control plan" in text or "traffic and parking control plan" in text or "parking control" in text:
+            return StaffProductType.traffic_parking_control_plan
         return StaffProductType.security_annex
     if (
         "resource estimate" in text

@@ -242,8 +242,11 @@ class SelExecutionRequest(BaseModel):
 class SelExecutionResponse(BaseModel):
     title: str
     troop_flow_plan: list[str] = Field(default_factory=list)
+    troop_flow_checklist: list[str] = Field(default_factory=list)
     accountability_scheme: list[str] = Field(default_factory=list)
+    formation_transition_matrix: list[str] = Field(default_factory=list)
     leader_touchpoints: list[str] = Field(default_factory=list)
+    leader_touchpoint_plan: list[str] = Field(default_factory=list)
     standards_checks: list[str] = Field(default_factory=list)
     marine_welfare_checks: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
@@ -284,9 +287,13 @@ class MedicalPlanningResponse(BaseModel):
     title: str
     medical_support_estimate: list[str] = Field(default_factory=list)
     tccc_considerations: list[str] = Field(default_factory=list)
+    tccc_knowledge_points: list[str] = Field(default_factory=list)
     nine_line_considerations: list[str] = Field(default_factory=list)
     casevac_plan_elements: list[str] = Field(default_factory=list)
+    casevac_medevac_check: list[str] = Field(default_factory=list)
+    casualty_collection_logic: list[str] = Field(default_factory=list)
     medical_decision_points: list[str] = Field(default_factory=list)
     medical_rehearsal_checks: list[str] = Field(default_factory=list)
     coordination_requirements: list[str] = Field(default_factory=list)
+    coordination_trigger_list: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

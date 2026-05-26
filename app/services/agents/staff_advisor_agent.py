@@ -9,6 +9,7 @@ from app.services.agents.source_refs import (
     G8_REFERENCES,
     G9_REFERENCES,
     IG_REFERENCES,
+    LEADERSHIP_REFERENCES,
     LEGAL_REFERENCES,
     MEDICAL_REFERENCES,
     ORM_REFERENCES,
@@ -60,7 +61,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Discipline, accountability, welfare, admin reality",
         ("Marine impact", "accountability", "admin friction"),
         (MagtfLens.ce_c2,),
-        ("troop flow plan", "accountability scheme", "leader touchpoint checklist"),
+        ("troop-flow checklist", "formation/transition matrix", "leader touchpoint plan"),
     ),
     StaffRoleDefinition(
         StaffEchelon.company,
@@ -88,7 +89,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Collateral-duty safety, ORM, and stop-training criteria",
         ("ORM", "range/training safety", "stop-training criteria"),
         (MagtfLens.gce, MagtfLens.ce_c2),
-        ("Company ORM worksheet", "stop-training criteria", "safety rehearsal checklist"),
+        ("ORM worksheet", "no-go criteria", "residual-risk decision note", "rehearsal safety brief"),
     ),
     StaffRoleDefinition(
         StaffEchelon.battalion,
@@ -136,7 +137,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Senior enlisted perspective",
         ("standards", "welfare", "discipline"),
         (MagtfLens.ce_c2,),
-        ("troop flow plan", "accountability scheme", "leader touchpoint checklist"),
+        ("troop-flow checklist", "formation/transition matrix", "leader touchpoint plan"),
     ),
     StaffRoleDefinition(
         StaffEchelon.battalion,
@@ -202,7 +203,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Medical support, TCCC awareness, and evacuation planning",
         ("medical support", "TCCC", "evacuation planning"),
         (MagtfLens.lce, MagtfLens.gce),
-        ("Medical estimate", "CASEVAC plan", "health-service-support appendix"),
+        ("Medical estimate", "CASEVAC / MEDEVAC check", "casualty collection logic", "coordination trigger list"),
     ),
     StaffRoleDefinition(
         StaffEchelon.battalion,
@@ -252,7 +253,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "ORM, mishap prevention, risk acceptance, and stop-training criteria",
         ("ORM", "risk acceptance", "mishap prevention"),
         (MagtfLens.ce_c2, MagtfLens.gce),
-        ("Risk assessment worksheet", "no-go criteria", "residual-risk acceptance note"),
+        ("ORM worksheet", "no-go criteria", "residual-risk decision note", "rehearsal safety brief"),
     ),
     StaffRoleDefinition(
         StaffEchelon.battalion,
@@ -387,7 +388,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Health service support, casualty estimates, medical evacuation, and medical readiness",
         ("health service support", "casualty estimates", "medical evacuation"),
         (MagtfLens.lce, MagtfLens.ce_c2),
-        ("Medical estimate", "medical service support annex", "CASEVAC/MEDEVAC decision points"),
+        ("Medical estimate", "medical service support annex", "CASEVAC / MEDEVAC check", "coordination trigger list"),
     ),
     StaffRoleDefinition(
         StaffEchelon.regiment_meu_wing,
@@ -654,7 +655,7 @@ ROLE_DEFINITIONS: tuple[StaffRoleDefinition, ...] = (
         "Health service support, casualty estimates, medical evacuation, and medical readiness",
         ("health service support", "casualty estimates", "medical evacuation"),
         (MagtfLens.lce, MagtfLens.ce_c2),
-        ("medical estimate", "health service support annex", "medical readiness risks"),
+        ("medical estimate", "health service support annex", "CASEVAC / MEDEVAC check", "medical readiness risks"),
     ),
     StaffRoleDefinition(
         StaffEchelon.hqmc,
@@ -1033,7 +1034,8 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "- What would embarrass the unit if it went unverified?\n"
             "- What needs rehearsal instead of a verbal assumption?\n\n"
             "Recommended next action:\n"
-            "- Write the sequence, accountability method, uniform standard, and speaking or movement order now.\n"
+            "- Write the troop-flow checklist, formation/transition matrix, and leader touchpoint plan now.\n"
+            "- Make sequence, accountability method, uniform standard, and speaking or movement order explicit.\n"
             "- Verify ceremony and protocol questions against the governing reference before execution."
             f"{active_context_note}"
             f"{osint_note}"
@@ -1054,11 +1056,13 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "Concerns to test:\n"
             "- What casualty scenario is most plausible enough to drive planning?\n"
             "- Who is qualified, equipped, and empowered to make the first hard call?\n"
-            "- What 9-line and CASEVAC elements actually need rehearsal here?\n"
+            "- What TCCC knowledge, trauma-gear familiarity, and first-response\n"
+            "  expectations need refresh before execution?\n"
+            "- What 9-line, CASEVAC / MEDEVAC, and casualty-collection elements actually need rehearsal here?\n"
             "- What assumption about transport, terrain, comm, or time to higher care is still weak?\n\n"
             "Recommended next action:\n"
-            "- Write the casualty scenarios, casualty collection plan,\n"
-            "  movement assumptions, and stop-training criteria now.\n"
+            "- Write the casualty scenarios, CASEVAC / MEDEVAC check, casualty collection logic,\n"
+            "  coordination triggers, movement assumptions, and stop-training criteria now.\n"
             "- Pause for qualified medical review before pretending the plan is executable."
             f"{active_context_note}"
             f"{osint_note}"
@@ -1177,8 +1181,8 @@ def _build_staff_answer(definition: StaffRoleDefinition, focus_lines: str, osint
             "- What residual risk needs command acceptance instead of staff optimism?\n"
             "- What rehearsal proves the control measure is executable?\n\n"
             "Recommended next action:\n"
-            "- Build the ORM worksheet, no-go criteria, risk-owner list, and safety brief before the event "
-            "timeline hardens."
+            "- Build the ORM worksheet, no-go criteria, residual-risk decision note, and rehearsal safety brief "
+            "before the event timeline hardens."
             f"{active_context_note}"
             f"{osint_note}"
         )
@@ -1323,8 +1327,8 @@ def _role_references(role: str) -> tuple[SourceRef, ...]:
         "pao": PAO_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "commstrat": PAO_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "ig": IG_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "chaplain": STAFF_PROCESS_REFERENCES,
-        "rp": STAFF_PROCESS_REFERENCES,
+        "chaplain": LEADERSHIP_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "rp": LEADERSHIP_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "safety": ORM_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "provost": FORCE_PROTECTION_REFERENCES + LEGAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "hqmc_mra": S1_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
