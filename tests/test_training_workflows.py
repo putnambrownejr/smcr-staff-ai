@@ -3,6 +3,19 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 
+def test_training_scenario_preset_catalog_lists_first_pass_presets() -> None:
+    client = TestClient(app)
+
+    response = client.get("/training/scenario-presets")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_presets"] >= 4
+    ids = {item["preset_id"] for item in payload["records"]}
+    assert "baltic-littoral-coercion" in ids
+    assert "hadr-armed-opportunists" in ids
+
+
 def test_training_scenario_builder_returns_admin_and_orm_requirements() -> None:
     client = TestClient(app)
 
@@ -35,13 +48,36 @@ def test_training_scenario_builder_returns_admin_and_orm_requirements() -> None:
     assert payload["aar_prompts"]
     assert payload["scenario_setting"]
     assert payload["adversary_profile"]
+    assert payload["threat_actor_stereotypes"]
     assert payload["inject_matrix"]
     assert payload["facilitator_notes"]
+    assert payload["redcell_questions"]
     assert payload["scenario_archetype_used"] == "littoral_hybrid"
     assert payload["inject_tags_used"] == ["comms_degraded", "media_pressure"]
     assert "fictional" in payload["scenario_setting"][0].lower()
     assert payload["adversary_profile"][0]["name"]
     assert any(item["title"] == "Comms blackout window" for item in payload["inject_matrix"])
+    assert payload["threat_actor_stereotypes"][0]["preferred_seams"]
+
+
+def test_training_scenario_builder_applies_preset_defaults() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/training/scenario",
+        json={
+            "scenario_type": "staff_drill",
+            "title": "Preset-driven planning drill",
+            "training_objective": "Stress command decisions with a ready-made scenario package.",
+            "scenario_preset_id": "baltic-littoral-coercion",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["scenario_archetype_used"] == "littoral_hybrid"
+    assert payload["inject_tags_used"] == ["comms_degraded", "media_pressure", "partner_force_failure"]
+    assert any("corridor" in item.lower() for item in payload["scenario_setting"])
 
 
 def test_training_case_study_route_returns_s2_and_conop_implications() -> None:
@@ -193,15 +229,18 @@ def test_s3_planner_returns_battle_rhythm_and_outputs() -> None:
     assert payload["scenario_setting"]
     assert payload["scenario_frame"]
     assert payload["adversary_profile"]
+    assert payload["threat_actor_stereotypes"]
     assert payload["scenario_escalation"]
     assert payload["narrative_beats"]
     assert payload["injects"]
     assert payload["inject_matrix"]
     assert payload["facilitator_notes"]
+    assert payload["redcell_questions"]
     assert payload["adversary_profile"][0]["signature_tactics"]
     assert any("Phase II" in item["phase"] or "Phase III" in item["phase"] for item in payload["inject_matrix"])
     assert any(item["title"] == "Casualty inject" for item in payload["inject_matrix"])
     assert any(item["title"] == "Support collapse" for item in payload["inject_matrix"])
+    assert payload["threat_actor_stereotypes"][0]["likely_friendly_mistakes"]
     assert payload["met_alignment"]
     assert payload["coordination_matrix"]
     assert payload["battle_rhythm"]
@@ -209,6 +248,26 @@ def test_s3_planner_returns_battle_rhythm_and_outputs() -> None:
     assert len(payload["subordinate_prompt_packets"]) == 2
     assert any("On order" in item["task"] for item in payload["subordinate_prompt_packets"])
     assert payload["citations"]
+
+
+def test_s3_planner_applies_scenario_preset_defaults() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/training/s3-plan",
+        json={
+            "title": "Preset-driven S-3 scenario drill",
+            "mission_or_training_goal": "Use a ready scenario package to test staff synchronization.",
+            "scenario_preset_id": "urban-unrest-partner-fragility",
+            "event_type": "staff_drill",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["scenario_archetype_used"] == "urban_unrest"
+    assert payload["inject_tags_used"] == ["civil_unrest", "disinformation", "legal_gray_zone"]
+    assert any(item["title"] == "Legal ambiguity" for item in payload["inject_matrix"])
 
 
 def test_s4_planner_returns_support_and_sustainment_elements() -> None:

@@ -170,7 +170,23 @@ def test_red_team_agent_returns_assumptions_challenge_structure() -> None:
 
     assert "Red-team / assumptions challenge advisory" in response.answer
     assert "What to challenge" in response.answer
+    assert "Threat actor stereotype board" in response.answer
+    assert "Red-cell questions" in response.answer
     assert response.structured_citations
+
+
+def test_red_team_agent_inflects_to_urban_unrest_pattern() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("red-team-assumptions-challenge")
+    assert agent is not None
+
+    response = agent.run(
+        "Pressure-test this urban unrest scenario before we brief it.",
+        context=AgentContext(request_is_training_or_fictional=True),
+    )
+
+    assert "urban_unrest" in response.answer
+    assert "Crowd-shielded agitator" in response.answer
 
 
 def test_assessment_learning_agent_returns_aar_linkage_structure() -> None:

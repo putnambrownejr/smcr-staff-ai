@@ -9,7 +9,9 @@ from app.schemas.training import (
     ScenarioInjectCard,
     ScenarioInjectTag,
     ScenarioNarrativeBeat,
+    ThreatActorStereotype,
 )
+from app.services.training.redcell_engine import build_redcell_design
 
 
 @dataclass(frozen=True)
@@ -19,10 +21,12 @@ class ScenarioDesign:
     setting: list[str]
     frame: list[str]
     actors: list[ScenarioActorProfile]
+    stereotypes: list[ThreatActorStereotype]
     escalation: list[str]
     beats: list[ScenarioNarrativeBeat]
     injects: list[ScenarioInjectCard]
     facilitator_notes: list[str]
+    redcell_questions: list[str]
 
 
 def build_s3_scenario_design(
@@ -53,6 +57,11 @@ def build_s3_scenario_design(
     place_name = _fictional_place(seed)
     country_name = _fictional_country(seed)
     actor = _fictional_actor(seed, archetype, place_name)
+    redcell_design = build_redcell_design(
+        archetype=archetype,
+        actor_name=actor.name,
+        place_name=place_name,
+    )
     setting = _setting_lines(
         archetype=archetype,
         country_name=country_name,
@@ -95,10 +104,12 @@ def build_s3_scenario_design(
         setting=setting,
         frame=frame,
         actors=[actor],
+        stereotypes=redcell_design.stereotypes,
         escalation=escalation,
         beats=beats,
         injects=injects,
         facilitator_notes=facilitator_notes,
+        redcell_questions=redcell_design.questions,
     )
 
 

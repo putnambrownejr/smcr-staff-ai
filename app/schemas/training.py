@@ -60,11 +60,31 @@ class TrainingCaseStudyResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class ScenarioPresetRecord(BaseModel):
+    preset_id: str
+    name: str
+    scenario_archetype: ScenarioArchetype
+    inject_tags: list[ScenarioInjectTag] = Field(default_factory=list)
+    summary: str
+    recommended_for: list[str] = Field(default_factory=list)
+    primary_scenario_input: str
+    secondary_scenario_input: str
+    current_event_context: list[str] = Field(default_factory=list)
+    coordinating_sections: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+
+
+class ScenarioPresetListResponse(BaseModel):
+    total_presets: int
+    records: list[ScenarioPresetRecord] = Field(default_factory=list)
+
+
 class TrainingScenarioRequest(BaseModel):
     scenario_type: TrainingScenarioType
     title: str
     training_objective: str
     audience: str | None = None
+    scenario_preset_id: str | None = None
     scenario_archetype: ScenarioArchetype | None = None
     inject_tags: list[ScenarioInjectTag] = Field(default_factory=list)
     primary_scenario_input: str | None = None
@@ -84,9 +104,11 @@ class TrainingScenarioResponse(BaseModel):
     concept: list[str] = Field(default_factory=list)
     scenario_setting: list[str] = Field(default_factory=list)
     adversary_profile: list[ScenarioActorProfile] = Field(default_factory=list)
+    threat_actor_stereotypes: list[ThreatActorStereotype] = Field(default_factory=list)
     narrative_beats: list[ScenarioNarrativeBeat] = Field(default_factory=list)
     inject_matrix: list[ScenarioInjectCard] = Field(default_factory=list)
     facilitator_notes: list[str] = Field(default_factory=list)
+    redcell_questions: list[str] = Field(default_factory=list)
     support_requirements: list[str] = Field(default_factory=list)
     admin_requirements: list[str] = Field(default_factory=list)
     orm_considerations: list[str] = Field(default_factory=list)
@@ -201,12 +223,21 @@ class ScenarioInjectCard(BaseModel):
     primary_sections: list[str] = Field(default_factory=list)
 
 
+class ThreatActorStereotype(BaseModel):
+    label: str
+    summary: str
+    indicators: list[str] = Field(default_factory=list)
+    preferred_seams: list[str] = Field(default_factory=list)
+    likely_friendly_mistakes: list[str] = Field(default_factory=list)
+
+
 class S3PlanningRequest(BaseModel):
     title: str
     mission_or_training_goal: str
     event_type: str = "drill_weekend"
     audience: str | None = None
     timeframe: str | None = None
+    scenario_preset_id: str | None = None
     scenario_archetype: ScenarioArchetype | None = None
     inject_tags: list[ScenarioInjectTag] = Field(default_factory=list)
     primary_scenario_input: str | None = None
@@ -229,11 +260,13 @@ class S3PlanningResponse(BaseModel):
     scenario_setting: list[str] = Field(default_factory=list)
     scenario_frame: list[str] = Field(default_factory=list)
     adversary_profile: list[ScenarioActorProfile] = Field(default_factory=list)
+    threat_actor_stereotypes: list[ThreatActorStereotype] = Field(default_factory=list)
     scenario_escalation: list[str] = Field(default_factory=list)
     narrative_beats: list[ScenarioNarrativeBeat] = Field(default_factory=list)
     injects: list[str] = Field(default_factory=list)
     inject_matrix: list[ScenarioInjectCard] = Field(default_factory=list)
     facilitator_notes: list[str] = Field(default_factory=list)
+    redcell_questions: list[str] = Field(default_factory=list)
     met_alignment: list[str] = Field(default_factory=list)
     critical_tasks: list[str] = Field(default_factory=list)
     coordination_matrix: list[str] = Field(default_factory=list)

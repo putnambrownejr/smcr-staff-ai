@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.schemas.tdg import TdgGenerationRequest, TdgGenerationResponse
 from app.schemas.training import (
@@ -14,6 +14,7 @@ from app.schemas.training import (
     S3PlanningResponse,
     S4PlanningRequest,
     S4PlanningResponse,
+    ScenarioPresetListResponse,
     TrainingCaseStudyRequest,
     TrainingCaseStudyResponse,
     TrainingScenarioRequest,
@@ -25,10 +26,12 @@ from app.services.training.infantry_package_builder import InfantryTrainingPacka
 from app.services.training.s3_planner import S3Planner
 from app.services.training.s4_planner import S4Planner
 from app.services.training.scenario_builder import RangeSafetyBuilder, TrainingScenarioBuilder
+from app.services.training.scenario_preset_catalog import ScenarioPresetCatalog
 from app.services.training.tdg_builder import TdgBuilder
 
 router = APIRouter(prefix="/training", tags=["training workflows"])
 _scenario_builder = TrainingScenarioBuilder()
+_scenario_presets = ScenarioPresetCatalog.default()
 _range_builder = RangeSafetyBuilder()
 _annual_training_planner = AnnualTrainingPlanner()
 _range_package_planner = RangePackagePlanner()
@@ -39,8 +42,21 @@ _case_study_builder = TrainingCaseStudyBuilder()
 _infantry_package_builder = InfantryTrainingPackageBuilder()
 
 
+@router.get("/scenario-presets", response_model=ScenarioPresetListResponse)
+def list_scenario_presets() -> ScenarioPresetListResponse:
+    return _scenario_presets.list()
+
+
 @router.post("/scenario", response_model=TrainingScenarioResponse)
 def build_training_scenario(request: TrainingScenarioRequest) -> TrainingScenarioResponse:
+    if request.scenario_preset_id:
+        try:
+            request = _scenario_presets.apply_to_training_request(request)
+        except KeyError as exc:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Unknown scenario preset: {request.scenario_preset_id}",
+            ) from exc
     return _scenario_builder.build(request)
 
 
@@ -71,6 +87,14 @@ def build_training_case_study(request: TrainingCaseStudyRequest) -> TrainingCase
 
 @router.post("/s3-plan", response_model=S3PlanningResponse)
 def build_s3_plan(request: S3PlanningRequest) -> S3PlanningResponse:
+    if request.scenario_preset_id:
+        try:
+            request = _scenario_presets.apply_to_s3_request(request)
+        except KeyError as exc:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Unknown scenario preset: {request.scenario_preset_id}",
+            ) from exc
     return _s3_planner.build(request)
 
 
