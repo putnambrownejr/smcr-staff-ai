@@ -1,5 +1,4 @@
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
-from app.schemas.training import ScenarioArchetype
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import (
     S2_REFERENCES,
@@ -9,7 +8,9 @@ from app.services.agents.source_refs import (
     source_trust_markers,
     structured_citations,
 )
+from app.schemas.training import ScenarioArchetype
 from app.services.training.redcell_engine import build_redcell_design
+from app.services.training.scenario_engine import infer_archetype_from_text
 
 
 class RedTeamAssumptionsAgent(Agent):
@@ -112,13 +113,4 @@ def build_red_team_agent() -> RedTeamAssumptionsAgent:
 
 
 def _infer_archetype(input_text: str) -> ScenarioArchetype:
-    text = input_text.lower()
-    if any(term in text for term in {"littoral", "coast", "maritime", "port", "meu"}):
-        return ScenarioArchetype.littoral_hybrid
-    if any(term in text for term in {"urban", "riot", "city", "protest", "crowd"}):
-        return ScenarioArchetype.urban_unrest
-    if any(term in text for term in {"disaster", "flood", "storm", "aid", "humanitarian"}):
-        return ScenarioArchetype.disaster_unrest
-    if any(term in text for term in {"border", "route", "convoy", "crossing", "smuggling"}):
-        return ScenarioArchetype.border_proxy
-    return ScenarioArchetype.expeditionary_coercion
+    return infer_archetype_from_text(input_text)

@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.admin_workflows import (
     AdminWorkflowDraftRequest,
@@ -66,7 +67,7 @@ from app.services.staff.sel_execution_planner import SelExecutionPlanner
 from app.services.staff.update_cycle import StaffUpdateCycleBuilder
 from app.services.staff.xo_sync_planner import XoSyncPlanner
 
-router = APIRouter(prefix="/staff", tags=["staff council"])
+router = APIRouter(prefix="/staff", tags=["staff council"], dependencies=[LocalApiKeyDependency])
 
 _service = StaffCouncilService()
 _command_cell_planner = CommandCellPlanner()

@@ -52,7 +52,7 @@ class LocalContextStore:
         warnings = [*DEFAULT_WARNINGS]
         text = _extract_preview_text(file_path, content_type, safe_name)
         warnings.extend(detect_sensitive_input(text))
-        contains_pii = bool(detect_pii_input(text))
+        contains_pii = detect_pii_input(text)
 
         metadata = LocalContextMetadata(
             context_id=context_id,

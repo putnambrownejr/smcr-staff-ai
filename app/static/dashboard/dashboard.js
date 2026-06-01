@@ -68,7 +68,7 @@ const MOS_BENCH_CATALOG = [
 for (const button of document.querySelectorAll(".lane-button")) {
   button.addEventListener("click", () => {
     state.activeLane = button.dataset.lane || "overview";
-    applyLaneVisibility();
+    applyLaneVisibility(true); // A3: move focus into panel on explicit tab click
   });
 }
 
@@ -174,7 +174,7 @@ document.getElementById("staff-cycle-form").addEventListener("submit", async (ev
   const payload = {
     title: form.get("title"),
     supported_unit: form.get("supported_unit"),
-    supported_echelon: "company",
+    supported_echelon: form.get("supported_echelon") || "company", // UX6: from form select
     mission_or_training_goal: form.get("mission_or_training_goal"),
     commander_priorities: splitLines(form.get("commander_priorities")),
     section_updates: parseSectionUpdates(form.get("section_updates")),
@@ -186,25 +186,10 @@ document.getElementById("staff-cycle-form").addEventListener("submit", async (ev
 
 document.getElementById("planning-cell-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const form = new FormData(event.currentTarget);
-  const supportAndCivil = splitLines(form.get("support_requirements"));
-  const payload = {
-    title: form.get("title"),
-    supported_unit: form.get("supported_unit"),
-    supported_echelon: "company",
-    event_type: form.get("event_type") || "training_event",
-    mission_or_training_goal: form.get("mission_or_training_goal"),
-    time_available: form.get("time_available") || null,
-    commander_priorities: splitLines(form.get("commander_priorities")),
-    higher_guidance: splitLines(form.get("higher_guidance")),
-    constraints: splitLines(form.get("higher_guidance")),
-    coordinating_sections: splitLines(form.get("coordinating_sections")),
-    support_requirements: supportAndCivil,
-    civil_considerations: supportAndCivil,
-    section_updates: parseSectionUpdates(form.get("section_updates")),
-    training_only: true,
-  };
-  const data = await apiFetch("/staff/planning-cell", { method: "POST", body: JSON.stringify(payload) });
+  const data = await apiFetch("/staff/planning-cell", {
+    method: "POST",
+    body: JSON.stringify(buildPlanningCellPayloadFromForm()),
+  });
   renderPlanningCellOutput("planning-cell-output", data);
 });
 
@@ -270,6 +255,16 @@ document.getElementById("document-select")?.addEventListener("change", (event) =
   state.selectedDocumentId = event.target.value || null;
   renderDocumentLibrary(state.workspace?.document_details || []);
 });
+// Workflow dialog — close button and backdrop click
+document.getElementById("workflow-dialog-close").addEventListener("click", () => {
+  document.getElementById("workflow-dialog").close();
+});
+document.getElementById("workflow-dialog").addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) {
+    event.currentTarget.close();
+  }
+});
+
 document.getElementById("quick-open-watch").addEventListener("click", () => openLane("watch", "Opened the watch lane."));
 document
   .getElementById("quick-open-library")
@@ -293,18 +288,38 @@ document
 document
   .getElementById("draft-open-brief-clinic")
   .addEventListener("click", () => launchWalkInWorkflow("brief-clinic"));
-document
-  .getElementById("workflow-open-lone-planner")
-  .addEventListener("click", () => launchThinStaffWorkflow("lone-planner"));
-document
-  .getElementById("workflow-open-planning-cell")
-  .addEventListener("click", () => launchThinStaffWorkflow("planning-cell"));
-document
-  .getElementById("workflow-run-staff-package")
-  .addEventListener("click", runStaffPlanningPackage);
-document
-  .getElementById("workflow-open-brief-clinic")
-  .addEventListener("click", () => launchWalkInWorkflow("brief-clinic"));
+// Start Here cards: Lone Planner and Staff Package open a dialog (instant results,
+// no form input needed). Planning Cell and Brief Clinic open their lane drawers.
+document.getElementById("workflow-open-lone-planner").addEventListener("click", () => {
+  if (state.workspace) {
+    primeThinStaffForms();
+    runWorkflowInDialog("Lone Planner Mode", async (outputEl) => {
+      const payload = buildPlanningCellPayloadFromForm();
+      const data = await apiFetch("/staff/lone-planner", { method: "POST", body: JSON.stringify(payload) });
+      renderLonePlannerOutput(outputEl.id, data);
+    });
+  } else {
+    setWorkspaceNote("Load a workspace first so Lone Planner can use your current context.", true);
+  }
+});
+document.getElementById("workflow-open-planning-cell").addEventListener("click", () => {
+  openToolDrawer("drawer-planning-cell");
+  setWorkspaceNote("Planning cell is open in the Workflows lane.");
+});
+document.getElementById("workflow-run-staff-package").addEventListener("click", () => {
+  if (state.workspace) {
+    runWorkflowInDialog("Integrated Staff Package", async (outputEl) => {
+      const data = await runStaffPlanningPackageAndReturn();
+      renderToolOutput(outputEl.id, data, ["planning_posture", "command_decisions", "section_outputs", "staff_products", "warnings"]);
+    });
+  } else {
+    setWorkspaceNote("Load a workspace first to build a staff package.", true);
+  }
+});
+document.getElementById("workflow-open-brief-clinic").addEventListener("click", () => {
+  openToolDrawer("drawer-brief-clinic");
+  setWorkspaceNote("Brief Clinic is open in the Workflows lane.");
+});
 document
   .getElementById("battle-rhythm-open-editor")
   .addEventListener("click", () => openBattleRhythmEditor());
@@ -369,6 +384,8 @@ document.addEventListener("click", async (event) => {
 
 async function loadWorkspace() {
   updateModeBanner();
+  // UX5: show loading overlay so users know the fetch is in flight
+  setLoading(true);
   try {
     if (state.mode === "demo") {
       state.workspace = await apiFetch("/demo/dashboard/data");
@@ -381,9 +398,34 @@ async function loadWorkspace() {
       state.workspace = await apiFetch(`/dashboard/data/${encodeURIComponent(userKey)}`, { auth: true });
     }
     renderWorkspace(state.workspace);
+    openDefaultPanels();
     setWorkspaceNote("Workspace refreshed.");
   } catch (error) {
     setWorkspaceNote(error.message, true);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function setLoading(active) {
+  const overlay = document.getElementById("dashboard-loading");
+  if (overlay) {
+    overlay.classList.toggle("is-hidden", !active);
+  }
+}
+
+// UX3: open the most operationally relevant panels by default after a workspace load
+function openDefaultPanels() {
+  for (const id of ["daily-brief-drawer", "act-now-drawer"]) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.open = true;
+    }
+  }
+  // Open the command snapshots drawer so chief / admin / career counts are visible
+  const snapshots = document.querySelector(".collapsible-panel.full-span details");
+  if (snapshots && state.workspace) {
+    snapshots.open = true;
   }
 }
 
@@ -579,6 +621,18 @@ function battleRhythmLines(items) {
     .join("\n");
 }
 
+// Open a tool drawer in the Workflows lane without forcing a scroll jump.
+// Switches to the draft lane, expands the target drawer, and lets the user
+// scroll at their own pace.
+function openToolDrawer(drawerId) {
+  state.activeLane = "draft";
+  applyLaneVisibility(true);
+  const drawer = document.getElementById(drawerId);
+  if (drawer) {
+    drawer.open = true;
+  }
+}
+
 async function launchThinStaffWorkflow(mode) {
   if (!state.workspace) {
     setWorkspaceNote("Load a workspace first so the launch can use current context.", true);
@@ -587,60 +641,104 @@ async function launchThinStaffWorkflow(mode) {
 
   if (mode === "admin") {
     state.activeLane = "overview";
-    applyLaneVisibility();
-    document.getElementById("admin-summary")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    applyLaneVisibility(true);
     setWorkspaceNote("Jumped to admin readiness.");
     return;
   }
 
   primeThinStaffForms();
-  state.activeLane = "draft";
-  applyLaneVisibility();
-
-  if (mode === "update-cycle") {
-    document.getElementById("staff-cycle-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    setWorkspaceNote("Opened the staff update cycle with current workspace context.");
-    return;
-  }
-
-  document.getElementById("planning-cell-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
-
-  if (mode === "planning-cell") {
-    setWorkspaceNote("Opened the planning cell with current workspace context.");
-    return;
-  }
 
   if (mode === "lone-planner") {
-    await runLonePlannerMode();
-    setWorkspaceNote("Ran lone planner mode from the thin-staff assist lane.");
+    // Lone Planner runs instantly from context — show results in a dialog
+    await runWorkflowInDialog("Lone Planner Mode", async (outputEl) => {
+      const payload = buildPlanningCellPayloadFromForm();
+      const data = await apiFetch("/staff/lone-planner", { method: "POST", body: JSON.stringify(payload) });
+      renderLonePlannerOutput(outputEl.id, data);
+    });
+    return;
+  }
+
+  if (mode === "planning-cell") {
+    openToolDrawer("drawer-planning-cell");
+    setWorkspaceNote("Planning cell is ready in the Workflows lane.");
+    return;
+  }
+
+  if (mode === "update-cycle") {
+    openToolDrawer("drawer-staff-cycle");
+    setWorkspaceNote("Staff update cycle is ready in the Workflows lane.");
     return;
   }
 
   if (mode === "mission-analysis") {
-    const payload = buildPlanningCellPayloadFromForm();
-    const data = await apiFetch("/staff/mission-analysis", { method: "POST", body: JSON.stringify(payload) });
-    renderMissionAnalysisOutput("planning-cell-output", data);
-    setWorkspaceNote("Ran mission analysis from the thin-staff assist lane.");
+    await runWorkflowInDialog("Mission Analysis", async (outputEl) => {
+      const payload = buildPlanningCellPayloadFromForm();
+      const data = await apiFetch("/staff/mission-analysis", { method: "POST", body: JSON.stringify(payload) });
+      renderMissionAnalysisOutput(outputEl.id, data);
+    });
   }
 }
 
 function launchWalkInWorkflow(mode) {
-  state.activeLane = "draft";
-  applyLaneVisibility();
   if (mode === "brief-clinic") {
-    document.getElementById("brief-clinic-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    setWorkspaceNote("Opened brief clinic from the walk-in brief pack.");
+    openToolDrawer("drawer-brief-clinic");
+    setWorkspaceNote("Brief Clinic is ready in the Workflows lane.");
     return;
   }
-  document.getElementById("run-lone-planner")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  setWorkspaceNote("Opened lone planner mode from the walk-in brief pack.");
+  // Lone planner from walk-in pack
+  if (state.workspace) {
+    primeThinStaffForms();
+    runWorkflowInDialog("Lone Planner Mode", async (outputEl) => {
+      const payload = buildPlanningCellPayloadFromForm();
+      const data = await apiFetch("/staff/lone-planner", { method: "POST", body: JSON.stringify(payload) });
+      renderLonePlannerOutput(outputEl.id, data);
+    });
+  } else {
+    openToolDrawer("drawer-planning-cell");
+    setWorkspaceNote("Open your workspace first, then run lone planner mode.");
+  }
 }
 
 function openBattleRhythmEditor() {
-  state.activeLane = "draft";
-  applyLaneVisibility();
-  document.getElementById("battle-rhythm-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  setWorkspaceNote("Opened the battle rhythm editor.");
+  openToolDrawer("drawer-battle-rhythm");
+  setWorkspaceNote("Battle Rhythm Editor is open in the Workflows lane.");
+}
+
+// Workflow dialog — shows quick-launch tool output in a floating panel
+// without pulling the user away from their current lane.
+async function runWorkflowInDialog(title, runFn) {
+  const dialog = document.getElementById("workflow-dialog");
+  const titleEl = document.getElementById("workflow-dialog-title");
+  const body = document.getElementById("workflow-dialog-body");
+  if (!dialog || !body) return;
+
+  titleEl.textContent = title;
+  body.innerHTML = `
+    <div id="workflow-dialog-output" class="tool-output empty-state" aria-live="polite">
+      Running ${escapeHtml(title)}…
+    </div>
+  `;
+  dialog.showModal();
+
+  try {
+    const outputEl = document.getElementById("workflow-dialog-output");
+    outputEl.className = "tool-output";
+    await runFn(outputEl);
+  } catch (error) {
+    const outputEl = document.getElementById("workflow-dialog-output");
+    if (outputEl) {
+      outputEl.textContent = `Error: ${error.message}`;
+      outputEl.className = "tool-output critical";
+    }
+  }
+}
+
+// Render lone-planner output into a target element (dialog or lane)
+function renderLonePlannerOutput(targetId, data) {
+  const target = document.getElementById(targetId);
+  if (target) {
+    renderToolOutput(targetId, data, ["walk_in_brief", "blind_spots", "missing_section_questions", "recommended_products", "immediate_actions"]);
+  }
 }
 
 function primeThinStaffForms() {
@@ -688,21 +786,23 @@ function primeThinStaffForms() {
 
 function buildPlanningCellPayloadFromForm() {
   const form = new FormData(document.getElementById("planning-cell-form"));
-  const supportAndCivil = splitLines(form.get("support_requirements"));
+  // BUG1 fix: constraints now read from its own field, not duplicated from higher_guidance
+  // BUG2 fix: civil_considerations now read from its own field, not duplicated from support_requirements
+  // UX6 fix: supported_echelon now read from the form select, not hard-coded to "company"
   return {
     user_key: state.mode === "personal" && state.userKey ? state.userKey : null,
     title: form.get("title"),
     supported_unit: form.get("supported_unit"),
-    supported_echelon: "company",
+    supported_echelon: form.get("supported_echelon") || "company",
     event_type: form.get("event_type") || "training_event",
     mission_or_training_goal: form.get("mission_or_training_goal"),
     time_available: form.get("time_available") || null,
     commander_priorities: splitLines(form.get("commander_priorities")),
     higher_guidance: splitLines(form.get("higher_guidance")),
-    constraints: splitLines(form.get("higher_guidance")),
+    constraints: splitLines(form.get("constraints")),
     coordinating_sections: splitLines(form.get("coordinating_sections")),
-    support_requirements: supportAndCivil,
-    civil_considerations: supportAndCivil,
+    support_requirements: splitLines(form.get("support_requirements")),
+    civil_considerations: splitLines(form.get("civil_considerations")),
     focus_sections: splitLines(form.get("focus_sections")),
     section_updates: parseSectionUpdates(form.get("section_updates")),
     training_only: true,
@@ -881,6 +981,7 @@ async function saveSelectedDocumentType() {
       auth: true,
       body: JSON.stringify({ document_type: documentType }),
     });
+    // ARCH4: patch local state in-place instead of re-fetching all 14 services
     if (state.workspace?.document_details) {
       state.workspace.document_details = state.workspace.document_details.map((item) =>
         item.context_id === state.selectedDocumentId ? { ...item, document_type: data.record.document_type } : item,
@@ -891,8 +992,8 @@ async function saveSelectedDocumentType() {
         item.context_id === state.selectedDocumentId ? { ...item, document_type: data.record.document_type } : item,
       );
     }
+    renderDocumentLibrary(state.workspace?.document_details || []);
     setWorkspaceNote(data.message || "File category updated.");
-    await loadWorkspace();
   } catch (error) {
     setWorkspaceNote(error.message, true);
   }
@@ -985,9 +1086,12 @@ function renderSectionMemoryProfile(profile) {
           <p><strong>Failure modes:</strong> ${escapeHtml((entry.recurring_failure_modes || []).slice(0, 3).join(" | ") || "None stored")}</p>
           <p><strong>Checks:</strong> ${escapeHtml((entry.preferred_checks || []).slice(0, 3).join(" | ") || "None stored")}</p>
           <p class="meta-inline">${escapeHtml((entry.notes || []).slice(0, 3).join(" | ") || "No extra notes stored.")}</p>
+          <!-- A10: aria-label disambiguates Edit/Delete when multiple entries exist -->
           <div class="button-row compact-controls">
-            <button type="button" class="secondary" data-section-memory-edit="${escapeHtml(entryKey)}">Edit</button>
-            <button type="button" class="secondary" data-section-memory-delete="${escapeHtml(entryKey)}">Delete</button>
+            <button type="button" class="secondary" data-section-memory-edit="${escapeHtml(entryKey)}"
+              aria-label="Edit ${escapeAttribute(entry.section)} — ${escapeAttribute(entry.title)}">Edit</button>
+            <button type="button" class="secondary" data-section-memory-delete="${escapeHtml(entryKey)}"
+              aria-label="Delete ${escapeAttribute(entry.section)} — ${escapeAttribute(entry.title)}">Delete</button>
           </div>
         </article>
       `;
@@ -2082,7 +2186,7 @@ async function runLonePlannerMode() {
     renderLonePlannerOutput("lone-planner-output", data);
     state.activeLane = "draft";
     applyLaneVisibility();
-    document.getElementById("lone-planner-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    
     setWorkspaceNote("Lone planner mode ran against the current planning context.");
   } catch (error) {
     setWorkspaceNote(error.message, true);
@@ -2099,39 +2203,38 @@ async function runSectionGapCover() {
     renderSectionGapCoverOutput("section-gap-cover-output", data);
     state.activeLane = "draft";
     applyLaneVisibility();
-    document.getElementById("section-gap-cover-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    
     setWorkspaceNote("Built assisted section estimates from the current planning context.");
   } catch (error) {
     setWorkspaceNote(error.message, true);
   }
 }
 
+async function runStaffPlanningPackageAndReturn() {
+  const planning = buildPlanningCellPayloadFromForm();
+  const payload = {
+    title: planning.title,
+    event_type: planning.event_type,
+    mission_or_training_goal: planning.mission_or_training_goal,
+    audience: planning.supported_unit,
+    timeframe: planning.time_available,
+    constraints: planning.constraints || [],
+    coordinating_sections: planning.coordinating_sections || [],
+    support_requirements: planning.support_requirements || [],
+    civil_considerations: planning.civil_considerations || [],
+    include_g9: (planning.civil_considerations || []).length > 0,
+    product_types: ["warno", "frago", "aar"],
+    training_only: true,
+  };
+  return apiFetch("/planning/staff-package", { method: "POST", body: JSON.stringify(payload) });
+}
+
 async function runStaffPlanningPackage() {
+  // Used by the in-lane planning cell button — renders into the lane output div
   try {
-    const planning = buildPlanningCellPayloadFromForm();
-    const payload = {
-      title: planning.title,
-      event_type: planning.event_type,
-      mission_or_training_goal: planning.mission_or_training_goal,
-      audience: planning.supported_unit,
-      timeframe: planning.time_available,
-      constraints: planning.constraints || [],
-      coordinating_sections: planning.coordinating_sections || [],
-      support_requirements: planning.support_requirements || [],
-      civil_considerations: planning.civil_considerations || [],
-      include_g9: (planning.civil_considerations || []).length > 0,
-      product_types: ["warno", "frago", "aar"],
-      training_only: true,
-    };
-    const data = await apiFetch("/planning/staff-package", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+    const data = await runStaffPlanningPackageAndReturn();
     renderStaffPlanningPackageOutput("staff-package-output", data);
-    state.activeLane = "draft";
-    applyLaneVisibility();
-    document.getElementById("staff-package-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    setWorkspaceNote("Built the integrated staff package from the current planning context.");
+    setWorkspaceNote("Built the integrated staff package.");
   } catch (error) {
     setWorkspaceNote(error.message, true);
   }
@@ -2146,15 +2249,13 @@ function openMosBenchLane(agentId) {
   const form = document.getElementById("mos-advisor-form");
   form.elements.mos_tool.value = item.id;
   form.elements.prompt.value = item.starter;
-  state.activeLane = "draft";
-  applyLaneVisibility();
-  form.scrollIntoView({ behavior: "smooth", block: "start" });
-  setWorkspaceNote(`Opened the ${item.label} lane.`);
+  openToolDrawer("drawer-mos-advisor");
+  setWorkspaceNote(`MOS Advisor is open — ${item.label} lane loaded.`);
 }
 
 function openLane(lane, message = "") {
   state.activeLane = lane;
-  applyLaneVisibility();
+  applyLaneVisibility(true);
   if (message) {
     setWorkspaceNote(message);
   }
@@ -2294,14 +2395,21 @@ function setWorkspaceNote(message, critical = false) {
 }
 
 function updateModeBanner() {
+  // A5: mode-badge element is now present in HTML; keep data-mode in sync for CSS
   const badge = document.getElementById("mode-badge");
   if (badge) {
     badge.textContent = state.mode === "demo" ? "Demo mode" : "Personal mode";
+    badge.setAttribute("data-mode", state.mode);
   }
 }
 
 function toggleTimezonePanel() {
   state.timezonePanelOpen = !state.timezonePanelOpen;
+  // A8: keep aria-expanded in sync with open state
+  const btn = document.getElementById("toggle-timezone-panel");
+  if (btn) {
+    btn.setAttribute("aria-expanded", state.timezonePanelOpen ? "true" : "false");
+  }
   renderTimezoneControls();
 }
 
@@ -2465,22 +2573,56 @@ function resolveApiBase() {
 }
 
 function resolveInitialLane() {
-  const lane = window.location.hash.replace("#", "").trim().toLowerCase();
-  return lane || "overview";
+  // UX8: restore last-used lane from localStorage, then URL hash, then default
+  const hash = window.location.hash.replace("#", "").trim().toLowerCase();
+  if (hash) {
+    return hash;
+  }
+  try {
+    const saved = window.localStorage.getItem("smcr.dashboard.lane");
+    if (saved) {
+      return saved;
+    }
+  } catch (_e) {
+    // storage unavailable
+  }
+  return "overview";
 }
 
-function applyLaneVisibility() {
+function applyLaneVisibility(moveFocus = false) {
   const active = state.activeLane;
-  for (const button of document.querySelectorAll(".lane-button")) {
+
+  // A1: aria-selected is valid on role="tab" (which the buttons now have)
+  // A2: aria-labelledby on the tabpanel updated to match the active tab id
+  for (const button of document.querySelectorAll(".lane-button[role='tab']")) {
     const isActive = button.dataset.lane === active;
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-selected", isActive ? "true" : "false");
   }
+
+  const main = document.getElementById("dashboard-main");
+  if (main) {
+    main.setAttribute("aria-labelledby", `tab-${active}`);
+  }
+
   for (const section of document.querySelectorAll("[data-section-group]")) {
     const group = section.dataset.sectionGroup;
-    const show = group === "global" || active === "all" || group === active;
+    const show = group === "global" || group === active;
     section.classList.toggle("is-hidden", !show);
   }
+
+  // UX8: persist active lane across sessions
+  try {
+    window.localStorage.setItem("smcr.dashboard.lane", active);
+  } catch (_e) {
+    // storage unavailable
+  }
+
+  // A3: move focus into the panel content on explicit tab switch
+  if (moveFocus && main) {
+    main.focus();
+  }
+
   window.location.hash = active === "overview" ? "" : active;
 }
 
@@ -2595,7 +2737,7 @@ function editSectionMemoryEntry(entryKey) {
   populateSectionMemoryForm(entry);
   state.activeLane = "library";
   applyLaneVisibility();
-  document.getElementById("section-memory-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  
   setWorkspaceNote(`Editing section memory for ${entry.section}.`);
 }
 
@@ -2674,7 +2816,7 @@ function seedSectionMemoryEntry(encodedSeed) {
     populateSectionMemoryForm(seed);
     state.activeLane = "library";
     applyLaneVisibility();
-    document.getElementById("section-memory-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    
     setWorkspaceNote(`Loaded a section-memory starter for ${seed.section}.`);
   } catch (_error) {
     setWorkspaceNote("Could not load that section-memory starter.", true);

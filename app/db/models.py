@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 
 from sqlmodel import Field, Relationship, SQLModel
@@ -16,7 +16,7 @@ class Document(SQLModel, table=True):
     publication_type: str
     issuing_org: str | None = None
     url: str | None = None
-    retrieved_at: datetime = Field(default_factory=datetime.utcnow)
+    retrieved_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     version: str | None = None
     effective_date: datetime | None = None
     classification_label: str = ClassificationLabel.unclassified.value
@@ -44,7 +44,7 @@ class MessageRecord(SQLModel, table=True):
     published_at: datetime | None = None
     summary: str | None = None
     tags_csv: str = ""
-    retrieved_at: datetime = Field(default_factory=datetime.utcnow)
+    retrieved_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class CalendarPlan(SQLModel, table=True):
@@ -52,7 +52,7 @@ class CalendarPlan(SQLModel, table=True):
     drill_date: datetime
     title: str
     tasks_json: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class OrgUnit(SQLModel, table=True):

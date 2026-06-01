@@ -27,9 +27,11 @@ async def review_uniform_photo(
     observed_concerns: Annotated[str | None, Form()] = None,
     local_guidance: Annotated[str | None, Form()] = None,
 ) -> UniformPhotoReviewResponse:
-    content = await file.read()
     if not (file.content_type or "").lower().startswith("image/"):
         raise HTTPException(status_code=400, detail="Uniform photo review requires an image upload.")
+    content = await file.read(store.max_upload_bytes + 1)
+    if len(content) > store.max_upload_bytes:
+        raise HTTPException(status_code=413, detail=f"Upload exceeds the {store.max_upload_bytes}-byte limit.")
     try:
         item = store.save(
             filename=file.filename or "uniform_photo_upload",

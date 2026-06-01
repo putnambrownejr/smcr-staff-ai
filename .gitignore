@@ -23,3 +23,13 @@ docs/scenarios/
 docs/sources/civil_affairs.md
 outputs/
 scripts/scratch_*/
+
+# Auto-generated improvement tracking files — local only, never commit to public repo.
+# These may contain session notes or testing context not suitable for public GitHub.
+FINDINGS_HANDOFF.md
+USAGE_NOTES.md
+docs/IMPROVEMENT_PLAN_*.md
+docs/UPSTREAM_INSIGHTS_*.md
+
+# Claude Code local config — contains machine-specific paths and session state.
+.claude/

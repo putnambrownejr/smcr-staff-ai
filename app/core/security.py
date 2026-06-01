@@ -15,7 +15,8 @@ PII_PATTERNS: tuple[re.Pattern[str], ...] = (
         r"\b(?:phone|mobile|cell)\s*[:=]?\s*(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b",
         re.IGNORECASE,
     ),
-    re.compile(r"\b\d{5}(?:-\d{4})?\b"),
+    re.compile(r"\b\d{5}-\d{4}\b"),
+    re.compile(r"(?:zip\s*(?:code)?\s*[:=]?\s*)\d{5}\b", re.IGNORECASE),
 )
 
 DEFAULT_WARNINGS = [
@@ -48,13 +49,8 @@ def should_limit_to_generic_response(text: str) -> bool:
     return bool(detect_sensitive_input(text))
 
 
-def detect_pii_input(text: str) -> list[str]:
-    warnings: list[str] = []
-    for pattern in PII_PATTERNS:
-        if pattern.search(text):
-            warnings.append("Potential PII detected.")
-            break
-    return warnings
+def detect_pii_input(text: str) -> bool:
+    return any(pattern.search(text) for pattern in PII_PATTERNS)
 
 
 def redact_pii(text: str) -> str:

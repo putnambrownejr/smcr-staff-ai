@@ -242,9 +242,9 @@ def _diff_findings(diff_text: str | None, staged: bool) -> list[PrivacyFinding]:
     if not diff_text:
         return []
     findings: list[PrivacyFinding] = []
-    pii_warnings = detect_pii_input(diff_text)
+    contains_pii = detect_pii_input(diff_text)
     sensitive_warnings = detect_sensitive_input(diff_text)
-    if pii_warnings:
+    if contains_pii:
         findings.append(
             PrivacyFinding(
                 severity=PrivacyFindingSeverity.high if staged else PrivacyFindingSeverity.medium,
@@ -255,7 +255,7 @@ def _diff_findings(diff_text: str | None, staged: bool) -> list[PrivacyFinding]:
                     + ("staged" if staged else "unstaged")
                     + " diff."
                 ),
-                evidence=pii_warnings,
+                evidence=["Potential PII detected."],
                 recommendation="Redact or move the personal data into local-only storage before pushing.",
             )
         )

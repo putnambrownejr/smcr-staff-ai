@@ -1,4 +1,5 @@
 import hashlib
+import logging
 from dataclasses import dataclass
 
 from app.schemas.agents import Confidence, StructuredCitation
@@ -6,6 +7,8 @@ from app.schemas.documents import DocumentRead
 from app.services.rag.chunking import chunk_text
 from app.services.rag.embeddings import LocalHashEmbeddingProvider
 from app.services.rag.vector_store import LocalVectorStore, VectorRecord
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -23,6 +26,16 @@ class LocalRagPipeline:
     ) -> None:
         self.vector_store = vector_store or LocalVectorStore()
         self.embedding_provider = embedding_provider or LocalHashEmbeddingProvider()
+        if vector_store is None:
+            _log.warning(
+                "LocalRagPipeline: using in-memory LocalVectorStore (dev stub) — "
+                "all indexed content will be lost on restart."
+            )
+        if embedding_provider is None:
+            _log.warning(
+                "LocalRagPipeline: using LocalHashEmbeddingProvider (dev stub) — "
+                "retrieval uses non-semantic SHA-256 vectors and will produce poor results."
+            )
 
     def ingest_text(self, document: DocumentRead, text: str) -> int:
         records: list[VectorRecord] = []

@@ -14,12 +14,15 @@
           <p class="service-mark">UNCLASSIFIED advisory workspace</p>
           <h1>SMCR Staff AI Dashboard</h1>
           <p class="subhead">Readiness, continuity, staff products, and local context in one working board.</p>
+          <!-- A5: mode indicator so users always know which workspace is active -->
+          <span id="mode-badge" class="mode-badge" data-mode="demo">Demo mode</span>
         </div>
         <div class="status-cluster timezone-cluster">
           <div class="timezone-panel">
             <div class="timezone-panel-head">
               <span class="strip-label">Time watch</span>
-              <button type="button" class="secondary timezone-toggle" id="toggle-timezone-panel">Time zones</button>
+              <!-- A8: aria-expanded reflects open/closed state of the timezone control panel -->
+              <button type="button" class="secondary timezone-toggle" id="toggle-timezone-panel" aria-expanded="false" aria-controls="timezone-controls">Time zones</button>
             </div>
             <div id="timezone-display" class="timezone-display" aria-live="polite"></div>
             <div id="timezone-controls" class="timezone-controls is-hidden">
@@ -30,7 +33,13 @@
         </div>
       </header>
 
-      <main class="layout" id="dashboard-main" tabindex="-1">
+      <!-- UX5: loading overlay shown while workspace fetches -->
+      <div id="dashboard-loading" class="dashboard-loading is-hidden" role="status" aria-label="Loading workspace">
+        <span class="loading-text">Loading workspace…</span>
+      </div>
+
+      <!-- A2: role="tabpanel" — main is the single tabpanel target for all lane tabs -->
+      <main class="layout" id="dashboard-main" role="tabpanel" tabindex="-1" aria-labelledby="tab-overview">
         <section class="panel command-panel" data-section-group="global">
           <div class="panel-header">
             <div>
@@ -38,13 +47,13 @@
               <p>Move between readiness, watchstanding, local references, and drafting support.</p>
             </div>
           </div>
+          <!-- A1/A2: role="tab" required on children of role="tablist"; aria-controls wires each tab to the main panel -->
           <div class="command-toolbar" role="tablist" aria-label="Dashboard lanes">
-            <button type="button" class="lane-button active" data-lane="overview">Overview</button>
-            <button type="button" class="lane-button" data-lane="watch">Watch</button>
-            <button type="button" class="lane-button" data-lane="library">Bench / Files</button>
-            <button type="button" class="lane-button" data-lane="draft">Workflows</button>
-            <button type="button" class="lane-button" data-lane="configure">Workspace</button>
-            <button type="button" class="lane-button secondary" data-lane="all">Show all</button>
+            <button type="button" class="lane-button active" role="tab" id="tab-overview" aria-selected="true" aria-controls="dashboard-main" data-lane="overview">Overview</button>
+            <button type="button" class="lane-button" role="tab" id="tab-watch" aria-selected="false" aria-controls="dashboard-main" data-lane="watch">Watch</button>
+            <button type="button" class="lane-button" role="tab" id="tab-library" aria-selected="false" aria-controls="dashboard-main" data-lane="library">Bench / Files</button>
+            <button type="button" class="lane-button" role="tab" id="tab-draft" aria-selected="false" aria-controls="dashboard-main" data-lane="draft">Workflows</button>
+            <button type="button" class="lane-button" role="tab" id="tab-configure" aria-selected="false" aria-controls="dashboard-main" data-lane="configure">Workspace</button>
           </div>
           <div class="command-grid">
             <section class="strip">
@@ -91,7 +100,8 @@
             <button id="load-demo">Open demo workspace</button>
             <button id="load-personal" class="secondary">Open my workspace</button>
           </div>
-          <p class="helper-text" id="workspace-note">
+          <!-- A4: aria-live so screen readers announce status messages from all button actions -->
+          <p class="helper-text" id="workspace-note" aria-live="polite">
             Demo mode is a read-only tour. Personal mode opens your local workspace using the profile name above.
           </p>
         </section>
@@ -102,6 +112,16 @@
               <h2>Next Drill Readiness</h2>
               <p>The front door for what needs attention before the next drill cycle starts to slip.</p>
             </div>
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>When:</strong> Check this first each session. It's your readiness posture at a glance.</p>
+                <p><strong>Posture line:</strong> One-sentence status — green/track/watch/degraded — anchored to your next drill date.</p>
+                <p><strong>Decisive action:</strong> The single most important move right now. Do that before anything else.</p>
+                <p><strong>Must-do / Friction / Foundation:</strong> Immediate pre-drill tasks, likely problems, and missing baseline items (orders, RQS, BIO).</p>
+                <p><strong>Ready if…:</strong> Conditions that would move the needle from watch to green before drill.</p>
+              </div>
+            </details>
             <div class="readiness-shell">
               <section class="readiness-primary">
                 <span class="strip-label">Readiness posture</span>
@@ -195,6 +215,15 @@
               <h2>Source Watch</h2>
               <p>The compact watch strip for source changes that may alter products, assumptions, or next-drill prep.</p>
             </div>
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>When:</strong> Refresh before a drill weekend or when you expect new MARADMINs affecting your unit.</p>
+                <p><strong>MARADMIN ticker:</strong> Primary strip — Reserve-relevant messages from HQMC. Hit "Refresh MARADMIN feed" to pull the latest.</p>
+                <p><strong>Second-tier (NAVADMIN / ALNAV / DoD):</strong> Broader watch. Open the drawer only when you're doing a deeper policy sweep.</p>
+                <p><strong>Action:</strong> If a ticker item changes an assumption in your planning, update the Battle Rhythm Board's assumption log.</p>
+              </div>
+            </details>
             <div class="button-row compact-controls">
               <button type="button" class="secondary" id="refresh-maradmins">Refresh MARADMIN feed</button>
               <button type="button" class="secondary" id="refresh-reading">Refresh reading list</button>
@@ -234,7 +263,7 @@
 
         <section class="two-column" data-section-group="watch">
           <article class="panel collapsible-panel">
-            <details class="panel-drawer">
+            <details id="daily-brief-drawer" class="panel-drawer">
               <summary>
                 <div class="panel-header">
                   <div>
@@ -353,6 +382,15 @@
                   <div>
                     <h2>Thin Staff Assist</h2>
                     <p>Use this when you need the lone-planner help, not all day every day.</p>
+                    <details class="help-hint">
+                      <summary>How to use this</summary>
+                      <div class="help-hint-body">
+                        <p><strong>When:</strong> You're covering multiple staff lanes alone and need to know what you're probably missing.</p>
+                        <p><strong>Walk-in brief:</strong> Lines you can say out loud before a meeting — your current state in plain language.</p>
+                        <p><strong>Blind spots / Missing questions:</strong> What you'd miss if you were only in your own lane.</p>
+                        <p><strong>Buttons:</strong> Each button pre-fills the Workflows form with your current context so you don't start from scratch.</p>
+                      </div>
+                    </details>
                   </div>
                   <span class="drawer-label">Open</span>
                 </div>
@@ -402,6 +440,15 @@
                   <div>
                     <h2>Walk-In Brief Pack</h2>
                     <p>Use this when you need the delta, not as permanent wallpaper.</p>
+                    <details class="help-hint">
+                      <summary>How to use this</summary>
+                      <div class="help-hint-body">
+                        <p><strong>When:</strong> Right before walking into a meeting or sync — you need "what changed and what's open" in 60 seconds.</p>
+                        <p><strong>Delta since last drill / touchpoint:</strong> What shifted since you last met with the command group.</p>
+                        <p><strong>Open decisions / Stale assumptions:</strong> Things that still need a call or have drifted from what you planned.</p>
+                        <p><strong>Before you walk in:</strong> The short list of things to confirm before you start talking.</p>
+                      </div>
+                    </details>
                   </div>
                   <span class="drawer-label">Open</span>
                 </div>
@@ -450,6 +497,15 @@
               <h2>Act Now</h2>
               <p>The tightest stack of immediate actions, open decisions, and continuity drift that needs attention first.</p>
             </div>
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>When:</strong> Start here if you have limited time. This is the distilled "do this now" list.</p>
+                <p><strong>Critical / Attention / Routine:</strong> Severity-ranked cards. Work critical items before opening anything else.</p>
+                <p><strong>Where it comes from:</strong> Pulled from your Chief/Aide brief, tracked POAMs, and continuity drift — automatically after workspace loads.</p>
+                <p><strong>If it's empty:</strong> Either your workspace isn't loaded yet, or you're genuinely clear. Load your personal workspace to see your real stack.</p>
+              </div>
+            </details>
             <div id="priority-queue" class="row-stack empty-state">Load the workspace to see current priorities.</div>
           </article>
 
@@ -460,6 +516,16 @@
                   <div>
                     <h2>Battle Rhythm Board</h2>
                     <p>Keep this nearby when you need continuity, closed when you do not.</p>
+                    <details class="help-hint">
+                      <summary>How to use this</summary>
+                      <div class="help-hint-body">
+                        <p><strong>What it is:</strong> A persistent board that survives between drills. It's not a plan — it's your continuity record.</p>
+                        <p><strong>Assumptions:</strong> Things you're treating as true that haven't been confirmed. Add them here so they don't get lost.</p>
+                        <p><strong>Decision log:</strong> Calls the commander has made. Records why you're doing what you're doing.</p>
+                        <p><strong>Due-outs / Questions:</strong> Items that are someone's responsibility and open questions that need answers before next drill.</p>
+                        <p><strong>How to update it:</strong> Open the Workflows lane → Battle Rhythm Editor. Planning Cell output can save directly to it.</p>
+                      </div>
+                    </details>
                   </div>
                   <span class="drawer-label">Open</span>
                 </div>
@@ -515,6 +581,15 @@
               <div>
                 <h2>Watch lane</h2>
                 <p>Use this lane to stay plugged in between drills: message watches, custom feeds, action tracking, and source changes.</p>
+                <details class="help-hint">
+                  <summary>When to use each panel in this lane</summary>
+                  <div class="help-hint-body">
+                    <p><strong>Custom watch feeds:</strong> RSS feeds you've configured locally — unit pages, PME sources, professional feeds. Check 2–3x/week between drills.</p>
+                    <p><strong>Action tracker:</strong> Your tracked POAMs (owner, status, suspense). Use for items that need to survive multiple sessions — not one-off notes.</p>
+                    <p><strong>Opportunity watch:</strong> ADOS/SMCR opportunities you're tracking from your local career stack.</p>
+                    <p><strong>Source updates:</strong> Potential doctrine or admin-reference changes flagged by scans. Review before relying on older policy summaries.</p>
+                  </div>
+                </details>
               </div>
               <button type="button" class="secondary" id="watch-open-workspace">Open workspace setup</button>
             </div>
@@ -558,6 +633,17 @@
               <div>
                 <h2>Bench / Files lane</h2>
                 <p>Use this lane to keep local references, reusable templates, MOS shortcuts, and recurring bench memory close at hand.</p>
+                <details class="help-hint">
+                  <summary>When to use each panel in this lane</summary>
+                  <div class="help-hint-body">
+                    <p><strong>Personal files:</strong> Docs you've uploaded (orders, RQS, BIO, receipts). Set the category label so planning tools can reference them correctly.</p>
+                    <p><strong>Template library:</strong> System and saved scaffolds for recurring products. Use when you need the format, not a blank page.</p>
+                    <p><strong>MOS bench:</strong> Quick shortcuts for lanes outside your primary MOS — useful when covering down for another section.</p>
+                    <p><strong>Section bench notebook:</strong> Recurring memory you've saved for a specific section lane — failure modes, preferred checks, standing questions. Sharpens Lone Planner outputs over time.</p>
+                    <p><strong>Doctrine library:</strong> Curated source notes from the repo. Use to verify a reference before citing it in a product.</p>
+                    <p><strong>Reading list:</strong> Commandant's reading list tracker. Track progress and notes.</p>
+                  </div>
+                </details>
               </div>
               <button type="button" class="secondary" id="library-open-workspace">Open workspace setup</button>
             </div>
@@ -819,6 +905,18 @@
               <div>
                 <h2>Workflow lane</h2>
                 <p>Use this lane when you need to build products, run planning support, pressure-test a brief, or cover gaps outside your normal box.</p>
+                <details class="help-hint">
+                  <summary>Which tool do I use?</summary>
+                  <div class="help-hint-body">
+                    <p><strong>20 min, cold, no staff → Lone Planner Mode.</strong> Gets you a walk-in brief and blind spots fast.</p>
+                    <p><strong>30+ min, clear mission goal → Planning Cell.</strong> Full mission analysis, assumptions, decisions, due-outs.</p>
+                    <p><strong>Missing sections → Section Gap Cover.</strong> Builds what each absent section would have said.</p>
+                    <p><strong>Briefing the command group → Staff Package.</strong> XO, admin, safety, SEL, medical — one integrated output.</p>
+                    <p><strong>Drill weekend, sections checking in → Staff Update Cycle.</strong> Feed section updates, get a running estimate and CUB.</p>
+                    <p><strong>Brief is drafted, needs tightening → Brief Clinic.</strong> Paste your draft, get pressure on logic and decision clarity.</p>
+                    <p><strong>Between drills, continuity → Battle Rhythm Editor.</strong> Update assumptions, decisions, questions, due-outs so the next session isn't a cold start.</p>
+                  </div>
+                </details>
               </div>
               <div class="button-row compact-controls">
                 <button type="button" class="secondary" id="draft-open-planning-cell">Open planning cell</button>
@@ -835,33 +933,33 @@
             </div>
             <div class="workflow-priority-grid">
               <section class="brief-block workflow-priority-card">
-                <span class="strip-label">Primary</span>
-                <h3>Lone planner mode</h3>
-                <p class="helper-text">Best first move when you are cold, thin-staffed, or carrying multiple lanes alone.</p>
+                <span class="strip-label">Start here if you're alone</span>
+                <h3>Lone Planner Mode</h3>
+                <p class="helper-text">You're covering multiple lanes with limited time. Gives you a walk-in brief, the blind spots you'd miss, and what to ask each absent section. Takes ~2 minutes.</p>
                 <div class="button-row">
                   <button type="button" id="workflow-open-lone-planner">Run lone planner mode</button>
                 </div>
               </section>
               <section class="brief-block workflow-priority-card">
-                <span class="strip-label">Primary</span>
+                <span class="strip-label">Start here if you have a mission</span>
                 <h3>Planning Cell</h3>
-                <p class="helper-text">Use when you need mission analysis, assumptions, decisions, and due-outs in one working package.</p>
+                <p class="helper-text">You have a clear training goal and 30+ minutes. Builds a full mission analysis — assumptions, decision points, due-outs, and section coordination — in one package.</p>
                 <div class="button-row">
                   <button type="button" id="workflow-open-planning-cell">Open planning cell</button>
                 </div>
               </section>
               <section class="brief-block workflow-priority-card">
-                <span class="strip-label">Primary</span>
-                <h3>Integrated staff package</h3>
-                <p class="helper-text">Use when you want XO, command-cell, admin, safety, SEL, medical, and core staff products in one package.</p>
+                <span class="strip-label">Start here if you're briefing the CO</span>
+                <h3>Integrated Staff Package</h3>
+                <p class="helper-text">Builds a complete staff output across XO, command cell, S-1/Admin, Safety, SEL, and Medical in one pass. Use when the command group needs a full picture, not just the S-3 lane.</p>
                 <div class="button-row">
                   <button type="button" id="workflow-run-staff-package">Build staff package</button>
                 </div>
               </section>
               <section class="brief-block workflow-priority-card">
-                <span class="strip-label">Secondary</span>
+                <span class="strip-label">Use after planning — not before</span>
                 <h3>Brief Clinic</h3>
-                <p class="helper-text">Use after the thinking is mostly done and the brief still needs to get sharper.</p>
+                <p class="helper-text">Your brief is drafted but it needs to get sharper. Paste the current draft and it will pressure the logic, audience fit, and decision clarity. Not a planning tool — a sharpening tool.</p>
                 <div class="button-row">
                   <button type="button" class="secondary" id="workflow-open-brief-clinic">Open brief clinic</button>
                 </div>
@@ -869,10 +967,27 @@
             </div>
           </article>
           <article class="panel tool-panel full-span">
-            <div class="panel-header">
-              <h2>Battle Rhythm Editor</h2>
-              <p>Update the persistent board here when assumptions, decisions, questions, or due-outs need a real edit.</p>
-            </div>
+            <details id="drawer-battle-rhythm" class="tool-drawer">
+            <summary>
+              <div class="panel-header">
+                <h2>Battle Rhythm Editor</h2>
+                <p>Update the persistent board here when assumptions, decisions, questions, or due-outs need a real edit.</p>
+              </div>
+              <span class="drawer-label"></span>
+            </summary>
+            <div class="tool-drawer-body">
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>What it's for:</strong> Continuity between drills. Fill this out after each drill and it prevents a cold start next time.</p>
+                <p><strong>Commander focus:</strong> What the commander wants protected or prioritized — in their words, not staff language.</p>
+                <p><strong>Assumption log:</strong> Things you're treating as true but haven't confirmed. Format: <code>S-4: Transport window remains workable.</code></p>
+                <p><strong>Decision log:</strong> Calls already made. Records why you're doing what you're doing. Format: <code>Command: Approved one primary training lane.</code></p>
+                <p><strong>Question log:</strong> Open questions that need answers before next drill. Format: <code>S-6: What access issue is still unresolved?</code></p>
+                <p><strong>Due-outs:</strong> Items someone owns. Format: <code>S-4: Confirm transport timeline before next sync.</code></p>
+                <p><strong>Tip:</strong> Planning Cell can save directly here — use "Save to battle rhythm board" after running a planning cell.</p>
+              </div>
+            </details>
             <form id="battle-rhythm-form" class="tool-form">
               <div class="form-row">
                 <label>
@@ -932,12 +1047,28 @@
                 <button type="submit">Save battle rhythm board</button>
               </div>
             </form>
+            </div><!-- /tool-drawer-body -->
+            </details><!-- /drawer-battle-rhythm -->
           </article>
           <article class="panel tool-panel">
-            <div class="panel-header">
-              <h2>Personnel products</h2>
-              <p>FitRep, awards, and routing-package support.</p>
-            </div>
+            <details id="drawer-personnel" class="tool-drawer">
+            <summary>
+              <div class="panel-header">
+                <h2>Personnel products</h2>
+                <p>FitRep, awards, and routing-package support.</p>
+              </div>
+              <span class="drawer-label"></span>
+            </summary>
+            <div class="tool-drawer-body">
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>When:</strong> You're building or reviewing a FitRep, award package, or routing package and want a structural scaffold.</p>
+                <p><strong>What you get:</strong> Section structure, routing steps, review checklist, and required document list — not the writing itself.</p>
+                <p><strong>FitRep planning vs bullets:</strong> Planning gives you a preparation checklist and timeline. Bullets gives you a scaffold for the actual performance traits.</p>
+                <p><strong>Subject field:</strong> Use a generic description (e.g., "Capt, civil affairs, BN XO billet") — no real names or SSNs.</p>
+              </div>
+            </details>
             <form id="personnel-form" class="tool-form">
               <div class="form-row">
                 <label>
@@ -977,13 +1108,31 @@
               </div>
             </form>
             <div id="personnel-output" class="tool-output empty-state">Generated sections, routing steps, and review points will appear here.</div>
+            </div><!-- /tool-drawer-body -->
+            </details><!-- /drawer-personnel -->
           </article>
 
           <article class="panel tool-panel">
-            <div class="panel-header">
-              <h2>Staff products</h2>
-              <p>Fast scaffolds for orders, correspondence, reports, and AARs.</p>
-            </div>
+            <details id="drawer-staff-products" class="tool-drawer">
+            <summary>
+              <div class="panel-header">
+                <h2>Staff products</h2>
+                <p>Fast scaffolds for orders, correspondence, reports, and AARs.</p>
+              </div>
+              <span class="drawer-label"></span>
+            </summary>
+            <div class="tool-drawer-body">
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>When:</strong> You need the correct format and section structure for a product, not a blank page.</p>
+                <p><strong>What you get:</strong> Section headers, required content checklist, and review points for the selected product type.</p>
+                <p><strong>WARNO / OPORD / FRAGO:</strong> Planning orders. Use WARNO early, OPORD when the plan is set, FRAGO for changes.</p>
+                <p><strong>SITREP:</strong> Situation report scaffold — use for routine or event-driven status reporting.</p>
+                <p><strong>Naval letter / Memo / Endorsement:</strong> Correspondence formats. The tool gives you the correct header structure and routing guidance.</p>
+                <p><strong>AAR:</strong> After action review — observations, discussions, and lessons in the standard format.</p>
+              </div>
+            </details>
             <form id="staff-form" class="tool-form">
               <div class="form-row">
                 <label>
@@ -1009,13 +1158,29 @@
               </div>
             </form>
             <div id="staff-output" class="tool-output empty-state">Sections and review notes will appear here.</div>
+            </div><!-- /tool-drawer-body -->
+            </details><!-- /drawer-staff-products -->
           </article>
 
           <article class="panel tool-panel">
-            <div class="panel-header">
-              <h2>Brief Clinic</h2>
-              <p>Tighten a CUB, decision brief, command update, or civil-affairs CPB around audience, decision, evidence, and backup.</p>
-            </div>
+            <details id="drawer-brief-clinic" class="tool-drawer">
+            <summary>
+              <div class="panel-header">
+                <h2>Brief Clinic</h2>
+                <p>Tighten a CUB, decision brief, command update, or civil-affairs CPB around audience, decision, evidence, and backup.</p>
+              </div>
+              <span class="drawer-label"></span>
+            </summary>
+            <div class="tool-drawer-body">
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>When:</strong> You already have a draft brief. This is a sharpening tool, not a planning tool.</p>
+                <p><strong>Decision required field:</strong> Be specific — "Approve the training concept" is better than "brief the commander." If you can't name the decision, the brief isn't ready.</p>
+                <p><strong>Paste your draft:</strong> Put whatever you have — an outline, bullet list, or full slides summary. The clinic will pressure the logic and flag what the audience will ask first.</p>
+                <p><strong>CUB vs CPB:</strong> CUB = Command Update Brief (internal, to the commander). CPB = Civil-Military Planning Board brief (external or interagency audience).</p>
+              </div>
+            </details>
             <form id="brief-clinic-form" class="tool-form">
               <div class="form-row">
                 <label>
@@ -1049,13 +1214,30 @@
               </div>
             </form>
             <div id="brief-clinic-output" class="tool-output empty-state">Brief-clinic feedback will appear here.</div>
+            </div><!-- /tool-drawer-body -->
+            </details><!-- /drawer-brief-clinic -->
           </article>
 
           <article class="panel tool-panel">
-            <div class="panel-header">
-              <h2>Uniform Photo Review</h2>
-              <p>Upload a local uniform photo and run a source-anchored advisory review against the uniform order.</p>
-            </div>
+            <details id="drawer-uniform-review" class="tool-drawer">
+            <summary>
+              <div class="panel-header">
+                <h2>Uniform Photo Review</h2>
+                <p>Upload a local uniform photo and run a source-anchored advisory review against the uniform order.</p>
+              </div>
+              <span class="drawer-label"></span>
+            </summary>
+            <div class="tool-drawer-body">
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>When:</strong> Pre-drill inspection prep, ceremony uniform check, or when you have a specific wear question you want to run against MCO 1020.34H.</p>
+                <p><strong>What it does:</strong> Gives you a source-anchored checklist of what to verify in the image — it does NOT perform automated AI image analysis. The review framework is the value, not computer vision.</p>
+                <p><strong>Visible items:</strong> List what's actually visible in the photo (rank insignia, ribbons/badges, cover, belt/buckle, footwear, grooming/hair).</p>
+                <p><strong>Photo is stored locally only</strong> — it stays on your machine, not sent to any external service.</p>
+                <p><strong>Ambiguous calls:</strong> The output will tell you to route unresolved questions through the chain of command or SEL.</p>
+              </div>
+            </details>
             <form id="uniform-photo-form" class="tool-form">
               <div class="form-row">
                 <label>
@@ -1114,13 +1296,31 @@
             <div id="uniform-photo-output" class="tool-output empty-state">
               Photo-assisted uniform review will appear here, anchored to MCO 1020.34H and official follow-on links.
             </div>
+            </div><!-- /tool-drawer-body -->
+            </details><!-- /drawer-uniform-review -->
           </article>
 
           <article class="panel tool-panel">
-            <div class="panel-header">
-              <h2>MOS advisor</h2>
-              <p>Run a focused staff MOS lane when you need the narrower officer slice under S-1, S-3, or S-4.</p>
-            </div>
+            <details id="drawer-mos-advisor" class="tool-drawer">
+            <summary>
+              <div class="panel-header">
+                <h2>MOS advisor</h2>
+                <p>Run a focused staff MOS lane when you need the narrower officer slice under S-1, S-3, or S-4.</p>
+              </div>
+              <span class="drawer-label"></span>
+            </summary>
+            <div class="tool-drawer-body">
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>When:</strong> You're covering a lane that's not your primary MOS and need to know what that officer would prioritize.</p>
+                <p><strong>0102 Adjutant:</strong> Admin accountability, correspondence, awards, and reserve admin continuity.</p>
+                <p><strong>0402 Logistics:</strong> Supportability, sustainment judgment, lead times, and what breaks the plan first.</p>
+                <p><strong>3002 Supply:</strong> Supply accountability, fiscal discipline, inventory readiness, and command supply risk.</p>
+                <p><strong>0511 MAGTF Planner:</strong> Mission analysis, planning support, assumption control, and staff integration.</p>
+                <p><strong>Prompt tip:</strong> Describe the specific problem or question — "Help me tighten the logistics estimate for AT" works better than "what should I do."</p>
+              </div>
+            </details>
             <form id="mos-advisor-form" class="tool-form">
               <div class="form-row">
                 <label>
@@ -1150,13 +1350,29 @@
               </div>
             </form>
             <div id="mos-advisor-output" class="tool-output empty-state">MOS-specific advisory output will appear here.</div>
+            </div><!-- /tool-drawer-body -->
+            </details><!-- /drawer-mos-advisor -->
           </article>
 
           <article class="panel tool-panel">
-            <div class="panel-header">
-              <h2>Staff update cycle</h2>
-              <p>Turn quick section updates into a running estimate, CUB, and decision brief without rebuilding the frame.</p>
-            </div>
+            <details id="drawer-staff-cycle" class="tool-drawer">
+            <summary>
+              <div class="panel-header">
+                <h2>Staff update cycle</h2>
+                <p>Turn quick section updates into a running estimate, CUB, and decision brief without rebuilding the frame.</p>
+              </div>
+              <span class="drawer-label"></span>
+            </summary>
+            <div class="tool-drawer-body">
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>When:</strong> Drill weekend — sections are checking in and you need to roll their updates into a structured output without rebuilding the planning cell from scratch.</p>
+                <p><strong>Section updates format:</strong> One line per section: <code>S-3: Concept is supportable if the company cuts to one primary lane.</code></p>
+                <p><strong>What you get:</strong> A running estimate, CUB structure, and decision brief scaffold based on what each section said.</p>
+                <p><strong>Difference from Planning Cell:</strong> The update cycle assumes planning is done — it processes status, not analysis. Use the planning cell for analysis, the update cycle for drill-weekend sync.</p>
+              </div>
+            </details>
             <form id="staff-cycle-form" class="tool-form">
               <div class="form-row">
                 <label>
@@ -1166,6 +1382,16 @@
                 <label>
                   <span>Supported unit</span>
                   <input name="supported_unit" type="text" value="Civil affairs company" />
+                </label>
+                <!-- UX6: echelon was previously hard-coded to "company" in JS -->
+                <label>
+                  <span>Echelon</span>
+                  <select name="supported_echelon">
+                    <option value="company">Company</option>
+                    <option value="battalion">Battalion</option>
+                    <option value="regiment">Regiment / Group</option>
+                    <option value="meu">MEU / Task Force</option>
+                  </select>
                 </label>
               </div>
               <label>
@@ -1199,13 +1425,32 @@
             <div id="staff-cycle-output" class="tool-output empty-state">
               Running estimate, CUB, and decision-brief outputs will appear here.
             </div>
+            </div><!-- /tool-drawer-body -->
+            </details><!-- /drawer-staff-cycle -->
           </article>
 
           <article class="panel tool-panel full-span">
-            <div class="panel-header">
-              <h2>Planning Cell</h2>
-              <p>Run mission analysis, pick a planning rhythm, and keep assumptions, decisions, and due-outs visible.</p>
-            </div>
+            <details id="drawer-planning-cell" class="tool-drawer">
+            <summary>
+              <div class="panel-header">
+                <h2>Planning Cell</h2>
+                <p>Run mission analysis, pick a planning rhythm, and keep assumptions, decisions, and due-outs visible.</p>
+              </div>
+              <span class="drawer-label"></span>
+            </summary>
+            <div class="tool-drawer-body">
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>When:</strong> You have a training goal, 30+ minutes, and need a structured planning package — not just notes.</p>
+                <p><strong>Mission / training goal:</strong> The one thing the event must accomplish. Be specific.</p>
+                <p><strong>Commander priorities:</strong> What to protect even if the plan has to shrink. One per line.</p>
+                <p><strong>Higher guidance:</strong> What battalion or higher has told you. Constraints go in the Constraints field — these are two different things.</p>
+                <p><strong>Section updates:</strong> What each section knows right now. Format: <code>S-4: Transport is available but timing is tight.</code></p>
+                <p><strong>What you get:</strong> Mission analysis, planning approach, assumption log, decision log, and due-outs — ready to brief or save to the Battle Rhythm Board.</p>
+                <p><strong>Lone Planner vs Section Gap Cover:</strong> Run Lone Planner first if you're cold. Run Section Gap Cover after the planning cell if you're missing sections and need to fill the gaps.</p>
+              </div>
+            </details>
             <form id="planning-cell-form" class="tool-form">
               <div class="form-row">
                 <label>
@@ -1218,6 +1463,16 @@
                 </label>
               </div>
               <div class="form-row">
+                <!-- UX6: echelon was previously hard-coded to "company" in JS -->
+                <label>
+                  <span>Echelon</span>
+                  <select name="supported_echelon">
+                    <option value="company">Company</option>
+                    <option value="battalion">Battalion</option>
+                    <option value="regiment">Regiment / Group</option>
+                    <option value="meu">MEU / Task Force</option>
+                  </select>
+                </label>
                 <label>
                   <span>Event type</span>
                   <input name="event_type" type="text" value="training_event" />
@@ -1245,7 +1500,7 @@
                   ></textarea>
                 </label>
                 <label>
-                  <span>Higher guidance / constraints (one per line)</span>
+                  <span>Higher guidance (one per line)</span>
                   <textarea
                     name="higher_guidance"
                     rows="4"
@@ -1253,21 +1508,41 @@
                   ></textarea>
                 </label>
               </div>
+              <!-- BUG1 fix: constraints was previously duplicating higher_guidance; now a separate field -->
               <div class="form-row">
+                <label>
+                  <span>Constraints (one per line)</span>
+                  <textarea
+                    name="constraints"
+                    rows="3"
+                    placeholder="Time available&#10;Manning limits&#10;Equipment or access restrictions"
+                  ></textarea>
+                </label>
                 <label>
                   <span>Coordinating sections (one per line)</span>
                   <textarea
                     name="coordinating_sections"
-                    rows="4"
+                    rows="3"
                     placeholder="S-3&#10;S-4&#10;S-6&#10;Medical"
                   ></textarea>
                 </label>
+              </div>
+              <!-- BUG2 fix: civil_considerations was previously duplicating support_requirements; now separate fields -->
+              <div class="form-row">
                 <label>
-                  <span>Support requirements / civil factors (one per line)</span>
+                  <span>Support requirements (one per line)</span>
                   <textarea
                     name="support_requirements"
                     rows="4"
-                    placeholder="Transport timeline&#10;Water plan&#10;Billeting reality&#10;Partner visibility if required"
+                    placeholder="Transport timeline&#10;Water plan&#10;Billeting reality"
+                  ></textarea>
+                </label>
+                <label>
+                  <span>Civil considerations (one per line)</span>
+                  <textarea
+                    name="civil_considerations"
+                    rows="4"
+                    placeholder="Partner visibility if required&#10;Key population concerns&#10;Host-nation coordination"
                   ></textarea>
                 </label>
               </div>
@@ -1307,10 +1582,21 @@
             <div id="staff-package-output" class="tool-output empty-state">
               The integrated staff package will surface planning posture, command decisions, risk cuts, section outputs, and linked staff products here.
             </div>
+            </div><!-- /tool-drawer-body -->
+            </details><!-- /drawer-planning-cell -->
           </article>
         </section>
       </main>
     </div>
+
+    <!-- Workflow dialog — floating panel for quick-launch tools (Lone Planner, Staff Package) -->
+    <dialog id="workflow-dialog" class="workflow-dialog" aria-labelledby="workflow-dialog-title">
+      <div class="workflow-dialog-header">
+        <h2 id="workflow-dialog-title">Workflow</h2>
+        <button type="button" id="workflow-dialog-close" class="secondary" aria-label="Close dialog">✕ Close</button>
+      </div>
+      <div id="workflow-dialog-body" class="workflow-dialog-body"></div>
+    </dialog>
 
     <script>
       (function loadDashboardAssets() {

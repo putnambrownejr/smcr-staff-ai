@@ -138,6 +138,20 @@ def _fictional_place(seed: str) -> str:
     return f"{prefix} {root}"
 
 
+def infer_archetype_from_text(text: str) -> ScenarioArchetype:
+    """Infer a ScenarioArchetype from free text using keyword matching."""
+    lowered = text.lower()
+    if any(term in lowered for term in {"littoral", "maritime", "coast", "port", "meu", "shipping"}):
+        return ScenarioArchetype.littoral_hybrid
+    if any(term in lowered for term in {"flood", "storm", "earthquake", "disaster", "evacuation", "humanitarian"}):
+        return ScenarioArchetype.disaster_unrest
+    if any(term in lowered for term in {"urban", "city", "metro", "riot", "civil unrest", "megacity", "protest", "crowd"}):
+        return ScenarioArchetype.urban_unrest
+    if any(term in lowered for term in {"border", "crossing", "smuggling", "riverine", "cartel", "convoy", "route"}):
+        return ScenarioArchetype.border_proxy
+    return ScenarioArchetype.expeditionary_coercion
+
+
 def _scenario_archetype(
     *,
     scenario_archetype: ScenarioArchetype | None,
@@ -159,16 +173,8 @@ def _scenario_archetype(
             *current_event_context,
             *constraints,
         ]
-    ).lower()
-    if any(term in text for term in {"littoral", "maritime", "coast", "port", "meu", "shipping"}):
-        return ScenarioArchetype.littoral_hybrid
-    if any(term in text for term in {"flood", "storm", "earthquake", "disaster", "evacuation", "humanitarian"}):
-        return ScenarioArchetype.disaster_unrest
-    if any(term in text for term in {"urban", "city", "metro", "riot", "civil unrest", "megacity"}):
-        return ScenarioArchetype.urban_unrest
-    if any(term in text for term in {"border", "crossing", "smuggling", "riverine", "cartel"}):
-        return ScenarioArchetype.border_proxy
-    return ScenarioArchetype.expeditionary_coercion
+    )
+    return infer_archetype_from_text(text)
 
 
 def _fictional_actor(seed: str, archetype: ScenarioArchetype, place_name: str) -> ScenarioActorProfile:

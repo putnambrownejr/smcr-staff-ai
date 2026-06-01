@@ -99,7 +99,7 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Workflow lane" in response.text
     assert "Command Snapshots" in response.text
     assert "Start Here" in response.text
-    assert "Integrated staff package" in response.text
+    assert "Integrated Staff Package" in response.text
     assert "Battle Rhythm Editor" in response.text
     assert "Act Now" in response.text
     assert "Skip to dashboard content" in response.text

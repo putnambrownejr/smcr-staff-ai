@@ -688,8 +688,18 @@ textarea {
   border-radius: 999px;
   background: var(--surface-3);
   color: var(--muted);
-  font-size: 0.82rem;
+  /* A11: hide static inline text; ::before provides context-aware label */
+  font-size: 0;
   font-weight: 700;
+}
+
+.drawer-label::before {
+  font-size: 0.82rem;
+  content: "Open";
+}
+
+details[open] > summary .drawer-label::before {
+  content: "Close";
 }
 
 .reading-drawer {
@@ -725,8 +735,9 @@ textarea {
   margin: 0 0 8px;
 }
 
+/* A6: #b21f2d fails WCAG AA (3.6:1) on --bg; #e05060 passes at 5.2:1 */
 .critical {
-  color: var(--scarlet);
+  color: #e05060;
 }
 
 @media (max-width: 1180px) {
@@ -738,6 +749,188 @@ textarea {
   .workflow-priority-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* Tool drawers — collapsible wrappers for each workflow tool panel */
+.tool-drawer {
+  border: none;
+  background: none;
+}
+
+.tool-drawer > summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  list-style: none;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.tool-drawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+.tool-drawer > summary .panel-header {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.tool-drawer-body {
+  padding-top: 16px;
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+/* Workflow dialog — floating panel for quick-launch tools */
+.workflow-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(760px, 96vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.workflow-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(2px);
+}
+
+.workflow-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+
+.workflow-dialog-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.workflow-dialog-body {
+  padding: 18px 20px 24px;
+}
+
+/* Help hints — compact collapsible usage guides inside each panel */
+.help-hint {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-3);
+}
+
+.help-hint > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  cursor: pointer;
+  padding: 7px 12px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  user-select: none;
+}
+
+.help-hint > summary::-webkit-details-marker {
+  display: none;
+}
+
+.help-hint > summary::before {
+  content: "ℹ";
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.help-hint[open] > summary {
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+}
+
+.help-hint-body {
+  padding: 10px 14px 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.help-hint-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.help-hint-body p strong {
+  color: var(--text);
+}
+
+.help-hint-body ul {
+  margin: 4px 0 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+/* A5: Mode badge — shows demo vs personal mode in topbar */
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mode-badge[data-mode="personal"] {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+/* UX5: Loading overlay */
+.dashboard-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(9, 11, 13, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.dashboard-loading.is-hidden {
+  display: none;
+}
+
+.loading-text {
+  padding: 12px 24px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.94rem;
+  font-weight: 700;
 }
 
 @media (max-width: 980px) {

@@ -1,4 +1,11 @@
+from collections.abc import Callable
+from typing import TypeVar
+
 from fastapi import APIRouter, HTTPException
+
+from app.core.auth import LocalApiKeyDependency
+
+_T = TypeVar("_T")
 
 from app.schemas.tdg import TdgGenerationRequest, TdgGenerationResponse
 from app.schemas.training import (
@@ -29,7 +36,16 @@ from app.services.training.scenario_builder import RangeSafetyBuilder, TrainingS
 from app.services.training.scenario_preset_catalog import ScenarioPresetCatalog
 from app.services.training.tdg_builder import TdgBuilder
 
-router = APIRouter(prefix="/training", tags=["training workflows"])
+router = APIRouter(prefix="/training", tags=["training workflows"], dependencies=[LocalApiKeyDependency])
+
+
+def _apply_preset(fn: Callable[[], _T], preset_id: str | None) -> _T:
+    try:
+        return fn()
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Unknown scenario preset: {preset_id}")
+
+
 _scenario_builder = TrainingScenarioBuilder()
 _scenario_presets = ScenarioPresetCatalog.default()
 _range_builder = RangeSafetyBuilder()
@@ -50,13 +66,7 @@ def list_scenario_presets() -> ScenarioPresetListResponse:
 @router.post("/scenario", response_model=TrainingScenarioResponse)
 def build_training_scenario(request: TrainingScenarioRequest) -> TrainingScenarioResponse:
     if request.scenario_preset_id:
-        try:
-            request = _scenario_presets.apply_to_training_request(request)
-        except KeyError as exc:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Unknown scenario preset: {request.scenario_preset_id}",
-            ) from exc
+        request = _apply_preset(lambda: _scenario_presets.apply_to_training_request(request), request.scenario_preset_id)
     return _scenario_builder.build(request)
 
 
@@ -88,13 +98,7 @@ def build_training_case_study(request: TrainingCaseStudyRequest) -> TrainingCase
 @router.post("/s3-plan", response_model=S3PlanningResponse)
 def build_s3_plan(request: S3PlanningRequest) -> S3PlanningResponse:
     if request.scenario_preset_id:
-        try:
-            request = _scenario_presets.apply_to_s3_request(request)
-        except KeyError as exc:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Unknown scenario preset: {request.scenario_preset_id}",
-            ) from exc
+        request = _apply_preset(lambda: _scenario_presets.apply_to_s3_request(request), request.scenario_preset_id)
     return _s3_planner.build(request)
 
 

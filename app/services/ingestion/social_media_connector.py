@@ -1,4 +1,5 @@
 import hashlib
+import ipaddress
 from datetime import UTC, datetime
 from urllib.parse import urlparse
 
@@ -50,13 +51,7 @@ VETTED_SOURCES: tuple[VettedSocialSource, ...] = (
     ),
 )
 
-BLOCKED_HOST_FRAGMENTS = (
-    "localhost",
-    "127.0.0.1",
-    "10.",
-    "172.16.",
-    "192.168.",
-)
+_BLOCKED_HOSTNAMES = frozenset({"localhost"})
 
 
 class SocialMediaVettedConnector:
@@ -93,13 +88,24 @@ class SocialMediaVettedConnector:
         parsed = urlparse(str(item.url))
         if parsed.scheme not in {"http", "https"}:
             warnings.append(f"Unsupported URL scheme for {item.url}.")
-        if any(parsed.hostname and parsed.hostname.startswith(fragment) for fragment in BLOCKED_HOST_FRAGMENTS):
+        if _is_private_or_local_host(parsed.hostname):
             warnings.append(f"Private or local URL is not allowed for social trend ingestion: {item.url}.")
         if item.source_type == SocialSourceType.social_trend and not item.trend_signal:
             warnings.append("Social trend records should include a topic-level trend_signal.")
         if _looks_person_targeted(item) and strict:
             warnings.append("Record appears person-targeted. Use topic-level trends only.")
         return warnings
+
+
+def _is_private_or_local_host(hostname: str | None) -> bool:
+    if not hostname:
+        return True
+    if hostname in _BLOCKED_HOSTNAMES:
+        return True
+    try:
+        return ipaddress.ip_address(hostname).is_private
+    except ValueError:
+        return False
 
 
 def to_osint_source_item(record: SocialTrendRecord) -> dict[str, str]:
