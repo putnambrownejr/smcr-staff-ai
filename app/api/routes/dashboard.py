@@ -63,6 +63,7 @@ from app.services.templates.system_template_catalog import SystemTemplateCatalog
 router = APIRouter(tags=["dashboard"])
 _DASHBOARD_HTML = Path(__file__).resolve().parents[2] / "static" / "dashboard" / "index.html"
 SEED_DIR = Path("data/seed")
+_reference_library_cache: list[DashboardReferenceEntry] | None = None
 
 
 @router.get("/dashboard", summary="Open the lightweight SMCR Staff AI dashboard")
@@ -570,6 +571,9 @@ def _reading_books(
 
 
 def _reference_library() -> list[DashboardReferenceEntry]:
+    global _reference_library_cache
+    if _reference_library_cache is not None:
+        return _reference_library_cache
     source_dir = Path("docs/sources")
     if not source_dir.exists():
         return []
@@ -578,7 +582,8 @@ def _reference_library() -> list[DashboardReferenceEntry]:
         for path in sorted(source_dir.glob("*.md"))
         if path.name.lower() != "readme.md"
     ]
-    return [entry for entry in entries if entry is not None]
+    _reference_library_cache = [entry for entry in entries if entry is not None]
+    return _reference_library_cache
 
 
 def _reference_entry_from_file(path: Path) -> DashboardReferenceEntry | None:

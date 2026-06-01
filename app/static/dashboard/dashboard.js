@@ -255,6 +255,19 @@ document.getElementById("document-select")?.addEventListener("change", (event) =
   state.selectedDocumentId = event.target.value || null;
   renderDocumentLibrary(state.workspace?.document_details || []);
 });
+// Onboarding card buttons — visible until first workspace load
+document.getElementById("onboarding-load-demo").addEventListener("click", () => {
+  state.mode = "demo";
+  state.userKey = "";
+  state.apiKey = "";
+  document.getElementById("user-key").value = "";
+  document.getElementById("api-key").value = "";
+  loadWorkspace();
+});
+document.getElementById("onboarding-open-setup").addEventListener("click", () => {
+  openLane("configure", "Enter your profile name to load your personal workspace.");
+});
+
 // Workflow dialog — close button and backdrop click
 document.getElementById("workflow-dialog-close").addEventListener("click", () => {
   document.getElementById("workflow-dialog").close();
@@ -399,6 +412,7 @@ async function loadWorkspace() {
     }
     renderWorkspace(state.workspace);
     openDefaultPanels();
+    setOnboardingVisible(false);
     setWorkspaceNote("Workspace refreshed.");
   } catch (error) {
     setWorkspaceNote(error.message, true);
@@ -414,16 +428,24 @@ function setLoading(active) {
   }
 }
 
-// UX3: open the most operationally relevant panels by default after a workspace load
-function openDefaultPanels() {
-  for (const id of ["daily-brief-drawer", "act-now-drawer"]) {
-    const el = document.getElementById(id);
-    if (el) {
-      el.open = true;
-    }
+// UX4: show onboarding panel when no workspace is loaded, hide it once loaded
+function setOnboardingVisible(visible) {
+  const panel = document.getElementById("workspace-onboarding");
+  if (panel) {
+    panel.classList.toggle("is-hidden", !visible);
   }
-  // Open the command snapshots drawer so chief / admin / career counts are visible
-  const snapshots = document.querySelector(".collapsible-panel.full-span details");
+}
+
+// UX3: open the most operationally relevant panels by default after a workspace load.
+// Act Now is now at the top of Overview so no extra scroll is needed to see it.
+// Daily Brief auto-opens in Watch lane; Command Snapshots auto-opens for the counts.
+function openDefaultPanels() {
+  const dailyBrief = document.getElementById("daily-brief-drawer");
+  if (dailyBrief) {
+    dailyBrief.open = true;
+  }
+  // Open Command Snapshots so chief/admin/career counts are immediately visible
+  const snapshots = document.querySelector(".collapsible-panel.full-span details.panel-drawer");
   if (snapshots && state.workspace) {
     snapshots.open = true;
   }

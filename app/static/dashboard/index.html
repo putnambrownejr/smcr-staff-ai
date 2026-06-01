@@ -106,7 +106,56 @@
           </p>
         </section>
 
+        <!-- UX4: First-run onboarding — visible until a workspace loads successfully -->
         <section class="summary-grid" data-section-group="overview">
+          <article id="workspace-onboarding" class="panel onboarding-panel full-span">
+            <div class="panel-header">
+              <h2>Welcome to SMCR Staff AI</h2>
+              <p>Load a workspace to see your readiness posture, act-now stack, and live source watch. Takes about 5 seconds.</p>
+            </div>
+            <div class="onboarding-steps">
+              <div class="onboarding-step">
+                <span class="strip-label">Explore first</span>
+                <h3>Demo mode</h3>
+                <p>Safe read-only tour with sample data. No setup required — just click below to see what the dashboard does.</p>
+                <div class="button-row">
+                  <button type="button" id="onboarding-load-demo">Open demo workspace</button>
+                </div>
+              </div>
+              <div class="onboarding-step">
+                <span class="strip-label">Your data</span>
+                <h3>Personal workspace</h3>
+                <p>Enter your profile name from the Workspace tab. If you set a passkey, enter that too. Your data stays local.</p>
+                <div class="button-row">
+                  <button type="button" class="secondary" id="onboarding-open-setup">Open workspace setup</button>
+                </div>
+              </div>
+              <div class="onboarding-step">
+                <span class="strip-label">First time?</span>
+                <h3>Start with demo, then go personal</h3>
+                <p>Demo shows you the layout. Once you know what fields mean, switch to personal mode and enter your profile name.</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- Act Now is first — the single most important thing when time is short -->
+          <article class="panel full-span">
+            <div class="panel-header">
+              <h2>Act Now</h2>
+              <p>The tightest stack of immediate actions, open decisions, and continuity drift that needs attention first.</p>
+            </div>
+            <details class="help-hint">
+              <summary>How to use this</summary>
+              <div class="help-hint-body">
+                <p><strong>When:</strong> Start here if you have limited time. This is the distilled "do this now" list.</p>
+                <p><strong>Critical / Attention / Routine:</strong> Severity-ranked cards. Work critical items before opening anything else.</p>
+                <p><strong>Where it comes from:</strong> Pulled from your Chief/Aide brief, tracked POAMs, and continuity drift — automatically after workspace loads.</p>
+                <p><strong>If it's empty:</strong> Either your workspace isn't loaded yet, or you're genuinely clear. Load your personal workspace to see your real stack.</p>
+              </div>
+            </details>
+            <div id="priority-queue" class="row-stack empty-state">Load the workspace to see current priorities.</div>
+          </article>
+
           <article class="panel readiness-panel full-span">
             <div class="panel-header">
               <h2>Next Drill Readiness</h2>
@@ -122,6 +171,7 @@
                 <p><strong>Ready if…:</strong> Conditions that would move the needle from watch to green before drill.</p>
               </div>
             </details>
+            <!-- Primary strip: always visible — posture + decisive action -->
             <div class="readiness-shell">
               <section class="readiness-primary">
                 <span class="strip-label">Readiness posture</span>
@@ -132,43 +182,54 @@
                   <p id="readiness-decisive-action">Load the workspace to surface the one move that matters most.</p>
                 </div>
               </section>
-              <section class="readiness-columns">
-                <div class="brief-block">
-                  <h3>This week focus</h3>
-                  <ul id="readiness-focus" class="bullet-list"></ul>
-                </div>
-                <div class="brief-block">
-                  <h3>Immediate must-do</h3>
-                  <div id="readiness-must-do" class="row-stack empty-state">No immediate pre-drill actions yet.</div>
-                </div>
-                <div class="brief-block">
-                  <h3>Likely friction</h3>
-                  <ul id="readiness-friction" class="bullet-list"></ul>
-                </div>
-                <div class="brief-block">
-                  <h3>Missing foundation</h3>
-                  <ul id="readiness-foundation" class="bullet-list"></ul>
-                </div>
-                <div class="brief-block">
-                  <h3>Standing rhythm</h3>
-                  <ul id="readiness-rhythm" class="bullet-list"></ul>
-                </div>
-              </section>
             </div>
-            <div class="readiness-footer">
-              <div class="brief-block">
-                <h3>Summary</h3>
-                <ul id="readiness-summary" class="bullet-list"></ul>
+            <!-- Detail sections collapsed by default — expand when you have time -->
+            <details id="readiness-detail-drawer" class="panel-drawer" style="margin-top:14px;">
+              <summary>
+                <div class="panel-header compact">
+                  <div><h3 style="margin:0;font-size:1rem;">This week focus, must-do, friction, foundation</h3></div>
+                  <span class="drawer-label"></span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
+                <div class="readiness-columns">
+                  <div class="brief-block">
+                    <h3>This week focus</h3>
+                    <ul id="readiness-focus" class="bullet-list"></ul>
+                  </div>
+                  <div class="brief-block">
+                    <h3>Immediate must-do</h3>
+                    <div id="readiness-must-do" class="row-stack empty-state">No immediate pre-drill actions yet.</div>
+                  </div>
+                  <div class="brief-block">
+                    <h3>Likely friction</h3>
+                    <ul id="readiness-friction" class="bullet-list"></ul>
+                  </div>
+                  <div class="brief-block">
+                    <h3>Missing foundation</h3>
+                    <ul id="readiness-foundation" class="bullet-list"></ul>
+                  </div>
+                  <div class="brief-block">
+                    <h3>Standing rhythm</h3>
+                    <ul id="readiness-rhythm" class="bullet-list"></ul>
+                  </div>
+                </div>
+                <div class="readiness-footer">
+                  <div class="brief-block">
+                    <h3>Summary</h3>
+                    <ul id="readiness-summary" class="bullet-list"></ul>
+                  </div>
+                  <div class="brief-block">
+                    <h3>Ready if...</h3>
+                    <ul id="readiness-ready-if" class="bullet-list"></ul>
+                  </div>
+                  <div class="brief-block">
+                    <h3>Follow-on workflows</h3>
+                    <ul id="readiness-workflows" class="bullet-list"></ul>
+                  </div>
+                </div>
               </div>
-              <div class="brief-block">
-                <h3>Ready if...</h3>
-                <ul id="readiness-ready-if" class="bullet-list"></ul>
-              </div>
-              <div class="brief-block">
-                <h3>Follow-on workflows</h3>
-                <ul id="readiness-workflows" class="bullet-list"></ul>
-              </div>
-            </div>
+            </details>
           </article>
 
           <article class="panel collapsible-panel full-span">
@@ -490,23 +551,6 @@
                 </div>
               </div>
             </details>
-          </article>
-
-          <article class="panel">
-            <div class="panel-header">
-              <h2>Act Now</h2>
-              <p>The tightest stack of immediate actions, open decisions, and continuity drift that needs attention first.</p>
-            </div>
-            <details class="help-hint">
-              <summary>How to use this</summary>
-              <div class="help-hint-body">
-                <p><strong>When:</strong> Start here if you have limited time. This is the distilled "do this now" list.</p>
-                <p><strong>Critical / Attention / Routine:</strong> Severity-ranked cards. Work critical items before opening anything else.</p>
-                <p><strong>Where it comes from:</strong> Pulled from your Chief/Aide brief, tracked POAMs, and continuity drift — automatically after workspace loads.</p>
-                <p><strong>If it's empty:</strong> Either your workspace isn't loaded yet, or you're genuinely clear. Load your personal workspace to see your real stack.</p>
-              </div>
-            </details>
-            <div id="priority-queue" class="row-stack empty-state">Load the workspace to see current priorities.</div>
           </article>
 
           <article class="panel full-span battle-rhythm-overview-panel collapsible-panel">

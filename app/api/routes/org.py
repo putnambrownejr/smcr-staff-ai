@@ -1,4 +1,3 @@
-from functools import lru_cache
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -11,11 +10,19 @@ from app.services.org_awareness.hierarchy import OrgHierarchyService
 router = APIRouter(tags=["org"])
 
 SEED_DIR = Path(__file__).resolve().parents[3] / "data" / "seed"
+_org_service: OrgHierarchyService | None = None
 
 
-@lru_cache
 def org_service() -> OrgHierarchyService:
-    return OrgHierarchyService.from_json(SEED_DIR / "org_units.example.json")
+    global _org_service
+    if _org_service is None:
+        _org_service = OrgHierarchyService.from_json(SEED_DIR / "org_units.example.json")
+    return _org_service
+
+
+def clear_org_service_cache() -> None:
+    global _org_service
+    _org_service = None
 
 
 @router.get("/org/units", response_model=list[OrgUnit])
