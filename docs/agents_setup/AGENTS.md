@@ -49,7 +49,7 @@ At minimum, check these places first:
 
 1. `README.md`
 2. `docs/core_documents/project_purpose.md`
-3. `docs/compatibility/chatgpt_repo_mode.md`
+3. `docs/compatibility/ai_assistant_guide.md`
 4. `app/api/routes/`
 5. `app/services/agents/registry.py`
 6. `docs/examples/`

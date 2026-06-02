@@ -30,7 +30,6 @@ When real ingestion is added, fetch from the official URL, calculate source hash
 - [Programs, Resources, And G-8 Grounding](programs_resources_g8.md)
 - [Inspector General And Inspection Readiness Grounding](inspector_general_readiness.md)
 - [Commandant's Professional Reading List](commandants_reading_list.md)
-- [Source Inventory Integration Plan](source_inventory_integration_plan.md)
 - [Infantry / 03XX Publications](infantry_03xx.md)
 - [TBS And SOI Training Grounding](tbs_soi_training.md)
 - [Logistics / 04XX Publications](logistics_04xx.md)

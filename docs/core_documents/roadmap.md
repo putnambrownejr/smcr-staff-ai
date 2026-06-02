@@ -11,7 +11,7 @@ Implement resilient public-source fetchers, normalized message storage, source h
 Inputs:
 
 - `docs/deep_research/source_inventory_integration_plan.md`
-- `docs/sources/source_inventory_integration_plan.md`
+- `docs/deep_research/source_inventory_integration_plan.md`
 
 Initial implementation should prioritize MARADMIN RSS/print-view parsing, MCPEL item-page parsing, and fixture-backed tests.
 

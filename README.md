@@ -16,7 +16,7 @@ The project has a simple center of gravity:
 
 In plain language, `smcr-staff-ai` exists to help Marine Corps Reservists stay aware, stay sharp, and stay ahead of the friction of reserve service by turning scattered obligations, staff problems, and training demands into organized, advisory, usable outputs.
 
-For the fuller version, see [docs/core_documents/project_purpose.md](/C:/smcr-staff-ai/docs/core_documents/project_purpose.md).
+For the fuller version, see [docs/core_documents/project_purpose.md](docs/core_documents/project_purpose.md).
 
 ## Safety First
 
@@ -140,14 +140,14 @@ http://127.0.0.1:8000/dashboard
 ```
 
 Run the local app with `uvicorn app.main:app --reload`.
-For a fast repo map, see [docs/README.md](/C:/smcr-staff-ai/docs/README.md).
-For tooling-oriented repo discovery, see [AGENTS.md](/C:/smcr-staff-ai/AGENTS.md).
-For hosted-AI/repo-only orientation, see [docs/compatibility/chatgpt_repo_mode.md](/C:/smcr-staff-ai/docs/compatibility/chatgpt_repo_mode.md).
-For the lowest-friction GitHub-plus-local workflow, see [docs/compatibility/how_to_use_with_chatgpt.md](/C:/smcr-staff-ai/docs/compatibility/how_to_use_with_chatgpt.md).
-For project purpose and scope, see [docs/core_documents/project_purpose.md](/C:/smcr-staff-ai/docs/core_documents/project_purpose.md).
-For Claude/Gemini/Grok/Copilot/GENAI-safe usage patterns, see [docs/compatibility/external_ai_safe_use.md](/C:/smcr-staff-ai/docs/compatibility/external_ai_safe_use.md) and [docs/compatibility/external_ai_playbooks.md](/C:/smcr-staff-ai/docs/compatibility/external_ai_playbooks.md).
-For the build-vs-reuse decision matrix, see [docs/compatibility/capability_reuse_audit.md](/C:/smcr-staff-ai/docs/compatibility/capability_reuse_audit.md).
-Working scratch notes currently live in [docs/core_documents/offline_notes.md](/C:/smcr-staff-ai/docs/core_documents/offline_notes.md); review before any public push.
+For a fast repo map, see [docs/README.md](docs/README.md).
+For tooling-oriented repo discovery, see [AGENTS.md](AGENTS.md).
+For hosted-AI/repo-only orientation, see [docs/compatibility/ai_assistant_guide.md](ai_assistant_guide.md).
+For the lowest-friction GitHub-plus-local workflow, see [docs/compatibility/ai_assistant_guide.md](ai_assistant_guide.md).
+For project purpose and scope, see [docs/core_documents/project_purpose.md](docs/core_documents/project_purpose.md).
+For Claude/Gemini/Grok/Copilot/GENAI-safe usage patterns, see [docs/compatibility/external_ai_safe_use.md](external_ai_safe_use.md) and [docs/compatibility/external_ai_safe_use.md](external_ai_safe_use.md).
+For the build-vs-reuse decision matrix, see [docs/compatibility/capability_reuse_audit.md](capability_reuse_audit.md).
+Working scratch notes currently live in [docs/core_documents/offline_notes.md](docs/core_documents/offline_notes.md); review before any public push.
 
 ## Calling The API
 
@@ -820,7 +820,7 @@ curl -X POST http://127.0.0.1:8000/sharing/external-ai-packet `
 
 This route is the preferred way to take local user context to an external AI. It withholds raw local file references, context IDs, and other fields that should usually stay on the machine, and it can tailor the recommended share prompt for `claude`, `gemini`, `grok`, `copilot`, `genai`, or a generic external model.
 
-For provider-specific defaults and starter prompts, see [docs/compatibility/external_ai_playbooks.md](/C:/smcr-staff-ai/docs/compatibility/external_ai_playbooks.md).
+For provider-specific defaults and starter prompts, see [docs/compatibility/external_ai_safe_use.md](external_ai_safe_use.md).
 
 Draft a proposed handoff update from notes:
 
@@ -1407,7 +1407,7 @@ Read these before expanding the project:
 - `docs/doctrine_sources.md`
 - `docs/sources/README.md`
 - `docs/sources/core_marine_doctrine.md`
-- `docs/sources/source_inventory_integration_plan.md`
+- `docs/deep_research/source_inventory_integration_plan.md`
 - `docs/sources/infantry_03xx.md`
 - `docs/sources/logistics_04xx.md`
 - `docs/sources/correspondence_formatting.md`
@@ -1428,7 +1428,7 @@ Start with:
 1. `README.md`
 2. `AGENTS.md`
 3. `docs/core_documents/project_purpose.md`
-4. `docs/compatibility/chatgpt_repo_mode.md`
+4. `docs/compatibility/ai_assistant_guide.md`
 5. `app/services/agents/registry.py`
 6. `app/api/routes/`
 7. `docs/examples/`

@@ -2,7 +2,7 @@ notice: "Example manifest only. Fetch official public sources at runtime; do not
 planning_refs:
   - title: Source Inventory and Integration Plan
     local_path: docs/deep_research/source_inventory_integration_plan.md
-    summary_path: docs/sources/source_inventory_integration_plan.md
+    summary_path: docs/deep_research/source_inventory_integration_plan.md
     classification_label: UNCLASSIFIED
     cui_flag: false
     source_policy: planning_reference_only

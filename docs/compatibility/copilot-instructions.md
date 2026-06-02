@@ -9,7 +9,7 @@ Before answering non-trivial questions about repo capability, workflow, or imple
 1. `README.md`
 2. `AGENTS.md`
 3. `docs/core_documents/project_purpose.md`
-4. `docs/compatibility/chatgpt_repo_mode.md`
+4. `docs/compatibility/ai_assistant_guide.md`
 5. `app/api/routes/`
 6. `app/services/agents/registry.py`
 7. `docs/examples/`
