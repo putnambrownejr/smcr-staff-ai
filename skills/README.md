@@ -22,6 +22,15 @@ Packaged repo-local skills for humans and connected AI tools.
 - `pptx`
   - Use when creating, editing, or extracting content from PowerPoint (.pptx) files — decision briefs, back-briefs, AARs, CUBs, and MDMP slide packages.
 
+- `source-trust-review`
+  - Use when reviewing the freshness and verification status of doctrine or policy sources. Routes follow-up work based on trust state: verified-current, needs-review, or update-detected.
+
+- `personal-chief-of-staff`
+  - Use when you need a single integrated brief covering handoff state, open actions, career watch, admin due-outs, and drill prep in one pass. Extends chief-brief-ops across the full personal admin and continuity surface.
+
+- `connector-adapter`
+  - Use when normalizing external calendar, email, or travel summaries into repo-native schemas and workflow paths. Bridges outside inputs to local routes without the repo owning OAuth.
+
 ## Working Rule
 
 Prefer existing repo routes, services, schemas, and local storage workflows before inventing new logic. These skills are operating overlays, not replacements for the app's core behavior.

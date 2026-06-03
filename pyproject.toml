@@ -17,6 +17,11 @@ dependencies = [
   "uvicorn[standard]>=0.30.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/putnambrownejr/smcr-staff-ai"
+Repository = "https://github.com/putnambrownejr/smcr-staff-ai"
+"Issue Tracker" = "https://github.com/putnambrownejr/smcr-staff-ai/issues"
+
 [project.optional-dependencies]
 dev = [
   "mypy>=1.11.0",

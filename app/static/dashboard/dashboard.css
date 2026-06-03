@@ -907,6 +907,32 @@ details[open] > summary .drawer-label::before {
   color: var(--amber);
 }
 
+/* Handoff staleness banner */
+.handoff-stale-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border: 1px solid var(--amber);
+  border-radius: var(--radius);
+  background: var(--amber-soft);
+  color: var(--amber);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.handoff-stale-banner.is-hidden {
+  display: none;
+}
+
+.handoff-stale-banner code {
+  font-size: 0.82rem;
+  background: rgba(180, 137, 47, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
 /* UX4: First-run onboarding panel */
 .onboarding-panel {
   border-color: var(--amber);
