@@ -300,6 +300,40 @@ templates:
     local_only: false
     warnings:
       - "System template only. Tie every failed check to an owner and immediate follow-up action."
+  - template_id: "sys-mrows-rebuttal"
+    template_name: "System MROWS Rebuttal"
+    template_type: "mrows_rebuttal"
+    description: "An S-1/admin rebuttal scaffold for MROWS travel-admin denials, cited authority, evidence, and requested correction."
+    tags: ["system", "mrows_rebuttal", "s1", "admin", "travel"]
+    audience_hint: "S-1/admin chief, traveler, reviewer, and command routing chain"
+    preferred_format: "memorandum"
+    reusable_headings:
+      ["Issue and requested correction", "Facts and timeline", "Cited authority", "Supporting documentation", "Routing and follow-up"]
+    reusable_guidance:
+      - "Ask for the Admin's cited authority in writing before drafting around hearsay."
+      - "For baggage issues, start policy review with JTR section 020204 and verify current local guidance."
+      - "Keep the tone factual, professional, and tied to the specific correction requested."
+    example_excerpt: "Issue / facts / cited authority / supporting docs / routing."
+    local_only: false
+    warnings:
+      - "System template only. Verify current JTR text and command admin process before routing."
+  - template_id: "sys-ridt"
+    template_name: "System RIDT Request"
+    template_type: "ridt"
+    description: "A Request for Individual Delay of Training scaffold for requestor info, reason code, support docs, endorsement, and routing."
+    tags: ["system", "ridt", "s1", "admin", "drill"]
+    audience_hint: "Marine, S-1/admin chief, commander, and routing chain"
+    preferred_format: "request"
+    reusable_headings:
+      ["Requestor information", "Affected training period", "Reason code and explanation", "Supporting documentation", "Commander endorsement and routing"]
+    reusable_guidance:
+      - "Capture requestor, affected drill dates, reason category, and proposed makeup plan clearly."
+      - "Separate medical, family, occupational, and other supporting documentation."
+      - "Track commander endorsement and final admin disposition instead of assuming submission equals approval."
+    example_excerpt: "Requestor / affected drill / reason / support docs / endorsement."
+    local_only: false
+    warnings:
+      - "System template only. Confirm local RIDT format, reason codes, and deadlines with the command admin section."
   - template_id: "sys-troop-flow-checklist"
     template_name: "System Troop-Flow Checklist"
     template_type: "troop_flow_checklist"

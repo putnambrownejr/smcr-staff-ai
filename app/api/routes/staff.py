@@ -200,6 +200,30 @@ def build_s1_gtcc_helper(request: AdminWorkflowDraftRequest) -> AdminWorkflowRes
     )
 
 
+@router.post("/s1/mrows-rebuttal", response_model=AdminWorkflowResponse)
+def build_s1_mrows_rebuttal(request: AdminWorkflowDraftRequest) -> AdminWorkflowResponse:
+    return _admin_workflow_builder.build(
+        AdminWorkflowRequest(
+            workflow_type=AdminWorkflowType.mrows_rebuttal,
+            title=request.title,
+            facts=request.facts,
+            constraints=request.constraints,
+        )
+    )
+
+
+@router.post("/s1/ridt", response_model=AdminWorkflowResponse)
+def build_s1_ridt(request: AdminWorkflowDraftRequest) -> AdminWorkflowResponse:
+    return _admin_workflow_builder.build(
+        AdminWorkflowRequest(
+            workflow_type=AdminWorkflowType.ridt,
+            title=request.title,
+            facts=request.facts,
+            constraints=request.constraints,
+        )
+    )
+
+
 @router.post("/running-estimate", response_model=RunningEstimateResponse)
 def build_running_estimate(request: RunningEstimateRequest) -> RunningEstimateResponse:
     return _update_cycle.build_running_estimate(request)

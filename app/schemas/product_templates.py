@@ -28,6 +28,8 @@ class ProductTemplateType(StrEnum):
     admin_task_tracker = "admin_task_tracker"
     routing_matrix = "routing_matrix"
     pre_drill_admin_readiness_check = "pre_drill_admin_readiness_check"
+    mrows_rebuttal = "mrows_rebuttal"
+    ridt = "ridt"
     troop_flow_checklist = "troop_flow_checklist"
     formation_transition_matrix = "formation_transition_matrix"
     leader_touchpoint_plan = "leader_touchpoint_plan"

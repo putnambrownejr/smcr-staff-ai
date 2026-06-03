@@ -51,6 +51,51 @@ def _workflow_parts(workflow_type: AdminWorkflowType) -> tuple[list[str], list[s
             ["DTS reference", "travel receipts", "orders", "supporting itinerary"],
             ["Verify claimant data and amounts against official systems.", "Route through the appropriate approver."],
         )
+    if workflow_type == AdminWorkflowType.mrows_rebuttal:
+        return (
+            [
+                "Get the Admin's cited denial authority or local policy reference in writing before rebutting.",
+                "Frame the rebuttal around the specific rejected item, the mission requirement, and the policy basis.",
+                "For baggage disputes, cite JTR section 020204 as the starting point for authorized baggage review.",
+                "Separate facts, attached proof, and requested correction so the reviewer can act without guessing.",
+                "Suggested scaffold: I request reconsideration of the MROWS travel determination because [fact], "
+                "supported by [document], and ask that Admin identify the controlling authority if denied.",
+            ],
+            [
+                "MROWS denial or returned-action note",
+                "orders or travel authorization",
+                "Admin's cited authority or denial rationale",
+                "receipts, baggage documentation, or carrier records as applicable",
+                "unit mission/training requirement note if relevant",
+            ],
+            [
+                "Confirm the current JTR text and any local command travel policy before routing.",
+                "Keep the rebuttal professional, fact-bound, and tied to the exact correction requested.",
+                "Do not rely on memory of an Admin conversation; ask for the cited authority in writing.",
+            ],
+        )
+    if workflow_type == AdminWorkflowType.ridt:
+        return (
+            [
+                "Capture requestor information: name, EDIPI if required locally, unit, billet, contact, and affected drill dates.",
+                "Identify the RIDT reason code or category: medical, family, occupational, education, travel, or command-directed.",
+                "State the specific training period affected and the proposed makeup or alternate training plan if known.",
+                "Route for commander endorsement before treating the request as approved.",
+                "Submit through the local S-1/admin channel and preserve confirmation, endorsement, and final disposition.",
+            ],
+            [
+                "RIDT request form or local command format",
+                "medical documentation when medically relevant",
+                "family-care or emergency support note when relevant",
+                "employer or occupational-conflict documentation when relevant",
+                "commander endorsement or routing sheet",
+            ],
+            [
+                "Verify local RIDT format, reason codes, and submission deadlines with the command admin section.",
+                "Confirm whether the delay affects pay, points, readiness reporting, or future drill makeup requirements.",
+                "Do not assume submission equals approval; track the commander's endorsed decision and final admin action.",
+            ],
+        )
     if workflow_type == AdminWorkflowType.gtcc:
         return (
             [
