@@ -1,9 +1,10 @@
+from app.core.auth import LocalApiKeyDependency
 from fastapi import APIRouter
 
 from app.schemas.social import SocialIngestRequest, SocialIngestResponse, VettedSocialSource
 from app.services.ingestion.social_media_connector import SocialMediaVettedConnector
 
-router = APIRouter(prefix="/social", tags=["vetted social sources"])
+router = APIRouter(prefix="/social", tags=["vetted social sources"], dependencies=[LocalApiKeyDependency])
 
 _connector = SocialMediaVettedConnector()
 

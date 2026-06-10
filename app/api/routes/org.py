@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from app.core.auth import LocalApiKeyDependency
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.exercises import ExerciseCadence
@@ -7,7 +8,7 @@ from app.schemas.org import OrgChainResponse, OrgUnit
 from app.services.org_awareness.exercise_cadence import load_exercise_cadence
 from app.services.org_awareness.hierarchy import OrgHierarchyService
 
-router = APIRouter(tags=["org"])
+router = APIRouter(tags=["org"], dependencies=[LocalApiKeyDependency])
 
 SEED_DIR = Path(__file__).resolve().parents[3] / "data" / "seed"
 _org_service: OrgHierarchyService | None = None

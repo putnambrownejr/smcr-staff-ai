@@ -1,4 +1,6 @@
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
+
+_FUTURE_DRILL = date.today() + timedelta(days=21)
 from pathlib import Path
 
 from app.schemas.battle_rhythm import BattleRhythmBoardUpsertRequest, BattleRhythmEntryInput
@@ -51,7 +53,7 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
     plan_store.save(
         DrillPrepPlanResponse(
             id="drill-test",
-            drill_date=date(2026, 6, 6),
+            drill_date=_FUTURE_DRILL,
             tasks=[
                 PrepTask(
                     title="Pack gear",
@@ -107,7 +109,7 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
     assert brief.recommended_courses
     assert brief.summary_lines
     assert brief.top_priority_items
-    assert brief.next_drill_readiness.anchor_drill_date == date(2026, 6, 6)
+    assert brief.next_drill_readiness.anchor_drill_date == _FUTURE_DRILL
     assert brief.next_drill_readiness.must_do_before_drill
     assert brief.next_drill_readiness.decisive_action
     assert brief.next_drill_readiness.this_week_focus
@@ -301,7 +303,7 @@ def test_chief_brief_surfaces_recurring_checks_and_drill_schedule(tmp_path: Path
         UserSessionHandoff(
             user_key="capt-rhythm",
             updated_at=datetime(2026, 5, 10, tzinfo=UTC),
-            drill_dates=[DrillDateRecord(drill_date=date(2026, 6, 6), label="June drill")],
+            drill_dates=[DrillDateRecord(drill_date=_FUTURE_DRILL, label="June drill")],
             recurring_drill_notes=["Every drill confirm uniform and haircut."],
             recurring_checks=[
                 RecurringCheck(
@@ -352,7 +354,7 @@ def test_chief_brief_reads_stored_travel_cases(tmp_path: Path) -> None:
                 sender="noreply@citravel.example",
                 message_received_at=datetime(2026, 6, 1, 14, 30, tzinfo=UTC),
                 travel_status="post_travel",
-                travel_start=date(2026, 6, 6),
+                travel_start=_FUTURE_DRILL,
                 travel_end=date(2026, 6, 8),
                 voucher_due_date=date(2026, 6, 13),
                 rental_car_expected=True,

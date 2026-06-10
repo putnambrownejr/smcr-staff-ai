@@ -24,6 +24,13 @@ class UpdateReviewStatus(StrEnum):
     ignored = "ignored"
 
 
+class SourceTrustState(StrEnum):
+    verified_current = "verified_current"
+    needs_review = "needs_review"
+    update_detected = "update_detected"
+    placeholder = "placeholder"
+
+
 class DocumentationUpdateCandidate(BaseModel):
     candidate_id: str
     tracked_source_id: str | None = None
@@ -40,6 +47,7 @@ class DocumentationUpdateCandidate(BaseModel):
     new_source_hash: str | None = None
     confidence: UpdateConfidence = UpdateConfidence.low
     review_status: UpdateReviewStatus = UpdateReviewStatus.new
+    trust_state: SourceTrustState = SourceTrustState.needs_review
     reviewed_at: datetime | None = None
     review_notes: str | None = None
     human_review_required: bool = True
@@ -52,5 +60,6 @@ class DocumentationUpdateScanResult(BaseModel):
 
 
 class DocumentationUpdateStatusUpdate(BaseModel):
-    review_status: UpdateReviewStatus
+    review_status: UpdateReviewStatus | None = None
+    trust_state: SourceTrustState | None = None
     review_notes: str | None = None

@@ -31,6 +31,21 @@ Packaged repo-local skills for humans and connected AI tools.
 - `connector-adapter`
   - Use when normalizing external calendar, email, or travel summaries into repo-native schemas and workflow paths. Bridges outside inputs to local routes without the repo owning OAuth.
 
+- `frontend-design`
+  - Use when building web components, pages, dashboards, or any UI for the SMCR staff app. Enforces distinctive, production-grade aesthetics and avoids generic AI output patterns.
+
+- `systematic-debugging`
+  - Use when diagnosing non-trivial bugs across any component of the app. Blocks fixes until root cause is confirmed; forces architectural review after three failed attempts.
+
+- `brainstorming`
+  - Use before any feature or component work. Hard-gated: no code until a design is presented and approved. Proposes 2-3 approaches, writes a spec doc, then hands off to writing-plans.
+
+- `grill-me`
+  - Use before implementing any non-trivial feature or data model change. One-question-at-a-time design review that produces a numbered decision log before any code is touched.
+
+- `grill-with-docs`
+  - Use when existing CONTEXT.md or ADRs exist in the repo. Anchors the design review to recorded decisions, challenges terminology against the domain model, and updates docs inline.
+
 ## Working Rule
 
 Prefer existing repo routes, services, schemas, and local storage workflows before inventing new logic. These skills are operating overlays, not replacements for the app's core behavior.

@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 from typing import Annotated
 
+from app.core.auth import LocalApiKeyDependency
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.config import get_settings
@@ -9,7 +10,7 @@ from app.services.agents.base import AgentContext
 from app.services.agents.registry import agent_registry
 from app.services.session.active_context_store import ActiveUserContextStore
 
-router = APIRouter(prefix="/agents", tags=["agents"])
+router = APIRouter(prefix="/agents", tags=["agents"], dependencies=[LocalApiKeyDependency])
 
 
 def get_active_context_store() -> Iterator[ActiveUserContextStore]:

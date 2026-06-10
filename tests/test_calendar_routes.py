@@ -1,4 +1,6 @@
-from datetime import date
+from datetime import date, timedelta
+
+_FUTURE_DRILL = date.today() + timedelta(days=21)
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -36,7 +38,7 @@ def test_drill_plan_uses_templated_local_context_and_persists(tmp_path: Path) ->
     try:
         response = client.post(
             "/calendar/drill-prep-plan",
-            json={"drill_date": date(2026, 6, 6).isoformat(), "context_ids": [context.context_id]},
+            json={"drill_date": _FUTURE_DRILL.isoformat(), "context_ids": [context.context_id]},
         )
         assert response.status_code == 200
         payload = response.json()
@@ -73,8 +75,8 @@ def test_drill_plan_rejects_non_unclassified_key_event(tmp_path: Path) -> None:
         response = client.post(
             "/calendar/drill-prep-plan",
             json={
-                "drill_date": "2026-06-06",
-                "key_events": [{"title": "Brief", "event_date": "2026-06-06", "classification_label": "CUI"}],
+                "drill_date": _FUTURE_DRILL.isoformat(),
+                "key_events": [{"title": "Brief", "event_date": _FUTURE_DRILL.isoformat(), "classification_label": "CUI"}],
             },
         )
         assert response.status_code == 422
@@ -89,7 +91,7 @@ def test_handoff_reminder_plan_route_generates_plans_from_stored_rhythm(tmp_path
         UserSessionHandoff(
             user_key="capt-rhythm",
             unit_id="example-unit",
-            drill_dates=[DrillDateRecord(drill_date=date(2026, 6, 6), label="June drill")],
+            drill_dates=[DrillDateRecord(drill_date=_FUTURE_DRILL, label="June drill")],
             recurring_drill_notes=["Every drill confirm uniform and haircut."],
             recurring_checks=[
                 RecurringCheck(

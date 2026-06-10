@@ -73,7 +73,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Navy message watch | Attempts to pull official NAVADMIN and ALNAV current-year message indexes into local cache, with warning-preserving fallback when MyNavyHR blocks server-side access. | Working best-effort connector |
 | DoD watch | Pulls and filters official Defense.gov release RSS items into a smaller local officer-relevant watchlist. | Working local live-source connector |
 | Custom watch feeds | Lets a user add local-only RSS/Atom feeds with trust labels, categories, and per-feed refresh so personal or unit watches stay outside the repo. | Working local live-source connector |
-| RAG foundations | Includes document/chunk models, chunking, local embedding stub, vector-store stub, doctrine manifest validation, and citation-preserving local RAG pipeline. | Ready for expansion |
+| RAG interface stubs | Chunking, embedding, vector-store, and pipeline interfaces are defined. Current implementation uses a hash embedder (not semantic) and lexical keyword overlap (not vector retrieval). Interface shape is ready; a real provider replaces both files wholesale when semantic RAG is a priority. | Stub — not semantic retrieval |
 | Lightweight dashboard | Serves a browser-based local operations board for Chief brief, admin readiness, career watch, and drafting tools. | Working local UI |
 
 ## What It Does Not Do Yet
@@ -123,7 +123,6 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
 copy .env.example .env
-python -m app.db.init_db
 uvicorn app.main:app --reload
 ```
 

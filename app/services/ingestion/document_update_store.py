@@ -20,6 +20,7 @@ class DocumentUpdateStore:
             existing = self.get(candidate.candidate_id)
             if existing is not None:
                 candidate.review_status = existing.review_status
+                candidate.trust_state = existing.trust_state
                 candidate.reviewed_at = existing.reviewed_at
                 candidate.review_notes = existing.review_notes
             self._path(candidate.candidate_id).write_text(candidate.model_dump_json(indent=2), encoding="utf-8")
@@ -49,9 +50,13 @@ class DocumentUpdateStore:
         candidate = self.get(candidate_id)
         if candidate is None:
             return None
-        candidate.review_status = update.review_status
+        if update.review_status is not None:
+            candidate.review_status = update.review_status
+        if update.trust_state is not None:
+            candidate.trust_state = update.trust_state
         candidate.review_notes = update.review_notes
-        if update.review_status != UpdateReviewStatus.new:
+        review_status_changed = update.review_status is not None and update.review_status != UpdateReviewStatus.new
+        if review_status_changed or update.trust_state is not None:
             candidate.reviewed_at = datetime.now(UTC)
         self._path(candidate_id).write_text(candidate.model_dump_json(indent=2), encoding="utf-8")
         return candidate

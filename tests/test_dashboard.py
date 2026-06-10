@@ -1,4 +1,6 @@
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
+
+_FUTURE_DRILL = date.today() + timedelta(days=21)
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -287,7 +289,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     plan_store.save(
         DrillPrepPlanResponse(
             id="plan-1",
-            drill_date=date(2026, 6, 6),
+            drill_date=_FUTURE_DRILL,
             tasks=[PrepTask(title="Pack gear", due_offset_days=3, due_date=date(2026, 6, 3), category="gear")],
         )
     )
@@ -471,7 +473,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         payload = response.json()
         assert payload["mode"] == "personal"
         assert payload["chief_brief"]["user_key"] == "capt-dash"
-        assert payload["chief_brief"]["next_drill_readiness"]["anchor_drill_date"] == "2026-06-06"
+        assert payload["chief_brief"]["next_drill_readiness"]["anchor_drill_date"] == _FUTURE_DRILL.isoformat()
         assert payload["chief_brief"]["next_drill_readiness"]["decisive_action"]
         assert payload["chief_brief"]["next_drill_readiness"]["this_week_focus"]
         assert payload["chief_brief"]["next_drill_readiness"]["ready_if"]

@@ -1,3 +1,4 @@
+from app.core.auth import LocalApiKeyDependency
 from fastapi import APIRouter
 
 from app.schemas.planning import (
@@ -9,7 +10,7 @@ from app.schemas.planning import (
 from app.services.planning.frago_conop_builder import FragoToConopBuilder
 from app.services.planning.orchestrator import StaffPlanningOrchestrator
 
-router = APIRouter(prefix="/planning", tags=["planning workflows"])
+router = APIRouter(prefix="/planning", tags=["planning workflows"], dependencies=[LocalApiKeyDependency])
 _orchestrator = StaffPlanningOrchestrator()
 _frago_conop = FragoToConopBuilder()
 

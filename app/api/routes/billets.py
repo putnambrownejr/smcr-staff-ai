@@ -1,11 +1,12 @@
 import httpx
+from app.core.auth import LocalApiKeyDependency
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.billets import BilletSearchRequest, BilletSearchResponse, BilletSourceInfo
 from app.services.billets.recommender import DEFAULT_BILLET_WARNINGS, recommend_billets
 from app.services.ingestion.smcr_bic_scraper import OFFICIAL_BILLET_SOURCE_URLS, SmcrBicScraper, official_billet_sources
 
-router = APIRouter(prefix="/billets", tags=["SMCR billets"])
+router = APIRouter(prefix="/billets", tags=["SMCR billets"], dependencies=[LocalApiKeyDependency])
 
 
 @router.get("/sources", response_model=list[BilletSourceInfo])

@@ -1,9 +1,13 @@
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
+from app.api.routes.source_updates import get_update_store as get_source_update_store
 from app.main import app
+from app.schemas.source_updates import DocumentationUpdateCandidate
+from app.services.ingestion.document_update_store import DocumentUpdateStore
 
 
 def test_document_update_check_route_returns_candidates() -> None:
@@ -54,6 +58,7 @@ def test_document_update_routes_persist_and_update_status(tmp_path: Path, monkey
     )
     assert create_response.status_code == 200
     candidate_id = create_response.json()["candidates"][0]["candidate_id"]
+    assert create_response.json()["candidates"][0]["trust_state"] == "needs_review"
 
     list_response = client.get("/documents/updates")
     assert list_response.status_code == 200
@@ -61,10 +66,15 @@ def test_document_update_routes_persist_and_update_status(tmp_path: Path, monkey
 
     status_response = client.post(
         f"/documents/updates/{candidate_id}/status",
-        json={"review_status": "reviewed", "review_notes": "Verified against official page."},
+        json={
+            "review_status": "reviewed",
+            "trust_state": "verified_current",
+            "review_notes": "Verified against official page.",
+        },
     )
     assert status_response.status_code == 200
     assert status_response.json()["review_status"] == "reviewed"
+    assert status_response.json()["trust_state"] == "verified_current"
 
     filtered_response = client.get("/documents/updates?status=reviewed")
     assert filtered_response.status_code == 200
@@ -91,3 +101,56 @@ def test_document_update_routes_persist_and_update_status(tmp_path: Path, monkey
     accepted_filter = client.get("/documents/updates?status=accepted")
     assert accepted_filter.status_code == 200
     assert len(accepted_filter.json()) == 1
+
+
+def test_source_updates_route_lists_and_reviews_trust_state(tmp_path: Path) -> None:
+    store = DocumentUpdateStore(tmp_path)
+    store.save_many(
+        [
+            DocumentationUpdateCandidate(
+                candidate_id="candidate-trust",
+                tracked_title="MCO 5000.1",
+                trigger_type="manual_review",
+            )
+        ]
+    )
+
+    def override_store() -> DocumentUpdateStore:
+        return store
+
+    app.dependency_overrides[get_source_update_store] = override_store
+    client = TestClient(app)
+    try:
+        list_response = client.get("/source-updates")
+        assert list_response.status_code == 200
+        assert list_response.json()[0]["trust_state"] == "needs_review"
+
+        review_response = client.post(
+            "/source-updates/candidate-trust/review",
+            json={"trust_state": "update_detected", "review_notes": "New MARADMIN appears to supersede source."},
+        )
+        assert review_response.status_code == 200
+        payload = review_response.json()
+        assert payload["trust_state"] == "update_detected"
+        assert payload["review_notes"] == "New MARADMIN appears to supersede source."
+        assert payload["reviewed_at"] is not None
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_document_update_store_loads_legacy_records_with_default_trust_state(tmp_path: Path) -> None:
+    legacy_payload = {
+        "candidate_id": "legacy-candidate",
+        "tracked_title": "Legacy Source",
+        "trigger_type": "manual_review",
+        "detected_at": datetime(2026, 6, 3, tzinfo=UTC).isoformat(),
+    }
+    (tmp_path / "legacy-candidate.json").write_text(
+        DocumentationUpdateCandidate(**legacy_payload).model_dump_json(exclude={"trust_state"}),
+        encoding="utf-8",
+    )
+
+    record = DocumentUpdateStore(tmp_path).get("legacy-candidate")
+
+    assert record is not None
+    assert record.trust_state == "needs_review"

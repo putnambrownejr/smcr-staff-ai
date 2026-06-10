@@ -2,18 +2,28 @@ from datetime import UTC, date, datetime
 
 from fastapi import APIRouter, HTTPException
 
+from app.schemas.actions import ActionCategory, ActionHistoryEntry, ActionPriority, ActionRecord, ActionStatus
+from app.schemas.admin_workflows import (
+    AdminWorkflowDraftRequest,
+    AdminWorkflowRequest,
+    AdminWorkflowResponse,
+    AdminWorkflowType,
+)
 from app.schemas.agents import AgentRunRequest, AgentRunResponse
 from app.schemas.analysis import TextAnalysisRequest, TextAnalysisResponse
-from app.schemas.actions import ActionCategory, ActionHistoryEntry, ActionPriority, ActionRecord, ActionStatus
+from app.schemas.billets import BilletSearchRequest, BilletSearchResponse, BilletSourceInfo, SmcrBillet
 from app.schemas.career import CareerWatchResponse
 from app.schemas.chatgpt_surface import ChatGptToolSurfaceEntry, ChatGptToolSurfaceResponse
 from app.schemas.chief import ChiefBriefResponse
+from app.schemas.ingestion import MessageRecord
 from app.schemas.planning import StaffPlanningPackageRequest, StaffPlanningPackageResponse
 from app.schemas.session import DrillDateRecord, FitrepReminder, PmeStatus, RecurringCheck, UserSessionHandoff
 from app.schemas.staff_products import StaffProductDraftRequest, StaffProductDraftResponse
+from app.services.admin.workflow_builder import AdminWorkflowBuilder
 from app.services.agents.base import AgentContext
 from app.services.agents.registry import agent_registry
 from app.services.analysis.summarizer import TextAnalysisService
+from app.services.billets.recommender import DEFAULT_BILLET_WARNINGS, recommend_billets
 from app.services.demo.scenarios import DEMO_USER_KEY, build_demo_career_watch, build_demo_chief_brief
 from app.services.planning.orchestrator import StaffPlanningOrchestrator
 from app.services.staff_products.builder import StaffProductBuilder
@@ -22,6 +32,7 @@ router = APIRouter(prefix="/demo", tags=["demo"])
 _analysis_service = TextAnalysisService()
 _staff_product_builder = StaffProductBuilder()
 _planning_orchestrator = StaffPlanningOrchestrator()
+_admin_workflow_builder = AdminWorkflowBuilder()
 
 
 @router.get("/status", summary="Show repo-mode demo capabilities")
@@ -40,8 +51,11 @@ def demo_status() -> dict[str, object]:
             "/demo/career/watch",
             "/demo/actions",
             "/demo/handoffs/{user_key}",
+            "/demo/maradmins/feed",
             "/demo/planning/staff-package",
             "/demo/analysis/summarize",
+            "/demo/staff/s1/dts-helper",
+            "/demo/billets/recommend",
             "/demo/staff-products/draft",
             "/demo/agents/{agent_id}/run",
         ],
@@ -244,6 +258,119 @@ def demo_handoff(user_key: str) -> UserSessionHandoff:
     summary="Get a stateless demo staff planning package",
 )
 def demo_staff_planning_package() -> StaffPlanningPackageResponse:
+    return _demo_staff_planning_package()
+
+
+@router.post(
+    "/planning/staff-package",
+    response_model=StaffPlanningPackageResponse,
+    summary="Build a stateless demo staff planning package",
+)
+def demo_build_staff_planning_package(
+    request: StaffPlanningPackageRequest | None = None,
+) -> StaffPlanningPackageResponse:
+    if request is None:
+        return _demo_staff_planning_package()
+    return _planning_orchestrator.build(request)
+
+
+@router.get("/maradmins/feed", response_model=list[MessageRecord], summary="Get a stateless demo MARADMIN feed")
+def demo_maradmin_feed() -> list[MessageRecord]:
+    return [
+        MessageRecord(
+            source_id="demo-maradmin-254-26",
+            title="MARADMIN 254/26 Demo Reserve Readiness Reporting Update",
+            canonical_url="https://www.marines.mil/News/Messages/Messages-Display/Article/0000000/demo/",
+            message_number="254/26",
+            fiscal_year=2026,
+            published_at=datetime(2026, 6, 1, 14, 0, tzinfo=UTC),
+            summary="Training-only example of a Reserve-relevant readiness reporting update.",
+            tags=["Reserve", "Readiness", "DocumentUpdate"],
+            source_hash="demo-maradmin-254-26",
+        ),
+        MessageRecord(
+            source_id="demo-maradmin-248-26",
+            title="MARADMIN 248/26 Demo FY26 Professional Military Education Reminder",
+            canonical_url="https://www.marines.mil/News/Messages/Messages-Display/Article/0000001/demo/",
+            message_number="248/26",
+            fiscal_year=2026,
+            published_at=datetime(2026, 5, 29, 16, 30, tzinfo=UTC),
+            summary="Training-only example of a PME reminder suitable for follow-up analysis.",
+            tags=["PME", "Career", "Reserve"],
+            source_hash="demo-maradmin-248-26",
+        ),
+    ]
+
+
+@router.post(
+    "/staff/s1/dts-helper",
+    response_model=AdminWorkflowResponse,
+    summary="Build a stateless demo DTS helper workflow",
+)
+def demo_s1_dts_helper(request: AdminWorkflowDraftRequest) -> AdminWorkflowResponse:
+    return _admin_workflow_builder.build(
+        AdminWorkflowRequest(
+            workflow_type=AdminWorkflowType.dts_authorization,
+            title=request.title,
+            facts=request.facts,
+            constraints=request.constraints,
+        )
+    )
+
+
+@router.post(
+    "/billets/recommend",
+    response_model=BilletSearchResponse,
+    summary="Get stateless demo billet recommendations",
+)
+def demo_billet_recommendations(request: BilletSearchRequest) -> BilletSearchResponse:
+    demo_billets = [
+        SmcrBillet(
+            bic="DEMO0602",
+            title="Communications Officer",
+            unit="Demo Comm Company",
+            location="Fort Worth, TX",
+            rank="Capt",
+            mos="0602",
+            source_url="https://www.marforres.marines.mil/",
+            notes="Training-only example billet for API demonstration.",
+        ),
+        SmcrBillet(
+            bic="DEMO0511",
+            title="MAGTF Planner",
+            unit="Demo Civil Affairs Group",
+            location="New Orleans, LA",
+            rank="Maj",
+            mos="0511",
+            source_url="https://www.marforres.marines.mil/",
+            notes="Training-only example billet with planning keyword coverage.",
+        ),
+        SmcrBillet(
+            bic="DEMO8006",
+            title="Operations Officer",
+            unit="Demo Reserve Battalion",
+            location="Chicago, IL",
+            rank="Capt",
+            mos="8006",
+            source_url="https://www.marforres.marines.mil/",
+            notes="Training-only example broad-MOS billet; eligibility requires human verification.",
+        ),
+    ]
+    return BilletSearchResponse(
+        source=BilletSourceInfo(
+            name="Demo public Marine Corps billet source",
+            url="https://www.marforres.marines.mil/",
+            description="Synthetic, stateless billet data for demo recommendations.",
+            warnings=DEFAULT_BILLET_WARNINGS,
+        ),
+        discovered_links=["https://www.marforres.marines.mil/"],
+        billets_seen=len(demo_billets),
+        recommendations=recommend_billets(demo_billets, request.profile, request.max_results),
+        warnings=[*DEFAULT_BILLET_WARNINGS, "Demo recommendations are synthetic and must be verified."],
+    )
+
+
+def _demo_staff_planning_package() -> StaffPlanningPackageResponse:
     return _planning_orchestrator.build(
         StaffPlanningPackageRequest(
             title="Demo reserve field training package",

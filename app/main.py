@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
@@ -33,7 +35,9 @@ from app.api.routes import (
     reading_state,
     section_memory,
     sharing,
+    skills,
     social,
+    source_updates,
     staff,
     staff_products,
     training,
@@ -88,11 +92,16 @@ def create_app() -> FastAPI:
     app.include_router(staff.router)
     app.include_router(staff_products.router)
     app.include_router(sharing.router)
+    app.include_router(skills.router)
+    app.include_router(source_updates.router)
     app.include_router(training.router)
     app.include_router(travel_cases.router)
     app.include_router(uniform.router)
     app.include_router(user_context.router)
-    app.mount("/static", StaticFiles(directory="app/static"), name="static")
+    # Use absolute path so the dashboard serves correctly regardless of
+    # the working directory the server is launched from (fixes #21 extension)
+    _static_dir = Path(__file__).resolve().parent / "static"
+    app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
     return app
 
 

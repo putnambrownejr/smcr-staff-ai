@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 from typing import Annotated
 
+from app.core.auth import LocalApiKeyDependency
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.config import get_settings
@@ -10,7 +11,7 @@ from app.services.staff_products.builder import StaffProductBuilder
 from app.services.staff_products.poam_builder import PoamBuilder
 from app.services.templates.product_template_repository import ProductTemplateRepository
 
-router = APIRouter(prefix="/staff-products", tags=["staff products"])
+router = APIRouter(prefix="/staff-products", tags=["staff products"], dependencies=[LocalApiKeyDependency])
 
 _builder = StaffProductBuilder()
 _poam_builder = PoamBuilder()
