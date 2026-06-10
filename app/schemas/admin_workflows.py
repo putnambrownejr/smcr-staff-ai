@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 class AdminWorkflowType(StrEnum):
     dts_voucher = "dts_voucher"
     dts_authorization = "dts_authorization"
+    mrows_rebuttal = "mrows_rebuttal"
+    ridt = "ridt"
     gtcc = "gtcc"
     orders_review = "orders_review"
     admin_package = "admin_package"

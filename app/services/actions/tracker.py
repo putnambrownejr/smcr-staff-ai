@@ -57,7 +57,7 @@ class ActionTracker:
             records = [
                 record
                 for record in records
-                if record.status not in {ActionStatus.complete, ActionStatus.archived}
+                if record.status not in {ActionStatus.closed, ActionStatus.complete, ActionStatus.archived}
             ]
         return sorted(records, key=_sort_key)
 
@@ -72,12 +72,13 @@ class ActionTracker:
         if record is None:
             return None
         payload = update.model_dump(exclude_unset=True)
+        history_detail = _update_history_detail(record, payload)
         for key, value in payload.items():
             setattr(record, key, value)
         record.history.append(
             ActionHistoryEntry(
                 event="update",
-                detail=", ".join(sorted(payload.keys())) or "manual update",
+                detail=history_detail,
             )
         )
         record.updated_at = datetime.now(UTC)
@@ -174,3 +175,18 @@ def _link_record(link: ActionLinkRequest) -> ActionLinkRecord:
         url=link.url,
         notes=link.notes,
     )
+
+
+def _update_history_detail(record: ActionRecord, payload: dict[str, object]) -> str:
+    details: list[str] = []
+    if "status" in payload:
+        new_status = payload["status"]
+        if isinstance(new_status, ActionStatus):
+            new_status_value = new_status.value
+        else:
+            new_status_value = str(new_status)
+        details.append(f"status: {record.status.value} -> {new_status_value}")
+    changed_fields = sorted(key for key in payload if key != "status")
+    if changed_fields:
+        details.append("fields: " + ", ".join(changed_fields))
+    return "; ".join(details) or "manual update"

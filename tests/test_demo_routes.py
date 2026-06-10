@@ -42,3 +42,40 @@ def test_demo_staff_product_draft_works_without_local_state() -> None:
     payload = response.json()
     assert payload["product_type"] == "warno"
     assert payload["sections"]
+
+
+def test_demo_actions_returns_stateless_action_records() -> None:
+    client = TestClient(app)
+
+    response = client.get("/demo/actions")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload
+    assert payload[0]["owner"]
+    assert payload[0]["suspense_date"]
+    assert payload[0]["history"]
+
+
+def test_demo_handoff_returns_stateless_continuity_context() -> None:
+    client = TestClient(app)
+
+    response = client.get("/demo/handoffs/demo-smcr-officer")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["user_key"] == "demo-smcr-officer"
+    assert payload["admin_watch_items"]
+    assert payload["warnings"]
+
+
+def test_demo_staff_planning_package_returns_cross_staff_example() -> None:
+    client = TestClient(app)
+
+    response = client.get("/demo/planning/staff-package")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["planning_approach"]["recommended_method"] in {"mcpp", "r2p2"}
+    assert payload["s1_readiness"]["admin_task_tracker"]
+    assert payload["product_package"]

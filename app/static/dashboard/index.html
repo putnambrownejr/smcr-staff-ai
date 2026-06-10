@@ -171,6 +171,11 @@
                 <p><strong>Ready if…:</strong> Conditions that would move the needle from watch to green before drill.</p>
               </div>
             </details>
+            <!-- Staleness warning — shown when the stored handoff is > 14 days old -->
+            <div id="handoff-stale-banner" class="handoff-stale-banner is-hidden" role="alert">
+              ⚠ Session handoff is stale — readiness signals may not reflect your current situation.
+              Refresh your handoff via <code>PUT /handoffs/{user_key}</code> before relying on this brief.
+            </div>
             <!-- Primary strip: always visible — posture + decisive action -->
             <div class="readiness-shell">
               <section class="readiness-primary">

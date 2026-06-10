@@ -16,6 +16,7 @@ class ActionStatus(StrEnum):
     in_progress = "in_progress"
     waiting = "waiting"
     blocked = "blocked"
+    closed = "closed"
     complete = "complete"
     archived = "archived"
 

@@ -495,6 +495,13 @@ function renderChief(payload) {
 }
 
 function renderNextDrillReadiness(payload) {
+  // Surface handoff staleness visually — it's buried in brief text without this
+  const staleBanner = document.getElementById("handoff-stale-banner");
+  if (staleBanner) {
+    const isStale = state.workspace?.chief_brief?.handoff_is_stale === true;
+    staleBanner.classList.toggle("is-hidden", !isStale);
+  }
+
   document.getElementById("readiness-posture").textContent =
     payload.readiness_posture || "No readiness posture loaded yet.";
   document.getElementById("readiness-anchor").textContent = payload.anchor_drill_date

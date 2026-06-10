@@ -116,6 +116,10 @@ def test_action_routes_track_list_update_delete(tmp_path: Path) -> None:
         assert update_response.status_code == 200
         assert update_response.json()["status"] == "blocked"
 
+        history_response = client.get(f"/actions/{action_id}/history")
+        assert history_response.status_code == 200
+        assert any("status: open -> blocked" in item["detail"] for item in history_response.json())
+
         link_response = client.post(
             f"/actions/{action_id}/links",
             json={"link_type": "local_context", "label": "Orders", "target_id": context_item.context_id},
@@ -170,6 +174,21 @@ def test_action_bulk_update_route_changes_multiple_records(tmp_path: Path) -> No
         assert all(item["status"] == "waiting" for item in payload["updated"])
     finally:
         app.dependency_overrides.clear()
+
+
+def test_action_closed_status_is_supported_and_filtered_by_default(tmp_path: Path) -> None:
+    tracker = ActionTracker(tmp_path)
+    tracked = tracker.track(
+        [
+            ActionItemRequest(user_key="capt-action", title="Close me", owner="Capt Example"),
+        ]
+    )
+    updated = tracker.update(tracked[0].action_id, ActionUpdateRequest(status="closed"))
+
+    assert updated is not None
+    assert updated.status.value == "closed"
+    assert tracker.list(user_key="capt-action") == []
+    assert tracker.list(user_key="capt-action", include_closed=True)[0].status.value == "closed"
 
 
 def test_action_promote_route_infers_category_priority_and_links(tmp_path: Path) -> None:

@@ -1,96 +1,69 @@
 ---
 name: source-trust-review
-description: Use when reviewing the trust state of doctrine, admin, or policy sources — checking which references are verified-current, which are flagged as needs-review or update-detected, and routing follow-up work cleanly. Triggers on phrases like "check my sources," "are my references current," "review doctrine freshness," "what needs to be verified," "update my source states," "check MARADMINs for changes," or any request to validate whether the references underlying a brief or product are still accurate.
+description: Use when reviewing the freshness, verification status, and trust level of doctrine, admin, or public-source material. Routes follow-up work based on trust state — verified-current, needs-review, or update-detected. No external analog for this domain-specific trust-propagation pattern.
 ---
 
 # Source Trust Review
 
 ## Purpose
 
-Walk through the repo's source-trust state in an organized pass: identify what is verified-current, what has been flagged as update-detected or needs-review, and turn the open items into concrete follow-up actions. The goal is to prevent advisory outputs from resting on stale or unverified references without the user realizing it.
+Keep the source layer honest. Surface what is verified-current, what needs a human review pass,
+and what has a pending update signal — so advisory outputs are grounded in reliable material
+and operators know when to pause before acting on a source.
 
 ## When To Use
 
-- Before building a staff product, brief, or admin package that will be handed to a commander or routed formally.
-- After a batch of MARADMINs comes through — check whether any affect doctrine or admin references you're relying on.
-- At the start of a new drill period — verify that references used last drill are still current.
-- When the dashboard source-watch ticker shows flagged items — move from awareness to action.
-- Any time the user asks whether their references are current or wants to confirm freshness before use.
+- Before building a staff product that cites doctrine or policy (OPORD, CASEVAC plan, ORM worksheet)
+- After a MARADMIN scan surfaces a potential change to tracked source material
+- When a source reference feels stale but you don't know its actual status
+- When conducting a periodic source freshness audit before a drill
 
-## When Not To Use
+## Trust States
 
-- When the user only wants a MARADMIN feed summary without acting on it (use `usmc-monitoring` instead).
-- When official verification through proper channels is required — this skill produces advisory follow-up prompts, not authoritative source certification.
-- When no source states or update candidates exist yet in the local workspace.
+| State | Meaning | Action |
+|---|---|---|
+| `verified-current` | Source confirmed fresh, no pending updates | Use freely, cite confidently |
+| `needs-review` | Source not checked recently or flagged as potentially outdated | Human review before citing; note "verify before use" |
+| `update-detected` | Monitoring system flagged a potential change | Do not use until reviewed; route to source update workflow |
+| `placeholder` | Source noted but never fetched or ingested | Do not cite; flag as gap |
 
 ## Preferred Repo Paths
 
-Pull the full source-trust picture before making any recommendations:
+Use existing repo surfaces:
 
-**Update candidates (detected but not reviewed):**
-- `GET /documents/updates` — all flagged documentation update candidates
-- `GET /documents/updates?status=new` — candidates not yet reviewed
-- `GET /documents/updates?status=reviewed` — candidates reviewed but not yet accepted
-
-**Verified source states:**
-- `GET /documents/source-states` — all verified source state records
-
-**Live feed checks:**
-- `GET /maradmins/feed` — current MARADMIN cache
-- `GET /message-watch/navadmins/feed` — NAVADMIN cache
-- `GET /message-watch/alnavs/feed` — ALNAV cache
-- `GET /message-watch/dod/feed` — DoD watch cache
-
-**Refresh feeds if stale:**
-- `POST /maradmins/refresh`
-- `POST /message-watch/navadmins/refresh`
-- `POST /documents/check-updates` — scan new messages against tracked doctrine
-
-**Accept a reviewed candidate:**
-- `POST /documents/source-states/accept/{candidate_id}`
-
-**Mark a candidate reviewed:**
-- `POST /documents/updates/{candidate_id}/status`
+- `GET /source-updates` — list pending documentation update candidates
+- `POST /source-updates/{id}/review` — mark a candidate as reviewed, confirmed, or ignored
+- `GET /maradmins/feed` — check recent MARADMINs that may affect tracked sources
+- `POST /maradmins/refresh` — pull latest feed before a trust review
+- `GET /reading-list/sources` — check reading list source freshness
 
 ## Workflow
 
-1. Pull all update candidates — separate new (unreviewed), reviewed, and ignored items.
-2. Pull all verified source states — note what has been confirmed current and when.
-3. Refresh the MARADMIN and message feeds if they look stale (compare last-fetched date to today).
-4. Run `/documents/check-updates` against current feed items if new messages are available.
-5. Triage the open candidates — for each, surface: what changed, which local references it may affect, and what action the user should take.
-6. Flag references that are still in `needs_review` or `update_detected` state but are being relied on in current products.
-7. Recommend which candidates to accept, which to mark ignored, and which need human verification before accepting.
-8. If the user confirms a source is current, offer to accept it via `/documents/source-states/accept/{candidate_id}`.
+1. Identify the sources cited in or relevant to the current task
+2. For each source, determine its trust state using the table above
+3. Flag any `update-detected` or `needs-review` sources explicitly in the output
+4. For `update-detected`: route to `POST /source-updates/{id}/review` before proceeding
+5. For `needs-review`: note the gap in the output and recommend the human verify before using
+6. For `placeholder`: note that the source exists in the manifest but has not been ingested
 
 ## Output Format
 
-- **Source trust summary** — counts: verified-current, needs-review, update-detected, ignored.
-- **Open candidates requiring action** — each with: what flagged it, which references it affects, recommended action.
-- **Verified-current references** — brief list with last-verified date.
-- **Feed freshness** — how old each feed cache is; flag if stale.
-- **Action queue** — ordered list of follow-up steps with the route to take for each.
-- **Human verification triggers** — items that need the user to check the actual source before accepting.
+- Source name and type
+- Current trust state
+- Last verified date (if known)
+- Recommended action
+- Routing path for follow-up
 
-## Safety And Review Rules
+## Safety Rules
 
-- Do not mark a source as verified-current without explicit user confirmation — the skill recommends acceptance, the user approves it.
-- Distinguish between "feed item detected a change" and "source is confirmed updated" — these are different states.
-- Flag when the local feed cache is older than 7 days and may not reflect the latest MARADMIN traffic.
-- Keep all recommendations advisory — the user must verify against the actual official source before routing any product based on a reference.
-- Do not claim a reference is outdated without evidence from a feed item or update candidate.
+- Never silently drop a needs-review or update-detected source from an output
+- Never upgrade a source's trust state without a human confirmation step
+- Flag uncertainty explicitly — "source status unknown" is an acceptable output
+- Do not infer current policy from stale source material
 
 ## Failure Modes
 
-- Feed caches are empty — no MARADMINs have been pulled yet; recommend running a refresh first.
-- No update candidates exist — the monitoring service hasn't been run; offer to run a check-updates pass.
-- Update candidates are all in `ignored` state — the user marked things ignored without reviewing them; surface this.
-- A candidate is accepted but the underlying source wasn't actually checked — outputs will still warn.
-
-## Verification Checklist
-
-- All open update candidates are surfaced with recommended action, not just listed.
-- Feed freshness is checked and flagged if any cache is older than a week.
-- Verified-current list includes last-verified date for each entry.
-- Human verification triggers are explicit — not buried in the action queue.
-- The skill did not accept any source state without user confirmation.
+- Treating a cached doc as authoritative when an update has been detected
+- Missing a MARADMIN that supersedes a cited policy
+- Citing a placeholder source that was never actually ingested
+- Silently degrading output quality when sources are stale instead of flagging it

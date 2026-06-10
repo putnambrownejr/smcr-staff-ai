@@ -15,6 +15,7 @@ from app.schemas.actions import (
     ActionFollowUpRequest,
     ActionFollowUpResponse,
     ActionFollowUpResult,
+    ActionHistoryEntry,
     ActionLinkRequest,
     ActionPriority,
     ActionPromoteRequest,
@@ -298,6 +299,17 @@ def update_action(
     if record is None:
         raise HTTPException(status_code=404, detail=f"Unknown action item: {action_id}")
     return record
+
+
+@router.get("/{action_id}/history", response_model=list[ActionHistoryEntry])
+def get_action_history(
+    action_id: str,
+    tracker: Annotated[ActionTracker, Depends(get_tracker)],
+) -> list[ActionHistoryEntry]:
+    record = tracker.get(action_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail=f"Unknown action item: {action_id}")
+    return record.history
 
 
 @router.post("/bulk-update", response_model=ActionBulkUpdateResponse)
