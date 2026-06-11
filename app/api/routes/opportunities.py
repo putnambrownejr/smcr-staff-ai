@@ -20,7 +20,7 @@ router = APIRouter(prefix="/opportunities", tags=["career opportunities"], depen
 
 def get_tracker() -> Iterator[OpportunityTracker]:
     settings = get_settings()
-    yield OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities")
+    yield OpportunityTracker(settings.opportunities_storage_dir)
 
 
 @router.get("", response_model=list[OpportunityRecord])

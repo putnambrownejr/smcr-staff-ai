@@ -6,6 +6,7 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from app.core.config import (
     Settings,
+    configured_storage_dirs,
     default_database_url,
     default_local_context_dir,
     default_local_state_root,
@@ -47,7 +48,26 @@ def test_settings_default_paths_point_outside_repo_when_unset(monkeypatch: Monke
     assert "data/local_context" not in settings.local_context_storage_dir.replace("\\", "/").lower()
     assert settings.local_context_storage_dir.endswith("smcr-staff-ai\\local_context")
     assert settings.session_handoff_storage_dir.endswith("smcr-staff-ai\\local_context\\session_handoffs")
+    assert settings.actions_storage_dir.endswith("smcr-staff-ai\\local_context\\actions")
+    assert settings.document_updates_storage_dir.endswith("smcr-staff-ai\\local_context\\document_updates")
+    assert settings.drill_plans_storage_dir.endswith("smcr-staff-ai\\local_context\\drill_plans")
+    assert settings.opportunities_storage_dir.endswith("smcr-staff-ai\\local_context\\opportunities")
+    assert settings.source_states_storage_dir.endswith("smcr-staff-ai\\local_context\\source_states")
     assert settings.database_url.endswith("/smcr-staff-ai/smcr_staff_ai.db")
+
+
+def test_configured_storage_dirs_include_first_class_substores(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("SMCR_STAFF_AI_HOME", str(tmp_path / "home"))
+    settings = Settings(_env_file=None)
+
+    storage_dirs = configured_storage_dirs(settings)
+
+    assert Path(settings.active_user_context_storage_dir) in storage_dirs
+    assert Path(settings.actions_storage_dir) in storage_dirs
+    assert Path(settings.document_updates_storage_dir) in storage_dirs
+    assert Path(settings.drill_plans_storage_dir) in storage_dirs
+    assert Path(settings.opportunities_storage_dir) in storage_dirs
+    assert Path(settings.source_states_storage_dir) in storage_dirs
 
 
 def test_warns_when_local_api_key_unset(caplog: LogCaptureFixture) -> None:

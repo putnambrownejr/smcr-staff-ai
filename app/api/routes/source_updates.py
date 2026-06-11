@@ -17,7 +17,7 @@ router = APIRouter(prefix="/source-updates", tags=["source updates"], dependenci
 
 def get_update_store() -> Iterator[DocumentUpdateStore]:
     settings = get_settings()
-    yield DocumentUpdateStore(f"{settings.local_context_storage_dir}/document_updates")
+    yield DocumentUpdateStore(settings.document_updates_storage_dir)
 
 
 @router.get("", response_model=list[DocumentationUpdateCandidate])

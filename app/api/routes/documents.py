@@ -26,12 +26,12 @@ router = APIRouter(prefix="/documents", tags=["documents"], dependencies=[LocalA
 
 def get_update_store() -> DocumentUpdateStore:
     settings = get_settings()
-    return DocumentUpdateStore(f"{settings.local_context_storage_dir}/document_updates")
+    return DocumentUpdateStore(settings.document_updates_storage_dir)
 
 
 def get_source_state_store() -> SourceStateStore:
     settings = get_settings()
-    return SourceStateStore(f"{settings.local_context_storage_dir}/source_states")
+    return SourceStateStore(settings.source_states_storage_dir)
 
 
 @router.get(

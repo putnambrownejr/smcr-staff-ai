@@ -90,13 +90,13 @@ def get_chief_orchestrator(
     return ChiefAideOrchestrator(
         handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
         document_organizer=PersonalDocumentOrganizer(store),
-        drill_plan_store=DrillPrepPlanStore(f"{settings.local_context_storage_dir}/drill_plans"),
+        drill_plan_store=DrillPrepPlanStore(settings.drill_plans_storage_dir),
         reading_catalog=load_effective_reading_catalog(
             seed_path=SEED_DIR / "reading_list.example.yaml",
             store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
         ),
-        document_update_store=DocumentUpdateStore(f"{settings.local_context_storage_dir}/document_updates"),
-        opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
+        document_update_store=DocumentUpdateStore(settings.document_updates_storage_dir),
+        opportunity_tracker=OpportunityTracker(settings.opportunities_storage_dir),
         travel_case_store=TravelCaseStore(settings.travel_case_storage_dir),
         battle_rhythm_store=BattleRhythmStore(settings.battle_rhythm_storage_dir),
     )
@@ -120,7 +120,7 @@ def get_career_service(
     return CareerWatchService(
         handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
         document_organizer=PersonalDocumentOrganizer(store),
-        opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
+        opportunity_tracker=OpportunityTracker(settings.opportunities_storage_dir),
         reading_catalog=load_effective_reading_catalog(
             seed_path=SEED_DIR / "reading_list.example.yaml",
             store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
@@ -131,17 +131,17 @@ def get_career_service(
 
 def get_opportunity_tracker() -> Iterator[OpportunityTracker]:
     settings = get_settings()
-    yield OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities")
+    yield OpportunityTracker(settings.opportunities_storage_dir)
 
 
 def get_update_store() -> Iterator[DocumentUpdateStore]:
     settings = get_settings()
-    yield DocumentUpdateStore(f"{settings.local_context_storage_dir}/document_updates")
+    yield DocumentUpdateStore(settings.document_updates_storage_dir)
 
 
 def get_action_tracker() -> Iterator[ActionTracker]:
     settings = get_settings()
-    yield ActionTracker(f"{settings.local_context_storage_dir}/actions")
+    yield ActionTracker(settings.actions_storage_dir)
 
 
 def get_battle_rhythm_store() -> Iterator[BattleRhythmStore]:

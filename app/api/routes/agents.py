@@ -1,9 +1,9 @@
 from collections.abc import Iterator
 from typing import Annotated
 
-from app.core.auth import LocalApiKeyDependency
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.agents import AgentMetadata, AgentRunRequest, AgentRunResponse
 from app.services.agents.base import AgentContext
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/agents", tags=["agents"], dependencies=[LocalApiKeyD
 
 def get_active_context_store() -> Iterator[ActiveUserContextStore]:
     settings = get_settings()
-    yield ActiveUserContextStore(f"{settings.local_context_storage_dir}/active_user_context")
+    yield ActiveUserContextStore(settings.active_user_context_storage_dir)
 
 
 @router.get("", response_model=list[AgentMetadata])

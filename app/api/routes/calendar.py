@@ -28,7 +28,7 @@ _ics_provider = LocalIcsProvider()
 
 
 def get_plan_store() -> Iterator[DrillPrepPlanStore]:
-    yield DrillPrepPlanStore(f"{get_settings().local_context_storage_dir}/drill_plans")
+    yield DrillPrepPlanStore(get_settings().drill_plans_storage_dir)
 
 
 def get_context_store() -> Iterator[LocalContextStore]:

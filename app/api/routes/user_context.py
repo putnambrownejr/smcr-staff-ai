@@ -13,7 +13,7 @@ router = APIRouter(prefix="/user-context", tags=["active user context"], depende
 
 def get_active_context_store() -> Iterator[ActiveUserContextStore]:
     settings = get_settings()
-    yield ActiveUserContextStore(f"{settings.local_context_storage_dir}/active_user_context")
+    yield ActiveUserContextStore(settings.active_user_context_storage_dir)
 
 
 @router.put("/{user_key}", response_model=ActiveUserContextUpsertResponse)

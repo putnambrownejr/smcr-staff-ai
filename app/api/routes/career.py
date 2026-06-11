@@ -32,7 +32,7 @@ def get_career_watch_service(
     return CareerWatchService(
         handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
         document_organizer=PersonalDocumentOrganizer(context_store),
-        opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
+        opportunity_tracker=OpportunityTracker(settings.opportunities_storage_dir),
         reading_catalog=load_effective_reading_catalog(
             seed_path=SEED_DIR / "reading_list.example.yaml",
             store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),

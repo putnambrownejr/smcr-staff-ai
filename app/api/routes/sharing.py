@@ -28,15 +28,15 @@ def get_handoff_store() -> Iterator[SessionHandoffStore]:
 
 def get_active_context_store() -> Iterator[ActiveUserContextStore]:
     settings = get_settings()
-    yield ActiveUserContextStore(f"{settings.local_context_storage_dir}/active_user_context")
+    yield ActiveUserContextStore(settings.active_user_context_storage_dir)
 
 
 def get_plan_store() -> Iterator[DrillPrepPlanStore]:
-    yield DrillPrepPlanStore(f"{get_settings().local_context_storage_dir}/drill_plans")
+    yield DrillPrepPlanStore(get_settings().drill_plans_storage_dir)
 
 
 def get_opportunity_tracker() -> Iterator[OpportunityTracker]:
-    yield OpportunityTracker(f"{get_settings().local_context_storage_dir}/opportunities")
+    yield OpportunityTracker(get_settings().opportunities_storage_dir)
 
 
 def get_document_organizer(

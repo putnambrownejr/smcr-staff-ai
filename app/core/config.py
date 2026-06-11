@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -76,6 +76,30 @@ def default_history_storage_dir() -> Path:
     return default_local_context_dir() / "history"
 
 
+def default_active_user_context_dir() -> Path:
+    return default_local_context_dir() / "active_user_context"
+
+
+def default_actions_storage_dir() -> Path:
+    return default_local_context_dir() / "actions"
+
+
+def default_document_updates_dir() -> Path:
+    return default_local_context_dir() / "document_updates"
+
+
+def default_drill_plans_dir() -> Path:
+    return default_local_context_dir() / "drill_plans"
+
+
+def default_opportunities_dir() -> Path:
+    return default_local_context_dir() / "opportunities"
+
+
+def default_source_states_dir() -> Path:
+    return default_local_context_dir() / "source_states"
+
+
 def default_database_url() -> str:
     database_path = default_local_state_root() / "smcr_staff_ai.db"
     return f"sqlite:///{database_path.as_posix()}"
@@ -100,6 +124,12 @@ class Settings(BaseSettings):
     custom_watch_feed_storage_dir: str = str(default_custom_watch_feed_dir())
     section_memory_storage_dir: str = str(default_section_memory_dir())
     history_storage_dir: str = str(default_history_storage_dir())
+    active_user_context_storage_dir: str = str(default_active_user_context_dir())
+    actions_storage_dir: str = str(default_actions_storage_dir())
+    document_updates_storage_dir: str = str(default_document_updates_dir())
+    drill_plans_storage_dir: str = str(default_drill_plans_dir())
+    opportunities_storage_dir: str = str(default_opportunities_dir())
+    source_states_storage_dir: str = str(default_source_states_dir())
     local_api_key: str | None = None
     max_upload_bytes: int = 50_000_000
     public_source_only: bool = True
@@ -122,11 +152,12 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.custom_watch_feed_storage_dir),
         Path(settings.section_memory_storage_dir),
         Path(settings.history_storage_dir),
-        Path(settings.local_context_storage_dir) / "actions",
-        Path(settings.local_context_storage_dir) / "document_updates",
-        Path(settings.local_context_storage_dir) / "drill_plans",
-        Path(settings.local_context_storage_dir) / "opportunities",
-        Path(settings.local_context_storage_dir) / "source_states",
+        Path(settings.active_user_context_storage_dir),
+        Path(settings.actions_storage_dir),
+        Path(settings.document_updates_storage_dir),
+        Path(settings.drill_plans_storage_dir),
+        Path(settings.opportunities_storage_dir),
+        Path(settings.source_states_storage_dir),
     ]
 
 

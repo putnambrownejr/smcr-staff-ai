@@ -37,14 +37,14 @@ def get_orchestrator(
     return ChiefAideOrchestrator(
         handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
         document_organizer=PersonalDocumentOrganizer(context_store),
-        drill_plan_store=DrillPrepPlanStore(f"{settings.local_context_storage_dir}/drill_plans"),
+        drill_plan_store=DrillPrepPlanStore(settings.drill_plans_storage_dir),
         reading_catalog=load_effective_reading_catalog(
             seed_path=SEED_DIR / "reading_list.example.yaml",
             store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
         ),
-        document_update_store=DocumentUpdateStore(f"{settings.local_context_storage_dir}/document_updates"),
-        opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
-        active_context_store=ActiveUserContextStore(f"{settings.local_context_storage_dir}/active_user_context"),
+        document_update_store=DocumentUpdateStore(settings.document_updates_storage_dir),
+        opportunity_tracker=OpportunityTracker(settings.opportunities_storage_dir),
+        active_context_store=ActiveUserContextStore(settings.active_user_context_storage_dir),
         travel_case_store=TravelCaseStore(settings.travel_case_storage_dir),
         battle_rhythm_store=BattleRhythmStore(settings.battle_rhythm_storage_dir),
     )
