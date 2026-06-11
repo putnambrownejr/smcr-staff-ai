@@ -11,6 +11,7 @@ from app.schemas.context import LocalContextMetadata
 from app.services.ingestion.pdf_extract import extract_pdf_text
 
 MAX_PREVIEW_CHARS = 4000
+MAX_DOCX_XML_BYTES = 2_000_000
 CONTEXT_ID_PATTERN = re.compile(r"^[a-f0-9]{16}$")
 DEFAULT_MAX_UPLOAD_BYTES = 10_000_000
 
@@ -194,6 +195,9 @@ def _safe_extract_pdf(file_path: Path) -> str:
 def _extract_docx_text(file_path: Path) -> str:
     try:
         with zipfile.ZipFile(file_path) as archive:
+            document_xml = archive.getinfo("word/document.xml")
+            if document_xml.file_size > MAX_DOCX_XML_BYTES:
+                return ""
             xml_bytes = archive.read("word/document.xml")
     except (FileNotFoundError, KeyError, zipfile.BadZipFile):
         return ""

@@ -2,13 +2,14 @@ from importlib import import_module
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
 
 from app.core.config import get_settings
 
 
 def test_app_serves_dashboard_static_and_seed_data_from_non_root_cwd(
     tmp_path: Path,
-    monkeypatch,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("SMCR_STAFF_AI_HOME", str(tmp_path / "state"))

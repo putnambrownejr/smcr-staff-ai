@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 
 from app.api.routes.section_memory import get_section_memory_store
@@ -186,7 +188,7 @@ def test_staff_assisted_section_estimates_builds_gap_cover_pack() -> None:
     assert body["recommended_products"]
 
 
-def test_section_memory_profile_enriches_thin_staff_outputs(tmp_path) -> None:
+def test_section_memory_profile_enriches_thin_staff_outputs(tmp_path: Path) -> None:
     store = SectionMemoryStore(tmp_path / "section-memory")
     store.upsert(
         "capt-memory",

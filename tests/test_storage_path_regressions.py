@@ -1,6 +1,8 @@
 from datetime import date
 from pathlib import Path
 
+from pytest import MonkeyPatch
+
 from app.api.routes import dashboard
 from app.schemas.actions import ActionItemRequest
 from app.schemas.battle_rhythm import BattleRhythmBoardUpsertRequest, BattleRhythmEntryInput
@@ -24,7 +26,7 @@ from app.services.staff.section_memory_store import SectionMemoryStore
 
 def test_runtime_stores_use_injected_temp_paths_without_localappdata(
     tmp_path: Path,
-    monkeypatch,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     local_app_data = tmp_path / "localappdata"
     storage_root = tmp_path / "runtime"
@@ -92,7 +94,7 @@ def test_runtime_stores_use_injected_temp_paths_without_localappdata(
     assert not local_app_data.exists()
 
 
-def test_dashboard_seed_and_sources_load_when_cwd_is_not_repo_root(tmp_path: Path, monkeypatch) -> None:
+def test_dashboard_seed_and_sources_load_when_cwd_is_not_repo_root(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     dashboard._reference_library_cache = None
 

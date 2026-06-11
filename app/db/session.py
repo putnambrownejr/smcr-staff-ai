@@ -1,13 +1,14 @@
 from collections.abc import Generator
 
+from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
 from app.core.config import get_settings
 
-_engine = None
+_engine: Engine | None = None
 
 
-def _get_engine() -> object:
+def _get_engine() -> Engine:
     global _engine
     if _engine is None:
         _engine = create_engine(get_settings().database_url, echo=False)

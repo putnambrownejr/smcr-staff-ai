@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
 
 from app.api.routes.context import get_context_store
 from app.core.security import detect_pii_input
@@ -216,7 +217,31 @@ def test_docx_local_context_returns_extracted_preview(tmp_path: Path) -> None:
     assert "PACE plan section" in preview
 
 
-def test_pdf_local_context_uses_pdf_text_extractor(tmp_path: Path, monkeypatch) -> None:
+def test_docx_local_context_skips_oversized_document_xml(tmp_path: Path) -> None:
+    store = LocalContextStore(tmp_path)
+    docx_path = tmp_path / "oversized.docx"
+    with zipfile.ZipFile(docx_path, "w") as archive:
+        archive.writestr("word/document.xml", b"<w:t>" + b"A" * local_context_store.MAX_DOCX_XML_BYTES + b"</w:t>")
+
+    item = store.save(
+        filename="oversized.docx",
+        content=docx_path.read_bytes(),
+        content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        document_type="product_example",
+        consent_ack=True,
+    )
+
+    assert store.read_preview(item.context_id) == (
+        "Binary local context item: oversized.docx\n"
+        "Content type: application/vnd.openxmlformats-officedocument.wordprocessingml.document\n"
+        f"Size bytes: {item.size_bytes}\n"
+        "Document type: product_example\n"
+        "Tags: none\n"
+        "No text preview is available for this media item."
+    )
+
+
+def test_pdf_local_context_uses_pdf_text_extractor(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     store = LocalContextStore(tmp_path)
 
     monkeypatch.setattr(local_context_store, "extract_pdf_text", lambda path: "Reserve admin order reference")
