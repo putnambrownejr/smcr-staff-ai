@@ -45,11 +45,15 @@ from app.api.routes import (
     uniform,
     user_context,
 )
-from app.core.config import get_settings
+from app.core.config import ensure_storage_dirs, get_settings
+from app.core.logging import configure_logging
 
 
 def create_app() -> FastAPI:
+    # Configure logging before startup checks so path failures include clear context.
+    configure_logging()
     settings = get_settings()
+    ensure_storage_dirs(settings)
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,

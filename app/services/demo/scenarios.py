@@ -20,14 +20,17 @@ from app.schemas.session import (
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.career.watch import CareerWatchService
 from app.services.chief.orchestrator import ChiefAideOrchestrator
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
+from app.services.staff.battle_rhythm_store import BattleRhythmStore
 from app.services.storage.local_context_store import LocalContextStore
 
-SEED_DIR = Path("data/seed")
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SEED_DIR = REPO_ROOT / "data" / "seed"
 DEMO_USER_KEY = "demo-smcr-officer"
 
 
@@ -39,6 +42,8 @@ def build_demo_chief_brief() -> ChiefBriefResponse:
         plan_store = DrillPrepPlanStore(root / "plans")
         update_store = DocumentUpdateStore(root / "updates")
         opportunity_tracker = OpportunityTracker(root / "opportunities")
+        travel_case_store = TravelCaseStore(root / "travel_cases")
+        battle_rhythm_store = BattleRhythmStore(root / "battle_rhythm")
         _seed_demo_context(context_store, handoff_store, plan_store, opportunity_tracker)
         orchestrator = ChiefAideOrchestrator(
             handoff_store=handoff_store,
@@ -47,6 +52,8 @@ def build_demo_chief_brief() -> ChiefBriefResponse:
             reading_catalog=ReadingListCatalogService.from_yaml(SEED_DIR / "reading_list.example.yaml"),
             document_update_store=update_store,
             opportunity_tracker=opportunity_tracker,
+            travel_case_store=travel_case_store,
+            battle_rhythm_store=battle_rhythm_store,
         )
         return orchestrator.build_brief(
             ChiefBriefRequest(

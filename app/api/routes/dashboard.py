@@ -62,7 +62,8 @@ from app.services.templates.system_template_catalog import SystemTemplateCatalog
 
 router = APIRouter(tags=["dashboard"])
 _DASHBOARD_HTML = Path(__file__).resolve().parents[2] / "static" / "dashboard" / "index.html"
-SEED_DIR = Path("data/seed")
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SEED_DIR = REPO_ROOT / "data" / "seed"
 _reference_library_cache: list[DashboardReferenceEntry] | None = None
 
 
@@ -574,7 +575,7 @@ def _reference_library() -> list[DashboardReferenceEntry]:
     global _reference_library_cache
     if _reference_library_cache is not None:
         return _reference_library_cache
-    source_dir = Path("docs/sources")
+    source_dir = REPO_ROOT / "docs" / "sources"
     if not source_dir.exists():
         return []
     entries = [

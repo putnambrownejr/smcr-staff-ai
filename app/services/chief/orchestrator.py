@@ -37,21 +37,21 @@ class ChiefAideOrchestrator:
         document_organizer: PersonalDocumentOrganizer,
         drill_plan_store: DrillPrepPlanStore,
         reading_catalog: ReadingListCatalogService,
-        document_update_store: DocumentUpdateStore | None = None,
-        opportunity_tracker: OpportunityTracker | None = None,
+        document_update_store: DocumentUpdateStore,
+        opportunity_tracker: OpportunityTracker,
+        travel_case_store: TravelCaseStore,
+        battle_rhythm_store: BattleRhythmStore,
         active_context_store: ActiveUserContextStore | None = None,
-        travel_case_store: TravelCaseStore | None = None,
-        battle_rhythm_store: BattleRhythmStore | None = None,
     ) -> None:
         self.handoff_store = handoff_store
         self.document_organizer = document_organizer
         self.drill_plan_store = drill_plan_store
         self.reading_catalog = reading_catalog
-        self.document_update_store = document_update_store or DocumentUpdateStore()
-        self.opportunity_tracker = opportunity_tracker or OpportunityTracker()
+        self.document_update_store = document_update_store
+        self.opportunity_tracker = opportunity_tracker
         self.active_context_store = active_context_store
-        self.travel_case_store = travel_case_store or TravelCaseStore()
-        self.battle_rhythm_store = battle_rhythm_store or BattleRhythmStore()
+        self.travel_case_store = travel_case_store
+        self.battle_rhythm_store = battle_rhythm_store
 
     def build_brief(self, request: ChiefBriefRequest) -> ChiefBriefResponse:
         handoff = self.handoff_store.get(request.user_key) if request.user_key else None

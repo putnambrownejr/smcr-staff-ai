@@ -16,7 +16,8 @@ from app.services.session.handoff_store import SessionHandoffStore
 from app.services.storage.local_context_store import LocalContextStore
 
 router = APIRouter(prefix="/career", tags=["career watch"], dependencies=[LocalApiKeyDependency])
-SEED_DIR = Path("data/seed")
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SEED_DIR = REPO_ROOT / "data" / "seed"
 
 
 def get_context_store() -> Iterator[LocalContextStore]:

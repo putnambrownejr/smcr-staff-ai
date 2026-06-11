@@ -4,15 +4,14 @@ import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
 
-from app.core.config import default_section_memory_dir
 from app.core.security import DEFAULT_WARNINGS
 from app.schemas.section_memory import SectionMemoryEntry, SectionMemoryProfile, SectionMemoryProfileUpsertRequest
 from app.services.session.handoff_store import is_valid_user_key
 
 
 class SectionMemoryStore:
-    def __init__(self, root_dir: str | Path | None = None) -> None:
-        self.root_dir = Path(root_dir or default_section_memory_dir())
+    def __init__(self, root_dir: str | Path) -> None:
+        self.root_dir = Path(root_dir)
         self.root_dir.mkdir(parents=True, exist_ok=True)
 
     def get(self, user_key: str) -> SectionMemoryProfile | None:

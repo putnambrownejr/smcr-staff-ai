@@ -8,7 +8,7 @@
       "participating_unit_types": ["battalion", "regiment", "division"],
       "planning_lead_time_days": 180,
       "common_staff_requirements": ["training objectives", "movement planning", "risk management", "logistics coordination"],
-      "related_agents": ["training-planner", "orm-risk-management", "doctrine-opord-assistant"],
+      "related_agents": ["s3-opso", "orm-risk-management", "staff-products"],
       "confidence_level": "low",
       "source_required": true
     },
@@ -19,7 +19,7 @@
       "participating_unit_types": ["aircraft wing", "aviation support", "staff"],
       "planning_lead_time_days": 180,
       "common_staff_requirements": ["aviation support coordination", "training objectives", "travel planning"],
-      "related_agents": ["training-planner", "orm-risk-management"],
+      "related_agents": ["s3-opso", "orm-risk-management"],
       "confidence_level": "low",
       "source_required": true
     },
@@ -30,7 +30,7 @@
       "participating_unit_types": ["company", "battalion", "regiment"],
       "planning_lead_time_days": 120,
       "common_staff_requirements": ["orders", "DTS", "training schedule", "gear lists", "medical readiness"],
-      "related_agents": ["drill-prep-calendar", "training-planner"],
+      "related_agents": ["drill-prep-calendar", "s3-opso"],
       "confidence_level": "medium",
       "source_required": true
     },
@@ -41,7 +41,7 @@
       "participating_unit_types": ["company", "battalion"],
       "planning_lead_time_days": 90,
       "common_staff_requirements": ["OPORD", "ORM", "communications plan", "logistics support"],
-      "related_agents": ["doctrine-opord-assistant", "orm-risk-management", "mos-commo"],
+      "related_agents": ["staff-products", "orm-risk-management", "mos-commo"],
       "confidence_level": "medium",
       "source_required": true
     },
@@ -52,7 +52,7 @@
       "participating_unit_types": ["company", "battalion"],
       "planning_lead_time_days": 60,
       "common_staff_requirements": ["range coordination", "ammo forecast", "safety plan", "transportation"],
-      "related_agents": ["training-planner", "orm-risk-management"],
+      "related_agents": ["s3-opso", "orm-risk-management"],
       "confidence_level": "medium",
       "source_required": true
     },
@@ -63,7 +63,7 @@
       "participating_unit_types": ["all"],
       "planning_lead_time_days": 45,
       "common_staff_requirements": ["monitor assignment", "safety plan", "score reporting"],
-      "related_agents": ["training-planner", "orm-risk-management"],
+      "related_agents": ["s3-opso", "orm-risk-management"],
       "confidence_level": "medium",
       "source_required": true
     },
@@ -74,7 +74,7 @@
       "participating_unit_types": ["all"],
       "planning_lead_time_days": 45,
       "common_staff_requirements": ["monitor assignment", "safety plan", "score reporting"],
-      "related_agents": ["training-planner", "orm-risk-management"],
+      "related_agents": ["s3-opso", "orm-risk-management"],
       "confidence_level": "medium",
       "source_required": true
     },
@@ -85,7 +85,7 @@
       "participating_unit_types": ["all"],
       "planning_lead_time_days": 30,
       "common_staff_requirements": ["roster review", "billet accomplishments", "RS/RO coordination"],
-      "related_agents": ["fitrep-assistant"],
+      "related_agents": ["s1-admin-chief"],
       "confidence_level": "low",
       "source_required": true
     },
@@ -96,7 +96,7 @@
       "participating_unit_types": ["staff", "command"],
       "planning_lead_time_days": 180,
       "common_staff_requirements": ["training plan", "budget inputs", "exercise calendar", "readiness priorities"],
-      "related_agents": ["training-planner", "leadership-advisor"],
+      "related_agents": ["s3-opso", "leadership-advisor"],
       "confidence_level": "medium",
       "source_required": true
     },

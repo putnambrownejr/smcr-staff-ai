@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.core.config import default_local_context_dir
 from app.schemas.source_state import VerifiedSourceState
 
 
 class SourceStateStore:
-    def __init__(self, root_dir: str | Path | None = None) -> None:
-        self.root_dir = Path(root_dir or (default_local_context_dir() / "source_states"))
+    def __init__(self, root_dir: str | Path) -> None:
+        self.root_dir = Path(root_dir)
         self.root_dir.mkdir(parents=True, exist_ok=True)
 
     def save(self, state: VerifiedSourceState) -> VerifiedSourceState:

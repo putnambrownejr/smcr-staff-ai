@@ -4,7 +4,6 @@ import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
 
-from app.core.config import default_local_context_dir
 from app.schemas.connector_digest import TravelEmailCaseSummary
 from app.schemas.context import LocalContextMetadata
 from app.schemas.travel_cases import TravelCaseRecord
@@ -16,8 +15,8 @@ from app.services.session.handoff_store import is_valid_user_key
 
 
 class TravelCaseStore:
-    def __init__(self, root_dir: str | Path | None = None) -> None:
-        self.root_dir = Path(root_dir or (default_local_context_dir() / "travel_cases"))
+    def __init__(self, root_dir: str | Path) -> None:
+        self.root_dir = Path(root_dir)
         self.root_dir.mkdir(parents=True, exist_ok=True)
 
     def list_cases(self, user_key: str) -> list[TravelCaseRecord]:

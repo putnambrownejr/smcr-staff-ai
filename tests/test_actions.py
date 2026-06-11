@@ -14,11 +14,13 @@ from app.services.actions.tracker import ActionTracker
 from app.services.admin.readiness import AdminReadinessService
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.chief.orchestrator import ChiefAideOrchestrator
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
+from app.services.staff.battle_rhythm_store import BattleRhythmStore
 from app.services.storage.local_context_store import LocalContextStore
 
 
@@ -251,6 +253,7 @@ def test_action_promote_route_infers_category_priority_and_links(tmp_path: Path)
 
 
 def test_action_bundle_routes_track_from_chief_admin_and_at(tmp_path: Path) -> None:
+    repo_root = Path(__file__).resolve().parents[1]
     tracker = ActionTracker(tmp_path / "actions")
     context_store = LocalContextStore(tmp_path / "context")
     update_store = DocumentUpdateStore(tmp_path / "updates")
@@ -266,15 +269,16 @@ def test_action_bundle_routes_track_from_chief_admin_and_at(tmp_path: Path) -> N
         handoff_store=handoff_store,
         document_organizer=PersonalDocumentOrganizer(context_store),
         drill_plan_store=DrillPrepPlanStore(tmp_path / "drill_plans"),
-        reading_catalog=ReadingListCatalogService.from_yaml(
-            Path("C:/smcr-staff-ai/data/seed/reading_list.example.yaml")
-        ),
+        reading_catalog=ReadingListCatalogService.from_yaml(repo_root / "data" / "seed" / "reading_list.example.yaml"),
         document_update_store=update_store,
         opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+        travel_case_store=TravelCaseStore(tmp_path / "travel_cases"),
+        battle_rhythm_store=BattleRhythmStore(tmp_path / "battle_rhythm"),
     )
     admin_service = AdminReadinessService(
         handoff_store=handoff_store,
         document_organizer=PersonalDocumentOrganizer(context_store),
+        travel_case_store=TravelCaseStore(tmp_path / "admin_travel_cases"),
     )
 
     def override_tracker() -> ActionTracker:

@@ -2,8 +2,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi.testclient import TestClient
-from pytest import MonkeyPatch
 
+from app.api.routes.documents import get_source_state_store as get_document_source_state_store
+from app.api.routes.documents import get_update_store as get_document_update_store
 from app.api.routes.source_updates import get_update_store as get_source_update_store
 from app.main import app
 from app.schemas.source_updates import DocumentationUpdateCandidate
@@ -33,74 +34,83 @@ def test_document_update_check_route_returns_candidates() -> None:
     assert payload["candidates"][0]["human_review_required"] is True
 
 
-def test_document_update_routes_persist_and_update_status(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+def test_document_update_routes_persist_and_update_status(tmp_path: Path) -> None:
     from app.services.ingestion.document_update_store import DocumentUpdateStore
     from app.services.ingestion.source_state_store import SourceStateStore
 
     store = DocumentUpdateStore(tmp_path)
     state_store = SourceStateStore(tmp_path / "states")
-    monkeypatch.setattr("app.api.routes.documents._update_store", store)
-    monkeypatch.setattr("app.api.routes.documents._source_state_store", state_store)
+
+    def override_update_store() -> DocumentUpdateStore:
+        return store
+
+    def override_source_state_store() -> SourceStateStore:
+        return state_store
+
+    app.dependency_overrides[get_document_update_store] = override_update_store
+    app.dependency_overrides[get_document_source_state_store] = override_source_state_store
     client = TestClient(app)
+    try:
+        create_response = client.post(
+            "/documents/check-updates",
+            json=[
+                {
+                    "source_id": "maradmin-123-26",
+                    "title": "MARADMIN 123/26 Revision of MCO 1610.7 Performance Evaluation System",
+                    "canonical_url": "https://example.test/maradmin-123-26",
+                    "summary": "This message announces an update to FitRep/PES policy published on MCPEL.",
+                    "tags": ["DocumentUpdate"],
+                    "source_hash": "abc123",
+                }
+            ],
+        )
+        assert create_response.status_code == 200
+        candidate_id = create_response.json()["candidates"][0]["candidate_id"]
+        assert create_response.json()["candidates"][0]["trust_state"] == "needs_review"
 
-    create_response = client.post(
-        "/documents/check-updates",
-        json=[
-            {
-                "source_id": "maradmin-123-26",
-                "title": "MARADMIN 123/26 Revision of MCO 1610.7 Performance Evaluation System",
-                "canonical_url": "https://example.test/maradmin-123-26",
-                "summary": "This message announces an update to FitRep/PES policy published on MCPEL.",
-                "tags": ["DocumentUpdate"],
-                "source_hash": "abc123",
-            }
-        ],
-    )
-    assert create_response.status_code == 200
-    candidate_id = create_response.json()["candidates"][0]["candidate_id"]
-    assert create_response.json()["candidates"][0]["trust_state"] == "needs_review"
+        list_response = client.get("/documents/updates")
+        assert list_response.status_code == 200
+        assert list_response.json()
 
-    list_response = client.get("/documents/updates")
-    assert list_response.status_code == 200
-    assert list_response.json()
+        status_response = client.post(
+            f"/documents/updates/{candidate_id}/status",
+            json={
+                "review_status": "reviewed",
+                "trust_state": "verified_current",
+                "review_notes": "Verified against official page.",
+            },
+        )
+        assert status_response.status_code == 200
+        assert status_response.json()["review_status"] == "reviewed"
+        assert status_response.json()["trust_state"] == "verified_current"
 
-    status_response = client.post(
-        f"/documents/updates/{candidate_id}/status",
-        json={
-            "review_status": "reviewed",
-            "trust_state": "verified_current",
-            "review_notes": "Verified against official page.",
-        },
-    )
-    assert status_response.status_code == 200
-    assert status_response.json()["review_status"] == "reviewed"
-    assert status_response.json()["trust_state"] == "verified_current"
+        filtered_response = client.get("/documents/updates?status=reviewed")
+        assert filtered_response.status_code == 200
+        assert len(filtered_response.json()) == 1
 
-    filtered_response = client.get("/documents/updates?status=reviewed")
-    assert filtered_response.status_code == 200
-    assert len(filtered_response.json()) == 1
+        accept_response = client.post(
+            f"/documents/source-states/accept/{candidate_id}",
+            json={
+                "status": "current",
+                "current_version": "2026.1",
+                "verification_source_url": "https://example.test/official-current",
+                "notes": "Verified current against official source.",
+            },
+        )
+        assert accept_response.status_code == 200
+        accept_payload = accept_response.json()
+        assert accept_payload["status"] == "current"
+        assert accept_payload["accepted_candidate_id"] == candidate_id
 
-    accept_response = client.post(
-        f"/documents/source-states/accept/{candidate_id}",
-        json={
-            "status": "current",
-            "current_version": "2026.1",
-            "verification_source_url": "https://example.test/official-current",
-            "notes": "Verified current against official source.",
-        },
-    )
-    assert accept_response.status_code == 200
-    accept_payload = accept_response.json()
-    assert accept_payload["status"] == "current"
-    assert accept_payload["accepted_candidate_id"] == candidate_id
+        states_response = client.get("/documents/source-states")
+        assert states_response.status_code == 200
+        assert len(states_response.json()) == 1
 
-    states_response = client.get("/documents/source-states")
-    assert states_response.status_code == 200
-    assert len(states_response.json()) == 1
-
-    accepted_filter = client.get("/documents/updates?status=accepted")
-    assert accepted_filter.status_code == 200
-    assert len(accepted_filter.json()) == 1
+        accepted_filter = client.get("/documents/updates?status=accepted")
+        assert accepted_filter.status_code == 200
+        assert len(accepted_filter.json()) == 1
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_source_updates_route_lists_and_reviews_trust_state(tmp_path: Path) -> None:

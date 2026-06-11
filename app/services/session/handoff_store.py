@@ -2,7 +2,6 @@ import hashlib
 import re
 from pathlib import Path
 
-from app.core.config import default_session_handoff_dir
 from app.core.security import DEFAULT_WARNINGS
 from app.schemas.session import UserSessionHandoff
 
@@ -10,8 +9,8 @@ USER_KEY_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.@-]{1,80}$")
 
 
 class SessionHandoffStore:
-    def __init__(self, root_dir: str | Path | None = None) -> None:
-        self.root_dir = Path(root_dir or default_session_handoff_dir())
+    def __init__(self, root_dir: str | Path) -> None:
+        self.root_dir = Path(root_dir)
         self.root_dir.mkdir(parents=True, exist_ok=True)
 
     def upsert(self, handoff: UserSessionHandoff) -> UserSessionHandoff:

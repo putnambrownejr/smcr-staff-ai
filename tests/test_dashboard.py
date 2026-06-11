@@ -35,6 +35,7 @@ from app.services.admin.readiness import AdminReadinessService
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.career.watch import CareerWatchService
 from app.services.chief.orchestrator import ChiefAideOrchestrator
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.custom_watch_feed_store import CustomWatchFeedStore
 from app.services.ingestion.document_update_store import DocumentUpdateStore
@@ -405,6 +406,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
             reading_catalog=reading_catalog,
             document_update_store=update_store,
             opportunity_tracker=opportunity_tracker,
+            travel_case_store=TravelCaseStore(tmp_path / "travel_cases"),
             battle_rhythm_store=battle_rhythm_store,
         )
 
@@ -412,6 +414,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         return AdminReadinessService(
             handoff_store=handoff_store,
             document_organizer=PersonalDocumentOrganizer(context_store),
+            travel_case_store=TravelCaseStore(tmp_path / "admin_travel_cases"),
         )
 
     def override_career() -> CareerWatchService:

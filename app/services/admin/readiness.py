@@ -18,11 +18,11 @@ class AdminReadinessService:
         self,
         handoff_store: SessionHandoffStore,
         document_organizer: PersonalDocumentOrganizer,
-        travel_case_store: TravelCaseStore | None = None,
+        travel_case_store: TravelCaseStore,
     ) -> None:
         self.handoff_store = handoff_store
         self.document_organizer = document_organizer
-        self.travel_case_store = travel_case_store or TravelCaseStore()
+        self.travel_case_store = travel_case_store
 
     def build(self, user_key: str) -> AdminReadinessResponse:
         handoff = self.handoff_store.get(user_key)

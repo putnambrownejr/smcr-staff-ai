@@ -1,5 +1,29 @@
+import pytest
+
 from app.services.agents.base import AgentContext
 from app.services.agents.registry import AgentRegistry
+
+
+@pytest.mark.parametrize(
+    ("retired_id", "replacement_id"),
+    [
+        ("admin-readiness-advisor", "s1-admin-chief"),
+        ("correspondence-formatting", "staff-products"),
+        ("doctrine-opord-assistant", "staff-products"),
+        ("training-planner", "s3-opso"),
+        ("fitrep-assistant", "s1-admin-chief"),
+        ("maradmin-monitor", "chief-of-staff-aide"),
+        ("joint-interagency-frame-advisor", "s3-opso"),
+    ],
+)
+def test_retired_agents_are_not_registered_and_replacements_remain(
+    retired_id: str,
+    replacement_id: str,
+) -> None:
+    registry = AgentRegistry()
+
+    assert registry.get(retired_id) is None
+    assert registry.get(replacement_id) is not None
 
 
 def test_agent_registry_loads_expected_agents() -> None:
@@ -7,7 +31,6 @@ def test_agent_registry_loads_expected_agents() -> None:
     ids = {metadata.id for metadata in registry.list_metadata()}
 
     assert {
-        "admin-readiness-advisor",
         "s1-admin-chief",
         "s2-intel",
         "s3-opso",
@@ -19,15 +42,10 @@ def test_agent_registry_loads_expected_agents() -> None:
         "airo-advisor",
         "jag-legal-advisor",
         "chaplain-advisor",
-        "maradmin-monitor",
-        "correspondence-formatting",
         "uniform-advisor",
         "drill-prep-calendar",
-        "doctrine-opord-assistant",
         "staff-products",
-        "training-planner",
         "orm-risk-management",
-        "fitrep-assistant",
         "installation-practical-advisor",
         "pki-cac-troubleshooter",
         "leadership-advisor",
@@ -36,7 +54,6 @@ def test_agent_registry_loads_expected_agents() -> None:
         "red-team-assumptions-challenge",
         "assessment-learning-advisor",
         "writing-briefing-coach",
-        "joint-interagency-frame-advisor",
         "infantry-03xx-advisor",
         "osint-research-assistant",
         "terrain-map-advisor",
@@ -50,18 +67,6 @@ def test_agent_registry_loads_expected_agents() -> None:
         "mos-civil-affairs",
         "r2p2-planning-assistant",
     }.issubset(ids)
-
-
-def test_correspondence_formatting_agent_returns_source_citations() -> None:
-    registry = AgentRegistry()
-    agent = registry.get("correspondence-formatting")
-    assert agent is not None
-
-    response = agent.run("Give me a naval letter formatting checklist.", context=AgentContext())
-
-    assert "Correspondence formatting" in response.answer
-    assert response.structured_citations
-    assert any("5216" in citation.title for citation in response.structured_citations)
 
 
 def test_agent_sensitive_input_gets_warning() -> None:
@@ -210,21 +215,6 @@ def test_writing_briefing_agent_returns_product_discipline_structure() -> None:
 
     assert "Writing / briefing coach advisory" in response.answer
     assert "Who is the audience?" in response.answer
-    assert response.structured_citations
-
-
-def test_joint_interagency_agent_returns_external_frame_structure() -> None:
-    registry = AgentRegistry()
-    agent = registry.get("joint-interagency-frame-advisor")
-    assert agent is not None
-
-    response = agent.run(
-        "Help me widen the frame for a planning problem with outside stakeholders.",
-        context=AgentContext(),
-    )
-
-    assert "Joint / interagency frame advisory" in response.answer
-    assert "supported and who is supporting" in response.answer
     assert response.structured_citations
 
 

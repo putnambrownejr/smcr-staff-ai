@@ -1,7 +1,9 @@
-from datetime import datetime
+from datetime import UTC, datetime
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.config import get_settings
 from app.schemas.documents import DocumentRead, IngestRequest, IngestResponse
 from app.schemas.ingestion import MessageRecord
 from app.schemas.source_state import SourceStateAcceptRequest, VerifiedSourceState
@@ -20,8 +22,16 @@ from app.services.ingestion.source_state_store import SourceStateStore
 from app.services.ingestion.source_verifier import SourceVerifier, resolve_repo_local_path
 
 router = APIRouter(prefix="/documents", tags=["documents"])
-_update_store = DocumentUpdateStore()
-_source_state_store = SourceStateStore()
+
+
+def get_update_store() -> DocumentUpdateStore:
+    settings = get_settings()
+    return DocumentUpdateStore(f"{settings.local_context_storage_dir}/document_updates")
+
+
+def get_source_state_store() -> SourceStateStore:
+    settings = get_settings()
+    return SourceStateStore(f"{settings.local_context_storage_dir}/source_states")
 
 
 @router.get("", response_model=list[DocumentRead])
@@ -32,7 +42,7 @@ def list_documents() -> list[DocumentRead]:
             title="Doctrine corpus manifest placeholder",
             publication_type="manifest",
             issuing_org="smcr-staff-ai",
-            retrieved_at=datetime.utcnow(),
+            retrieved_at=datetime.now(UTC),
             classification_label="UNCLASSIFIED",
             cui_flag=False,
         )
@@ -64,30 +74,39 @@ def ingest_documents(request: IngestRequest) -> IngestResponse:
 
 
 @router.post("/check-updates", response_model=DocumentationUpdateScanResult)
-def check_document_updates(records: list[MessageRecord]) -> DocumentationUpdateScanResult:
+def check_document_updates(
+    records: list[MessageRecord],
+    update_store: Annotated[DocumentUpdateStore, Depends(get_update_store)],
+) -> DocumentationUpdateScanResult:
     result = DocumentUpdateMonitor().scan_maradmin_records(records)
     return DocumentationUpdateScanResult(
-        candidates=_update_store.save_many(result.candidates),
+        candidates=update_store.save_many(result.candidates),
         warnings=result.warnings,
     )
 
 
 @router.get("/updates", response_model=list[DocumentationUpdateCandidate])
-def list_document_updates(status: UpdateReviewStatus | None = None) -> list[DocumentationUpdateCandidate]:
-    return _update_store.list(status=status)
+def list_document_updates(
+    update_store: Annotated[DocumentUpdateStore, Depends(get_update_store)],
+    status: UpdateReviewStatus | None = None,
+) -> list[DocumentationUpdateCandidate]:
+    return update_store.list(status=status)
 
 
 @router.get("/source-states", response_model=list[VerifiedSourceState])
-def list_source_states() -> list[VerifiedSourceState]:
-    return _source_state_store.list()
+def list_source_states(
+    source_state_store: Annotated[SourceStateStore, Depends(get_source_state_store)],
+) -> list[VerifiedSourceState]:
+    return source_state_store.list()
 
 
 @router.post("/updates/{candidate_id}/status", response_model=DocumentationUpdateCandidate)
 def update_document_update_status(
     candidate_id: str,
     update: DocumentationUpdateStatusUpdate,
+    update_store: Annotated[DocumentUpdateStore, Depends(get_update_store)],
 ) -> DocumentationUpdateCandidate:
-    candidate = _update_store.update_status(candidate_id, update)
+    candidate = update_store.update_status(candidate_id, update)
     if candidate is None:
         raise HTTPException(status_code=404, detail=f"Unknown documentation update candidate: {candidate_id}")
     return candidate
@@ -97,8 +116,10 @@ def update_document_update_status(
 def accept_document_update_as_source_state(
     candidate_id: str,
     request: SourceStateAcceptRequest,
+    update_store: Annotated[DocumentUpdateStore, Depends(get_update_store)],
+    source_state_store: Annotated[SourceStateStore, Depends(get_source_state_store)],
 ) -> VerifiedSourceState:
-    state = SourceStateService(_update_store, _source_state_store).accept_candidate(candidate_id, request)
+    state = SourceStateService(update_store, source_state_store).accept_candidate(candidate_id, request)
     if state is None:
         raise HTTPException(status_code=404, detail=f"Unknown documentation update candidate: {candidate_id}")
     return state

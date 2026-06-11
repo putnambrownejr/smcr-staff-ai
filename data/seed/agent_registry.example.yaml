@@ -1,6 +1,4 @@
 agents:
-  - id: admin-readiness-advisor
-    doctrine_categories: [reserve_administration, fitrep_pes, correspondence_formatting]
   - id: s1-admin-chief
     doctrine_categories: [reserve_administration, fitrep_pes, correspondence_formatting]
     linked_workflows: [dts_authorization, dts_voucher, gtcc]
@@ -29,24 +27,14 @@ agents:
     doctrine_categories: [leadership]
   - id: chief-of-staff-aide
     doctrine_categories: [core_marine_doctrine, reserve_administration, training_readiness, fitrep_pes]
-  - id: correspondence-formatting
-    doctrine_categories: [correspondence_formatting, admin_records_leave]
-  - id: maradmin-monitor
-    doctrine_categories: [uniform_regulations, fitrep_pes, training_readiness]
   - id: uniform-advisor
     doctrine_categories: [uniform_regulations]
   - id: drill-prep-calendar
     doctrine_categories: [training_readiness]
-  - id: doctrine-opord-assistant
-    doctrine_categories: [core_marine_doctrine, operations_planning, infantry_03xx, logistics_04xx, tactical_handbooks]
   - id: staff-products
     doctrine_categories: [core_marine_doctrine, operations_planning, correspondence_formatting, training_readiness, orm]
-  - id: training-planner
-    doctrine_categories: [training_readiness, infantry_03xx, logistics_04xx, tactical_handbooks]
   - id: orm-risk-management
     doctrine_categories: [orm]
-  - id: fitrep-assistant
-    doctrine_categories: [fitrep_pes]
   - id: installation-practical-advisor
     doctrine_categories: [reserve_administration, uniform_regulations]
   - id: pki-cac-troubleshooter

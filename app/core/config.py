@@ -1,12 +1,16 @@
 import os
+import logging
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+logger = logging.getLogger(__name__)
+SMCR_STAFF_AI_HOME_ENV = "SMCR_STAFF_AI_HOME"
+
 
 def default_local_state_root() -> Path:
-    explicit_home = os.getenv("SMCR_STAFF_AI_HOME")
+    explicit_home = os.getenv(SMCR_STAFF_AI_HOME_ENV)
     if explicit_home:
         return Path(explicit_home).expanduser()
     if os.name == "nt":
@@ -101,6 +105,42 @@ class Settings(BaseSettings):
     public_source_only: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+
+def configured_storage_dirs(settings: Settings) -> list[Path]:
+    return [
+        Path(settings.local_context_storage_dir),
+        Path(settings.session_handoff_storage_dir),
+        Path(settings.product_template_storage_dir),
+        Path(settings.travel_case_storage_dir),
+        Path(settings.battle_rhythm_storage_dir),
+        Path(settings.reading_state_storage_dir),
+        Path(settings.reading_catalog_storage_dir),
+        Path(settings.maradmin_feed_storage_dir),
+        Path(settings.navy_message_storage_dir),
+        Path(settings.dod_watch_storage_dir),
+        Path(settings.custom_watch_feed_storage_dir),
+        Path(settings.section_memory_storage_dir),
+        Path(settings.history_storage_dir),
+        Path(settings.local_context_storage_dir) / "actions",
+        Path(settings.local_context_storage_dir) / "document_updates",
+        Path(settings.local_context_storage_dir) / "drill_plans",
+        Path(settings.local_context_storage_dir) / "opportunities",
+        Path(settings.local_context_storage_dir) / "source_states",
+    ]
+
+
+def ensure_storage_dirs(settings: Settings) -> None:
+    for directory in configured_storage_dirs(settings):
+        try:
+            directory.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            logger.exception(
+                "Could not create storage directory '%s'. Set %s to a writable local state root.",
+                directory,
+                SMCR_STAFF_AI_HOME_ENV,
+            )
+            raise
 
 
 @lru_cache

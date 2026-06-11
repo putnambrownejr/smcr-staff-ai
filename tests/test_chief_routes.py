@@ -9,9 +9,13 @@ from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
 from app.schemas.session import PmeStatus, UserSessionHandoff
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.chief.orchestrator import ChiefAideOrchestrator
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
+from app.services.ingestion.document_update_store import DocumentUpdateStore
+from app.services.opportunities.tracker import OpportunityTracker
 from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.handoff_store import SessionHandoffStore
+from app.services.staff.battle_rhythm_store import BattleRhythmStore
 from app.services.storage.local_context_store import LocalContextStore
 
 
@@ -47,6 +51,10 @@ def test_get_chief_brief_route_returns_sorted_actions(tmp_path: Path) -> None:
             document_organizer=PersonalDocumentOrganizer(context_store),
             drill_plan_store=plan_store,
             reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
+            document_update_store=DocumentUpdateStore(tmp_path / "updates"),
+            opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+            travel_case_store=TravelCaseStore(tmp_path / "travel_cases"),
+            battle_rhythm_store=BattleRhythmStore(tmp_path / "battle_rhythm"),
         )
 
     app.dependency_overrides[get_orchestrator] = override_orchestrator

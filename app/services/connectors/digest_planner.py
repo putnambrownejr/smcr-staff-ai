@@ -20,9 +20,9 @@ from app.services.session.handoff_store import SessionHandoffStore
 
 
 class ChiefConnectorDigestPlanner:
-    def __init__(self, handoff_store: SessionHandoffStore, travel_case_store: TravelCaseStore | None = None) -> None:
+    def __init__(self, handoff_store: SessionHandoffStore, travel_case_store: TravelCaseStore) -> None:
         self.handoff_store = handoff_store
-        self.travel_case_store = travel_case_store or TravelCaseStore()
+        self.travel_case_store = travel_case_store
 
     def build(self, request: ChiefConnectorDigestRequest) -> ChiefConnectorDigestResponse:
         handoff = self.handoff_store.get(request.user_key)

@@ -7,7 +7,7 @@ Guidelines:
 - Keep it UNCLASSIFIED.
 - Do not add CUI, PII, secrets, credentials, unit-sensitive details, real operational plans, COMSEC, frequencies, call signs, or current movement details.
 - Treat notes here as build direction and brainstorming, not authoritative doctrine or app data.
-- When back in session, ask Codex to review [docs/core_documents/offline_notes.md](/C:/smcr-staff-ai/docs/core_documents/offline_notes.md).
+- When back in session, ask Codex to review `docs/core_documents/offline_notes.md`.
 
 ## Working Purpose
 

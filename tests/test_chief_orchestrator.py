@@ -71,6 +71,8 @@ def test_chief_brief_combines_handoff_docs_drill_and_updates(tmp_path: Path) -> 
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
         document_update_store=DocumentUpdateStore(tmp_path / "updates"),
         opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+        travel_case_store=TravelCaseStore(tmp_path / "travel-cases"),
+        battle_rhythm_store=BattleRhythmStore(tmp_path / "battle-rhythm"),
     )
     battle_rhythm_store = BattleRhythmStore(tmp_path / "battle-rhythm")
     battle_rhythm_store.upsert(
@@ -161,6 +163,7 @@ def test_chief_brief_marks_aged_battle_rhythm_items_as_drift(tmp_path: Path) -> 
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
         document_update_store=DocumentUpdateStore(tmp_path / "updates"),
         opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+        travel_case_store=TravelCaseStore(tmp_path / "travel-cases"),
         battle_rhythm_store=battle_rhythm_store,
     )
 
@@ -189,6 +192,8 @@ def test_chief_brief_flags_stale_handoff_and_missing_core_docs(tmp_path: Path) -
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
         document_update_store=DocumentUpdateStore(tmp_path / "updates"),
         opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+        travel_case_store=TravelCaseStore(tmp_path / "travel-cases"),
+        battle_rhythm_store=BattleRhythmStore(tmp_path / "battle-rhythm"),
     )
 
     brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-stale"))
@@ -226,6 +231,8 @@ def test_chief_brief_uses_persisted_document_updates_and_skips_ignored(tmp_path:
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
         document_update_store=update_store,
         opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+        travel_case_store=TravelCaseStore(tmp_path / "travel-cases"),
+        battle_rhythm_store=BattleRhythmStore(tmp_path / "battle-rhythm"),
     )
 
     brief = orchestrator.build_brief(ChiefBriefRequest(user_key=None))
@@ -255,6 +262,8 @@ def test_chief_brief_surfaces_tracked_career_opportunities(tmp_path: Path) -> No
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
         document_update_store=DocumentUpdateStore(tmp_path / "updates"),
         opportunity_tracker=opportunity_tracker,
+        travel_case_store=TravelCaseStore(tmp_path / "travel-cases"),
+        battle_rhythm_store=BattleRhythmStore(tmp_path / "battle-rhythm"),
     )
 
     brief = orchestrator.build_brief(ChiefBriefRequest(user_key=None))
@@ -286,6 +295,8 @@ def test_chief_brief_dedupes_and_prioritizes_digest_items(tmp_path: Path) -> Non
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
         document_update_store=DocumentUpdateStore(tmp_path / "updates"),
         opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+        travel_case_store=TravelCaseStore(tmp_path / "travel-cases"),
+        battle_rhythm_store=BattleRhythmStore(tmp_path / "battle-rhythm"),
     )
 
     brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-digest"))
@@ -327,6 +338,8 @@ def test_chief_brief_surfaces_recurring_checks_and_drill_schedule(tmp_path: Path
         reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
         document_update_store=DocumentUpdateStore(tmp_path / "updates"),
         opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+        travel_case_store=TravelCaseStore(tmp_path / "travel-cases"),
+        battle_rhythm_store=BattleRhythmStore(tmp_path / "battle-rhythm"),
     )
 
     brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-rhythm"))
@@ -373,6 +386,7 @@ def test_chief_brief_reads_stored_travel_cases(tmp_path: Path) -> None:
         document_update_store=DocumentUpdateStore(tmp_path / "updates"),
         opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
         travel_case_store=travel_case_store,
+        battle_rhythm_store=BattleRhythmStore(tmp_path / "battle-rhythm"),
     )
 
     brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-travel-watch"))

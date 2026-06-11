@@ -57,9 +57,9 @@ At minimum, check these places first:
 Recommended search patterns:
 
 ```powershell
-rg -n "build_staff_package|frago|conop|aar|agent|route|tool" C:\smcr-staff-ai
-rg -n "class .*Agent|def build_.*agent|PlaceholderAgent" C:\smcr-staff-ai\app\services\agents
-rg -n "@router|APIRouter|response_model" C:\smcr-staff-ai\app\api\routes
+rg -n "build_staff_package|frago|conop|aar|agent|route|tool" <repo-root>
+rg -n "class .*Agent|def build_.*agent|PlaceholderAgent" <repo-root>\app\services\agents
+rg -n "@router|APIRouter|response_model" <repo-root>\app\api\routes
 ```
 
 ## How To Choose Capability

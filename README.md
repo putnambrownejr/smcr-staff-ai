@@ -118,7 +118,7 @@ tests/                 Offline fixture-based tests
 ## Setup
 
 ```powershell
-cd C:\smcr-staff-ai
+cd <repo-root>
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
@@ -273,7 +273,7 @@ Or point it at a specific local repo root:
 ```powershell
 curl -X POST http://127.0.0.1:8000/privacy/pre-push-review `
   -H "Content-Type: application/json" `
-  -d "{\"repo_root\":\"C:/smcr-staff-ai\"}"
+  -d "{\"repo_root\":\"<repo-root>\"}"
 ```
 
 This review checks:

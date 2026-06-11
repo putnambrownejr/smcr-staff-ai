@@ -41,6 +41,7 @@ from app.services.actions.tracker import ActionTracker
 from app.services.admin.readiness import AdminReadinessService
 from app.services.calendar.plan_store import DrillPrepPlanStore
 from app.services.chief.orchestrator import ChiefAideOrchestrator
+from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 from app.services.opportunities.tracker import OpportunityTracker
@@ -48,6 +49,7 @@ from app.services.personnel.correspondence_converter import CorrespondenceConver
 from app.services.reading.catalog_store import ReadingListCatalogStore
 from app.services.reading.live_catalog import load_effective_reading_catalog
 from app.services.session.handoff_store import SessionHandoffStore
+from app.services.staff.battle_rhythm_store import BattleRhythmStore
 from app.services.staff_products.poam_builder import PoamBuilder
 from app.services.storage.local_context_store import LocalContextStore
 from app.services.training.event_planner import AnnualTrainingPlanner, RangePackagePlanner
@@ -62,7 +64,8 @@ _correspondence_converter = CorrespondenceConverter()
 _follow_up_processor = ActionFollowUpProcessor()
 _tdg_builder = TdgBuilder()
 _poam_builder = PoamBuilder()
-SEED_DIR = Path("data/seed")
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SEED_DIR = REPO_ROOT / "data" / "seed"
 
 
 def get_tracker() -> Iterator[ActionTracker]:
@@ -95,6 +98,8 @@ def get_orchestrator(
         ),
         document_update_store=update_store,
         opportunity_tracker=OpportunityTracker(f"{settings.local_context_storage_dir}/opportunities"),
+        travel_case_store=TravelCaseStore(settings.travel_case_storage_dir),
+        battle_rhythm_store=BattleRhythmStore(settings.battle_rhythm_storage_dir),
     )
 
 
@@ -105,6 +110,7 @@ def get_admin_readiness_service(
     return AdminReadinessService(
         handoff_store=SessionHandoffStore(settings.session_handoff_storage_dir),
         document_organizer=PersonalDocumentOrganizer(context_store),
+        travel_case_store=TravelCaseStore(settings.travel_case_storage_dir),
     )
 
 
