@@ -40,6 +40,7 @@ workflow") rather than including the detail.
 
 ## Index (newest first)
 
+- [HANDOFF_2026-06-10_codex-feedback-pass.md](HANDOFF_2026-06-10_codex-feedback-pass.md) — Post-hardening feedback pass; CI portability fix, ruff/dependency/auth deployment findings. pytest/mypy green locally.
 - [HANDOFF_2026-06-10_claude-fable.md](HANDOFF_2026-06-10_claude-fable.md) — Security pass (auth gaps, #17), MOS agent consolidation, roadmap refresh, this handoff system. 518 tests green.
 
 ## Current Open Threads
@@ -64,8 +65,14 @@ The living "where are we" list. Update when you open or close a thread.
 - **Empty content panels** (#2 history facts, #5 doctrine library, #6 reading list)
   — verify whether the CWD path-bug fix already populates these before building new
   content; the panels may have been empty only because of the launch-directory bug.
-- **~103 pre-existing ruff errors** (mostly import sorting) — a dedicated lint pass.
-  Not from recent work; safe to batch-fix with `ruff check --fix`.
+- **~100 pre-existing ruff errors** (mostly import sorting, `E402`, and long lines)
+  — a dedicated lint pass. Not from recent work; start with safe import sorting,
+  then add `ruff check .` to CI once green.
+- **Dependency lock/update strategy** — no lockfile or Dependabot config yet.
+  Choose `uv`, `pip-tools`, or another project-standard path before enabling
+  automated dependency updates.
+- **Watch first CI run** — `.github/workflows/ci.yml` now runs pytest and mypy.
+  Confirm GitHub Actions is green on `main` after the Codex feedback-pass push.
 
 ### Strategic (from the June Fable assessment, archived)
 - **Turn-key delivery for non-technical tiers** — a hosted Claude Project / Custom
