@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.core.auth import LocalApiKeyDependency
 from app.schemas.personnel import (
     CorrespondenceConversionRequest,
     CorrespondenceConversionResponse,
@@ -9,7 +10,7 @@ from app.schemas.personnel import (
 from app.services.personnel.correspondence_converter import CorrespondenceConverter
 from app.services.personnel.product_builder import PersonnelProductBuilder
 
-router = APIRouter(prefix="/personnel", tags=["personnel products"])
+router = APIRouter(prefix="/personnel", tags=["personnel products"], dependencies=[LocalApiKeyDependency])
 _builder = PersonnelProductBuilder()
 _converter = CorrespondenceConverter()
 

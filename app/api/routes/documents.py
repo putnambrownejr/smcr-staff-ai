@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.documents import DocumentRead, IngestRequest, IngestResponse
 from app.schemas.ingestion import MessageRecord
@@ -20,7 +21,7 @@ from app.services.ingestion.source_state_service import SourceStateService
 from app.services.ingestion.source_state_store import SourceStateStore
 from app.services.ingestion.source_verifier import SourceVerifier, resolve_repo_local_path
 
-router = APIRouter(prefix="/documents", tags=["documents"])
+router = APIRouter(prefix="/documents", tags=["documents"], dependencies=[LocalApiKeyDependency])
 
 
 def get_update_store() -> DocumentUpdateStore:

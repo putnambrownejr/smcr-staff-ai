@@ -63,6 +63,33 @@ def test_local_context_upload_api(tmp_path: Path) -> None:
         app.dependency_overrides.clear()
 
 
+def test_upload_coerces_invalid_document_type_to_other(tmp_path: Path) -> None:
+    # #17: an invalid document_type must not reach storage; it falls back to "other".
+    def override_store() -> LocalContextStore:
+        return LocalContextStore(tmp_path)
+
+    app.dependency_overrides[get_context_store] = override_store
+    client = TestClient(app)
+    try:
+        response = client.post(
+            "/context/upload",
+            files={"file": ("x.txt", b"local", "text/plain")},
+            data={"document_type": "definitely-not-a-valid-type"},
+        )
+        assert response.status_code == 200
+        assert response.json()["item"]["document_type"] == "other"
+
+        valid = client.post(
+            "/context/upload",
+            files={"file": ("y.txt", b"local", "text/plain")},
+            data={"document_type": "orders"},
+        )
+        assert valid.status_code == 200
+        assert valid.json()["item"]["document_type"] == "orders"
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_rqs_bio_upload_metadata_and_redacted_preview(tmp_path: Path) -> None:
     store = LocalContextStore(tmp_path)
     item = store.save(

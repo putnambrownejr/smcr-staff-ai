@@ -7,7 +7,10 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.context import LocalContextListResponse, LocalContextReadResponse, LocalContextUploadResponse
+from app.schemas.personal_documents import PersonalDocumentType
 from app.services.storage.local_context_store import LocalContextStore, parse_tags
+
+_VALID_DOCUMENT_TYPES = {item.value for item in PersonalDocumentType}
 
 router = APIRouter(prefix="/context", tags=["local context"], dependencies=[LocalApiKeyDependency])
 
@@ -28,13 +31,16 @@ async def upload_context(
     expiration_date: Annotated[date | None, Form()] = None,
 ) -> LocalContextUploadResponse:
     content = await file.read()
+    # #17: constrain document_type to the known set so invalid labels never reach
+    # storage; unknown values fall back to "other" rather than being persisted raw.
+    safe_document_type = document_type if document_type in _VALID_DOCUMENT_TYPES else "other"
     try:
         item = store.save(
             filename=file.filename or "upload.bin",
             content=content,
             content_type=file.content_type or "application/octet-stream",
             tags=parse_tags(tags),
-            document_type=document_type,
+            document_type=safe_document_type,
             consent_ack=consent_ack,
             review_date=review_date,
             expiration_date=expiration_date,

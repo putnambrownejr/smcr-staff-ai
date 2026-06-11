@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.source_updates import (
     DocumentationUpdateCandidate,
@@ -11,7 +12,7 @@ from app.schemas.source_updates import (
 )
 from app.services.ingestion.document_update_store import DocumentUpdateStore
 
-router = APIRouter(prefix="/source-updates", tags=["source updates"])
+router = APIRouter(prefix="/source-updates", tags=["source updates"], dependencies=[LocalApiKeyDependency])
 
 
 def get_update_store() -> Iterator[DocumentUpdateStore]:
