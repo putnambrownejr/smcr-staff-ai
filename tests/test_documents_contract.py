@@ -1,7 +1,18 @@
 import pytest
+from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from app.main import app
 from app.schemas.documents import IngestRequest
+
+
+def test_list_documents_returns_honest_empty_until_ingestion_is_wired() -> None:
+    client = TestClient(app)
+
+    response = client.get("/documents")
+
+    assert response.status_code == 200
+    assert response.json() == []
 
 
 def test_ingest_request_requires_exactly_one_source() -> None:

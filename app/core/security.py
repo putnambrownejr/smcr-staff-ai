@@ -7,17 +7,25 @@ SENSITIVE_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\b(call ?sign|current movement|convoy route|grid coordinate|mgrs)\b", re.IGNORECASE),
 )
 
-PII_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
-    re.compile(r"\b(?:ssn|social security)\b", re.IGNORECASE),
-    re.compile(r"\b(?:dob|date of birth)\b", re.IGNORECASE),
-    re.compile(
-        r"\b(?:phone|mobile|cell)\s*[:=]?\s*(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b",
-        re.IGNORECASE,
+# Detection and redaction share this table so preview redaction stays aligned with PII flags.
+PII_REDACTION_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\b\d{3}-\d{2}-\d{4}\b"), "[REDACTED-SSN]"),
+    (re.compile(r"\b(?:ssn|social security)\b", re.IGNORECASE), "[REDACTED-SSN]"),
+    (
+        re.compile(r"\b(?:dob|date of birth)\b(?:\s*[:=]?\s*\d{1,2}[/-]\d{1,2}[/-]\d{2,4})?", re.IGNORECASE),
+        "[REDACTED-DOB]",
     ),
-    re.compile(r"\b\d{5}-\d{4}\b"),
-    re.compile(r"(?:zip\s*(?:code)?\s*[:=]?\s*)\d{5}\b", re.IGNORECASE),
+    (
+        re.compile(
+            r"\b(?:phone|mobile|cell)\s*[:=]?\s*(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b",
+            re.IGNORECASE,
+        ),
+        "[REDACTED-PHONE]",
+    ),
+    (re.compile(r"\b\d{5}-\d{4}\b"), "[REDACTED-ZIP]"),
+    (re.compile(r"(?:zip\s*(?:code)?\s*[:=]?\s*)\d{5}\b", re.IGNORECASE), "[REDACTED-ZIP]"),
 )
+PII_PATTERNS: tuple[re.Pattern[str], ...] = tuple(pattern for pattern, _replacement in PII_REDACTION_PATTERNS)
 
 DEFAULT_WARNINGS = [
     (
@@ -55,11 +63,6 @@ def detect_pii_input(text: str) -> bool:
 
 def redact_pii(text: str) -> str:
     redacted = text
-    redacted = re.sub(r"\b\d{3}-\d{2}-\d{4}\b", "[REDACTED-SSN]", redacted)
-    redacted = re.sub(
-        r"\b(?:phone|mobile|cell)\s*[:=]?\s*(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b",
-        "[REDACTED-PHONE]",
-        redacted,
-        flags=re.IGNORECASE,
-    )
+    for pattern, replacement in PII_REDACTION_PATTERNS:
+        redacted = pattern.sub(replacement, redacted)
     return redacted

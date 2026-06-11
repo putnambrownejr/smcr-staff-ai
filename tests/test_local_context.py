@@ -2,7 +2,9 @@ from pathlib import Path
 import zipfile
 
 from fastapi.testclient import TestClient
+import pytest
 
+from app.core.security import detect_pii_input
 from app.api.routes.context import get_context_store
 from app.main import app
 from app.services.storage import local_context_store
@@ -78,6 +80,38 @@ def test_rqs_bio_upload_metadata_and_redacted_preview(tmp_path: Path) -> None:
     assert "123-45-6789" not in preview
     assert "555-123-4567" not in preview
     assert "[REDACTED-SSN]" in preview
+
+
+@pytest.mark.parametrize(
+    ("raw_text", "redaction"),
+    [
+        ("SSN 123-45-6789", "[REDACTED-SSN]"),
+        ("social security is noted", "[REDACTED-SSN]"),
+        ("DOB: 01/02/1990", "[REDACTED-DOB]"),
+        ("phone: 555-123-4567", "[REDACTED-PHONE]"),
+        ("ZIP 12345-6789", "[REDACTED-ZIP]"),
+        ("zip code: 12345", "[REDACTED-ZIP]"),
+    ],
+)
+def test_pii_detection_patterns_are_redacted_from_preview(
+    tmp_path: Path,
+    raw_text: str,
+    redaction: str,
+) -> None:
+    assert detect_pii_input(raw_text) is True
+    store = LocalContextStore(tmp_path)
+    item = store.save(
+        filename="pii.txt",
+        content=f"Admin note. {raw_text}.".encode(),
+        content_type="text/plain",
+        consent_ack=True,
+    )
+
+    preview = store.read_preview(item.context_id)
+
+    assert preview is not None
+    assert raw_text not in preview
+    assert redaction in preview
 
 
 def test_binary_local_context_returns_metadata_preview(tmp_path: Path) -> None:

@@ -58,7 +58,7 @@ Recommended search patterns:
 
 ```powershell
 rg -n "build_staff_package|frago|conop|aar|agent|route|tool" <repo-root>
-rg -n "class .*Agent|def build_.*agent|PlaceholderAgent" <repo-root>\app\services\agents
+rg -n "class .*Agent|def build_.*agent|citation_required" <repo-root>\app\services\agents
 rg -n "@router|APIRouter|response_model" <repo-root>\app\api\routes
 ```
 

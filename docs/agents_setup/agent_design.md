@@ -14,17 +14,17 @@ Agents implement a common interface:
 - `citation_required`
 - `run(input, context)`
 
-Initial agents return structured placeholder responses. The response contract already supports citations, warnings, human-review flags, confidence, and follow-up questions.
+Agents must be concrete implementations of `Agent` from `app/services/agents/base.py`. Do not add or register `PlaceholderAgent`-style scaffolds; tests enforce that registered agents return usable advisory responses with citations or source-trust markers when required.
 
 ## Expansion Pattern
 
 Adding an agent should require:
 
-1. Create a new agent file.
-2. Add manifest metadata.
-3. Add doctrine source mappings.
-4. Add tests.
-5. Register in `AgentRegistry`.
+1. Copy an existing simple concrete agent pattern, such as `uniform_agent.py`.
+2. Extend `Agent` from `base.py` and provide real metadata, source mappings, warnings, and response structure.
+3. Add tests in `tests/test_agent_registry.py` and reliability coverage in `tests/test_agent_content_reliability.py`.
+4. Register the builder in `app/services/agents/registry.py`.
+5. Verify no registered response reads as a placeholder and citation-required agents include citations or source-trust markers.
 
 Agents should prefer checklists, templates, and questions over authoritative outputs. Operationally specific, classified, CUI, COMSEC, keying material, real frequency, real movement, or sensitive unit-plan requests must be refused or reduced to generic training guidance.
 

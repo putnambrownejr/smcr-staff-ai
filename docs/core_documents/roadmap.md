@@ -2,7 +2,7 @@
 
 ## Phase 0: Repo Skeleton and Stubs
 
-FastAPI app, models, seed data, placeholder agents, local tests, and safety documentation.
+FastAPI app, models, seed data, concrete advisory agents, local tests, and safety documentation.
 
 ## Phase 1: MARADMIN + MCPEL Ingestion
 

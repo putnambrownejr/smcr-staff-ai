@@ -1,4 +1,3 @@
-from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -34,19 +33,13 @@ def get_source_state_store() -> SourceStateStore:
     return SourceStateStore(f"{settings.local_context_storage_dir}/source_states")
 
 
-@router.get("", response_model=list[DocumentRead])
+@router.get(
+    "",
+    response_model=list[DocumentRead],
+    response_description="Doctrine corpus ingestion is not yet wired; see ARCHITECTURE.md.",
+)
 def list_documents() -> list[DocumentRead]:
-    return [
-        DocumentRead(
-            source_id="example-doctrine-manifest",
-            title="Doctrine corpus manifest placeholder",
-            publication_type="manifest",
-            issuing_org="smcr-staff-ai",
-            retrieved_at=datetime.now(UTC),
-            classification_label="UNCLASSIFIED",
-            cui_flag=False,
-        )
-    ]
+    return []
 
 
 @router.post("/ingest", response_model=IngestResponse)
