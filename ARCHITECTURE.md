@@ -116,6 +116,7 @@ Full inventory: `http://localhost:8000/docs`
 | `docs/core_documents/CONTRIBUTING_QUICKSTART.md` | First-run through first commit |
 | `skills/README.md` | Operator-facing skill catalog |
 | `data/seed/` | Example data shapes for every major entity |
+| `docs/handoffs/README.md` | Cross-account handoff relay + current open threads |
 
 ---
 
