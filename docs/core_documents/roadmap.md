@@ -1,78 +1,75 @@
 # Roadmap
 
-## Phase 0: Repo Skeleton and Stubs
+Honest current-state roadmap. For the architectural map of what is real vs. stub,
+see [ARCHITECTURE.md](../../ARCHITECTURE.md).
 
-FastAPI app, models, seed data, concrete advisory agents, local tests, and safety documentation.
+---
 
-## Phase 1: MARADMIN + MCPEL Ingestion
+## Shipped
 
-Implement resilient public-source fetchers, normalized message storage, source hashing, and update jobs.
+These are implemented, tested, and in active use.
 
-Inputs:
+- **Advisory agent layer** — ~30 agent files covering S/G-staff lanes, MOS slices
+  (0102/0202/0402/0430/0511/3002/CommO/Civil Affairs, compiled to data), staff
+  council echelons (company → HQMC), and functional advisors (ORM, OSINT, PKI,
+  red-team, writing/briefing, uniform, drill prep, privacy hygiene).
+- **JSON file-store continuity** — handoffs, actions/POAMs, travel cases, battle
+  rhythm, section memory, opportunities, drill plans. Survives between drills.
+- **Dashboard** — single-page operator surface with lane navigation, readiness
+  posture, Act Now queue, source watch, and workflow tools.
+- **Chief of Staff / Aide brief** — orchestrates handoff + documents + drill +
+  career + actions into a daily/drill-period brief.
+- **MARADMIN / message ingestion** — RSS/print-view parsing, message-watch
+  feeds (NAVADMIN/ALNAV/DoD), custom watch feeds, source hashing.
+- **SMCR billet discovery** — public BIC parsing and MOS/rank/location ranking.
+- **Admin workflows** — DTS, GTCC, MROWS rebuttal, RIDT scaffolds.
+- **Staff products** — WARNO/OPORD/FRAGO/SITREP/AAR and correspondence scaffolds.
+- **Skill layer** — 9 operator skills steering AI tools toward existing routes.
+- **Safety posture** — UNCLASSIFIED enforcement, PII detection + redaction,
+  sensitive-content refusal, local-first storage, API-key gating.
 
-- `docs/deep_research/source_inventory_integration_plan.md`
-- `docs/deep_research/source_inventory_integration_plan.md`
+## Stub / Interface-Only
 
-Initial implementation should prioritize MARADMIN RSS/print-view parsing, MCPEL item-page parsing, and fixture-backed tests.
+Real interfaces, no production implementation. See ARCHITECTURE.md for detail.
 
-## Phase 1B: Staff OS Scaffolding
+- **RAG over doctrine** — chunking/embedding/vector-store interfaces exist, but
+  the embedder is a hash stub and the store does lexical overlap, not semantic
+  retrieval. A real provider replaces both behind the interface when this becomes
+  a priority. Do not invest in incrementally improving the hash embedder.
+- **SQLite database** — five tables defined but unused at runtime; all live state
+  is JSON file stores. Kept as a documented future doctrine-ingestion schema.
+- **Live calendar / email connectors** — Microsoft Graph and Google Calendar
+  interfaces are stubs. Local ICS export works. The `connector-adapter` skill
+  handles normalization of externally-collected data without OAuth ownership.
 
-Chief of Staff / Aide de Camp agent, session handoffs, staff council roles by echelon, and S-2/G-2 OSINT tie-in.
+## Current Priorities
 
-Current scaffold:
+The active focus, in order:
 
-- `chief-of-staff-aide`
-- `/handoffs/{user_key}`
-- `/staff/roles`
-- `/staff/vet-idea`
-- Email provider stubs
-- Calendar provider stubs and local ICS export
+1. **Pre-release readiness** — honest docs, clean first-run launch, path-bug and
+   auth fixes for external review (FHG AI initiative upload).
+2. **Continuity between drills** — the file-store layer is the differentiated
+   value; keep deepening handoff → brief → action workflow bridges.
+3. **Thin-bench / lone-planner support** — the most common real use case.
+4. **Discoverability** — quickstart, workflow map, skill catalog, honest
+   architecture entry point so reviewers and contributors find the spine fast.
+5. **Turn-key delivery for non-technical tiers** — a hosted Claude Project /
+   Custom GPT preloaded with the skills and reference notes reaches users who
+   want a chat surface, not a local install. (See the delivery strategy in the
+   archived June assessment.)
 
-## Phase 1A: SMCR Billet Discovery
+## Deliberately Not Prioritized
 
-Parse official public billet source pages where possible, surface Reserve Hub links, and rank open BICs against user MOS, rank, location, and career keywords.
+- More specialist agents — the roster is already broad; marginal value is low
+  against orchestration and packaging.
+- Incremental RAG embedder improvement — it will be replaced wholesale.
+- An LLM inside the local app — the local app stays deterministic and private;
+  generative reasoning comes from the user's connected AI assistant.
+- Docker / hosted MCP surfaces — maintained as secondary, not leading items.
 
-## Phase 2: RAG Over Public Doctrine
+## Governance (future)
 
-Add embedding backend, vector store adapter, citation packing, retrieval evaluation, and document freshness warnings.
-
-## Phase 3: Calendar Integration With ICS Export
-
-Expand local `.ics` generation, recurring reminders, and user-controlled task templates.
-
-## Phase 4: Microsoft Graph Integration
-
-Implement OAuth, minimal scopes, token protection, and calendar write-review flow.
-
-## Phase 5: MOS-Specific Agents: CommO and CAO
-
-Connect MOS agents to doctrine manifests, checklist templates, and refusal policies.
-
-## Phase 6: Full Staff Buildout
-
-Add OpsO, LogO, AirO, IntelO, Fires, AdminO, SupplyO, TrainingO, Safety/ORM, and other staff agents.
-
-## Phase 7: Unit Pilot
-
-Run a controlled UNCLASSIFIED pilot with example data, feedback capture, and governance review.
-
-## Phase 8: Public GitHub Release Governance
-
-Formalize security reporting, contributor policy, release process, and source review.
-
-## Phase 9: Multi-Unit/Multi-Service Expansion
-
-Generalize organizational models, source manifests, and agent registry patterns for broader reserve and joint use.
-
-## Current Priority Shift
-
-The roadmap above reflects the original repo sequence. The current implementation focus has shifted toward:
-
-1. SMCR continuity between drills
-2. thin-bench / lone-planner support
-3. staff battle rhythm and planning-cell discipline
-4. local-only storage, privacy, and user-specific continuity
-5. dashboard-first usability
-
-That means optional ChatGPT/MCP and Docker surfaces are no longer treated as leading roadmap items. They are
-maintained as secondary/legacy surfaces unless a clear user need pulls them forward again.
+- Formal security reporting, contributor policy, and release process for public
+  GitHub distribution.
+- Controlled UNCLASSIFIED unit pilot with example data and feedback capture.
+- Generalization of org models and source manifests for broader reserve use.
