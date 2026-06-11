@@ -1,5 +1,6 @@
 import hashlib
 import re
+import secrets
 import zipfile
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -44,7 +45,7 @@ class LocalContextStore:
         if len(content) > self.max_upload_bytes:
             raise ValueError(f"Upload exceeds max_upload_bytes={self.max_upload_bytes}.")
         digest = hashlib.sha256(content).hexdigest()
-        context_id = digest[:16]
+        context_id = self._new_context_id()
         safe_name = _safe_filename(filename)
         file_path = self.files_dir / f"{context_id}-{safe_name}"
         file_path.write_bytes(content)
@@ -129,6 +130,12 @@ class LocalContextStore:
 
     def _metadata_path(self, context_id: str) -> Path:
         return self.metadata_dir / f"{context_id}.json"
+
+    def _new_context_id(self) -> str:
+        while True:
+            context_id = secrets.token_hex(8)
+            if not self._metadata_path(context_id).exists():
+                return context_id
 
     def _file_path_for(self, metadata: LocalContextMetadata) -> Path | None:
         if not is_valid_context_id(metadata.context_id):

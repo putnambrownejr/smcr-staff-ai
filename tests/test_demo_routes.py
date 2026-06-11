@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from app.api.routes.demo import DEMO_ROUTES
 from app.main import app
 
 
@@ -11,7 +12,7 @@ def test_demo_status_lists_repo_mode_routes() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["mode"] == "stateless_demo"
-    assert "/demo/chief/brief" in payload["routes"]
+    assert payload["routes"] == DEMO_ROUTES
 
 
 def test_demo_chief_brief_returns_digest_fields() -> None:

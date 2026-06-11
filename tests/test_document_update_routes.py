@@ -2,13 +2,79 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
 
 from app.api.routes.documents import get_source_state_store as get_document_source_state_store
 from app.api.routes.documents import get_update_store as get_document_update_store
 from app.api.routes.source_updates import get_update_store as get_source_update_store
+from app.core.config import get_settings
 from app.main import app
 from app.schemas.source_updates import DocumentationUpdateCandidate
 from app.services.ingestion.document_update_store import DocumentUpdateStore
+
+API_KEY = "test-local-key"
+
+
+def test_document_and_source_update_routes_require_api_key_when_configured(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setenv("LOCAL_API_KEY", API_KEY)
+    get_settings.cache_clear()
+    client = TestClient(app)
+    try:
+        checks = [
+            client.post("/documents/check-updates", json=[]),
+            client.get("/documents/updates"),
+            client.post(
+                "/documents/updates/missing/status",
+                json={"review_status": "reviewed", "trust_state": "verified_current"},
+            ),
+            client.post(
+                "/documents/source-states/accept/missing",
+                json={"status": "current", "current_version": "2026.1"},
+            ),
+            client.get("/source-updates"),
+            client.post("/source-updates/missing/review", json={"trust_state": "ignored"}),
+        ]
+
+        assert [response.status_code for response in checks] == [401, 401, 401, 401, 401, 401]
+    finally:
+        get_settings.cache_clear()
+
+
+def test_document_and_source_update_routes_accept_valid_api_key(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("LOCAL_API_KEY", API_KEY)
+    get_settings.cache_clear()
+    store = DocumentUpdateStore(tmp_path)
+    store.save_many(
+        [
+            DocumentationUpdateCandidate(
+                candidate_id="candidate-auth-check",
+                tracked_title="MCO 5000.1",
+                trigger_type="manual_review",
+            )
+        ]
+    )
+
+    def override_store() -> DocumentUpdateStore:
+        return store
+
+    app.dependency_overrides[get_document_update_store] = override_store
+    app.dependency_overrides[get_source_update_store] = override_store
+    client = TestClient(app)
+    headers = {"X-Local-API-Key": API_KEY}
+    try:
+        create_response = client.post(
+            "/documents/check-updates",
+            headers=headers,
+            json=[],
+        )
+        assert create_response.status_code == 200
+
+        list_response = client.get("/source-updates", headers=headers)
+        assert list_response.status_code == 200
+        assert list_response.json()
+    finally:
+        app.dependency_overrides.clear()
+        get_settings.cache_clear()
 
 
 def test_document_update_check_route_returns_candidates() -> None:

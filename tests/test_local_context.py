@@ -1,11 +1,11 @@
-from pathlib import Path
 import zipfile
+from pathlib import Path
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 
-from app.core.security import detect_pii_input
 from app.api.routes.context import get_context_store
+from app.core.security import detect_pii_input
 from app.main import app
 from app.services.storage import local_context_store
 from app.services.storage.local_context_store import LocalContextStore
@@ -36,6 +36,32 @@ def test_local_context_rejects_glob_context_id_for_delete(tmp_path: Path) -> Non
 
     assert store.delete("*") is False
     assert store.get(item.context_id) is not None
+
+
+def test_duplicate_content_uploads_keep_distinct_metadata(tmp_path: Path) -> None:
+    store = LocalContextStore(tmp_path)
+
+    first = store.save(
+        filename="first.txt",
+        content=b"Same advisory note.",
+        content_type="text/plain",
+        tags=["first"],
+    )
+    second = store.save(
+        filename="second.txt",
+        content=b"Same advisory note.",
+        content_type="text/plain",
+        tags=["second"],
+    )
+
+    assert first.context_id != second.context_id
+    assert first.sha256 == second.sha256
+    first_saved = store.get(first.context_id)
+    second_saved = store.get(second.context_id)
+    assert first_saved is not None
+    assert second_saved is not None
+    assert first_saved.filename == "first.txt"
+    assert second_saved.filename == "second.txt"
 
 
 def test_local_context_upload_api(tmp_path: Path) -> None:

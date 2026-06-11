@@ -21,7 +21,7 @@ python -m venv .venv
 .venv\Scripts\activate        # Windows
 # source .venv/bin/activate   # Mac/Linux
 pip install -e ".[dev]"
-python -m pytest tests/ -q    # should show 503+ passing
+python -m pytest tests/ -q    # all tests should pass
 uvicorn app.main:app --reload  # starts at http://localhost:8000
 ```
 
@@ -34,7 +34,7 @@ Browse the API: **http://localhost:8000/docs**
 
 ```
 app/
-  api/routes/       39+ FastAPI routes — this is the public surface
+  api/routes/       FastAPI routes — this is the public surface
   services/         business logic, agents, ingestion, storage
   schemas/          Pydantic models — source of truth for data shapes
   static/dashboard/ single-file dashboard (HTML + JS + CSS)
@@ -49,7 +49,7 @@ docs/
 
 skills/             operator-facing skill overlays (SKILL.md files)
 data/seed/          example seed data for first-run experience
-tests/              503+ offline tests — run before every commit
+tests/              Offline tests — run before every commit
 ```
 
 ---
@@ -101,7 +101,7 @@ python -m ruff check app/ tests/   # lint
 python -m mypy app/                # type check (strict)
 ```
 
-The CI bar is: **503+ tests passing, zero ruff errors, mypy clean**.
+The CI bar is: **all tests passing, zero ruff errors, mypy clean**.
 
 ---
 

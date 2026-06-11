@@ -141,11 +141,11 @@ http://127.0.0.1:8000/dashboard
 Run the local app with `uvicorn app.main:app --reload`.
 For a fast repo map, see [docs/README.md](docs/README.md).
 For tooling-oriented repo discovery, see [AGENTS.md](AGENTS.md).
-For hosted-AI/repo-only orientation, see [docs/compatibility/ai_assistant_guide.md](ai_assistant_guide.md).
-For the lowest-friction GitHub-plus-local workflow, see [docs/compatibility/ai_assistant_guide.md](ai_assistant_guide.md).
+For hosted-AI/repo-only orientation, see [docs/compatibility/ai_assistant_guide.md](docs/compatibility/ai_assistant_guide.md).
+For the lowest-friction GitHub-plus-local workflow, see [docs/handoffs/README.md](docs/handoffs/README.md).
 For project purpose and scope, see [docs/core_documents/project_purpose.md](docs/core_documents/project_purpose.md).
-For Claude/Gemini/Grok/Copilot/GENAI-safe usage patterns, see [docs/compatibility/external_ai_safe_use.md](external_ai_safe_use.md) and [docs/compatibility/external_ai_safe_use.md](external_ai_safe_use.md).
-For the build-vs-reuse decision matrix, see [docs/compatibility/capability_reuse_audit.md](capability_reuse_audit.md).
+For Claude/Gemini/Grok/Copilot/GENAI-safe usage patterns, see [docs/compatibility/external_ai_safe_use.md](docs/compatibility/external_ai_safe_use.md).
+For the build-vs-reuse decision matrix, see [docs/core_documents/capability_reuse_audit.md](docs/core_documents/capability_reuse_audit.md).
 Working scratch notes currently live in [docs/core_documents/offline_notes.md](docs/core_documents/offline_notes.md); review before any public push.
 
 ## Calling The API
@@ -819,7 +819,7 @@ curl -X POST http://127.0.0.1:8000/sharing/external-ai-packet `
 
 This route is the preferred way to take local user context to an external AI. It withholds raw local file references, context IDs, and other fields that should usually stay on the machine, and it can tailor the recommended share prompt for `claude`, `gemini`, `grok`, `copilot`, `genai`, or a generic external model.
 
-For provider-specific defaults and starter prompts, see [docs/compatibility/external_ai_safe_use.md](external_ai_safe_use.md).
+For provider-specific defaults and starter prompts, see [docs/compatibility/external_ai_safe_use.md](docs/compatibility/external_ai_safe_use.md).
 
 Draft a proposed handoff update from notes:
 
@@ -1374,15 +1374,9 @@ SQLite is the default for quick local development. Docker Compose includes Postg
 Run checks:
 
 ```powershell
-ruff check .
-mypy app tests
-pytest
-```
-
-Run everything through Make:
-
-```powershell
-make check
+python -m ruff check .
+python -m mypy app tests
+python -m pytest tests/ -q
 ```
 
 Use fixture-based tests for parsers and network-adjacent features. Tests should not require live network access.

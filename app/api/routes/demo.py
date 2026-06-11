@@ -33,6 +33,21 @@ _analysis_service = TextAnalysisService()
 _staff_product_builder = StaffProductBuilder()
 _planning_orchestrator = StaffPlanningOrchestrator()
 _admin_workflow_builder = AdminWorkflowBuilder()
+DEMO_ROUTES = [
+    "/demo/status",
+    "/demo/tool-catalog",
+    "/demo/chief/brief",
+    "/demo/career/watch",
+    "/demo/actions",
+    "/demo/handoffs/{user_key}",
+    "/demo/maradmins/feed",
+    "/demo/planning/staff-package",
+    "/demo/analysis/summarize",
+    "/demo/staff/s1/dts-helper",
+    "/demo/billets/recommend",
+    "/demo/staff-products/draft",
+    "/demo/agents/{agent_id}/run",
+]
 
 
 @router.get("/status", summary="Show repo-mode demo capabilities")
@@ -45,20 +60,7 @@ def demo_status() -> dict[str, object]:
             "They exist to make the repository easier to understand from GitHub and OpenAPI alone.",
             "Private/local workflows still require the non-demo routes and local context storage.",
         ],
-        "routes": [
-            "/demo/status",
-            "/demo/chief/brief",
-            "/demo/career/watch",
-            "/demo/actions",
-            "/demo/handoffs/{user_key}",
-            "/demo/maradmins/feed",
-            "/demo/planning/staff-package",
-            "/demo/analysis/summarize",
-            "/demo/staff/s1/dts-helper",
-            "/demo/billets/recommend",
-            "/demo/staff-products/draft",
-            "/demo/agents/{agent_id}/run",
-        ],
+        "routes": DEMO_ROUTES,
     }
 
 
