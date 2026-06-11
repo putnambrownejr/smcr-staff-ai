@@ -17,8 +17,7 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "jag-legal-advisor": "Issue-spot this matter before routing it further.",
     "chaplain-advisor": "Help me think through a morale and welfare issue.",
     "leadership-advisor": "Help me frame a PME on standards and command climate.",
-    "mcpp-planning-assistant": "Help me conduct deliberate MCPP for a new reserve planning problem.",
-    "opt-facilitator": "Help me run mission analysis with an OPT that keeps drifting.",
+    "planning-advisor": "Help me conduct deliberate MCPP for a new reserve planning problem.",
     "red-team-assumptions-challenge": "Pressure-test this plan before we brief it to the commander.",
     "assessment-learning-advisor": "Help me connect this AAR to the next drill's actual fixes.",
     "writing-briefing-coach": "Help me sharpen a command brief so the decision is clear.",
@@ -37,7 +36,6 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "mos-mobility-0430": "Help me think through embarkation and movement-control friction for AT.",
     "mos-supply-3002": "Help me think through supply accountability and readiness before drill.",
     "mos-magtf-planner-0511": "Help me run mission analysis and keep the planning support products straight.",
-    "r2p2-planning-assistant": "Help me conduct compressed R2P2-style refinement for a familiar event.",
     "repo-privacy-sweeper": "Review this repo before I push and look for personal data backflow.",
 }
 

@@ -49,8 +49,7 @@ def test_agent_registry_loads_expected_agents() -> None:
         "installation-practical-advisor",
         "pki-cac-troubleshooter",
         "leadership-advisor",
-        "mcpp-planning-assistant",
-        "opt-facilitator",
+        "planning-advisor",
         "red-team-assumptions-challenge",
         "assessment-learning-advisor",
         "writing-briefing-coach",
@@ -65,7 +64,6 @@ def test_agent_registry_loads_expected_agents() -> None:
         "mos-magtf-planner-0511",
         "mos-commo",
         "mos-civil-affairs",
-        "r2p2-planning-assistant",
     }.issubset(ids)
 
 
@@ -142,28 +140,37 @@ def test_s3_opso_agent_returns_staff_planning_structure() -> None:
     assert response.source_trust
 
 
-def test_mcpp_agent_returns_deliberate_planning_structure() -> None:
+def test_planning_advisor_covers_deliberate_rapid_and_opt_content() -> None:
+    # The planning-advisor agent collapses the former MCPP, R2P2, and OPT
+    # agents — all three content bodies must survive in the merged response.
     registry = AgentRegistry()
-    agent = registry.get("mcpp-planning-assistant")
+    agent = registry.get("planning-advisor")
     assert agent is not None
 
     response = agent.run("Help me run deliberate planning for a new training event.", context=AgentContext())
 
-    assert "MCPP planning assistant advisory" in response.answer
+    # MCPP (deliberate) content
     assert "COA wargaming" in response.answer
+    assert "Deliberate MCPP rhythm" in response.answer
+    # OPT facilitation content
+    assert "assumption log" in response.answer
+    assert "OPT lead" in response.answer
+    # R2P2 (rapid) content
+    assert "Compressed R2P2 rhythm" in response.answer
+    assert "Abort compression" in response.answer
     assert response.structured_citations
 
 
-def test_opt_facilitator_agent_returns_opt_conduct_structure() -> None:
+def test_planning_advisor_reads_compressed_tempo_from_input() -> None:
     registry = AgentRegistry()
-    agent = registry.get("opt-facilitator")
+    agent = registry.get("planning-advisor")
     assert agent is not None
 
-    response = agent.run("Help me run mission analysis with my staff.", context=AgentContext())
+    rapid = agent.run("Help me refine a familiar event under a short timeline.", context=AgentContext())
+    deliberate = agent.run("Help me plan a brand new problem from scratch.", context=AgentContext())
 
-    assert "OPT facilitator advisory" in response.answer
-    assert "assumption log" in response.answer
-    assert response.structured_citations
+    assert "looks compressed" in rapid.answer
+    assert "looks like deliberate planning" in deliberate.answer
 
 
 def test_red_team_agent_returns_assumptions_challenge_structure() -> None:
@@ -215,18 +222,6 @@ def test_writing_briefing_agent_returns_product_discipline_structure() -> None:
 
     assert "Writing / briefing coach advisory" in response.answer
     assert "Who is the audience?" in response.answer
-    assert response.structured_citations
-
-
-def test_r2p2_agent_returns_compressed_planning_guardrails() -> None:
-    registry = AgentRegistry()
-    agent = registry.get("r2p2-planning-assistant")
-    assert agent is not None
-
-    response = agent.run("Help me refine a familiar event under a short timeline.", context=AgentContext())
-
-    assert "R2P2 planning assistant advisory" in response.answer
-    assert "Abort compressed planning" in response.answer
     assert response.structured_citations
 
 

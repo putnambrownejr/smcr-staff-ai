@@ -9,8 +9,6 @@ class StaffEchelon(StrEnum):
     battalion = "battalion"
     regiment_meu_wing = "regiment_meu_wing"
     division_group = "division_group"
-    mef = "mef"
-    hqmc = "hqmc"
 
 
 class MagtfLens(StrEnum):

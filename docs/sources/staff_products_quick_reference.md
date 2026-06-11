@@ -385,7 +385,7 @@ Next event/rehearsal to verify:
 
 - `staff-products`: choose the product scaffold and citations.
 - `staff council`: return role-specific recommended products and source citations.
-- `s3-opso`, `mcpp-planning-assistant`, `r2p2-planning-assistant`: enforce planning rhythm and transition discipline.
+- `s3-opso`, `planning-advisor`: enforce planning rhythm (deliberate MCPP vs compressed R2P2), OPT conduct, and transition discipline.
 - `s2-intel`, `s4-logistics`, `s6-comms`, `medical-doc-advisor`, `airo-advisor`, `jag-legal-advisor`, `g9-civil-military`: provide section-specific estimate and annex inputs.
 
 Keep outputs advisory, source-cited, and training-safe unless the user provides an approved environment and confirms the work is appropriate for that environment.

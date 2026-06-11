@@ -15,15 +15,13 @@ from app.services.agents.installation_agent import build_installation_agent
 from app.services.agents.jag_agent import build_jag_agent
 from app.services.agents.leadership_agent import build_leadership_agent
 from app.services.agents.map_agent import build_map_agent
-from app.services.agents.mcpp_agent import build_mcpp_agent
 from app.services.agents.medical_doc_agent import build_medical_doc_agent
 from app.services.agents.mos_advisor import build_mos_advisor_agents
-from app.services.agents.opt_facilitator_agent import build_opt_facilitator_agent
 from app.services.agents.orm_agent import build_orm_agent
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.pki_agent import build_pki_troubleshooter_agent
+from app.services.agents.planning_advisor_agent import build_planning_advisor_agent
 from app.services.agents.privacy_hygiene_agent import build_privacy_hygiene_agent
-from app.services.agents.r2p2_agent import build_r2p2_agent
 from app.services.agents.red_team_agent import build_red_team_agent
 from app.services.agents.s1_admin_chief_agent import build_s1_admin_chief_agent
 from app.services.agents.s2_intel_agent import build_s2_intel_agent
@@ -74,8 +72,7 @@ def default_agents() -> list[Agent]:
         build_sel_enlisted_leader_agent(),
         build_chief_of_staff_agent(),
         build_medical_doc_agent(),
-        build_mcpp_agent(),
-        build_opt_facilitator_agent(),
+        build_planning_advisor_agent(),
         build_red_team_agent(),
         build_assessment_learning_agent(),
         build_writing_briefing_agent(),
@@ -89,7 +86,6 @@ def default_agents() -> list[Agent]:
         build_jag_agent(),
         build_pki_troubleshooter_agent(),
         build_privacy_hygiene_agent(),
-        build_r2p2_agent(),
         build_leadership_agent(),
         build_osint_agent(),
         build_map_agent(),

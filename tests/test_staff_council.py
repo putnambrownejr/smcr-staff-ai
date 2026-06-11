@@ -52,11 +52,10 @@ def test_registry_includes_chief_and_staff_agents() -> None:
     assert "staff-division_group-wing_ops" in ids
     assert "staff-division_group-mlg_log" in ids
     assert "staff-division_group-surgeon" in ids
-    assert "staff-mef-ace" in ids
-    assert "staff-mef-lce" in ids
-    assert "staff-hqmc-hqmc_mra" in ids
-    assert "staff-hqmc-hqmc_ppo" in ids
-    assert "staff-hqmc-hqmc_aviation" in ids
+    # MEF and HQMC echelons were intentionally removed — division_group is the
+    # top supported echelon for an SMCR-focused tool.
+    assert not any(id_.startswith("staff-mef-") for id_ in ids)
+    assert not any(id_.startswith("staff-hqmc-") for id_ in ids)
 
 
 def test_chief_of_staff_agent_surfaces_handoff_watch_items() -> None:
@@ -117,7 +116,8 @@ def test_staff_round_robin_runs_all_default_echelons() -> None:
         request=StaffRoundRobinRequest(question="Should we change the drill weekend admin battle rhythm?")
     )
 
-    assert len(response.councils) == 20
+    # 4 default echelons (company → division_group) × 4 phases = 16
+    assert len(response.councils) == 16
     assert response.phases == [
         "section_estimates",
         "critique_other_sections",
@@ -281,7 +281,6 @@ def test_staff_round_robin_runs_airo_sja_where_available() -> None:
     assert {"airo", "sja"}.issubset(roles_run)
     assert StaffEchelon.regiment_meu_wing in echelons_run
     assert StaffEchelon.division_group in echelons_run
-    assert StaffEchelon.mef in echelons_run
     assert all(council.roles_missing == [] for council in response.councils)
 
 

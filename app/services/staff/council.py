@@ -94,7 +94,6 @@ class StaffCouncilService:
             StaffEchelon.battalion,
             StaffEchelon.regiment_meu_wing,
             StaffEchelon.division_group,
-            StaffEchelon.mef,
         ]
         phases = ["section_estimates", "critique_other_sections", "cross_staff_friction", "commander_xo_synthesis"]
         councils: list[StaffCouncilResponse] = []
@@ -264,16 +263,16 @@ def _build_critical_questions(role: str) -> list[str]:
 
 def _build_assumptions(role: str) -> list[str]:
     base = ["Local SOPs, current orders, and qualified human reviewers remain authoritative."]
-    if role in {"airo", "ace", "wing_ops", "hqmc_aviation"}:
+    if role in {"airo", "ace", "wing_ops"}:
         return [
             *base,
             "Aviation support is hypothetical until approved by qualified aviation reviewers through proper channels.",
         ]
     if role == "sja":
         return [*base, "This is issue-spotting only and not legal advice."]
-    if role in {"pao", "commstrat", "g7", "hqmc_information"}:
+    if role in {"pao", "commstrat", "g7"}:
         return [*base, "Public release authority and OPSEC review must be verified."]
-    if role in {"g8", "hqmc_pr"}:
+    if role in {"g8"}:
         return [*base, "Resource availability, fiscal controls, and comptroller review must be verified locally."]
     if role in {"chaplain", "rp"}:
         return [*base, "Confidential communications are not exposed to the staff estimate."]
@@ -355,13 +354,13 @@ def _mcpp_step_for_phase(phase: str) -> str:
 def _mcpp_discipline_for_role(role: str) -> str:
     if role in {"s3", "opso", "meu_s3", "g3"}:
         return "Tie the event to objectives, standards, timeline, assessment, and AAR."
-    if role in {"airo", "ace", "wing_ops", "hqmc_aviation"}:
+    if role in {"airo", "ace", "wing_ops"}:
         return "State supported aviation effect, control method, deconfliction, and qualified-review needs."
     if role == "sja":
         return "Issue-spot authorities, review triggers, and boundaries before execution."
-    if role in {"pao", "commstrat", "g7", "hqmc_information"}:
+    if role in {"pao", "commstrat", "g7"}:
         return "Connect public posture, OPSEC, release authority, and information effects."
-    if role in {"g8", "hqmc_pr"}:
+    if role in {"g8"}:
         return "Translate resource posture into command tradeoffs, controls, and decisions."
     if role == "ig":
         return "Protect inquiry boundaries while surfacing readiness trends and inspection friction."

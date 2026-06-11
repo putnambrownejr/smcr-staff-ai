@@ -48,14 +48,19 @@ workflow") rather than including the detail.
 The living "where are we" list. Update when you open or close a thread.
 
 ### Decisions waiting on the maintainer
-- **Staff echelon registry trim** (106 → ~35 registered agents). Needs a call on
-  which echelons are "used": company/battalion/regiment are clearly in; mef and
-  hqmc (14 agents) — keep, or generate on demand? Mechanical once decided.
 - **RAG: cut or build.** Currently a hash-embedder + lexical stub. Decide whether
   to remove it (lowest cost) or implement real semantic retrieval (only if doctrine
   RAG is the next priority). See ARCHITECTURE.md.
 - **SQLite DB: cut or wire.** Five tables defined, zero runtime use. Documented as
   future doctrine-ingestion schema. Decide to keep-as-documented or remove.
+
+### Decided and done
+- **MEF/HQMC echelons ditched** (2026-06-10) — division_group is now the top
+  supported echelon. 14 staff-advisor agents removed; enum pruned.
+- **Planning cluster collapsed** (2026-06-10) — MCPP + R2P2 + OPT merged into one
+  `planning-advisor` agent that reads tempo (deliberate vs compressed) from input
+  and carries the OPT facilitation discipline. 3 agents → 1, no content lost.
+- Registered agents: 106 → 90.
 
 ### Ready to work (mechanical, no decision needed)
 - **#7 expand MOS coverage** (0602 Comm Officer, SJA/legal, aviation/wing) — now
