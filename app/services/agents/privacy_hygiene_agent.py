@@ -35,8 +35,7 @@ class PrivacyHygieneAgent(Agent):
     )
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
-        repo_root = _repo_root_from_context(context)
-        result = RepoPrivacySweeper(repo_root).sweep()
+        result = RepoPrivacySweeper(_repo_root()).sweep()
         if result.git_available is False:
             answer = (
                 "I could not inspect git state for this repo, so I cannot give a trustworthy pre-push privacy read. "
@@ -88,8 +87,12 @@ def build_privacy_hygiene_agent() -> PrivacyHygieneAgent:
     return PrivacyHygieneAgent()
 
 
-def _repo_root_from_context(context: AgentContext) -> Path:
-    raw_repo_root = context.extra.get("repo_root")
-    if isinstance(raw_repo_root, str) and raw_repo_root.strip():
-        return Path(raw_repo_root)
+def _repo_root() -> Path:
+    """Resolve the repo root from this file's location only.
+
+    The repo root is deliberately NOT taken from caller-supplied context: the
+    privacy sweep runs git and filesystem reads against this path, so accepting
+    an arbitrary caller path would allow filesystem enumeration of any directory
+    on the host (see issue #19). The sweep is always scoped to this repository.
+    """
     return Path(__file__).resolve().parents[3]

@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -45,7 +46,7 @@ from app.api.routes import (
     uniform,
     user_context,
 )
-from app.core.config import ensure_storage_dirs, get_settings
+from app.core.config import Settings, ensure_storage_dirs, get_settings
 from app.core.logging import configure_logging
 
 
@@ -54,6 +55,7 @@ def create_app() -> FastAPI:
     configure_logging()
     settings = get_settings()
     ensure_storage_dirs(settings)
+    _warn_if_auth_disabled(settings)
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
@@ -107,6 +109,23 @@ def create_app() -> FastAPI:
     _static_dir = Path(__file__).resolve().parent / "static"
     app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
     return app
+
+
+def _warn_if_auth_disabled(settings: Settings) -> None:
+    """Log a prominent warning when no local API key is configured (issue #20).
+
+    When ``local_api_key`` is unset, ``LocalApiKeyDependency`` is a no-op and every
+    personal/write route is reachable without a key. That is a reasonable default
+    for a private single-user machine, but it should never be silent — a user who
+    exposes the port (LAN, tunnel, container) needs to know the gate is open.
+    """
+    if settings.local_api_key is None:
+        logging.getLogger("smcr_staff_ai").warning(
+            "LOCAL_API_KEY is not set - all personal and write-capable routes are "
+            "reachable WITHOUT authentication. This is fine for a private local "
+            "machine, but set LOCAL_API_KEY before exposing this server to a "
+            "network, tunnel, or shared host."
+        )
 
 
 app = create_app()

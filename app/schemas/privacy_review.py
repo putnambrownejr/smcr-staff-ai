@@ -10,7 +10,9 @@ class PrivacyFindingSeverity(StrEnum):
 
 
 class RepoPrivacySweepRequest(BaseModel):
-    repo_root: str | None = None
+    # repo_root is intentionally NOT a request field: the sweep always runs
+    # against this server's own repository. Accepting a caller-supplied path
+    # would allow filesystem enumeration of any directory on the host (issue #19).
     include_untracked: bool = True
     include_ignored_status: bool = True
 

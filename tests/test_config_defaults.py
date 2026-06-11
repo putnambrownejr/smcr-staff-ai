@@ -1,5 +1,7 @@
+import logging
 from pathlib import Path
 
+from _pytest.logging import LogCaptureFixture
 from _pytest.monkeypatch import MonkeyPatch
 
 from app.core.config import (
@@ -46,3 +48,23 @@ def test_settings_default_paths_point_outside_repo_when_unset(monkeypatch: Monke
     assert settings.local_context_storage_dir.endswith("smcr-staff-ai\\local_context")
     assert settings.session_handoff_storage_dir.endswith("smcr-staff-ai\\local_context\\session_handoffs")
     assert settings.database_url.endswith("/smcr-staff-ai/smcr_staff_ai.db")
+
+
+def test_warns_when_local_api_key_unset(caplog: LogCaptureFixture) -> None:
+    from app.main import _warn_if_auth_disabled
+
+    settings = Settings(_env_file=None, local_api_key=None)
+    with caplog.at_level(logging.WARNING, logger="smcr_staff_ai"):
+        _warn_if_auth_disabled(settings)
+
+    assert any("LOCAL_API_KEY is not set" in record.message for record in caplog.records)
+
+
+def test_no_warning_when_local_api_key_set(caplog: LogCaptureFixture) -> None:
+    from app.main import _warn_if_auth_disabled
+
+    settings = Settings(_env_file=None, local_api_key="set-key")
+    with caplog.at_level(logging.WARNING, logger="smcr_staff_ai"):
+        _warn_if_auth_disabled(settings)
+
+    assert not any("LOCAL_API_KEY is not set" in record.message for record in caplog.records)

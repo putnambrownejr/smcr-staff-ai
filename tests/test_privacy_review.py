@@ -33,16 +33,21 @@ def test_privacy_sweep_flags_pii_in_staged_diff(tmp_path: Path) -> None:
     assert any("PII" in finding.title for finding in response.findings)
 
 
-def test_privacy_route_returns_clean_result_for_empty_repo(tmp_path: Path) -> None:
-    repo_root = _init_git_repo(tmp_path)
+def test_privacy_route_sweeps_server_repo_and_ignores_caller_path(tmp_path: Path) -> None:
+    # The route must always sweep its own repo. A caller-supplied repo_root is
+    # ignored (issue #19): the sweep cannot be redirected to an arbitrary path.
     client = TestClient(app)
 
-    response = client.post("/privacy/pre-push-review", json={"repo_root": str(repo_root)})
+    response = client.post(
+        "/privacy/pre-push-review",
+        json={"repo_root": str(tmp_path), "include_untracked": True},
+    )
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["git_available"] is True
-    assert payload["safe_to_push"] is True
+    # The reported root is the server's repo, never the caller-supplied tmp_path.
+    assert str(tmp_path) not in payload["repo_root"]
 
 
 def _init_git_repo(tmp_path: Path) -> Path:
