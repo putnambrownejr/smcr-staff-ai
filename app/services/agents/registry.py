@@ -17,14 +17,7 @@ from app.services.agents.leadership_agent import build_leadership_agent
 from app.services.agents.map_agent import build_map_agent
 from app.services.agents.mcpp_agent import build_mcpp_agent
 from app.services.agents.medical_doc_agent import build_medical_doc_agent
-from app.services.agents.mos_adjutant_0102_agent import build_mos_adjutant_0102_agent
-from app.services.agents.mos_civil_affairs_agent import build_mos_civil_affairs_agent
-from app.services.agents.mos_commo_agent import build_mos_commo_agent
-from app.services.agents.mos_intel_0202_agent import build_mos_intel_0202_agent
-from app.services.agents.mos_logistics_0402_agent import build_mos_logistics_0402_agent
-from app.services.agents.mos_magtf_planner_0511_agent import build_mos_magtf_planner_0511_agent
-from app.services.agents.mos_mobility_0430_agent import build_mos_mobility_0430_agent
-from app.services.agents.mos_supply_3002_agent import build_mos_supply_3002_agent
+from app.services.agents.mos_advisor import build_mos_advisor_agents
 from app.services.agents.opt_facilitator_agent import build_opt_facilitator_agent
 from app.services.agents.orm_agent import build_orm_agent
 from app.services.agents.osint_agent import build_osint_agent
@@ -100,14 +93,7 @@ def default_agents() -> list[Agent]:
         build_leadership_agent(),
         build_osint_agent(),
         build_map_agent(),
-        build_mos_adjutant_0102_agent(),
-        build_mos_intel_0202_agent(),
-        build_mos_logistics_0402_agent(),
-        build_mos_mobility_0430_agent(),
-        build_mos_supply_3002_agent(),
-        build_mos_magtf_planner_0511_agent(),
-        build_mos_commo_agent(),
-        build_mos_civil_affairs_agent(),
+        *build_mos_advisor_agents(),
         *build_staff_advisor_agents(),
     ]
 
