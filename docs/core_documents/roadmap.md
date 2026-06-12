@@ -11,7 +11,7 @@ These are implemented, tested, and in active use.
 
 - **Advisory agent layer** — ~30 agent files covering S/G-staff lanes, MOS slices
   (0102/0202/0402/0430/0511/3002/CommO/Civil Affairs, compiled to data), staff
-  council echelons (company → HQMC), and functional advisors (ORM, OSINT, PKI,
+  council echelons (company → division/group), and functional advisors (ORM, OSINT, PKI,
   red-team, writing/briefing, uniform, drill prep, privacy hygiene).
 - **JSON file-store continuity** — handoffs, actions/POAMs, travel cases, battle
   rhythm, section memory, opportunities, drill plans. Survives between drills.

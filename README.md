@@ -46,7 +46,7 @@ The application includes basic runtime guardrails for likely sensitive inputs, b
 | Repo privacy sweep | Reviews tracked paths, staged diffs, ignored local-only files, and likely PII/OPSEC backflow before push. | Working local review |
 | Chief/Aide orchestration brief | Combines session handoff, local personal docs, drill plans, MARADMIN-driven source updates, and reading suggestions into one advisory triage brief. | Working local orchestrator |
 | Text summarizer / checklist API | Turns pasted text into a local summary, due-outs, action items, checklist, and follow-up questions without storing the input. | Working local analysis |
-| Staff council | Vets ideas through company, battalion, regiment/MEU/wing, division/group, MEF, and HQMC-adjacent staff roles with richer cross-staff critique and special-staff coverage. | Working advisory workflow |
+| Staff council | Vets ideas through company, battalion, regiment/MEU/wing, and division/group staff roles with richer cross-staff critique and special-staff coverage. | Working advisory workflow |
 | Staff products | Builds advisory scaffolds for OPORDs, WARNOs, FRAGOs, CONOPs, SITREPs, IPBs, AARs, naval letters, memos, and endorsements. | Working advisory workflow |
 | Session handoffs | Stores minimum necessary local user context for PME, FitRep, annual drill dates, recurring checks, admin, drill, and preference reminders. | Working local storage |
 | Installation / base practical advisor | Helps with common Marine/joint-base access, sponsorship, REAL-ID, visitor-center, and command-event coordination friction while insisting on local verification. | Working advisory agent |

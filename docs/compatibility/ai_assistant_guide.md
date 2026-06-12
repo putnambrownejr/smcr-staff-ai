@@ -35,7 +35,7 @@ It runs locally. All sensitive user context stays on the user's machine.
 
 The repo provides:
 - FastAPI backend routes covering staff planning, admin, training, career, and org awareness
-- Advisory agents covering staff echelons from company to HQMC
+- Advisory agents covering staff echelons from company to division/group
 - A local dashboard at `http://localhost:8000/dashboard`
 - Demo routes (`/demo/*`) that work without any local state
 

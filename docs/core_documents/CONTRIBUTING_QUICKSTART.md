@@ -101,7 +101,9 @@ python -m ruff check app/ tests/   # lint
 python -m mypy app/                # type check (strict)
 ```
 
-The CI bar is: **all tests passing, zero ruff errors, mypy clean**.
+CI enforces: **all tests passing, mypy clean** (`.github/workflows/ci.yml`).
+Ruff is a recommended local check — run it before committing, but it is not yet
+a CI gate and the existing tree still has lint debt to clear.
 
 ---
 

@@ -40,6 +40,7 @@ workflow") rather than including the detail.
 
 ## Index (newest first)
 
+- [HANDOFF_2026-06-10_codex-security-pass.md](HANDOFF_2026-06-10_codex-security-pass.md) — Codex security-workflow pass; auth-gap confirmation, app-key scoping note, and follow-up test recommendations (negative-auth tests since delivered).
 - [HANDOFF_2026-06-10_codex-feedback-pass.md](HANDOFF_2026-06-10_codex-feedback-pass.md) — Post-hardening feedback pass; CI portability fix, ruff/dependency/auth deployment findings. pytest/mypy green locally.
 - [HANDOFF_2026-06-10_claude-fable.md](HANDOFF_2026-06-10_claude-fable.md) — Security pass (auth gaps, #17), MOS agent consolidation, roadmap refresh, this handoff system. 518 tests green.
 
