@@ -27,6 +27,14 @@ These are implemented, tested, and in active use.
 - **Skill layer** — 9 operator skills steering AI tools toward existing routes.
 - **Safety posture** — UNCLASSIFIED enforcement, PII detection + redaction,
   sensitive-content refusal, local-first storage, API-key gating.
+- **MOS advisor expansion** — added 0602 CommO, 4402 JAG, and 7200 Aviation
+  Wing advisor specs.
+- **Seeded reference data** — history facts now include 29 entries with a
+  randomizer fallback, and the Commandant's reading list is seeded with 13 books.
+- **Doctrine source manifest** — populated public-source doctrine links across
+  the source categories for official public ingestion metadata.
+- **CI and dependency hygiene** — ruff zero-error enforcement runs in CI, with
+  `uv.lock` and Dependabot configured for dependency update flow.
 
 ## Stub / Interface-Only
 

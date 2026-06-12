@@ -16,30 +16,20 @@ categories:
     source_refs:
       - title: MCDP 1 Warfighting
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899773/mcdp-1/
-      - title: MCDP 1-1 Strategy
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899769/mcdp-1-1/
-      - title: MCDP 1-2 Campaigning
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899842/mcdp-1-2/
-      - title: MCDP 1-3 Tactics
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899772/mcdp-1-3/
-      - title: MCDP 1-4 Competing
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2653457/mcdp-1-4/
-      - title: MCDP 2 Intelligence
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcdp-2/
-      - title: MCDP 3 Expeditionary Operations
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899770/mcdp-3/
-      - title: MCDP 4 Logistics
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899840/mcdp-4/
+        publisher: United States Marine Corps
+        scope_note: Covers the Marine Corps philosophy of maneuver warfare and the nature, theory, and conduct of war.
+        cac_required: false
       - title: MCDP 5 Planning
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899841/mcdp-5/
+        publisher: United States Marine Corps
+        scope_note: Provides the Marine Corps theory and philosophy of planning in peace, crisis, and war.
+        cac_required: false
       - title: MCDP 6 Command and Control
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899771/mcdp-6/
-      - title: MCDP 7 Learning
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3174243/mcdp-7/
-      - title: MCDP 8 Information
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3159467/mcdp-8/
-      - title: MCTP 3-30B Information Management
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899781/mctp-3-30b/
+        publisher: United States Marine Corps
+        scope_note: Explains command and control theory, commander's intent, mission tactics, and decision-making.
+        cac_required: false
+
   - id: uniform_regulations
     name: Uniform regulations
     publication_families: ["orders", "MARADMIN"]
@@ -48,9 +38,22 @@ categories:
     cui_flag: false
     source_refs:
       - title: MCO 1020.34H Marine Corps Uniform Regulations
-        url: https://www.marines.mil/portals/1/Publications/MCO%201020.34H%20v2.pdf?ver=20
+        url: https://www.marines.mil/News/Publications/MCPEL/PageSize/5000/
+        publisher: United States Marine Corps
+        scope_note: Establishes Marine Corps uniform policy, wear standards, and appearance requirements.
+        cac_required: false
+        needs_verification: true
       - title: Marine Corps Uniform Board Frequently Asked Questions
         url: https://www.hqmc.marines.mil/Agencies/Marine-Corps-Uniform-Board/Frequently-Asked-Questions/
+        publisher: United States Marine Corps
+        scope_note: Provides official public answers on uniform board decisions and uniform policy implementation.
+        cac_required: false
+      - title: MCO 5060.20 Marine Corps Drill and Ceremonies Manual
+        url: https://www.marines.mil/Portals/1/Publications/MCO%205060.20_Enclosure%201_signed_EDD.pdf?ver=2019-06-05-105622-833
+        publisher: United States Marine Corps
+        scope_note: Provides drill, ceremony, honors, and formation procedures that intersect with uniformed appearance.
+        cac_required: false
+
   - id: reserve_administration
     name: Reserve administration and MCRAMM
     publication_families: ["MCO", "MARADMIN", "Reserve policy"]
@@ -60,10 +63,22 @@ categories:
     source_refs:
       - title: MCO 1001R.1L w/ Ch-2 Marine Corps Reserve Administrative Management Manual (MCRAMM)
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900627/mco-1001r1l-w-ch-2/index.html
-      - title: Travel Explorer / Defense Travel System training resources
-        url: https://www.travel.dod.mil/Training/Travel-Explorer/
-      - title: Government Travel Charge Card training resources
-        url: https://www.travel.dod.mil/Programs/Government-Travel-Charge-Card/
+        publisher: United States Marine Corps
+        scope_note: Prescribes Reserve administration policy for SMCR, IMA, IRR, and other Reserve categories.
+        cac_required: false
+      - title: MCO 1040R.35 Reserve Career Retention and Development Manual
+        url: https://www.marines.mil/News/Publications/MCPEL/Search/1040R.35/
+        publisher: United States Marine Corps
+        scope_note: Provides public MCPEL indexing for Reserve career retention and development policy.
+        cac_required: false
+        needs_verification: true
+      - title: MCO 1900.16 w/ Ch-3 Marine Corps Separation and Retirement Manual
+        url: https://www.marines.mil/News/Publications/MCPEL/Search/1900.16/
+        publisher: United States Marine Corps
+        scope_note: Covers separation and retirement policy relevant to Reserve administrative actions.
+        cac_required: false
+        needs_verification: true
+
   - id: correspondence_formatting
     name: Naval correspondence and document formatting
     publication_families: ["SECNAV Manual", "MCO", "NAVMC forms"]
@@ -73,8 +88,21 @@ categories:
     source_refs:
       - title: SECNAV M-5216.5 CH-1 Department of the Navy Correspondence Manual
         url: https://www.secnav.navy.mil/doni/SECNAV%20Manuals1/5216.5%20%20CH-1.pdf
+        publisher: DoD
+        scope_note: Defines Department of the Navy correspondence formats, standards, and signature practices.
+        cac_required: false
       - title: MCO 5216.20B w/Admin Ch-4 Marine Corps Supplement to the Department of the Navy Correspondence Manual
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2795618/mco-521620b-wadmin-ch-4/
+        publisher: United States Marine Corps
+        scope_note: Supplements the DON correspondence manual with Marine Corps-specific correspondence requirements.
+        cac_required: false
+      - title: MCO 5215.1K Marine Corps Directives Management Program
+        url: https://www.marines.mil/News/Publications/MCPEL/Search/5215.1K/
+        publisher: United States Marine Corps
+        scope_note: Establishes Marine Corps directives lifecycle and formatting policy for official publications.
+        cac_required: false
+        needs_verification: true
+
   - id: orm
     name: Risk management / ORM
     publication_families: ["orders", "safety guidance"]
@@ -84,6 +112,22 @@ categories:
     source_refs:
       - title: MCO 5100.29C Marine Corps Safety Management System
         url: https://www.marines.mil/News/Publications/MCPEL/Tag/162585/safety/
+        publisher: United States Marine Corps
+        scope_note: Establishes Marine Corps safety management policy and risk-management responsibilities.
+        cac_required: false
+        needs_verification: true
+      - title: MCO 3500.27C Risk Management
+        url: https://www.marines.mil/News/Publications/MCPEL/Search/3500.27C/
+        publisher: United States Marine Corps
+        scope_note: Provides Marine Corps risk management policy for training, operations, and planning.
+        cac_required: false
+        needs_verification: true
+      - title: MCTP 3-30A Command and Staff Actions
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/
+        publisher: United States Marine Corps
+        scope_note: Describes staff planning and execution processes that include risk identification and mitigation.
+        cac_required: false
+
   - id: fitrep_pes
     name: FitRep / PES
     publication_families: ["PES manual", "orders"]
@@ -93,8 +137,21 @@ categories:
     source_refs:
       - title: MCO 1610.7B Performance Evaluation System
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1513503/mco-16107b/
+        publisher: United States Marine Corps
+        scope_note: Publishes revisions and policy for the Marine Corps Performance Evaluation System.
+        cac_required: false
       - title: MARADMIN 308/23 Revision of MCO 1610.7 Performance Evaluation System
         url: https://www.marines.mil/News/Messages/Messages-Display/Article/3428853/revision-of-mco-16107-performance-evaluation-system/
+        publisher: United States Marine Corps
+        scope_note: Announces public changes and implementation guidance for MCO 1610.7 PES revisions.
+        cac_required: false
+      - title: MCO 1000.6 Assignment, Classification, and Travel Systems Manual (ACTS MANUAL)
+        url: https://www.marines.mil/News/Publications/MCPEL/Search/1000.6/
+        publisher: United States Marine Corps
+        scope_note: Provides personnel assignment and classification policy that informs evaluation context.
+        cac_required: false
+        needs_verification: true
+
   - id: training_readiness
     name: Training and readiness
     publication_families: ["T&R", "orders"]
@@ -102,12 +159,22 @@ categories:
     classification_label: UNCLASSIFIED
     cui_flag: false
     source_refs:
-      - title: MCO 1553.3C Unit Training Management
+      - title: MCO 1553.3C Unit Training Management (UTM) Program
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899431/mco-15533c/
+        publisher: United States Marine Corps
+        scope_note: Establishes unit training management policy and responsibilities.
+        cac_required: false
       - title: NAVMC 3500.18D Common Skills Training and Readiness Manual
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2158067/navmc-350018d/
-      - title: MCWP 5-10 Marine Corps Planning Process
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/
+        publisher: United States Marine Corps
+        scope_note: Defines common individual training and readiness standards for Marines.
+        cac_required: false
+      - title: NAVMC 1553.1A Marine Corps Instructional Systems Design/Systems Approach to Training and Education Handbook
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1044650/navmc-15531a-cancels-navmc-15531/
+        publisher: United States Marine Corps
+        scope_note: Establishes procedures and business rules for applying MCISD/SATE to curriculum and unit training.
+        cac_required: false
+
   - id: communications
     name: Communications doctrine
     publication_families: ["MCWP", "MCRP"]
@@ -117,10 +184,20 @@ categories:
     source_refs:
       - title: MCDP 6 Command and Control
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899771/mcdp-6/
+        publisher: United States Marine Corps
+        scope_note: Provides the doctrinal basis for command relationships and information flow.
+        cac_required: false
       - title: MCTP 3-30B Information Management
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899781/mctp-3-30b/
+        publisher: United States Marine Corps
+        scope_note: Covers information management processes for commanders and staffs.
+        cac_required: false
       - title: NAVMC 3500.56C Communications Training and Readiness Manual
-        url: https://www.marines.mil/News/Publications/MCPEL/Tag/21778/communications/
+        url: https://www.marines.mil/portals/1/Publications/Communications%20T-R%20Manual.pdf
+        publisher: United States Marine Corps
+        scope_note: Defines communications occupational field training and readiness events.
+        cac_required: false
+
   - id: civil_affairs
     name: Civil Affairs / civil-military operations doctrine
     publication_families: ["MCRP", "joint public doctrine"]
@@ -130,14 +207,44 @@ categories:
     source_refs:
       - title: MCTP 3-32D Civil Affairs Operations
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1898548/mctp-3-32d/
+        publisher: United States Marine Corps
+        scope_note: Describes Marine Corps civil affairs operations and employment.
+        cac_required: false
       - title: MCWP 3-33.1 Marine Air-Ground Task Force Civil-Military Operations
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899782/mcwp-3-331/
+        publisher: United States Marine Corps
+        scope_note: Provides MAGTF civil-military operations doctrine for commanders and staffs.
+        cac_required: false
+      - title: JP 3-57 Civil-Military Operations
+        url: https://www.jcs.mil/doctrine/joint-doctrine-pubs/3-0-operations-series/
+        publisher: DoD
+        scope_note: Joint doctrine reference for civil-military operations planning and execution.
+        cac_required: false
+        needs_verification: true
+
   - id: logistics
     name: Logistics doctrine
     publication_families: ["MCDP", "MCWP"]
     source_policy: official_public_sources_only
     classification_label: UNCLASSIFIED
     cui_flag: false
+    source_refs:
+      - title: MCDP 4 Logistics
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899840/mcdp-4/
+        publisher: United States Marine Corps
+        scope_note: Provides the Marine Corps philosophy and foundations of logistics.
+        cac_required: false
+      - title: MCWP 3-40 Marine Corps Logistics
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1114634/mcwp-3-40/
+        publisher: United States Marine Corps
+        scope_note: Describes Marine Corps logistics missions, objectives, capabilities, and support processes.
+        cac_required: false
+      - title: MCTP 3-40B Tactical Logistics
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899787/mctp-3-40b/
+        publisher: United States Marine Corps
+        scope_note: Covers tactical-level logistics support for Marine Corps operations.
+        cac_required: false
+
   - id: logistics_04xx
     name: Logistics / 04XX doctrine, supply, transportation, maintenance, and training
     publication_families: ["MCDP", "MCWP", "MCTP", "MCRP", "MCO", "NAVMC"]
@@ -145,44 +252,22 @@ categories:
     classification_label: UNCLASSIFIED
     cui_flag: false
     source_refs:
-      - title: MCDP 4 Logistics
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899840/mcdp-4/
-      - title: MCWP 3-40 Marine Corps Logistics
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1114634/mcwp-3-40/
-      - title: MCTP 3-40B Tactical Logistics
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899787/mctp-3-40b/
-      - title: MCTP 3-40C Operational-Level Logistics
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1129173/mctp-3-40c/
-      - title: MCTP 3-40A Health Service Support
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899786/mctp-3-40a/
-      - title: MCTP 3-40E Maintenance Operations
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2076116/mctp-3-40e/
-      - title: MCTP 3-40F Distribution and Transportation Operations
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899565/mctp-3-40f/
-      - title: MCTP 3-40H MAGTF Supply Operations
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1127793/mctp-3-40h/
-      - title: MCRP 3-40B.5 Petroleum Operations
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1132614/mcrp-3-40b5/
-      - title: MCRP 3-40B.6 Multi-Service Tactics, Techniques, and Procedures for Operational Contract Support
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3403440/mcrp-3-40b6/
-      - title: MCRP 3-40D.14 Water Support Operations
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1130631/mcrp-3-40d14/
-      - title: MCRP 3-40G.1 Marine Corps Field Feeding Program
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899524/mcrp-3-40g1/
+      - title: MCO 4400.201 w/ Ch-3 Management of Property in the Possession of the Marine Corps
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900715/mco-4400201-w-ch-3/
+        publisher: United States Marine Corps
+        scope_note: Prescribes policy, procedures, and responsibilities for managing Marine Corps property.
+        cac_required: false
       - title: NAVMC 3500.64D Supply Chain Management Training and Readiness Manual
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3259614/navmc-350064d/
-      - title: MCO 3502.8A Marine Corps Logistics Tactics, Training, and Education Program
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2221611/mco-35028a/
-      - title: MCO 4000.60 Logistics and Supply Chain Management Business Process Management Program
-        url: https://www.marines.mil/News/Publications/MCPEL/Tag/20250/logistics/
-      - title: MCO 4200.33A Contractor Logistics Support
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2438639/mco-420033a/
-      - title: MCO 5230.19A Logistics Data Management
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1132754/mco-523019a/
-      - title: NAVMC 4000.4B Naval Logistics Integration Playbook - Edition 5
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3184169/navmc-40004b/
+        publisher: United States Marine Corps
+        scope_note: Defines supply chain management training and readiness requirements.
+        cac_required: false
       - title: NAVMC 4000.8 U.S. Marine Corps Forces Logistics for Deployed Forces Handbook, Edition 5
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2962418/navmc-40008/
+        publisher: United States Marine Corps
+        scope_note: Provides logistics handbook guidance for deployed Marine forces.
+        cac_required: false
+
   - id: operations_planning
     name: Operations/planning doctrine
     publication_families: ["MCDP", "MCWP", "MCRP"]
@@ -190,14 +275,22 @@ categories:
     classification_label: UNCLASSIFIED
     cui_flag: false
     source_refs:
-      - title: MCDP 5 Planning
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899841/mcdp-5/
       - title: MCWP 5-10 Marine Corps Planning Process
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900553/mcwp-5-10/
+        publisher: United States Marine Corps
+        scope_note: Describes the Marine Corps Planning Process for commanders and staffs.
+        cac_required: false
       - title: MCTP 3-30A Command and Staff Actions
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/
+        publisher: United States Marine Corps
+        scope_note: Provides staff action procedures, battle rhythm, and command post process guidance.
+        cac_required: false
       - title: MCO 1500.55 Military Thinking and Decision Making Exercises
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/898778/mco-150055/
+        publisher: United States Marine Corps
+        scope_note: Establishes Marine Corps guidance for military thinking and decision-making exercises used in planning development.
+        cac_required: false
+
   - id: infantry_03xx
     name: Infantry / 03XX tactics, operations, and training
     publication_families: ["MCWP", "MCTP", "MCRP", "NAVMC"]
@@ -205,38 +298,46 @@ categories:
     classification_label: UNCLASSIFIED
     cui_flag: false
     source_refs:
-      - title: Training Command Mission
-        url: https://www.trngcmd.marines.mil/Unit-Home/About/
-      - title: The Basic School Mission
-        url: https://www.trngcmd.marines.mil/TBS/
       - title: MCWP 3-10 MAGTF Ground Operations
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899778/mcwp-3-10/
-      - title: MCWP 3-01 Offensive and Defensive Tactics
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2362952/mcwp-3-01/
-      - title: MCRP 3-10A.1 Infantry Battalion Operations
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2325356/mcrp-3-10a1/
-      - title: MCRP 3-10A.2 Infantry Company Operations
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1780135/mcrp-3-10a2/
-      - title: MCRP 3-10A.3 Marine Infantry Platoon
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2500719/mcrp-3-10a3/
+        publisher: United States Marine Corps
+        scope_note: Provides doctrine for MAGTF ground operations.
+        cac_required: false
       - title: MCRP 3-10A.4 Marine Rifle Squad
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2472229/mcrp-3-10a4/
-      - title: MCTP 3-01A Scouting and Patrolling
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899780/mctp-3-01a/
-      - title: MCTP 12-10B Urban Operations
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1464473/mctp-12-10b/
-      - title: School of Infantry-East Combat Instructor School Mission
-        url: https://www.tecom.marines.mil/soieast/Units/CombatInstructorSchool.aspx
-      - title: School of Infantry-East Infantry Training Battalion MOS Description
-        url: https://www.trngcmd.marines.mil/Units/School-of-Infantry-East/Units/Infantry-Training-Battalion/MOS-Description/
+        publisher: United States Marine Corps
+        scope_note: Provides reference guidance for Marine rifle squad organization and tactical employment.
+        cac_required: false
       - title: NAVMC 3500.44D Infantry Training and Readiness Manual
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2187958/navmc-350044d/
+        publisher: United States Marine Corps
+        scope_note: Defines infantry occupational field training and readiness standards.
+        cac_required: false
+
   - id: aviation_support
     name: Aviation support doctrine
     publication_families: ["MCWP", "orders"]
     source_policy: official_public_sources_only
     classification_label: UNCLASSIFIED
     cui_flag: false
+    source_refs:
+      - title: MCWP 3-20 Aviation Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899781/mcwp-3-20/
+        publisher: United States Marine Corps
+        scope_note: Establishes Marine Corps doctrine for planning and executing aviation operations.
+        cac_required: false
+      - title: MCTP 3-20B Aviation Ground Support
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1676585/mctp-3-20b/
+        publisher: United States Marine Corps
+        scope_note: Covers aviation ground support doctrine for Marine aviation and MAGTF operations.
+        cac_required: false
+      - title: NAVMC 3500.14C Aviation Training and Readiness Program Manual
+        url: https://www.marines.mil/Portals/1/Publications/NAVMC_3500.14C_1.pdf
+        publisher: United States Marine Corps
+        scope_note: Provides policy, standardization, and procedures for aviation training and readiness manuals.
+        cac_required: false
+        needs_verification: true
+
   - id: intelligence_osint
     name: Intelligence/OSINT doctrine
     publication_families: ["public doctrine", "official public guidance"]
@@ -246,10 +347,21 @@ categories:
     source_refs:
       - title: MCDP 2 Intelligence
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcdp-2/
+        publisher: United States Marine Corps
+        scope_note: Provides Marine Corps intelligence doctrine and intelligence support concepts.
+        cac_required: false
       - title: MCRP 2-10B.1 Intelligence Preparation of the Battlespace
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899779/mcrp-2-10b1/
-      - title: MCTP 3-30A Command and Staff Actions
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1654393/mcrp-2-10b1/
+        publisher: United States Marine Corps
+        scope_note: Expands intelligence doctrine with IPB process guidance for planners and intelligence personnel.
+        cac_required: false
+      - title: MCWP 2-10 Intelligence Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Search/MCWP%202-10/
+        publisher: United States Marine Corps
+        scope_note: Provides public MCPEL indexing for intelligence operations doctrine.
+        cac_required: false
+        needs_verification: true
+
   - id: leadership
     name: Leadership doctrine
     publication_families: ["MCDP", "public leadership guidance"]
@@ -257,12 +369,23 @@ categories:
     classification_label: UNCLASSIFIED
     cui_flag: false
     source_refs:
-      - title: Marine Corps Manual w/ CH 1-3
+      - title: MCDP 1 Warfighting
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899773/mcdp-1/
+        publisher: United States Marine Corps
+        scope_note: Establishes the warfighting philosophy that anchors Marine leadership and decision-making.
+        cac_required: false
+      - title: Marine Corps Manual w/ Ch 1-3
         url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/898634/marine-corps-manual-wch-1-3/
-      - title: NAVMC 3500.18D Common Skills Training and Readiness Manual
-        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2158067/navmc-350018d/
-      - title: MCO 5060.20 Marine Corps Drill and Ceremonies Manual
-        url: https://www.marines.mil/Portals/1/Publications/MCO%205060.20_Enclosure%201_signed_EDD.pdf?ver=2019-06-05-105622-833
+        publisher: United States Marine Corps
+        scope_note: Defines foundational Marine Corps organization, command, administration, and duties.
+        cac_required: false
+      - title: MCTP 6-10A Sustaining the Transformation
+        url: https://www.marines.mil/News/Publications/MCPEL/Search/Sustaining%20the%20Transformation/
+        publisher: United States Marine Corps
+        scope_note: Provides leadership guidance for sustaining Marine transformation after entry-level training.
+        cac_required: false
+        needs_verification: true
+
   - id: professional_reading
     name: Commandant's Professional Reading List and PME classics
     publication_families: ["books", "periodicals", "podcasts", "public-domain classics", "official reading lists"]
@@ -270,14 +393,22 @@ categories:
     classification_label: UNCLASSIFIED
     cui_flag: false
     source_refs:
-      - title: Update to the Commandant's Professional Reading List for Fiscal Year 26
+      - title: MARADMIN 324/25 Update to the Commandant's Professional Reading List for Fiscal Year 26
         url: https://www.marines.mil/News/Messages/Messages-Display/Article/4351724/update-to-the-commandants-professional-reading-list-for-fiscal-year-26/
-      - title: Marine Corps University Professional Reading List and Archive
-        url: https://www.usmcu.edu/Academic-Programs/Lejeune-Leadership-Institute/LLI-Professional-Reading-List/
-      - title: The Defence of Duffer's Drift - Project Gutenberg
-        url: https://www.gutenberg.org/ebooks/24842
-      - title: The Art of War - Project Gutenberg
-        url: https://www.gutenberg.org/files/132/132-h/132-h.htm
+        publisher: United States Marine Corps
+        scope_note: Announces the FY26 Commandant's Professional Reading List update.
+        cac_required: false
+      - title: Commandant's Professional Reading List
+        url: https://www.usmcu.edu/Home/CMC-Reading-List/
+        publisher: United States Marine Corps
+        scope_note: Provides the current Marine Corps University public reading list page.
+        cac_required: false
+      - title: CMC Professional Reading List
+        url: https://www.usmcu.edu/Outreach/Marine-Corps-University-Press/CMC-Professional-Reading-List/
+        publisher: United States Marine Corps
+        scope_note: Provides Marine Corps University Press context and public access notes for reading list titles.
+        cac_required: false
+
   - id: tactical_handbooks
     name: Tactical handbooks and field leader guides
     publication_families: ["field handbook", "leader guide", "checklist"]
@@ -285,9 +416,22 @@ categories:
     classification_label: UNCLASSIFIED
     cui_flag: false
     source_refs:
-      - title: Leader's Tactical Handbook / Tactical Handbook, Unit Leader, Small (THULS)
-        url: https://soldiersystems.net/2010/09/14/thuls/
-        notes: "Reference/background only. No official public PDF verified; do not ingest unofficial mirrors or proprietary contents."
+      - title: MCRP 3-30.7 Commander's Tactical Handbook
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcrp-3-307/
+        publisher: United States Marine Corps
+        scope_note: Provides field reference material for organizing, planning, and conducting Marine ground combat operations.
+        cac_required: false
+      - title: MCRP 3-10A.3 Marine Infantry Platoon
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2500719/mcrp-3-10a3/
+        publisher: United States Marine Corps
+        scope_note: Provides infantry platoon-level tactical reference material for commanders and small-unit leaders.
+        cac_required: false
+      - title: MCTP 12-10B Urban Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1464473/mctp-12-10b/
+        publisher: United States Marine Corps
+        scope_note: Provides tactics, techniques, and planning considerations for urban operations.
+        cac_required: false
+
   - id: humanitarian_disaster_response
     name: Humanitarian assistance, disaster response, and field assessment guides
     publication_families: ["field operations guide", "interagency guide", "civil-military coordination"]
@@ -295,7 +439,20 @@ categories:
     classification_label: UNCLASSIFIED
     cui_flag: false
     source_refs:
-      - title: USAID Field Operations Guide for Disaster Assessment and Response
-        url: https://pdf.usaid.gov/pdf_docs/pnade100.pdf
-      - title: USAID Field Ops Guide museum/archive page
-        url: https://diplomacy.state.gov/items/usaid-field-ops-guide/
+      - title: JP 3-29 Foreign Humanitarian Assistance
+        url: https://www.jcs.mil/doctrine/joint-doctrine-pubs/3-0-operations-series/
+        publisher: DoD
+        scope_note: Joint doctrine reference for U.S. military foreign humanitarian assistance operations.
+        cac_required: false
+        needs_verification: true
+      - title: JP 3-28 Defense Support of Civil Authorities
+        url: https://www.jcs.mil/doctrine/joint-doctrine-pubs/3-0-operations-series/
+        publisher: DoD
+        scope_note: Joint doctrine reference for defense support to civil authorities during domestic incidents.
+        cac_required: false
+        needs_verification: true
+      - title: MCWP 3-03 Stability Operations
+        url: https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1130699/mcwp-3-03/
+        publisher: United States Marine Corps
+        scope_note: Provides Marine Corps doctrine for stability operations that often overlap with disaster response and civil-military coordination.
+        cac_required: false
