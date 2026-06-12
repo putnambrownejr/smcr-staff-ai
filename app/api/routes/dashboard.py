@@ -281,7 +281,7 @@ def get_dashboard_data(
         alnav_ticker=_message_watch_ticker(alnav_store.list(limit=8)),
         dod_ticker=_message_watch_ticker(dod_watch_store.list(limit=8)),
         custom_watch_feeds=custom_watch_feeds,
-        today_in_history=history_service.get_for_date(datetime.now(UTC).date()),
+        today_in_history=history_service.get_or_random(datetime.now(UTC).date()),
         history_library=history_library,
         reference_library=_reference_library(),
         reading_books=_reading_books(
@@ -336,7 +336,7 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
         alnav_ticker=_message_watch_ticker(alnav_feed),
         dod_ticker=_message_watch_ticker(dod_feed),
         custom_watch_feeds=custom_watch_feeds,
-        today_in_history=history_service.get_for_date(datetime.now(UTC).date()),
+        today_in_history=history_service.get_or_random(datetime.now(UTC).date()),
         history_library=history_service.list_items(),
         reference_library=_reference_library(),
         reading_books=_reading_books(
