@@ -40,6 +40,8 @@ workflow") rather than including the detail.
 
 ## Index (newest first)
 
+- c504473 — uv lock and Dependabot setup; dependency lock strategy decided and automated update path added.
+- da0c967 — Ruff cleanup and CI; pre-existing lint errors fixed and ruff added to CI.
 - [HANDOFF_2026-06-10_codex-security-pass.md](HANDOFF_2026-06-10_codex-security-pass.md) — Codex security-workflow pass; auth-gap confirmation, app-key scoping note, and follow-up test recommendations (negative-auth tests since delivered).
 - [HANDOFF_2026-06-10_codex-feedback-pass.md](HANDOFF_2026-06-10_codex-feedback-pass.md) — Post-hardening feedback pass; CI portability fix, ruff/dependency/auth deployment findings. pytest/mypy green locally.
 - [HANDOFF_2026-06-10_claude-fable.md](HANDOFF_2026-06-10_claude-fable.md) — Security pass (auth gaps, #17), MOS agent consolidation, roadmap refresh, this handoff system. 518 tests green.
@@ -56,6 +58,9 @@ The living "where are we" list. Update when you open or close a thread.
   future doctrine-ingestion schema. Decide to keep-as-documented or remove.
 
 ### Decided and done
+- **Dependency lock added with uv** (2026-06-12) — `uv.lock` is now present and Dependabot is configured for the dependency update path.
+- **Ruff errors fixed and in CI** (2026-06-12) — pre-existing ruff failures were cleaned up and `ruff check .` is part of CI.
+- **First CI run watched** (2026-06-12) — initial CI follow-up thread is closed as done.
 - **MEF/HQMC echelons ditched** (2026-06-10) — division_group is now the top
   supported echelon. 14 staff-advisor agents removed; enum pruned.
 - **Planning cluster collapsed** (2026-06-10) — MCPP + R2P2 + OPT merged into one
@@ -71,14 +76,6 @@ The living "where are we" list. Update when you open or close a thread.
 - **Empty content panels** (#2 history facts, #5 doctrine library, #6 reading list)
   — verify whether the CWD path-bug fix already populates these before building new
   content; the panels may have been empty only because of the launch-directory bug.
-- **~100 pre-existing ruff errors** (mostly import sorting, `E402`, and long lines)
-  — a dedicated lint pass. Not from recent work; start with safe import sorting,
-  then add `ruff check .` to CI once green.
-- **Dependency lock/update strategy** — no lockfile or Dependabot config yet.
-  Choose `uv`, `pip-tools`, or another project-standard path before enabling
-  automated dependency updates.
-- **Watch first CI run** — `.github/workflows/ci.yml` now runs pytest and mypy.
-  Confirm GitHub Actions is green on `main` after the Codex feedback-pass push.
 
 ### Strategic (from the June Fable assessment, archived)
 - **Turn-key delivery for non-technical tiers** — a hosted Claude Project / Custom

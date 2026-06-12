@@ -134,3 +134,105 @@ books:
       - "How should readers test a provocative argument?"
     cautions:
       - "Copyrighted and argumentative; pair with counterarguments."
+  - slug: "once-an-eagle"
+    title: "Once an Eagle"
+    author: "Anton Myrer"
+    categories: ["leadership", "commandants_choice", "current_list"]
+    list_years: ["2026", "prior_iterations"]
+    open_source_available: false
+    public_domain: false
+    source_urls:
+      - "https://www.marines.mil/News/Messages/Messages-Display/Article/4351724/update-to-the-commandants-professional-reading-list-for-fiscal-year-26/"
+    summary: "A long-form leadership novel that contrasts careerism with principled command responsibility. Its value is in forcing discussion about ambition, moral courage, and the habits leaders carry across a career."
+    key_themes: ["leadership", "character", "command", "career ethics"]
+    discussion_prompts:
+      - "Where does ambition support service, and where does it corrupt judgment?"
+      - "How should leaders recognize careerism in themselves and their staffs?"
+      - "Which leadership habits survive promotion and larger responsibility?"
+    cautions:
+      - "Copyrighted work; store metadata and study notes only."
+  - slug: "enders-game"
+    title: "Ender's Game"
+    author: "Orson Scott Card"
+    categories: ["leadership", "decision-making", "prior_list"]
+    list_years: ["prior_iterations"]
+    open_source_available: false
+    public_domain: false
+    source_urls:
+      - "https://www.marines.mil/News/Messages/Messages-Display/Article/1184470/revision-of-the-commandants-professional-reading-list/"
+    summary: "A science-fiction study in selection, training pressure, empathy for the adversary, and command isolation. It matters as a discussion prompt about talent management, simulation, deception, and the moral burden of decisions made at distance."
+    key_themes: ["decision-making", "training", "empathy", "command pressure", "ethics"]
+    discussion_prompts:
+      - "What are the risks of optimizing training for performance while ignoring moral cost?"
+      - "How does understanding the adversary change tactical and ethical decisions?"
+      - "Where do simulations sharpen judgment, and where can they distort it?"
+    cautions:
+      - "Copyrighted work; store metadata and study notes only."
+  - slug: "call-sign-chaos"
+    title: "Call Sign Chaos: Learning to Lead"
+    author: "Jim Mattis and Bing West"
+    categories: ["leadership", "current_list"]
+    list_years: ["2026"]
+    open_source_available: false
+    public_domain: false
+    source_urls:
+      - "https://www.mca-marines.org/commandants-professional-reading-list-leadership/"
+    summary: "A leadership memoir organized around direct, executive, and strategic leadership. It matters for connecting reading, command climate, battlefield judgment, and lifelong professional study."
+    key_themes: ["leadership", "learning", "command", "judgment"]
+    discussion_prompts:
+      - "How does a leader build a personal study habit that changes decisions?"
+      - "What changes when leadership moves from direct command to institutional responsibility?"
+      - "Which lessons are transferable to a reserve staff environment?"
+    cautions:
+      - "Copyrighted work; store metadata and study notes only."
+  - slug: "first-to-fight"
+    title: "First to Fight: An Inside View of the U.S. Marine Corps"
+    author: "Victor H. Krulak"
+    categories: ["heritage", "institutional", "current_list"]
+    list_years: ["2026", "prior_iterations"]
+    open_source_available: false
+    public_domain: false
+    source_urls:
+      - "https://www.mca-marines.org/commandants-professional-reading-list-heritage/"
+    summary: "An institutional argument about what makes the Marine Corps distinct and why that reputation has to be earned repeatedly. It matters for discussions of identity, adaptation, public trust, and the Corps' relationship with national needs."
+    key_themes: ["heritage", "institutional identity", "adaptation", "public trust"]
+    discussion_prompts:
+      - "Which parts of Marine Corps identity are operationally useful, and which can become slogans?"
+      - "How should a reserve unit preserve standards without confusing heritage for performance?"
+      - "What institutional adaptations does the book defend?"
+    cautions:
+      - "Copyrighted work; store metadata and study notes only."
+  - slug: "code-talker"
+    title: "Code Talker: The First and Only Memoir by One of the Original Navajo Code Talkers of WWII"
+    author: "Chester Nez and Judith Schiess Avila"
+    categories: ["heritage", "world_war_ii", "current_list"]
+    list_years: ["2026"]
+    open_source_available: false
+    public_domain: false
+    source_urls:
+      - "https://www.mca-marines.org/commandants-professional-reading-list-heritage/"
+    summary: "A memoir of Navajo code talker service in World War II and the human story behind a decisive communications advantage. It matters for PME on trust, cultural knowledge, communications security, and recognizing contributions that were long under-discussed."
+    key_themes: ["heritage", "communications", "code talkers", "World War II", "trust"]
+    discussion_prompts:
+      - "What made the code talkers effective beyond the technical code itself?"
+      - "How should units recognize specialized cultural or language knowledge?"
+      - "What does the story teach about secrecy, credit, and institutional memory?"
+    cautions:
+      - "Copyrighted work; store metadata and study notes only."
+  - slug: "make-your-bed"
+    title: "Make Your Bed"
+    author: "Admiral William H. McRaven"
+    categories: ["leadership", "current_list"]
+    list_years: ["2026"]
+    open_source_available: false
+    public_domain: false
+    source_urls:
+      - "https://www.mca-marines.org/commandants-professional-reading-list-leadership/"
+    summary: "A concise leadership book built from lessons on discipline, resilience, teamwork, and humility. It matters as an accessible entry point for junior Marines and small teams discussing everyday standards."
+    key_themes: ["leadership", "discipline", "resilience", "teamwork"]
+    discussion_prompts:
+      - "Which small habits actually improve unit performance?"
+      - "How can leaders teach resilience without using slogans?"
+      - "Where does personal discipline translate into staff reliability?"
+    cautions:
+      - "Copyrighted work; store metadata and study notes only."

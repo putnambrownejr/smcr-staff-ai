@@ -43,3 +43,278 @@ items:
       - "Useful for S-3, S-4, and command-team discussions."
     references:
       - "https://www.usmcu.edu/Research/Marine-Corps-History-Division/"
+  - slug: "new-providence-raid"
+    title: "Marines land at New Providence"
+    month: 3
+    day: 3
+    year_label: "1776"
+    summary: "Continental Marines landed in the Bahamas during the raid on New Providence, an early amphibious operation to seize military stores."
+    significance:
+      - "Early example of Marines supporting naval objectives with a shore landing."
+      - "Useful PME hook for amphibious raiding, maritime logistics, and expeditionary purpose."
+    references:
+      - "https://www.usmcu.edu/Portals/218/Chronology%201775-1934%20%5Bcomplete%5D_1.pdf"
+  - slug: "marine-corps-reestablished"
+    title: "Marine Corps reestablished by Congress"
+    month: 7
+    day: 11
+    year_label: "1798"
+    summary: "Congress reestablished the Marine Corps as a separate service during the Quasi-War period."
+    significance:
+      - "Marks the statutory rebirth of the Corps after the Continental Marines disbanded."
+      - "Good context for distinguishing the Corps' 1775 origin from its later federal reestablishment."
+    references:
+      - "https://www.usmcu.edu/Portals/218/HD/Brief%20Histories/2025_Update/Brief%20History/U.S.%20Marine%20Corps%20Brief%20History%20-%20FINAL.pdf?ver=3bkEEgtavvOQ2TgcKIscoA%3D%3D"
+  - slug: "derna-captured"
+    title: "Derna captured"
+    month: 4
+    day: 27
+    year_label: "1805"
+    summary: "A small force including Marines helped capture Derna, Libya, during the First Barbary War."
+    significance:
+      - "Connects directly to the Marine Hymn and the Corps' expeditionary identity."
+      - "Useful for discussing limited objectives, partner forces, and naval expeditionary reach."
+    references:
+      - "https://www.usmcu.edu/Portals/218/HD/Brief%20Histories/2025_Update/Brief%20History/U.S.%20Marine%20Corps%20Brief%20History%20-%20FINAL.pdf?ver=3bkEEgtavvOQ2TgcKIscoA%3D%3D"
+  - slug: "chapultepec"
+    title: "Battle of Chapultepec"
+    month: 9
+    day: 13
+    year_label: "1847"
+    summary: "Marines participated in the assault on Chapultepec during the Mexican-American War."
+    significance:
+      - "A heritage anchor behind the phrase 'From the Halls of Montezuma.'"
+      - "Useful for connecting ceremony, battle memory, and institutional identity."
+    references:
+      - "https://www.usmcu.edu/Portals/218/Chronology%201775-1934%20%5Bcomplete%5D_1.pdf"
+  - slug: "marine-aviation-first-aviator"
+    title: "First Marine aviator ordered to flight training"
+    month: 5
+    day: 22
+    year_label: "1912"
+    summary: "First Lieutenant Alfred A. Cunningham reported for aviation training, becoming the first Marine aviator."
+    significance:
+      - "Institutional starting point for Marine aviation."
+      - "Useful for MAGTF discussions that treat aviation as integral rather than separate."
+    references:
+      - "https://www.usmcu.edu/Portals/218/Chronology%201775-1934%20%5Bcomplete%5D_1.pdf"
+  - slug: "first-woman-marine"
+    title: "Opha May Johnson becomes first woman Marine"
+    month: 8
+    day: 13
+    year_label: "1918"
+    summary: "Opha May Johnson enlisted in the Marine Corps Reserve, becoming the first woman credited as a Marine."
+    significance:
+      - "Important first in Marine Corps personnel history."
+      - "Useful for PME on manpower, institutional change, and service opportunities."
+    references:
+      - "https://www.marines.mil/News/News-Display/Article/1601358/a-century-of-solidarity-celebrating-100-years-of-women-serving-in-the-marine-co/"
+  - slug: "wake-island-defense-begins"
+    title: "Defense of Wake Island begins"
+    month: 12
+    day: 8
+    year_label: "1941"
+    summary: "Marines and other defenders on Wake Island came under Japanese attack shortly after the attack on Pearl Harbor."
+    significance:
+      - "Shows the demands placed on isolated forward positions."
+      - "Useful for discussions of endurance, air-ground defense, and communications under pressure."
+    references:
+      - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
+  - slug: "edsons-ridge"
+    title: "Battle of Edson's Ridge"
+    month: 9
+    day: 12
+    year_label: "1942"
+    summary: "Marines on Guadalcanal fought to hold key terrain near Henderson Field during the Battle of Edson's Ridge."
+    significance:
+      - "Good case for defensive preparation, night fighting, and protecting critical capabilities."
+      - "Useful for linking tactical terrain to campaign-level effects."
+    references:
+      - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
+  - slug: "bougainville-landing"
+    title: "Bougainville landings begin"
+    month: 11
+    day: 1
+    year_label: "1943"
+    summary: "Marines landed at Empress Augusta Bay on Bougainville as part of the Allied advance through the Solomon Islands."
+    significance:
+      - "Good example of amphibious seizure tied to airfield and sea-control objectives."
+      - "Useful for staff discussion on campaign design and lodgment defense."
+    references:
+      - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
+  - slug: "tarawa-landing"
+    title: "Battle of Tarawa begins"
+    month: 11
+    day: 20
+    year_label: "1943"
+    summary: "The 2d Marine Division assaulted Betio Island at Tarawa in one of the first major Central Pacific amphibious assaults against a strongly defended atoll."
+    significance:
+      - "Enduring case study in amphibious planning, tides, reefs, fire support, and casualty costs."
+      - "Useful for showing why hard lessons become doctrine and training standards."
+    references:
+      - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
+  - slug: "cape-gloucester-landing"
+    title: "Cape Gloucester landings begin"
+    month: 12
+    day: 26
+    year_label: "1943"
+    summary: "Marines landed at Cape Gloucester on New Britain to support the isolation of Rabaul and secure airfield sites."
+    significance:
+      - "Useful case for jungle operations, sustainment, and airfield-oriented expeditionary objectives."
+      - "Shows how amphibious operations supported broader theater isolation campaigns."
+    references:
+      - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
+  - slug: "roi-namur"
+    title: "Roi-Namur assault"
+    month: 2
+    day: 1
+    year_label: "1944"
+    summary: "The 4th Marine Division assaulted Roi-Namur during the Kwajalein operation in the Marshall Islands."
+    significance:
+      - "Highlights increasing amphibious proficiency after earlier Pacific lessons."
+      - "Useful for comparing rehearsal, intelligence, naval gunfire, and landing execution across campaigns."
+    references:
+      - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
+  - slug: "saipan-landing"
+    title: "Battle of Saipan begins"
+    month: 6
+    day: 15
+    year_label: "1944"
+    summary: "Marines landed on Saipan in the Marianas, beginning a campaign that carried major operational and strategic consequences in the Pacific."
+    significance:
+      - "Good case for amphibious seizure of strategic terrain."
+      - "Useful for connecting tactical fighting to airpower, logistics, and theater reach."
+    references:
+      - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
+  - slug: "guam-liberation-landing"
+    title: "Guam liberation landings begin"
+    month: 7
+    day: 21
+    year_label: "1944"
+    summary: "Marines and soldiers landed on Guam to retake the island from Japanese occupation."
+    significance:
+      - "Useful for discussing recovery of U.S. territory and campaign sequencing in the Marianas."
+      - "Shows how amphibious assault, logistics, and follow-on base development fit together."
+    references:
+      - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
+  - slug: "peleliu-landing"
+    title: "Battle of Peleliu begins"
+    month: 9
+    day: 15
+    year_label: "1944"
+    summary: "Marines landed on Peleliu, beginning a costly campaign against prepared Japanese defenses."
+    significance:
+      - "Strong case study for intelligence estimates, terrain, fortifications, and assumptions about duration."
+      - "Useful for staff discussions on whether an objective's cost matches its operational value."
+    references:
+      - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
+  - slug: "iwo-jima-landing"
+    title: "Battle of Iwo Jima begins"
+    month: 2
+    day: 19
+    year_label: "1945"
+    summary: "Marines landed on Iwo Jima to seize an island whose airfields mattered to the air campaign against Japan."
+    significance:
+      - "Useful for discussing operational necessity, casualty expectations, and assaulting prepared defenses."
+      - "Sets context for the flag raising and the wider cost of the campaign."
+    references:
+      - "https://www.marines.mil/News/News-Display/Article/2088180/marine-corps-commemorates-75th-anniversary-of-iwo-jima/"
+  - slug: "iwo-jima-flag-raising"
+    title: "Iwo Jima flag raising"
+    month: 2
+    day: 23
+    year_label: "1945"
+    summary: "Marines raised the American flag on Mount Suribachi during the Battle of Iwo Jima."
+    significance:
+      - "One of the Corps' most recognized public symbols, but best taught with the broader battle context."
+      - "Useful for separating iconic imagery from the operational reality of a campaign still in progress."
+    references:
+      - "https://www.marines.mil/News/News-Display/Article/3307599/remembering-iwo-jima-78-years/"
+  - slug: "okinawa-landing"
+    title: "Okinawa landings begin"
+    month: 4
+    day: 1
+    year_label: "1945"
+    summary: "Marines and soldiers landed on Okinawa in the final major amphibious campaign of World War II."
+    significance:
+      - "Useful for discussing joint operations, sustainment, and the demands of prolonged land combat after landing."
+      - "Connects amphibious entry to extended campaign endurance."
+    references:
+      - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
+  - slug: "inchon-landing"
+    title: "Inchon landing"
+    month: 9
+    day: 15
+    year_label: "1950"
+    summary: "Marines landed at Inchon during the Korean War, helping reverse the operational situation after the Pusan Perimeter crisis."
+    significance:
+      - "Classic case for amphibious surprise, risk, tides, and operational maneuver."
+      - "Useful for PME on bold planning that still requires detailed staff work."
+    references:
+      - "https://www.usmcu.edu/Research/Marine-Corps-History-Division/Brief-Histories/Marines-in-the-Mediterranean/"
+  - slug: "chosin-reservoir-campaign"
+    title: "Chosin Reservoir campaign begins"
+    month: 11
+    day: 27
+    year_label: "1950"
+    summary: "The Chosin Reservoir campaign began as Chinese forces attacked and the 1st Marine Division fought through extreme cold and encirclement."
+    significance:
+      - "Enduring case for cohesion, leadership, logistics, withdrawal under pressure, and refusing panic."
+      - "Useful for discussing disciplined movement and command judgment under severe friction."
+    references:
+      - "https://www.usmcu.edu/Outreach/Marine-Corps-University-Press/MCH/Marine-Corps-History-Winter-2025-26/Remembering-Chosin/"
+  - slug: "operation-starlite"
+    title: "Operation Starlite begins"
+    month: 8
+    day: 18
+    year_label: "1965"
+    summary: "Marines launched Operation Starlite near Chu Lai, often cited as the first major U.S. ground offensive of the Vietnam War."
+    significance:
+      - "Useful for discussing combined helicopter and amphibious movement against a main-force enemy."
+      - "Good case for intelligence warning, rapid planning, and adaptation in early Vietnam operations."
+    references:
+      - "https://www.usmcu.edu/Portals/218/The_First_Fight_Starlite.pdf"
+  - slug: "khe-sanh-siege-begins"
+    title: "Siege of Khe Sanh begins"
+    month: 1
+    day: 21
+    year_label: "1968"
+    summary: "North Vietnamese forces began heavy attacks around Khe Sanh, starting a major siege involving U.S. Marines in northern South Vietnam."
+    significance:
+      - "Useful for discussing fire support, air resupply, base defense, and strategic attention."
+      - "Good prompt for comparing tactical risk with operational and political signaling."
+    references:
+      - "https://www.usmcu.edu/Portals/218/US%20Marines%20in%20Vietnam%20The%20Defining%20Year%201968%20%20PCN%2019000313800.pdf"
+  - slug: "hue-city-battle"
+    title: "Battle of Hue City begins"
+    month: 1
+    day: 31
+    year_label: "1968"
+    summary: "During the Tet Offensive, Marines entered the fight to retake Hue City in one of the Vietnam War's defining urban battles."
+    significance:
+      - "Enduring case for urban combat, small-unit initiative, combined arms, and civilian terrain."
+      - "Useful for staff discussions on intelligence gaps, rules of engagement, and clearing operations."
+    references:
+      - "https://www.usmcu.edu/Portals/218/HD%20MCUP/HD%20Pubs/DeathInTheImperialCity.pdf?ver=2018-10-16-102102-263"
+  - slug: "beirut-barracks-bombing"
+    title: "Beirut barracks bombing"
+    month: 10
+    day: 23
+    year_label: "1983"
+    summary: "A suicide truck bomb struck the Marine barracks at Beirut International Airport during the multinational peacekeeping deployment."
+    significance:
+      - "Important case for force protection, mission clarity, terrorism, and risk in peacekeeping operations."
+      - "Useful for sober PME on security posture and command responsibility."
+    references:
+      - "https://www.usmcu.edu/Portals/218/HD/Brief%20Histories/2025_Update/Operational/16.%20Beirut.pdf?ver=zgVVBXnXQSDXdCWB_Zx5NQ%3D%3D"
+  - slug: "mcdp-1-warfighting"
+    title: "MCDP 1 Warfighting published"
+    month: 6
+    day: 20
+    year_label: "1997"
+    summary: "The Marine Corps published MCDP 1 Warfighting, carrying forward and updating the Corps' foundational doctrine on the nature and conduct of war."
+    significance:
+      - "Foundational doctrine for maneuver warfare, friction, uncertainty, tempo, and commander's intent."
+      - "Useful for connecting history, PME, TDGs, planning, and staff judgment to a common doctrinal language."
+    references:
+      - "https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899837/mcdp-1/"
