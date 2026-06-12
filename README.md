@@ -6,6 +6,8 @@ It is also now structured to be easier for Claude, Gemini, Grok, Copilot, and ot
 
 This project is unofficial, not endorsed by the Marine Corps or Department of Defense, and not authoritative. All outputs are advisory drafts requiring human review.
 
+**How it works:** the local app is structured workflows, private storage, and advisory scaffolds — it does not call an LLM at runtime. The AI reasoning comes from your connected assistant (Claude, ChatGPT, Copilot, etc.) reading the repo's patterns and outputs.
+
 ## Project Purpose
 
 The project has a simple center of gravity:
