@@ -145,7 +145,10 @@ def infer_archetype_from_text(text: str) -> ScenarioArchetype:
         return ScenarioArchetype.littoral_hybrid
     if any(term in lowered for term in {"flood", "storm", "earthquake", "disaster", "evacuation", "humanitarian"}):
         return ScenarioArchetype.disaster_unrest
-    if any(term in lowered for term in {"urban", "city", "metro", "riot", "civil unrest", "megacity", "protest", "crowd"}):
+    if any(
+        term in lowered
+        for term in {"urban", "city", "metro", "riot", "civil unrest", "megacity", "protest", "crowd"}
+    ):
         return ScenarioArchetype.urban_unrest
     if any(term in lowered for term in {"border", "crossing", "smuggling", "riverine", "cartel", "convoy", "route"}):
         return ScenarioArchetype.border_proxy

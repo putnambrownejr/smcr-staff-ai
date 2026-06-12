@@ -47,16 +47,31 @@ class PersonalDocumentOrganizer:
         haystack = f"{filename}\n{preview}"
 
         if any(token in haystack for token in ("template", "format", "boilerplate", "sample", "example")):
-            return _suggest_if_better(current, PersonalDocumentType.product_template.value, "Template-style filename or preview text.")
+            return _suggest_if_better(
+                current,
+                PersonalDocumentType.product_template.value,
+                "Template-style filename or preview text.",
+            )
 
         if any(token in haystack for token in ("fitrep", "pes", "performance evaluation system")):
             return _suggest_if_better(current, PersonalDocumentType.fitrep.value, "FitRep or PES wording detected.")
 
         if any(token in haystack for token in ("1020.34", "uniform regulations", "uniform board", "uniform")):
-            return _suggest_if_better(current, PersonalDocumentType.admin_reference.value, "Uniform-reference wording detected.")
+            return _suggest_if_better(
+                current,
+                PersonalDocumentType.admin_reference.value,
+                "Uniform-reference wording detected.",
+            )
 
-        if any(token in haystack for token in ("mcdp", "mcwp", "mcrp", "mctp", "navmc", "marine corps planning process")):
-            return _suggest_if_better(current, PersonalDocumentType.doctrine.value, "Doctrine publication pattern detected.")
+        if any(
+            token in haystack
+            for token in ("mcdp", "mcwp", "mcrp", "mctp", "navmc", "marine corps planning process")
+        ):
+            return _suggest_if_better(
+                current,
+                PersonalDocumentType.doctrine.value,
+                "Doctrine publication pattern detected.",
+            )
 
         if any(
             token in haystack
@@ -71,7 +86,11 @@ class PersonalDocumentOrganizer:
                 "admin ch-",
             )
         ):
-            return _suggest_if_better(current, PersonalDocumentType.admin_reference.value, "Administrative order or message pattern detected.")
+            return _suggest_if_better(
+                current,
+                PersonalDocumentType.admin_reference.value,
+                "Administrative order or message pattern detected.",
+            )
 
         if any(
             token in haystack
@@ -85,7 +104,11 @@ class PersonalDocumentOrganizer:
                 "range safety",
             )
         ):
-            return _suggest_if_better(current, PersonalDocumentType.training_reference.value, "Training-reference wording detected.")
+            return _suggest_if_better(
+                current,
+                PersonalDocumentType.training_reference.value,
+                "Training-reference wording detected.",
+            )
 
         return None
 

@@ -165,9 +165,21 @@ class ScenarioPresetCatalog:
         return request.model_copy(
             update={
                 # Optional scalars: None means "not provided", use preset
-                "scenario_archetype": request.scenario_archetype if request.scenario_archetype is not None else preset.scenario_archetype,
-                "primary_scenario_input": request.primary_scenario_input if request.primary_scenario_input is not None else preset.primary_scenario_input,
-                "secondary_scenario_input": request.secondary_scenario_input if request.secondary_scenario_input is not None else preset.secondary_scenario_input,
+                "scenario_archetype": (
+                    request.scenario_archetype
+                    if request.scenario_archetype is not None
+                    else preset.scenario_archetype
+                ),
+                "primary_scenario_input": (
+                    request.primary_scenario_input
+                    if request.primary_scenario_input is not None
+                    else preset.primary_scenario_input
+                ),
+                "secondary_scenario_input": (
+                    request.secondary_scenario_input
+                    if request.secondary_scenario_input is not None
+                    else preset.secondary_scenario_input
+                ),
                 # Lists default to [] when not provided; empty means "use preset"
                 "inject_tags": request.inject_tags or list(preset.inject_tags),
                 "current_event_context": request.current_event_context or list(preset.current_event_context),
@@ -181,9 +193,21 @@ class ScenarioPresetCatalog:
         return request.model_copy(
             update={
                 # Optional scalars: None means "not provided", use preset
-                "scenario_archetype": request.scenario_archetype if request.scenario_archetype is not None else preset.scenario_archetype,
-                "primary_scenario_input": request.primary_scenario_input if request.primary_scenario_input is not None else preset.primary_scenario_input,
-                "secondary_scenario_input": request.secondary_scenario_input if request.secondary_scenario_input is not None else preset.secondary_scenario_input,
+                "scenario_archetype": (
+                    request.scenario_archetype
+                    if request.scenario_archetype is not None
+                    else preset.scenario_archetype
+                ),
+                "primary_scenario_input": (
+                    request.primary_scenario_input
+                    if request.primary_scenario_input is not None
+                    else preset.primary_scenario_input
+                ),
+                "secondary_scenario_input": (
+                    request.secondary_scenario_input
+                    if request.secondary_scenario_input is not None
+                    else preset.secondary_scenario_input
+                ),
                 # Lists default to [] when not provided; empty means "use preset"
                 "inject_tags": request.inject_tags or list(preset.inject_tags),
                 "current_event_context": request.current_event_context or list(preset.current_event_context),

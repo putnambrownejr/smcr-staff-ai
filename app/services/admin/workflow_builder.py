@@ -77,11 +77,15 @@ def _workflow_parts(workflow_type: AdminWorkflowType) -> tuple[list[str], list[s
     if workflow_type == AdminWorkflowType.ridt:
         return (
             [
-                "Capture requestor information: name, EDIPI if required locally, unit, billet, contact, and affected drill dates.",
-                "Identify the RIDT reason code or category: medical, family, occupational, education, travel, or command-directed.",
-                "State the specific training period affected and the proposed makeup or alternate training plan if known.",
+                "Capture requestor information: name, EDIPI if required locally, unit, billet, contact, "
+                "and affected drill dates.",
+                "Identify the RIDT reason code or category: medical, family, occupational, education, travel, "
+                "or command-directed.",
+                "State the specific training period affected and the proposed makeup or alternate training plan "
+                "if known.",
                 "Route for commander endorsement before treating the request as approved.",
-                "Submit through the local S-1/admin channel and preserve confirmation, endorsement, and final disposition.",
+                "Submit through the local S-1/admin channel and preserve confirmation, endorsement, "
+                "and final disposition.",
             ],
             [
                 "RIDT request form or local command format",
@@ -92,8 +96,10 @@ def _workflow_parts(workflow_type: AdminWorkflowType) -> tuple[list[str], list[s
             ],
             [
                 "Verify local RIDT format, reason codes, and submission deadlines with the command admin section.",
-                "Confirm whether the delay affects pay, points, readiness reporting, or future drill makeup requirements.",
-                "Do not assume submission equals approval; track the commander's endorsed decision and final admin action.",
+                "Confirm whether the delay affects pay, points, readiness reporting, "
+                "or future drill makeup requirements.",
+                "Do not assume submission equals approval; track the commander's endorsed decision "
+                "and final admin action.",
             ],
         )
     if workflow_type == AdminWorkflowType.gtcc:

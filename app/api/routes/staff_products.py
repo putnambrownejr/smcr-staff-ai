@@ -1,9 +1,9 @@
 from collections.abc import Iterator
 from typing import Annotated
 
-from app.core.auth import LocalApiKeyDependency
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.poam import PoamRequest, PoamResponse
 from app.schemas.staff_products import StaffProductDraftRequest, StaffProductDraftResponse

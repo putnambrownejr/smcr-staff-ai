@@ -180,10 +180,7 @@ def _update_history_detail(record: ActionRecord, payload: dict[str, object]) -> 
     details: list[str] = []
     if "status" in payload:
         new_status = payload["status"]
-        if isinstance(new_status, ActionStatus):
-            new_status_value = new_status.value
-        else:
-            new_status_value = str(new_status)
+        new_status_value = new_status.value if isinstance(new_status, ActionStatus) else str(new_status)
         details.append(f"status: {record.status.value} -> {new_status_value}")
     changed_fields = sorted(key for key in payload if key != "status")
     if changed_fields:

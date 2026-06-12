@@ -1,16 +1,16 @@
 from datetime import date, timedelta
 
 _FUTURE_DRILL = date.today() + timedelta(days=21)
-from pathlib import Path
+from pathlib import Path  # noqa: E402
 
-from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient  # noqa: E402
 
-from app.api.routes.calendar import get_context_store, get_handoff_store, get_plan_store
-from app.main import app
-from app.schemas.session import DrillDateRecord, RecurringCheck, UserSessionHandoff
-from app.services.calendar.plan_store import DrillPrepPlanStore
-from app.services.session.handoff_store import SessionHandoffStore
-from app.services.storage.local_context_store import LocalContextStore
+from app.api.routes.calendar import get_context_store, get_handoff_store, get_plan_store  # noqa: E402
+from app.main import app  # noqa: E402
+from app.schemas.session import DrillDateRecord, RecurringCheck, UserSessionHandoff  # noqa: E402
+from app.services.calendar.plan_store import DrillPrepPlanStore  # noqa: E402
+from app.services.session.handoff_store import SessionHandoffStore  # noqa: E402
+from app.services.storage.local_context_store import LocalContextStore  # noqa: E402
 
 
 def test_drill_plan_uses_templated_local_context_and_persists(tmp_path: Path) -> None:
@@ -76,7 +76,13 @@ def test_drill_plan_rejects_non_unclassified_key_event(tmp_path: Path) -> None:
             "/calendar/drill-prep-plan",
             json={
                 "drill_date": _FUTURE_DRILL.isoformat(),
-                "key_events": [{"title": "Brief", "event_date": _FUTURE_DRILL.isoformat(), "classification_label": "CUI"}],
+                "key_events": [
+                    {
+                        "title": "Brief",
+                        "event_date": _FUTURE_DRILL.isoformat(),
+                        "classification_label": "CUI",
+                    }
+                ],
             },
         )
         assert response.status_code == 422

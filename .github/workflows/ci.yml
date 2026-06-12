@@ -28,3 +28,6 @@ jobs:
 
       - name: Run type checks
         run: python -m mypy app tests
+
+      - name: Lint ruff
+        run: python -m ruff check .

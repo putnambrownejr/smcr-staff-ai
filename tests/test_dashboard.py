@@ -1,11 +1,11 @@
 from datetime import UTC, date, datetime, timedelta
 
 _FUTURE_DRILL = date.today() + timedelta(days=21)
-from pathlib import Path
+from pathlib import Path  # noqa: E402
 
-from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient  # noqa: E402
 
-from app.api.routes.dashboard import (
+from app.api.routes.dashboard import (  # noqa: E402
     get_action_tracker,
     get_admin_service,
     get_alnav_store,
@@ -20,32 +20,32 @@ from app.api.routes.dashboard import (
     get_section_memory_store,
     get_update_store,
 )
-from app.main import app
-from app.schemas.actions import ActionItemRequest
-from app.schemas.battle_rhythm import BattleRhythmBoardUpsertRequest, BattleRhythmEntryInput
-from app.schemas.calendar import DrillPrepPlanResponse, PrepTask
-from app.schemas.custom_watch_feeds import CreateCustomWatchFeedRequest
-from app.schemas.ingestion import MessageRecord
-from app.schemas.opportunities import ManualOpportunityRequest
-from app.schemas.section_memory import SectionMemoryEntry, SectionMemoryProfileUpsertRequest
-from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff
-from app.schemas.source_updates import DocumentationUpdateCandidate
-from app.services.actions.tracker import ActionTracker
-from app.services.admin.readiness import AdminReadinessService
-from app.services.calendar.plan_store import DrillPrepPlanStore
-from app.services.career.watch import CareerWatchService
-from app.services.chief.orchestrator import ChiefAideOrchestrator
-from app.services.connectors.travel_case_store import TravelCaseStore
-from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
-from app.services.ingestion.custom_watch_feed_store import CustomWatchFeedStore
-from app.services.ingestion.document_update_store import DocumentUpdateStore
-from app.services.ingestion.message_record_store import MessageRecordStore
-from app.services.opportunities.tracker import OpportunityTracker
-from app.services.reading.catalog import ReadingListCatalogService
-from app.services.session.handoff_store import SessionHandoffStore
-from app.services.staff.battle_rhythm_store import BattleRhythmStore
-from app.services.staff.section_memory_store import SectionMemoryStore
-from app.services.storage.local_context_store import LocalContextStore
+from app.main import app  # noqa: E402
+from app.schemas.actions import ActionItemRequest  # noqa: E402
+from app.schemas.battle_rhythm import BattleRhythmBoardUpsertRequest, BattleRhythmEntryInput  # noqa: E402
+from app.schemas.calendar import DrillPrepPlanResponse, PrepTask  # noqa: E402
+from app.schemas.custom_watch_feeds import CreateCustomWatchFeedRequest  # noqa: E402
+from app.schemas.ingestion import MessageRecord  # noqa: E402
+from app.schemas.opportunities import ManualOpportunityRequest  # noqa: E402
+from app.schemas.section_memory import SectionMemoryEntry, SectionMemoryProfileUpsertRequest  # noqa: E402
+from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff  # noqa: E402
+from app.schemas.source_updates import DocumentationUpdateCandidate  # noqa: E402
+from app.services.actions.tracker import ActionTracker  # noqa: E402
+from app.services.admin.readiness import AdminReadinessService  # noqa: E402
+from app.services.calendar.plan_store import DrillPrepPlanStore  # noqa: E402
+from app.services.career.watch import CareerWatchService  # noqa: E402
+from app.services.chief.orchestrator import ChiefAideOrchestrator  # noqa: E402
+from app.services.connectors.travel_case_store import TravelCaseStore  # noqa: E402
+from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer  # noqa: E402
+from app.services.ingestion.custom_watch_feed_store import CustomWatchFeedStore  # noqa: E402
+from app.services.ingestion.document_update_store import DocumentUpdateStore  # noqa: E402
+from app.services.ingestion.message_record_store import MessageRecordStore  # noqa: E402
+from app.services.opportunities.tracker import OpportunityTracker  # noqa: E402
+from app.services.reading.catalog import ReadingListCatalogService  # noqa: E402
+from app.services.session.handoff_store import SessionHandoffStore  # noqa: E402
+from app.services.staff.battle_rhythm_store import BattleRhythmStore  # noqa: E402
+from app.services.staff.section_memory_store import SectionMemoryStore  # noqa: E402
+from app.services.storage.local_context_store import LocalContextStore  # noqa: E402
 
 
 def test_dashboard_route_serves_html_shell() -> None:

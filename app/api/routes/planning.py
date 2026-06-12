@@ -1,6 +1,6 @@
-from app.core.auth import LocalApiKeyDependency
 from fastapi import APIRouter
 
+from app.core.auth import LocalApiKeyDependency
 from app.schemas.planning import (
     FragoToConopRequest,
     FragoToConopResponse,

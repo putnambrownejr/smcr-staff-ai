@@ -1,7 +1,7 @@
 import httpx
-from app.core.auth import LocalApiKeyDependency
 from fastapi import APIRouter, HTTPException
 
+from app.core.auth import LocalApiKeyDependency
 from app.schemas.billets import BilletSearchRequest, BilletSearchResponse, BilletSourceInfo
 from app.services.billets.recommender import DEFAULT_BILLET_WARNINGS, recommend_billets
 from app.services.ingestion.smcr_bic_scraper import OFFICIAL_BILLET_SOURCE_URLS, SmcrBicScraper, official_billet_sources

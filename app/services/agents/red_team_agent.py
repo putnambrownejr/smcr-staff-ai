@@ -1,4 +1,5 @@
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
+from app.schemas.training import ScenarioArchetype
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import (
     S2_REFERENCES,
@@ -8,7 +9,6 @@ from app.services.agents.source_refs import (
     source_trust_markers,
     structured_citations,
 )
-from app.schemas.training import ScenarioArchetype
 from app.services.training.redcell_engine import build_redcell_design
 from app.services.training.scenario_engine import infer_archetype_from_text
 

@@ -1,12 +1,8 @@
 from collections.abc import Callable
-from typing import TypeVar
 
 from fastapi import APIRouter, HTTPException
 
 from app.core.auth import LocalApiKeyDependency
-
-_T = TypeVar("_T")
-
 from app.schemas.tdg import TdgGenerationRequest, TdgGenerationResponse
 from app.schemas.training import (
     AnnualTrainingPlanRequest,
@@ -39,11 +35,14 @@ from app.services.training.tdg_builder import TdgBuilder
 router = APIRouter(prefix="/training", tags=["training workflows"], dependencies=[LocalApiKeyDependency])
 
 
-def _apply_preset(fn: Callable[[], _T], preset_id: str | None) -> _T:
+def _apply_preset[T](fn: Callable[[], T], preset_id: str | None) -> T:
     try:
         return fn()
-    except KeyError:
-        raise HTTPException(status_code=404, detail=f"Unknown scenario preset: {preset_id}")
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unknown scenario preset: {preset_id}",
+        ) from exc
 
 
 _scenario_builder = TrainingScenarioBuilder()
@@ -66,7 +65,10 @@ def list_scenario_presets() -> ScenarioPresetListResponse:
 @router.post("/scenario", response_model=TrainingScenarioResponse)
 def build_training_scenario(request: TrainingScenarioRequest) -> TrainingScenarioResponse:
     if request.scenario_preset_id:
-        request = _apply_preset(lambda: _scenario_presets.apply_to_training_request(request), request.scenario_preset_id)
+        request = _apply_preset(
+            lambda: _scenario_presets.apply_to_training_request(request),
+            request.scenario_preset_id,
+        )
     return _scenario_builder.build(request)
 
 

@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from app.core.auth import LocalApiKeyDependency
 from fastapi import APIRouter, HTTPException
 
+from app.core.auth import LocalApiKeyDependency
 from app.schemas.exercises import ExerciseCadence
 from app.schemas.org import OrgChainResponse, OrgUnit
 from app.services.org_awareness.exercise_cadence import load_exercise_cadence

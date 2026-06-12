@@ -64,7 +64,8 @@ async def review_uniform_photo(
 
     warnings = [
         "Current backend workflow stores the photo locally but does not perform computer-vision insignia detection.",
-        "Use this as a review framework and route ambiguous wear questions through the chain of command, SEL, or Uniform Board guidance.",
+        "Use this as a review framework and route ambiguous wear questions through the chain of command, "
+        "SEL, or Uniform Board guidance.",
     ]
     if item.contains_pii:
         warnings.append("Photo metadata triggered a conservative PII warning; keep retention local and intentional.")
@@ -86,7 +87,8 @@ async def review_uniform_photo(
         source_trust=source_trust_markers(
             UNIFORM_REFERENCES,
             notes_prefix=(
-                "Use the uploaded image only as local advisory context. Verify current uniform standards and any local command direction before acting."
+                "Use the uploaded image only as local advisory context. Verify current uniform standards and "
+                "any local command direction before acting."
             ),
         ),
     )
@@ -115,14 +117,19 @@ def _what_to_verify(uniform_type: str, visible: list[str], concerns: list[str]) 
     if "ribbons/badges" in normalized:
         checks.append("Verify ribbon, badge, or device alignment, spacing, precedence, and symmetry.")
     if "cover" in normalized:
-        checks.append("Check that the cover is the right type for the uniform and sits cleanly with correct insignia placement.")
+        checks.append(
+            "Check that the cover is the right type for the uniform and sits cleanly with correct insignia "
+            "placement."
+        )
     if "belt/buckle" in normalized:
         checks.append("Check buckle centering and belt alignment.")
     if "footwear" in normalized:
         checks.append("Check visible footwear for color, condition, and whether the style matches the uniform.")
     lowered_uniform = uniform_type.lower()
     if "cammies" in lowered_uniform or "utility" in lowered_uniform:
-        checks.append("Verify name tapes, blouse presentation, and obvious serviceability issues on the utility uniform.")
+        checks.append(
+            "Verify name tapes, blouse presentation, and obvious serviceability issues on the utility uniform."
+        )
     if "dress" in lowered_uniform or "service" in lowered_uniform:
         checks.append("Check coat or shirt presentation, gig line, and the overall alignment of front-facing items.")
     checks.extend(f"Investigate user-noted concern from the image: {concern}" for concern in concerns[:3])
