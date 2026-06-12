@@ -424,6 +424,48 @@ S6_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+MOS_4402_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCO 5800.16 w/Ch 1-7 w/Vol 1-17 Legal Support and Administration Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1447370/mco-580016-wch-1-7-wvol-1-17/",
+        publisher="United States Marine Corps",
+        notes="Current public LEGADMINMAN/LSAM hub for Marine Corps legal support and unit legal administration.",
+    ),
+    SourceRef(
+        title="Joint Service Committee Sources of Military Law",
+        url="https://jsc.defense.gov/Military-Law/Sources-of-Military-Law/",
+        publisher="Joint Service Committee on Military Justice",
+        notes="Public overview of UCMJ, Manual for Courts-Martial, and military-justice source relationships.",
+    ),
+    SourceRef(
+        title="MCO 5800.16 Volume 5 Marine Corps Legal Assistance Program",
+        url="https://www.marines.mil/Portals/1/Publications/MCO%205800.16%20Volume%205.pdf?ver=2018-02-21-144314-933",
+        publisher="United States Marine Corps",
+        notes="Marine Corps legal assistance policy, procedures, and responsibilities reference.",
+    ),
+)
+
+MOS_7200_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="NAVMC 3500.14C Aviation Training and Readiness Program Manual",
+        url="https://www.marines.mil/Portals/1/Publications/NAVMC_3500.14C_2.pdf",
+        publisher="United States Marine Corps",
+        notes="Public aviation T&R program reference for training standards, readiness events, and program structure.",
+    ),
+    SourceRef(
+        title="Marine Aviation Weapons and Tactics Squadron One",
+        url="https://www.29palms.marines.mil/Units/MAWTS-1/",
+        publisher="United States Marine Corps",
+        notes="Official MAWTS-1 public page for aviation training, readiness, weapons, and tactics support.",
+    ),
+    SourceRef(
+        title="MCO 5100.29C Volume 4 Marine Corps Safety Management System",
+        url="https://www.marines.mil/Portals/1/Publications/MCO%205100.29C%20Vol.%204%20Change%201.pdf",
+        publisher="United States Marine Corps",
+        notes="Marine Corps aviation safety management, command safety, and mishap-prevention reference.",
+    ),
+)
+
 MEDICAL_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCTP 3-40A Health Service Support",
