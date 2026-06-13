@@ -167,6 +167,7 @@ document.getElementById("manage-bench-sections")?.addEventListener("click", togg
 document.getElementById("add-bench-section")?.addEventListener("click", addBenchSectionFromInput);
 document.getElementById("save-bench-sections")?.addEventListener("click", saveBenchSections);
 document.getElementById("save-profile")?.addEventListener("click", () => saveUserProfile());
+document.getElementById("save-template")?.addEventListener("click", () => saveTemplate());
 document.getElementById("bench-section-input")?.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     event.preventDefault();
@@ -500,6 +501,7 @@ async function loadWorkspace() {
     }
     await loadBenchSections();
     await loadUserProfile();
+    await loadTemplates();
     renderWorkspace(state.workspace);
     openDefaultPanels();
     setOnboardingVisible(false);
@@ -1339,8 +1341,8 @@ function renderTemplateLibrary(items) {
   if (!items.length) {
     target.className = "row-stack empty-state";
     target.innerHTML = `
-      <p>${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</p>
-      <p class="helper-text">User-saved examples and reusable staff scaffolds will appear here once you promote them into the local template repo.</p>
+      <p>${state.workspace ? "No templates saved yet." : PRELOAD_EMPTY_TEXT}</p>
+      <p class="helper-text">Use the form above to save a brief format, heading structure, or any example you want to reuse.</p>
     `;
     return;
   }
@@ -1348,18 +1350,83 @@ function renderTemplateLibrary(items) {
   target.innerHTML = items
     .map(
       (item) => `
-        <article class="data-row">
+        <article class="data-row" data-template-id="${escapeHtml(item.template_id)}">
           <div class="data-row-head">
-            <span class="strip-label">${escapeHtml(item.template_source)}</span>
             <strong>${escapeHtml(item.template_name)}</strong>
             <span class="meta-inline">${escapeHtml(item.template_type)}</span>
           </div>
-          <p>${escapeHtml(item.description || "Reusable structure and tone reference.")}</p>
-          <p class="meta-inline">${escapeHtml((item.reusable_headings || []).slice(0, 4).join(" | ") || "No reusable headings stored.")}</p>
+          <p>${escapeHtml(item.description || item.example_excerpt?.slice(0, 120) || "Reusable structure and tone reference.")}</p>
+          <p class="meta-inline">${escapeHtml((item.reusable_headings || []).slice(0, 4).join(" · ") || "")}</p>
+          <div class="button-row compact-controls">
+            <button class="secondary small delete-template-btn" data-template-id="${escapeHtml(item.template_id)}">Delete</button>
+          </div>
         </article>
       `,
     )
     .join("");
+  for (const btn of target.querySelectorAll(".delete-template-btn")) {
+    btn.addEventListener("click", () => deleteTemplate(btn.dataset.templateId));
+  }
+}
+
+async function loadTemplates() {
+  if (!state.userKey || state.mode !== "personal") {
+    return;
+  }
+  try {
+    const response = await apiFetch("/product-templates", { auth: true });
+    renderTemplateLibrary(response.records || []);
+  } catch (error) {
+    console.error("Failed to load templates", error);
+  }
+}
+
+async function saveTemplate() {
+  const nameInput = document.getElementById("template-name-input");
+  const typeSelect = document.getElementById("template-type-select");
+  const contentInput = document.getElementById("template-content-input");
+  const noteEl = document.getElementById("template-save-note");
+  const name = nameInput?.value.trim();
+  if (!name) {
+    if (noteEl) noteEl.textContent = "Template name is required.";
+    return;
+  }
+  const rawContent = contentInput?.value.trim() || "";
+  const headings = rawContent
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && l.length < 120);
+  const body = {
+    template_name: name,
+    template_type: typeSelect?.value || "other",
+    reusable_headings: headings,
+    example_excerpt: rawContent.slice(0, 2000) || null,
+  };
+  try {
+    await apiFetch("/product-templates/manual", { method: "POST", auth: true, body: JSON.stringify(body) });
+    if (nameInput) nameInput.value = "";
+    if (contentInput) contentInput.value = "";
+    if (noteEl) {
+      noteEl.textContent = "Template saved.";
+      setTimeout(() => { noteEl.textContent = ""; }, 3000);
+    }
+    const drawer = document.getElementById("add-template-drawer");
+    if (drawer) drawer.open = false;
+    await loadTemplates();
+  } catch (error) {
+    if (noteEl) noteEl.textContent = error.message || "Failed to save template.";
+    console.error("Failed to save template", error);
+  }
+}
+
+async function deleteTemplate(templateId) {
+  if (!templateId) return;
+  try {
+    await apiFetch(`/product-templates/${encodeURIComponent(templateId)}`, { method: "DELETE", auth: true });
+    await loadTemplates();
+  } catch (error) {
+    console.error("Failed to delete template", error);
+  }
 }
 
 function renderMosBenchLibrary() {
@@ -3210,8 +3277,27 @@ async function loadUserProfile() {
   } catch (error) {
     if (error.status !== 404) {
       console.error("Failed to load user profile", error);
+    } else {
+      maybePromptFirstRunProfile();
     }
   }
+}
+
+function maybePromptFirstRunProfile() {
+  const key = `profile_prompted_${state.userKey}`;
+  if (localStorage.getItem(key)) {
+    return;
+  }
+  localStorage.setItem(key, "1");
+  const drawer = document.getElementById("profile-settings");
+  if (drawer && !drawer.open) {
+    drawer.open = true;
+  }
+  const noteEl = document.getElementById("profile-note");
+  if (noteEl) {
+    noteEl.textContent = "Welcome! Tell us about your billet and unit so we can personalize outputs for you.";
+  }
+  openLane("configure", "");
 }
 
 async function saveUserProfile() {

@@ -832,6 +832,38 @@
                 </div>
               </summary>
               <div class="panel-drawer-body">
+                <details id="add-template-drawer" class="strip">
+                  <summary><span class="drawer-label">Save a template</span></summary>
+                  <div class="config-grid">
+                    <label>
+                      <span>Template name</span>
+                      <input id="template-name-input" type="text" placeholder="e.g. Weekly SITREP format" />
+                    </label>
+                    <label>
+                      <span>Type</span>
+                      <select id="template-type-select">
+                        <option value="naval_letter">Naval letter</option>
+                        <option value="sitrep">SITREP</option>
+                        <option value="cpb">Commander's Update Brief</option>
+                        <option value="opord">OPORD</option>
+                        <option value="warno">WARNO</option>
+                        <option value="fragord">FRAGORD</option>
+                        <option value="conop">CONOP</option>
+                        <option value="memorandum">Memorandum</option>
+                        <option value="briefing_slide">Briefing slide notes</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label class="profile-style-notes-label">
+                    <span>Example content or headings (paste your template text)</span>
+                    <textarea id="template-content-input" rows="5" placeholder="Paste an example, list headings one per line, or describe the structure you want reused…" maxlength="8000"></textarea>
+                  </label>
+                  <div class="button-row">
+                    <button id="save-template" class="secondary">Save template</button>
+                  </div>
+                  <p id="template-save-note" class="helper-text" aria-live="polite"></p>
+                </details>
                 <div id="template-library" class="row-stack empty-state">Load workspace to see this</div>
               </div>
             </details>
