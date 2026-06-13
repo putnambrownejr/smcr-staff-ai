@@ -72,6 +72,10 @@ def default_section_memory_dir() -> Path:
     return default_local_context_dir() / "section_memory"
 
 
+def default_bench_sections_dir() -> Path:
+    return default_local_context_dir() / "bench_sections"
+
+
 def default_history_storage_dir() -> Path:
     return default_local_context_dir() / "history"
 
@@ -123,6 +127,7 @@ class Settings(BaseSettings):
     dod_watch_storage_dir: str = str(default_dod_watch_dir())
     custom_watch_feed_storage_dir: str = str(default_custom_watch_feed_dir())
     section_memory_storage_dir: str = str(default_section_memory_dir())
+    bench_sections_storage_dir: str = str(default_bench_sections_dir())
     history_storage_dir: str = str(default_history_storage_dir())
     active_user_context_storage_dir: str = str(default_active_user_context_dir())
     actions_storage_dir: str = str(default_actions_storage_dir())
@@ -151,6 +156,7 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.dod_watch_storage_dir),
         Path(settings.custom_watch_feed_storage_dir),
         Path(settings.section_memory_storage_dir),
+        Path(settings.bench_sections_storage_dir),
         Path(settings.history_storage_dir),
         Path(settings.active_user_context_storage_dir),
         Path(settings.actions_storage_dir),

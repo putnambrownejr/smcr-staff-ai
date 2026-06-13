@@ -10,6 +10,7 @@ from app.api.routes import (
     agents,
     analysis,
     battle_rhythm,
+    bench_sections,
     billets,
     calendar,
     career,
@@ -91,6 +92,7 @@ def create_app() -> FastAPI:
     app.include_router(privacy.router)
     app.include_router(reading.router)
     app.include_router(reading_state.router)
+    app.include_router(bench_sections.router)
     app.include_router(section_memory.router)
     app.include_router(maradmins.router)
     app.include_router(message_watch.router)

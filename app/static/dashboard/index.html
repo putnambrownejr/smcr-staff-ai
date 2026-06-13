@@ -863,22 +863,39 @@
               <div class="form-row">
                 <label>
                   <span>Section lane</span>
-                  <select name="section">
-                    <option value="S-1/Admin">S-1 / Admin</option>
-                    <option value="S-2">S-2 / Intel</option>
-                    <option value="S-3">S-3</option>
-                    <option value="S-4">S-4</option>
-                    <option value="S-6">S-6</option>
-                    <option value="XO/Chief">XO / Chief</option>
-                    <option value="SEL">SEL / 1stSgt / SgtMaj</option>
-                    <option value="Medical">Medical</option>
-                    <option value="G-9">G-9</option>
+                  <select id="bench-section-select" name="section">
+                    <option value="">Load workspace to populate sections</option>
                   </select>
                 </label>
                 <label>
                   <span>Memory title</span>
                   <input name="title" type="text" placeholder="Usual S-6 friction" />
                 </label>
+              </div>
+              <div class="button-row compact-controls">
+                <button
+                  type="button"
+                  class="secondary"
+                  id="manage-bench-sections"
+                  aria-expanded="false"
+                  aria-controls="bench-sections-editor"
+                >
+                  Manage
+                </button>
+              </div>
+              <div id="bench-sections-editor" class="strip is-hidden">
+                <span class="strip-label">Bench sections</span>
+                <div id="bench-sections-list" class="row-stack empty-state">Load workspace to edit sections.</div>
+                <div class="form-row">
+                  <label>
+                    <span>Add section</span>
+                    <input id="bench-section-input" type="text" placeholder="S-2/Intel" />
+                  </label>
+                </div>
+                <div class="button-row">
+                  <button type="button" class="secondary" id="add-bench-section">Add section</button>
+                  <button type="button" id="save-bench-sections">Save sections</button>
+                </div>
               </div>
               <div class="form-row">
                 <label>

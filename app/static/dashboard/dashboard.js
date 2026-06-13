@@ -13,6 +13,7 @@ const state = {
   apiBase: resolveApiBase(),
   timezoneOptions: buildTimezoneOptions(),
   selectedTimezoneIds: loadTimezoneSelection(),
+  benchSections: [],
   timezonePanelOpen: false,
   clockTimer: null,
   lastUpdatedAt: {
@@ -27,6 +28,7 @@ const state = {
 };
 
 const PRELOAD_EMPTY_TEXT = "Load workspace to see this";
+const DEFAULT_BENCH_SECTIONS = ["S-1/Admin", "S-2/Intel", "S-3", "S-4", "S-6"];
 const REFRESH_BUTTON_GROUPS = {
   sourceWatch: [
     "refresh-maradmins",
@@ -153,6 +155,15 @@ document.getElementById("section-memory-form").addEventListener("submit", async 
 document.getElementById("clear-section-memory-form").addEventListener("click", () => {
   clearSectionMemoryForm();
   setWorkspaceNote("Section-memory form cleared.");
+});
+document.getElementById("manage-bench-sections")?.addEventListener("click", toggleBenchSectionsEditor);
+document.getElementById("add-bench-section")?.addEventListener("click", addBenchSectionFromInput);
+document.getElementById("save-bench-sections")?.addEventListener("click", saveBenchSections);
+document.getElementById("bench-section-input")?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    addBenchSectionFromInput();
+  }
 });
 
 document.getElementById("battle-rhythm-form").addEventListener("submit", async (event) => {
@@ -424,6 +435,12 @@ document.addEventListener("click", async (event) => {
     return;
   }
 
+  const benchSectionRemoveButton = event.target.closest("[data-bench-section-remove]");
+  if (benchSectionRemoveButton) {
+    removeBenchSection(benchSectionRemoveButton.dataset.benchSectionRemove);
+    return;
+  }
+
   const mosBenchButton = event.target.closest("[data-mos-bench]");
   if (mosBenchButton) {
     openMosBenchLane(mosBenchButton.dataset.mosBench);
@@ -470,6 +487,7 @@ async function loadWorkspace() {
       }
       state.workspace = await apiFetch(`/dashboard/data/${encodeURIComponent(userKey)}`, { auth: true });
     }
+    await loadBenchSections();
     renderWorkspace(state.workspace);
     openDefaultPanels();
     setOnboardingVisible(false);
@@ -2692,7 +2710,10 @@ async function apiFetch(path, options = {}) {
   if (!response.ok) {
     const text = await response.text();
     recordFetchFailure();
-    throw new Error(`Request failed (${response.status}): ${text}`);
+    const httpError = new Error(`Request failed (${response.status}): ${text}`);
+    httpError.status = response.status;
+    httpError.responseText = text;
+    throw httpError;
   }
   try {
     const data = await response.json();
@@ -3124,12 +3145,152 @@ function populateSectionMemoryForm(entry = null) {
     return;
   }
   form.dataset.entryKey = entry ? sectionMemoryEntryKey(entry) : "";
-  form.elements.section.value = entry?.section || "S-1/Admin";
+  const selectedSection = entry?.section || state.benchSections[0] || DEFAULT_BENCH_SECTIONS[0];
+  if (selectedSection && !state.benchSections.includes(selectedSection)) {
+    state.benchSections = dedupeBenchSections([...state.benchSections, selectedSection]);
+    renderBenchSectionsSelect(selectedSection);
+    renderBenchSectionsEditor();
+  }
+  form.elements.section.value = selectedSection;
   form.elements.title.value = entry?.title || "";
   form.elements.recurring_questions.value = (entry?.recurring_questions || []).join("\n");
   form.elements.recurring_failure_modes.value = (entry?.recurring_failure_modes || []).join("\n");
   form.elements.preferred_checks.value = (entry?.preferred_checks || []).join("\n");
   form.elements.notes.value = (entry?.notes || []).join("\n");
+}
+
+async function loadBenchSections() {
+  if (state.mode !== "personal" || !state.userKey) {
+    state.benchSections = [...DEFAULT_BENCH_SECTIONS];
+    renderBenchSectionsSelect();
+    renderBenchSectionsEditor();
+    return;
+  }
+  try {
+    const config = await apiFetch(`/bench-sections/${encodeURIComponent(state.userKey)}`, { auth: true });
+    state.benchSections = dedupeBenchSections(config.sections || DEFAULT_BENCH_SECTIONS);
+  } catch (error) {
+    if (error.status === 404) {
+      state.benchSections = [...DEFAULT_BENCH_SECTIONS];
+    } else {
+      console.error("Failed to load bench sections", error);
+      state.benchSections = [...DEFAULT_BENCH_SECTIONS];
+      setWorkspaceNote(error.message, true);
+    }
+  }
+  renderBenchSectionsSelect();
+  renderBenchSectionsEditor();
+}
+
+function renderBenchSectionsSelect(selectedValue = "") {
+  const select = document.getElementById("bench-section-select");
+  if (!select) {
+    return;
+  }
+  const currentValue = selectedValue || select.value;
+  const sections = state.benchSections.length ? state.benchSections : DEFAULT_BENCH_SECTIONS;
+  select.innerHTML = sections
+    .map((section) => `<option value="${escapeAttribute(section)}">${escapeHtml(section)}</option>`)
+    .join("");
+  select.value = sections.includes(currentValue) ? currentValue : sections[0] || "";
+}
+
+function renderBenchSectionsEditor() {
+  const target = document.getElementById("bench-sections-list");
+  if (!target) {
+    return;
+  }
+  const sections = state.benchSections.length ? state.benchSections : DEFAULT_BENCH_SECTIONS;
+  target.classList.toggle("empty-state", sections.length === 0);
+  target.innerHTML = sections.length
+    ? sections
+        .map(
+          (section) => `
+            <article class="brief-card compact-card">
+              <div>
+                <strong>${escapeHtml(section)}</strong>
+              </div>
+              <button type="button" class="secondary" data-bench-section-remove="${escapeAttribute(section)}">Remove</button>
+            </article>
+          `,
+        )
+        .join("")
+    : "No sections configured.";
+}
+
+function toggleBenchSectionsEditor() {
+  const editor = document.getElementById("bench-sections-editor");
+  const button = document.getElementById("manage-bench-sections");
+  if (!editor || !button) {
+    return;
+  }
+  const nextVisible = editor.classList.contains("is-hidden");
+  editor.classList.toggle("is-hidden", !nextVisible);
+  button.setAttribute("aria-expanded", nextVisible ? "true" : "false");
+  renderBenchSectionsEditor();
+}
+
+function addBenchSectionFromInput() {
+  const input = document.getElementById("bench-section-input");
+  const value = input?.value.trim() || "";
+  if (!value) {
+    setPanelStatus(document.getElementById("bench-sections-editor"), "Add a section label first.", true);
+    return;
+  }
+  state.benchSections = dedupeBenchSections([...state.benchSections, value]);
+  if (input) {
+    input.value = "";
+  }
+  renderBenchSectionsSelect(value);
+  renderBenchSectionsEditor();
+}
+
+async function saveBenchSections(event) {
+  const button = event?.currentTarget || document.getElementById("save-bench-sections");
+  if (state.mode !== "personal" || !state.userKey) {
+    setWorkspaceNote("Open your personal workspace first so section choices stay local to your profile.", true);
+    setPanelStatus(document.getElementById("bench-sections-editor"), "Open your personal workspace first.", true);
+    return;
+  }
+  const sections = dedupeBenchSections(state.benchSections);
+  await withButtonFeedback(
+    button,
+    "Saving...",
+    "Saved bench sections.",
+    async () => {
+      const response = await apiFetch(`/bench-sections/${encodeURIComponent(state.userKey)}`, {
+        method: "PUT",
+        auth: true,
+        body: JSON.stringify({ sections }),
+      });
+      state.benchSections = dedupeBenchSections(response.config?.sections || sections);
+      renderBenchSectionsSelect();
+      renderBenchSectionsEditor();
+      setWorkspaceNote("Bench sections updated.");
+    },
+    { errorContext: "Failed to save bench sections", statusTarget: document.getElementById("bench-sections-editor") },
+  );
+}
+
+function removeBenchSection(section) {
+  state.benchSections = state.benchSections.filter((item) => item !== section);
+  renderBenchSectionsSelect();
+  renderBenchSectionsEditor();
+}
+
+function dedupeBenchSections(sections) {
+  const seen = new Set();
+  const result = [];
+  for (const section of sections || []) {
+    const cleaned = String(section || "").trim();
+    const key = cleaned.toLowerCase();
+    if (!cleaned || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    result.push(cleaned);
+  }
+  return result;
 }
 
 function clearSectionMemoryForm() {
