@@ -371,6 +371,9 @@ document
   .getElementById("library-open-workspace")
   .addEventListener("click", () => openLane("configure", "Opened workspace setup from the bench and files lane."));
 document
+  .getElementById("handoff-stale-go-workspace")
+  .addEventListener("click", () => openLane("configure", "Reopen workspace to refresh the stale handoff."));
+document
   .getElementById("draft-open-planning-cell")
   .addEventListener("click", () => launchThinStaffWorkflow("planning-cell"));
 document
