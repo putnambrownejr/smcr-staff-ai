@@ -1517,6 +1517,87 @@ async function loadTemplates() {
   }
 }
 
+// ------------------------------------------------------------------
+// Module Packs (Bench/Files lane)
+// ------------------------------------------------------------------
+
+// Lazy-load the pack list the first time the panel is opened.
+document.getElementById("module-packs-panel")?.addEventListener("toggle", async (e) => {
+  if (!e.target.open) { return; }
+  const listEl = document.getElementById("module-pack-list");
+  if (!listEl || listEl.dataset.loaded === "1") { return; }
+  await loadModulePacks();
+});
+
+async function loadModulePacks() {
+  const listEl = document.getElementById("module-pack-list");
+  if (!listEl) { return; }
+  try {
+    const packs = await apiFetch("/modules", { auth: true });
+    listEl.dataset.loaded = "1";
+    renderModulePackList(packs || []);
+  } catch (err) {
+    listEl.className = "row-stack empty-state";
+    listEl.textContent = err.isNetworkError
+      ? "Server not reachable — start the app first."
+      : "Could not load module packs.";
+  }
+}
+
+function renderModulePackList(packs) {
+  const listEl = document.getElementById("module-pack-list");
+  if (!listEl) { return; }
+  if (!packs.length) {
+    listEl.className = "row-stack empty-state";
+    listEl.textContent = "No module packs found. Add a sub-folder to the modules/ directory in the repo.";
+    return;
+  }
+  listEl.className = "row-stack";
+  listEl.innerHTML = packs.map((pack) => `
+    <article class="data-row module-pack-row" data-pack="${escapeHtml(pack.pack_name)}">
+      <div class="data-row-head">
+        <strong>${escapeHtml(pack.manifest?.title || pack.pack_name)}</strong>
+        <span class="meta-inline">${pack.supported_file_count} file${pack.supported_file_count !== 1 ? "s" : ""}</span>
+      </div>
+      ${pack.manifest?.description ? `<p>${escapeHtml(pack.manifest.description)}</p>` : ""}
+      ${pack.manifest?.author ? `<p class="meta-inline">By ${escapeHtml(pack.manifest.author)}${pack.manifest.version ? " · v" + escapeHtml(pack.manifest.version) : ""}</p>` : ""}
+      <div class="button-row compact-controls">
+        <button class="secondary small module-activate-btn" data-pack="${escapeHtml(pack.pack_name)}">Activate</button>
+      </div>
+      <p class="module-pack-note helper-text" aria-live="polite"></p>
+    </article>
+  `).join("");
+
+  for (const btn of listEl.querySelectorAll(".module-activate-btn")) {
+    btn.addEventListener("click", () => activateModulePack(btn.dataset.pack, btn));
+  }
+}
+
+async function activateModulePack(packName, button) {
+  if (state.mode !== "personal" || !state.userKey) {
+    const noteEl = button?.closest(".module-pack-row")?.querySelector(".module-pack-note");
+    if (noteEl) { noteEl.textContent = "Open a personal workspace first."; }
+    return;
+  }
+  const noteEl = button?.closest(".module-pack-row")?.querySelector(".module-pack-note");
+  const originalLabel = button?.textContent;
+  if (button) { button.disabled = true; button.textContent = "Activating…"; }
+  if (noteEl) { noteEl.textContent = ""; }
+  try {
+    const result = await apiFetch(`/modules/${encodeURIComponent(packName)}/ingest`, {
+      method: "POST",
+      auth: true,
+    });
+    if (noteEl) { noteEl.textContent = result.message || "Activated."; }
+    if (button) { button.textContent = "Activated ✓"; }
+  } catch (err) {
+    if (noteEl) { noteEl.textContent = err.message || "Activation failed."; }
+    if (button) { button.textContent = originalLabel; button.disabled = false; }
+  }
+}
+
+// ------------------------------------------------------------------
+
 async function saveTemplate() {
   const nameInput = document.getElementById("template-name-input");
   const typeSelect = document.getElementById("template-type-select");

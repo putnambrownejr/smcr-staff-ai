@@ -84,6 +84,10 @@ def default_billet_research_dir() -> Path:
     return default_local_context_dir() / "billet_research"
 
 
+def default_module_packs_dir() -> Path:
+    return Path(__file__).resolve().parent.parent.parent / "modules"
+
+
 def default_history_storage_dir() -> Path:
     return default_local_context_dir() / "history"
 
@@ -138,6 +142,7 @@ class Settings(BaseSettings):
     bench_sections_storage_dir: str = str(default_bench_sections_dir())
     user_profile_storage_dir: str = str(default_user_profile_dir())
     billet_research_storage_dir: str = str(default_billet_research_dir())
+    module_packs_dir: str = str(default_module_packs_dir())
     history_storage_dir: str = str(default_history_storage_dir())
     active_user_context_storage_dir: str = str(default_active_user_context_dir())
     actions_storage_dir: str = str(default_actions_storage_dir())
