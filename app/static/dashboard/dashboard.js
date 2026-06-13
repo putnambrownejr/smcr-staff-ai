@@ -21,6 +21,9 @@ const state = {
     sourceWatch: null,
   },
   lastUpdatedTimer: null,
+  consecutiveFetchFailures: 0,
+  connectionLostDismissed: false,
+  firstEmptyOrientationDismissed: false,
 };
 
 const PRELOAD_EMPTY_TEXT = "Load workspace to see this";
@@ -85,8 +88,7 @@ const MOS_BENCH_CATALOG = [
 
 for (const button of document.querySelectorAll(".lane-button")) {
   button.addEventListener("click", () => {
-    state.activeLane = button.dataset.lane || "overview";
-    applyLaneVisibility(true); // A3: move focus into panel on explicit tab click
+    openLane(button.dataset.lane || "overview");
   });
 }
 
@@ -114,6 +116,26 @@ document.getElementById("load-demo").addEventListener("click", () => {
   document.getElementById("user-key").value = "";
   document.getElementById("api-key").value = "";
   loadWorkspace();
+});
+document.getElementById("retry-workspace-load")?.addEventListener("click", () => loadWorkspace());
+document.getElementById("reload-demo-workspace")?.addEventListener("click", () => {
+  state.mode = "demo";
+  state.userKey = "";
+  state.apiKey = "";
+  loadWorkspace();
+});
+document.getElementById("dismiss-connection-lost")?.addEventListener("click", () => {
+  state.connectionLostDismissed = true;
+  setConnectionLostVisible(false);
+});
+document.getElementById("dismiss-first-empty-orientation")?.addEventListener("click", () => {
+  state.firstEmptyOrientationDismissed = true;
+  updateFirstEmptyOrientation(false);
+});
+
+window.addEventListener("popstate", (event) => {
+  const lane = event.state?.lane || resolveInitialLane();
+  openLane(lane, "", { updateHistory: false });
 });
 
 document.getElementById("load-personal").addEventListener("click", () => {
@@ -435,6 +457,8 @@ async function loadWorkspace() {
   updateModeBanner();
   // UX5: show loading overlay so users know the fetch is in flight
   setLoading(true);
+  setServerUnavailableVisible(false);
+  setDemoUnavailableVisible(false);
   try {
     if (state.mode === "demo") {
       state.workspace = await apiFetch("/demo/dashboard/data");
@@ -449,10 +473,19 @@ async function loadWorkspace() {
     renderWorkspace(state.workspace);
     openDefaultPanels();
     setOnboardingVisible(false);
+    updateFirstEmptyOrientation(isWorkspaceAllEmpty(state.workspace));
     setWorkspaceNote("Workspace refreshed.");
   } catch (error) {
     console.error("Failed to load workspace", error);
-    setWorkspaceNote(error.message, true);
+    if (error.isNetworkError) {
+      setServerUnavailableVisible(true);
+      setWorkspaceNote("Cannot reach local server — is the app running? Start it with: uvicorn app.main:app --reload", true);
+    } else if (state.mode === "demo") {
+      setDemoUnavailableVisible(true);
+      setWorkspaceNote("Demo unavailable — try reloading.", true);
+    } else {
+      setWorkspaceNote(error.message, true);
+    }
   } finally {
     setLoading(false);
   }
@@ -463,6 +496,18 @@ function setLoading(active) {
   if (overlay) {
     overlay.classList.toggle("is-hidden", !active);
   }
+}
+
+function setServerUnavailableVisible(visible) {
+  document.getElementById("server-unavailable-banner")?.classList.toggle("is-hidden", !visible);
+}
+
+function setDemoUnavailableVisible(visible) {
+  document.getElementById("demo-unavailable-banner")?.classList.toggle("is-hidden", !visible);
+}
+
+function setConnectionLostVisible(visible) {
+  document.getElementById("connection-lost-banner")?.classList.toggle("is-hidden", !visible);
 }
 
 async function withButtonFeedback(button, loadingLabel, successMessage, action, options = {}) {
@@ -663,8 +708,47 @@ function renderWorkspace(payload) {
 }
 
 function renderWorkspaceSummary(summaryLines, warnings) {
+  const placeholder = document.getElementById("command-preload-placeholder");
+  const summary = document.getElementById("workspace-summary");
+  const warningList = document.getElementById("workspace-warnings");
+  placeholder?.classList.toggle("is-hidden", true);
+  summary?.classList.toggle("is-hidden", false);
+  warningList?.classList.toggle("is-hidden", false);
   renderList("workspace-summary", summaryLines);
   renderList("workspace-warnings", warnings.slice(0, 4));
+}
+
+function updateFirstEmptyOrientation(show) {
+  const visible = show && !state.firstEmptyOrientationDismissed;
+  const card = document.getElementById("first-empty-orientation");
+  const main = document.getElementById("dashboard-main");
+  card?.classList.toggle("is-hidden", !visible);
+  main?.classList.toggle("all-empty-workspace", visible);
+}
+
+function isWorkspaceAllEmpty(payload) {
+  const chief = payload?.chief_brief || {};
+  const actionItems = [
+    ...(chief.top_priority_items || []),
+    ...(chief.action_items || []),
+    ...(payload?.tracked_actions || []),
+  ];
+  const sourceWatchItems = [
+    ...(payload?.maradmin_ticker || []),
+    ...(payload?.navadmin_ticker || []),
+    ...(payload?.alnav_ticker || []),
+    ...(payload?.dod_ticker || []),
+    ...(payload?.custom_watch_feeds || []),
+    ...(payload?.documentation_updates || []),
+    ...(chief.documentation_updates || []),
+  ];
+  const sectionMemoryEntries = payload?.section_memory_profile?.entries || [];
+  return (
+    actionItems.length === 0 &&
+    sourceWatchItems.length === 0 &&
+    sectionMemoryEntries.length === 0 &&
+    !chief.handoff
+  );
 }
 
 function renderChief(payload) {
@@ -834,8 +918,7 @@ function battleRhythmLines(items) {
 // Switches to the draft lane, expands the target drawer, and lets the user
 // scroll at their own pace.
 function openToolDrawer(drawerId) {
-  state.activeLane = "draft";
-  applyLaneVisibility(true);
+  openLane("draft");
   const drawer = document.getElementById(drawerId);
   if (drawer) {
     drawer.open = true;
@@ -849,9 +932,7 @@ async function launchThinStaffWorkflow(mode) {
   }
 
   if (mode === "admin") {
-    state.activeLane = "overview";
-    applyLaneVisibility(true);
-    setWorkspaceNote("Jumped to admin readiness.");
+    openLane("overview", "Jumped to admin readiness.");
     return;
   }
 
@@ -1436,15 +1517,28 @@ function renderCustomWatchFeeds(items) {
 
 function renderHistory(items) {
   const target = document.getElementById("history-feed");
+  const overviewTarget = document.getElementById("overview-history-fact");
   if (!items.length) {
     target.className = "row-stack empty-state";
     target.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
+    if (overviewTarget) {
+      overviewTarget.className = "row-stack empty-state";
+      overviewTarget.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
+    }
     return;
   }
   const item = items[0];
-  const significance = (item.significance || []).slice(0, 2);
   target.className = "row-stack";
-  target.innerHTML = `
+  target.innerHTML = renderHistoryFactCard(item);
+  if (overviewTarget) {
+    overviewTarget.className = "row-stack";
+    overviewTarget.innerHTML = renderHistoryFactCard(item);
+  }
+}
+
+function renderHistoryFactCard(item) {
+  const significance = (item.significance || []).slice(0, 2);
+  return `
     <article class="data-row">
       <div class="data-row-head">
         <span class="strip-label">${escapeHtml(item.year_label)}</span>
@@ -2408,10 +2502,7 @@ async function runLonePlannerMode() {
     const payload = buildPlanningCellPayloadFromForm();
     const data = await apiFetch("/staff/lone-planner", { method: "POST", body: JSON.stringify(payload) });
     renderLonePlannerOutput("lone-planner-output", data);
-    state.activeLane = "draft";
-    applyLaneVisibility();
-    
-    setWorkspaceNote("Lone planner mode ran against the current planning context.");
+    openLane("draft", "Lone planner mode ran against the current planning context.");
   } catch (error) {
     console.error("Failed to run lone planner mode", error);
     setWorkspaceNote(error.message, true);
@@ -2426,10 +2517,7 @@ async function runSectionGapCover() {
       body: JSON.stringify(payload),
     });
     renderSectionGapCoverOutput("section-gap-cover-output", data);
-    state.activeLane = "draft";
-    applyLaneVisibility();
-    
-    setWorkspaceNote("Built assisted section estimates from the current planning context.");
+    openLane("draft", "Built assisted section estimates from the current planning context.");
   } catch (error) {
     console.error("Failed to build section gap cover", error);
     setWorkspaceNote(error.message, true);
@@ -2480,9 +2568,13 @@ function openMosBenchLane(agentId) {
   setWorkspaceNote(`MOS Advisor is open — ${item.label} lane loaded.`);
 }
 
-function openLane(lane, message = "") {
+function openLane(lane, message = "", options = {}) {
+  const updateHistory = options.updateHistory !== false;
   state.activeLane = lane;
   applyLaneVisibility(true);
+  if (updateHistory) {
+    pushLaneHistory(lane);
+  }
   if (message) {
     setWorkspaceNote(message);
   }
@@ -2583,16 +2675,46 @@ async function apiFetch(path, options = {}) {
   if (options.auth && state.apiKey) {
     headers["X-Local-API-Key"] = state.apiKey;
   }
-  const response = await fetch(`${state.apiBase}${path}`, {
-    method: options.method || "GET",
-    headers,
-    body: options.body,
-  });
+  let response;
+  try {
+    response = await fetch(`${state.apiBase}${path}`, {
+      method: options.method || "GET",
+      headers,
+      body: options.body,
+    });
+  } catch (error) {
+    recordFetchFailure();
+    const networkError = new Error("Cannot reach local server.");
+    networkError.isNetworkError = true;
+    networkError.cause = error;
+    throw networkError;
+  }
   if (!response.ok) {
     const text = await response.text();
+    recordFetchFailure();
     throw new Error(`Request failed (${response.status}): ${text}`);
   }
-  return response.json();
+  try {
+    const data = await response.json();
+    recordFetchSuccess();
+    return data;
+  } catch (error) {
+    recordFetchFailure();
+    throw error;
+  }
+}
+
+function recordFetchSuccess() {
+  state.consecutiveFetchFailures = 0;
+  state.connectionLostDismissed = false;
+  setConnectionLostVisible(false);
+}
+
+function recordFetchFailure() {
+  state.consecutiveFetchFailures += 1;
+  if (state.consecutiveFetchFailures >= 3 && !state.connectionLostDismissed) {
+    setConnectionLostVisible(true);
+  }
 }
 
 async function runUniformPhotoReview(formElement) {
@@ -2611,16 +2733,27 @@ async function runUniformPhotoReview(formElement) {
     headers["X-Local-API-Key"] = state.apiKey;
   }
   try {
-    const response = await fetch(`${state.apiBase}/uniform/photo-review`, {
-      method: "POST",
-      headers,
-      body: form,
-    });
+    let response;
+    try {
+      response = await fetch(`${state.apiBase}/uniform/photo-review`, {
+        method: "POST",
+        headers,
+        body: form,
+      });
+    } catch (error) {
+      recordFetchFailure();
+      const networkError = new Error("Cannot reach local server.");
+      networkError.isNetworkError = true;
+      networkError.cause = error;
+      throw networkError;
+    }
     if (!response.ok) {
       const text = await response.text();
+      recordFetchFailure();
       throw new Error(`Request failed (${response.status}): ${text}`);
     }
     const data = await response.json();
+    recordFetchSuccess();
     renderUniformPhotoReviewOutput("uniform-photo-output", data);
     setWorkspaceNote("Uniform photo review completed and stored as local context.");
     await loadWorkspace();
@@ -2877,7 +3010,28 @@ function applyLaneVisibility(moveFocus = false) {
     main.focus();
   }
 
-  window.location.hash = active === "overview" ? "" : active;
+}
+
+function initializeLaneHistory() {
+  const lane = state.activeLane || "overview";
+  if (window.history?.replaceState) {
+    window.history.replaceState({ lane }, "", laneUrl(lane));
+  }
+}
+
+function pushLaneHistory(lane) {
+  if (!window.history?.pushState) {
+    return;
+  }
+  const currentLane = window.history.state?.lane;
+  if (currentLane === lane && window.location.hash === laneUrl(lane)) {
+    return;
+  }
+  window.history.pushState({ lane }, "", laneUrl(lane));
+}
+
+function laneUrl(lane) {
+  return `#${lane || "overview"}`;
 }
 
 function splitLines(value) {
@@ -2989,10 +3143,7 @@ function editSectionMemoryEntry(entryKey) {
     return;
   }
   populateSectionMemoryForm(entry);
-  state.activeLane = "library";
-  applyLaneVisibility();
-  
-  setWorkspaceNote(`Editing section memory for ${entry.section}.`);
+  openLane("library", `Editing section memory for ${entry.section}.`);
 }
 
 async function deleteSectionMemoryEntry(entryKey) {
@@ -3075,17 +3226,15 @@ function seedSectionMemoryEntry(encodedSeed) {
   try {
     const seed = decodeSectionMemorySeed(encodedSeed);
     populateSectionMemoryForm(seed);
-    state.activeLane = "library";
-    applyLaneVisibility();
-    
-    setWorkspaceNote(`Loaded a section-memory starter for ${seed.section}.`);
+    openLane("library", `Loaded a section-memory starter for ${seed.section}.`);
   } catch (_error) {
     console.error("Failed to decode section-memory starter", _error);
     setWorkspaceNote("Could not load that section-memory starter.", true);
   }
 }
 
-loadWorkspace();
 applyLaneVisibility();
+initializeLaneHistory();
+loadWorkspace();
 startTimezoneClock();
 startLastUpdatedClock();

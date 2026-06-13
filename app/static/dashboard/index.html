@@ -37,6 +37,18 @@
       <div id="dashboard-loading" class="dashboard-loading is-hidden" role="status" aria-label="Loading workspace">
         <span class="loading-text">Loading workspace…</span>
       </div>
+      <div id="server-unavailable-banner" class="status-banner critical-banner is-hidden" role="alert">
+        <span>Cannot reach local server — is the app running? Start it with: <code>uvicorn app.main:app --reload</code></span>
+        <button type="button" class="secondary" id="retry-workspace-load">Retry</button>
+      </div>
+      <div id="demo-unavailable-banner" class="status-banner critical-banner is-hidden" role="alert">
+        <span>Demo unavailable — try reloading.</span>
+        <button type="button" class="secondary" id="reload-demo-workspace">Reload</button>
+      </div>
+      <div id="connection-lost-banner" class="status-banner critical-banner is-hidden" role="alert">
+        <span>Connection lost — the local server may have stopped. Reload to reconnect.</span>
+        <button type="button" class="secondary" id="dismiss-connection-lost">Dismiss</button>
+      </div>
 
       <!-- A2: role="tabpanel" — main is the single tabpanel target for all lane tabs -->
       <main class="layout" id="dashboard-main" role="tabpanel" tabindex="-1" aria-labelledby="tab-overview">
@@ -56,13 +68,14 @@
             <button type="button" class="lane-button" role="tab" id="tab-configure" aria-selected="false" aria-controls="dashboard-main" data-lane="configure">Workspace</button>
           </div>
           <div class="command-grid">
+            <p id="command-preload-placeholder" class="command-preload-placeholder">— load workspace to populate —</p>
             <section class="strip">
               <span class="strip-label">Mission focus</span>
-              <ul id="workspace-summary" class="bullet-list"></ul>
+              <ul id="workspace-summary" class="bullet-list is-hidden"></ul>
             </section>
             <section class="strip">
               <span class="strip-label">Guardrails</span>
-              <ul id="workspace-warnings" class="bullet-list"></ul>
+              <ul id="workspace-warnings" class="bullet-list is-hidden"></ul>
             </section>
           </div>
           <div class="button-row quick-actions">
@@ -147,6 +160,26 @@
             <div id="priority-queue" class="row-stack empty-state">Load workspace to see this</div>
           </article>
 
+          <article id="first-empty-orientation" class="panel orientation-card full-span is-hidden">
+            <div class="panel-header compact">
+              <div>
+                <h2>Workspace ready</h2>
+                <p>You are all set up — nothing stored yet. Use the Workspace tab to add your first entries.</p>
+              </div>
+              <button type="button" class="secondary" id="dismiss-first-empty-orientation">Dismiss</button>
+            </div>
+          </article>
+
+          <article class="panel history-overview-card full-span">
+            <div class="panel-header compact">
+              <div>
+                <h2>Today in History</h2>
+                <p>A small historical reference from the watch lane feed.</p>
+              </div>
+            </div>
+            <div id="overview-history-fact" class="row-stack empty-state">Load workspace to see this</div>
+          </article>
+
           <article class="panel readiness-panel full-span">
             <div class="panel-header">
               <h2>Next Drill Readiness</h2>
@@ -164,7 +197,9 @@
             </details>
             <!-- Staleness warning — shown when the stored handoff is > 14 days old -->
             <div id="handoff-stale-banner" class="handoff-stale-banner is-hidden" role="alert">
-              ⚠ Session handoff is stale — readiness signals may not reflect your current situation.
+              <span aria-hidden="true">⚠</span>
+              <span class="sr-only">Warning:</span>
+              Session handoff is stale — readiness signals may not reflect your current situation.
               Refresh your handoff via <code>PUT /handoffs/{user_key}</code> before relying on this brief.
             </div>
             <!-- Primary strip: always visible — posture + decisive action -->
@@ -281,11 +316,12 @@
                 <p><strong>Action:</strong> If a ticker item changes an assumption in your planning, update the Battle Rhythm Board's assumption log.</p>
               </div>
             </details>
-            <div class="button-row compact-controls">
+            <fieldset class="button-row compact-controls refresh-feed-group">
+              <legend>Refresh feeds:</legend>
               <button type="button" class="secondary" id="refresh-maradmins">Refresh MARADMIN feed</button>
               <button type="button" class="secondary" id="refresh-reading">Refresh reading list</button>
               <button type="button" class="secondary" id="refresh-source-watch">Refresh all watches</button>
-            </div>
+            </fieldset>
             <div id="maradmin-ticker" class="row-stack empty-state">Load workspace to see this</div>
             <p id="maradmin-last-updated" class="last-updated is-hidden" aria-live="polite"></p>
             <details class="panel-drawer watch-subsection">
