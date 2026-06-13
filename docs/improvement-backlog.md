@@ -109,3 +109,27 @@ Four cut-or-wire decisions resolved:
 | B2 | Remove `database_url` / `vector_store_backend` dead config or mark reserved | done |
 | B3 | Document `user_key` → `group_key` extension point in `docs/architecture.md` | done |
 | B4 | Add module-split readiness note to `dashboard.js` header | done |
+
+---
+
+## Cycle 2 — New Cycle (2026-06-13)
+
+### Round 1 — Verify (browser)
+
+Verdict: PASS. All prior cycle features confirmed working in live browser via Chrome MCP.
+E2E suite activated: 4/5 Playwright tests passing (commit `9bf26da`).
+Minor notes: H1 loading feedback blocked by demo-mode early return (expected); last-refreshed timestamps hidden in demo mode (expected).
+
+### Round 2 — Security Review
+
+No exploitable vulnerabilities found. Path traversal blocked by SHA256 key scheme. XSS blocked by escapeHtml(). API key in-memory only, never logged or persisted.
+
+### Round 3 — Code Review (medium)
+
+One confirmed correctness bug fixed (commit `af82d14`):
+
+| ID | Finding | Fix | Status |
+|----|---------|-----|--------|
+| CR1 | `config.sections \|\| DEFAULT_BENCH_SECTIONS` treats `[]` as falsy — stored empty state silently reverted to defaults on every reload | Length-guard in JS; `Field(min_length=1)` on schema; post-dedup guard in store | done |
+
+Other reviewed items: REFRESH_BUTTON_GROUPS ID coupling (maintenance note, no fix needed), duplicate dedup logic Python/JS (documented, not fixed — JS is authoritative at save time).
