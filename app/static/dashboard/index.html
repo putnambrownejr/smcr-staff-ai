@@ -111,30 +111,21 @@
           <article id="workspace-onboarding" class="panel onboarding-panel full-span">
             <div class="panel-header">
               <h2>Welcome to SMCR Staff AI</h2>
-              <p>Load a workspace to see your readiness posture, act-now stack, and live source watch. Takes about 5 seconds.</p>
+              <p>Open the demo workspace to see the dashboard with safe sample data.</p>
             </div>
-            <div class="onboarding-steps">
-              <div class="onboarding-step">
-                <span class="strip-label">Explore first</span>
-                <h3>Demo mode</h3>
-                <p>Safe read-only tour with sample data. No setup required — just click below to see what the dashboard does.</p>
-                <div class="button-row">
-                  <button type="button" id="onboarding-load-demo">Open demo workspace</button>
+            <div class="onboarding-step">
+              <div class="button-row">
+                <button type="button" id="onboarding-load-demo">Open demo workspace</button>
+              </div>
+              <details class="help-hint">
+                <summary>More setup options</summary>
+                <div class="help-hint-body">
+                  <p>Demo mode is a read-only tour. To use local personal data, enter your profile name in the Workspace tab and add your passkey if you configured one.</p>
+                  <div class="button-row">
+                    <button type="button" class="secondary" id="onboarding-open-setup">Open workspace setup</button>
+                  </div>
                 </div>
-              </div>
-              <div class="onboarding-step">
-                <span class="strip-label">Your data</span>
-                <h3>Personal workspace</h3>
-                <p>Enter your profile name from the Workspace tab. If you set a passkey, enter that too. Your data stays local.</p>
-                <div class="button-row">
-                  <button type="button" class="secondary" id="onboarding-open-setup">Open workspace setup</button>
-                </div>
-              </div>
-              <div class="onboarding-step">
-                <span class="strip-label">First time?</span>
-                <h3>Start with demo, then go personal</h3>
-                <p>Demo shows you the layout. Once you know what fields mean, switch to personal mode and enter your profile name.</p>
-              </div>
+              </details>
             </div>
           </article>
 
@@ -150,10 +141,10 @@
                 <p><strong>When:</strong> Start here if you have limited time. This is the distilled "do this now" list.</p>
                 <p><strong>Critical / Attention / Routine:</strong> Severity-ranked cards. Work critical items before opening anything else.</p>
                 <p><strong>Where it comes from:</strong> Pulled from your Chief/Aide brief, tracked POAMs, and continuity drift — automatically after workspace loads.</p>
-                <p><strong>If it's empty:</strong> Either your workspace isn't loaded yet, or you're genuinely clear. Load your personal workspace to see your real stack.</p>
+                <p><strong>If it's empty:</strong> Either the workspace is not open yet, or you're genuinely clear. Load your personal workspace to see your real stack.</p>
               </div>
             </details>
-            <div id="priority-queue" class="row-stack empty-state">Load the workspace to see current priorities.</div>
+            <div id="priority-queue" class="row-stack empty-state">Load workspace to see this</div>
           </article>
 
           <article class="panel readiness-panel full-span">
@@ -180,11 +171,11 @@
             <div class="readiness-shell">
               <section class="readiness-primary">
                 <span class="strip-label">Readiness posture</span>
-                <h3 id="readiness-posture">No readiness posture loaded yet.</h3>
-                <p id="readiness-anchor" class="helper-text">Load the workspace to anchor this to the next drill.</p>
+                <h3 id="readiness-posture">Load workspace to see this</h3>
+                <p id="readiness-anchor" class="helper-text">Load workspace to see this</p>
                 <div class="decisive-box">
                   <span class="strip-label">Decisive action now</span>
-                  <p id="readiness-decisive-action">Load the workspace to surface the one move that matters most.</p>
+                  <p id="readiness-decisive-action">Load workspace to see this</p>
                 </div>
               </section>
             </div>
@@ -204,7 +195,7 @@
                   </div>
                   <div class="brief-block">
                     <h3>Immediate must-do</h3>
-                    <div id="readiness-must-do" class="row-stack empty-state">No immediate pre-drill actions yet.</div>
+                    <div id="readiness-must-do" class="row-stack empty-state">Load workspace to see this</div>
                   </div>
                   <div class="brief-block">
                     <h3>Likely friction</h3>
@@ -295,7 +286,8 @@
               <button type="button" class="secondary" id="refresh-reading">Refresh reading list</button>
               <button type="button" class="secondary" id="refresh-source-watch">Refresh all watches</button>
             </div>
-            <div id="maradmin-ticker" class="row-stack empty-state">No source-watch items loaded yet.</div>
+            <div id="maradmin-ticker" class="row-stack empty-state">Load workspace to see this</div>
+            <p id="maradmin-last-updated" class="last-updated is-hidden" aria-live="polite"></p>
             <details class="panel-drawer watch-subsection">
               <summary>
                 <span>Open second-tier watch</span>
@@ -310,15 +302,15 @@
                 <div class="brief-grid">
                   <section class="brief-block">
                     <h3>NAVADMIN</h3>
-                    <div id="navadmin-ticker" class="row-stack empty-state">No NAVADMIN items loaded yet.</div>
+                    <div id="navadmin-ticker" class="row-stack empty-state">Load workspace to see this</div>
                   </section>
                   <section class="brief-block">
                     <h3>ALNAV</h3>
-                    <div id="alnav-ticker" class="row-stack empty-state">No ALNAV items loaded yet.</div>
+                    <div id="alnav-ticker" class="row-stack empty-state">Load workspace to see this</div>
                   </section>
                   <section class="brief-block">
                     <h3>DoD</h3>
-                    <div id="dod-ticker" class="row-stack empty-state">No DoD watch items loaded yet.</div>
+                    <div id="dod-ticker" class="row-stack empty-state">Load workspace to see this</div>
                   </section>
                 </div>
               </div>
@@ -346,15 +338,15 @@
               </section>
               <section class="brief-block">
                 <h3>Must-do</h3>
-                <div id="daily-must-do" class="row-stack empty-state">No must-do items yet.</div>
+                <div id="daily-must-do" class="row-stack empty-state">Load workspace to see this</div>
               </section>
               <section class="brief-block">
                 <h3>Should-do</h3>
-                <div id="daily-should-do" class="row-stack empty-state">No should-do items yet.</div>
+                <div id="daily-should-do" class="row-stack empty-state">Load workspace to see this</div>
               </section>
               <section class="brief-block">
                 <h3>Can-defer</h3>
-                <div id="daily-can-defer" class="row-stack empty-state">No defer candidates yet.</div>
+                <div id="daily-can-defer" class="row-stack empty-state">Load workspace to see this</div>
               </section>
               <section class="brief-block">
                 <h3>Waiting-on</h3>
@@ -434,7 +426,7 @@
                 </div>
               </summary>
               <div class="panel-drawer-body">
-                <div id="history-feed" class="row-stack empty-state">No history entry is loaded for today.</div>
+                <div id="history-feed" class="row-stack empty-state">Load workspace to see this</div>
               </div>
             </details>
           </article>
@@ -492,7 +484,7 @@
                   </section>
                   <section class="brief-block">
                     <h3>Next touchpoint</h3>
-                    <div id="thin-staff-next-touchpoint" class="row-stack empty-state">No touchpoint loaded yet.</div>
+                    <div id="thin-staff-next-touchpoint" class="row-stack empty-state">Load workspace to see this</div>
                   </section>
                 </div>
               </div>
@@ -588,7 +580,7 @@
                   <section class="brief-block full-span">
                     <h3>Continuity watch</h3>
                     <p id="battle-rhythm-health-posture" class="meta-inline">
-                      No continuity watch is loaded yet.
+                      Load workspace to see this
                     </p>
                     <ul id="battle-rhythm-health-summary" class="bullet-list"></ul>
                     <h4>Hot items</h4>
@@ -600,23 +592,23 @@
                   </section>
                   <section class="brief-block">
                     <h3>Next touchpoint</h3>
-                    <div id="battle-rhythm-touchpoint" class="row-stack empty-state">No next touchpoint stored yet.</div>
+                    <div id="battle-rhythm-touchpoint" class="row-stack empty-state">Load workspace to see this</div>
                   </section>
                   <section class="brief-block">
                     <h3>Assumption log</h3>
-                    <div id="battle-rhythm-assumptions" class="row-stack empty-state">No assumptions stored yet.</div>
+                    <div id="battle-rhythm-assumptions" class="row-stack empty-state">Load workspace to see this</div>
                   </section>
                   <section class="brief-block">
                     <h3>Commander decision log</h3>
-                    <div id="battle-rhythm-decisions" class="row-stack empty-state">No decision items stored yet.</div>
+                    <div id="battle-rhythm-decisions" class="row-stack empty-state">Load workspace to see this</div>
                   </section>
                   <section class="brief-block">
                     <h3>Question log</h3>
-                    <div id="battle-rhythm-questions" class="row-stack empty-state">No question log stored yet.</div>
+                    <div id="battle-rhythm-questions" class="row-stack empty-state">Load workspace to see this</div>
                   </section>
                   <section class="brief-block">
                     <h3>Due-out board</h3>
-                    <div id="battle-rhythm-dueouts" class="row-stack empty-state">No due-outs stored yet.</div>
+                    <div id="battle-rhythm-dueouts" class="row-stack empty-state">Load workspace to see this</div>
                   </section>
                 </div>
               </div>
@@ -648,7 +640,7 @@
               <h2>Custom watch feeds</h2>
               <p>Local-only RSS watches with trust labels, quick toggles, and a short preview of what each feed is surfacing.</p>
             </div>
-            <div id="custom-feed-watch" class="row-stack empty-state">No custom watch feeds are configured yet.</div>
+            <div id="custom-feed-watch" class="row-stack empty-state">Load workspace to see this</div>
           </article>
 
           <article class="panel">
@@ -656,7 +648,7 @@
               <h2>Action Tracker</h2>
               <p>Tracked POAM items with owner, status, and suspense.</p>
             </div>
-            <div id="action-watch" class="row-stack empty-state">Tracked action items will appear here.</div>
+            <div id="action-watch" class="row-stack empty-state">Load workspace to see this</div>
           </article>
 
           <article class="panel">
@@ -672,7 +664,8 @@
               <h2>Source updates</h2>
               <p>Potential doctrine or admin-source changes still waiting for human review.</p>
             </div>
-            <div id="source-updates" class="row-stack empty-state">Potential source updates will appear here after scans are run.</div>
+            <div id="source-updates" class="row-stack empty-state">Load workspace to see this</div>
+            <p id="source-watch-last-updated" class="last-updated is-hidden" aria-live="polite"></p>
           </article>
         </section>
 
@@ -709,12 +702,12 @@
                 </div>
               </summary>
               <div class="panel-drawer-body">
-                <div id="document-library-summary" class="meta-inline">No local file previews loaded yet.</div>
+                <div id="document-library-summary" class="meta-inline">Load workspace to see this</div>
                 <div class="button-row compact">
                   <label class="inline-field">
                     <span>File</span>
                     <select id="document-select">
-                      <option value="">No local files loaded yet.</option>
+                      <option value="">Load workspace to see this</option>
                     </select>
                   </label>
                   <label class="inline-field">
@@ -736,7 +729,7 @@
                   <button type="button" class="secondary" id="apply-document-suggestion">Use suggestion</button>
                 </div>
                 <p id="document-type-suggestion" class="helper-text">No category suggestion yet.</p>
-                <div id="document-library" class="document-library empty-state">No local document previews loaded yet.</div>
+                <div id="document-library" class="document-library empty-state">Load workspace to see this</div>
                 <div class="row-stack compact-panel-stack">
                   <article class="data-row compact-row">
                     <div class="data-row-head">
@@ -764,7 +757,7 @@
                 </div>
               </summary>
               <div class="panel-drawer-body">
-                <div id="template-library" class="row-stack empty-state">No templates are loaded yet.</div>
+                <div id="template-library" class="row-stack empty-state">Load workspace to see this</div>
               </div>
             </details>
           </article>
@@ -781,7 +774,7 @@
                 </div>
               </summary>
               <div class="panel-drawer-body">
-                <div id="mos-bench-library" class="row-stack empty-state">MOS lane shortcuts will appear here.</div>
+                <div id="mos-bench-library" class="row-stack empty-state">Load workspace to see this</div>
               </div>
             </details>
           </article>
@@ -812,8 +805,8 @@
                   <button type="button" class="secondary" id="history-library-show-date">Show facts</button>
                   <button type="button" class="secondary" id="history-library-use-today">Use today</button>
                 </div>
-                <div id="history-library-summary" class="meta-inline">No history facts loaded yet.</div>
-                <div id="history-library-results" class="row-stack empty-state">No history facts loaded yet.</div>
+                <div id="history-library-summary" class="meta-inline">Load workspace to see this</div>
+                <div id="history-library-results" class="row-stack empty-state">Load workspace to see this</div>
               </div>
             </details>
           </article>
@@ -896,7 +889,7 @@
               </p>
             </form>
             <div id="section-memory-library" class="row-stack empty-state">
-              No recurring section memory is stored yet.
+              Load workspace to see this
             </div>
               </div>
             </details>
@@ -907,7 +900,7 @@
               <h2>Doctrine / Reference Library</h2>
               <p>Browse the repo’s curated source notes for doctrine, admin, planning, logistics, PME, and staff-reference grounding.</p>
             </div>
-            <div id="reference-summary" class="meta-inline">No reference notes loaded yet.</div>
+            <div id="reference-summary" class="meta-inline">Load workspace to see this</div>
             <details id="reference-library-drawer" class="panel-drawer reading-drawer">
               <summary>
                 <span>Open reference library</span>
@@ -917,10 +910,10 @@
                 <label>
                   <span>Reference note</span>
                   <select id="reference-select">
-                    <option value="">No reference notes loaded yet.</option>
+                    <option value="">Load workspace to see this</option>
                   </select>
                 </label>
-                <div id="reference-library" class="reading-detail empty-state">No reference notes loaded yet.</div>
+                <div id="reference-library" class="reading-detail empty-state">Load workspace to see this</div>
               </div>
             </details>
           </article>
@@ -930,7 +923,7 @@
               <h2>Commandant's Reading List</h2>
               <p>Track what you’ve read, keep notes, and let future recommendations key off your reading history.</p>
             </div>
-            <div id="reading-summary" class="meta-inline">No reading-list entries loaded yet.</div>
+            <div id="reading-summary" class="meta-inline">Load workspace to see this</div>
             <details id="reading-library-drawer" class="panel-drawer reading-drawer">
               <summary>
                 <span>Open reading tracker</span>
@@ -940,10 +933,11 @@
                 <label>
                   <span>Book</span>
                   <select id="reading-book-select">
-                    <option value="">No reading-list entries loaded yet.</option>
+                    <option value="">Load workspace to see this</option>
                   </select>
                 </label>
-                <div id="reading-library" class="reading-detail empty-state">No reading-list entries loaded yet.</div>
+                <div id="reading-library" class="reading-detail empty-state">Load workspace to see this</div>
+                <p id="reading-last-updated" class="last-updated is-hidden" aria-live="polite"></p>
               </div>
             </details>
           </article>

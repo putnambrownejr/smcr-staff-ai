@@ -15,6 +15,24 @@ const state = {
   selectedTimezoneIds: loadTimezoneSelection(),
   timezonePanelOpen: false,
   clockTimer: null,
+  lastUpdatedAt: {
+    maradmins: null,
+    reading: null,
+    sourceWatch: null,
+  },
+  lastUpdatedTimer: null,
+};
+
+const PRELOAD_EMPTY_TEXT = "Load workspace to see this";
+const REFRESH_BUTTON_GROUPS = {
+  sourceWatch: [
+    "refresh-maradmins",
+    "refresh-reading",
+    "refresh-navadmins",
+    "refresh-alnavs",
+    "refresh-dod-watch",
+    "refresh-source-watch",
+  ],
 };
 
 const DOCUMENT_TYPE_OPTIONS = [
@@ -216,6 +234,7 @@ document.getElementById("refresh-navadmins").addEventListener("click", (event) =
 document.getElementById("refresh-alnavs").addEventListener("click", (event) => refreshSourceLane("alnavs", event.currentTarget));
 document.getElementById("refresh-dod-watch").addEventListener("click", (event) => refreshSourceLane("dod", event.currentTarget));
 document.getElementById("refresh-source-watch").addEventListener("click", (event) => refreshSourceLane("all", event.currentTarget));
+initializeDrawerLabels();
 document
   .getElementById("thin-staff-run-lone-planner")
   .addEventListener("click", () => launchThinStaffWorkflow("lone-planner"));
@@ -448,9 +467,18 @@ function setLoading(active) {
 
 async function withButtonFeedback(button, loadingLabel, successMessage, action, options = {}) {
   const originalLabel = button?.textContent || "";
+  const originalButtonDisabled = button?.disabled || false;
+  const groupedButtons = getRefreshButtonGroup(options.disableButtonGroup);
+  const groupedButtonStates = groupedButtons.map((groupButton) => ({
+    button: groupButton,
+    disabled: groupButton.disabled,
+  }));
   if (button) {
     button.disabled = true;
     button.textContent = loadingLabel;
+  }
+  for (const groupButton of groupedButtons) {
+    groupButton.disabled = true;
   }
   const initialStatusTarget =
     typeof options.statusTarget === "function" ? options.statusTarget() : options.statusTarget || button;
@@ -470,8 +498,11 @@ async function withButtonFeedback(button, loadingLabel, successMessage, action, 
     setWorkspaceNote(message, true);
     return null;
   } finally {
+    for (const { button: groupButton, disabled } of groupedButtonStates) {
+      groupButton.disabled = disabled;
+    }
     if (button) {
-      button.disabled = false;
+      button.disabled = originalButtonDisabled;
       button.textContent = originalLabel;
     }
   }
@@ -522,6 +553,60 @@ function getPanelStatusElement(anchor, create = true) {
   return status;
 }
 
+function getRefreshButtonGroup(groupName) {
+  return (REFRESH_BUTTON_GROUPS[groupName] || [])
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+}
+
+function initializeDrawerLabels() {
+  for (const details of document.querySelectorAll("details")) {
+    updateDrawerLabels(details);
+    details.addEventListener("toggle", () => updateDrawerLabels(details));
+  }
+}
+
+function updateDrawerLabels(details) {
+  const label = details.open ? "Close" : "Open";
+  const summary = details.querySelector(":scope > summary");
+  for (const element of summary?.querySelectorAll(".drawer-label") || []) {
+    element.textContent = label;
+  }
+}
+
+function markLastUpdated(keys) {
+  const now = new Date();
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(state.lastUpdatedAt, key)) {
+      state.lastUpdatedAt[key] = now;
+    }
+  }
+  renderLastUpdatedStamps();
+}
+
+function renderLastUpdatedStamps() {
+  const targets = {
+    maradmins: "maradmin-last-updated",
+    reading: "reading-last-updated",
+    sourceWatch: "source-watch-last-updated",
+  };
+  for (const [key, targetId] of Object.entries(targets)) {
+    const target = document.getElementById(targetId);
+    if (!target) {
+      continue;
+    }
+    const timestamp = state.lastUpdatedAt[key];
+    target.textContent = timestamp ? `Last updated: ${formatElapsedMinutes(timestamp)} ago` : "";
+    target.classList.toggle("is-hidden", !timestamp);
+  }
+}
+
+function formatElapsedMinutes(timestamp) {
+  const elapsedMs = Math.max(0, Date.now() - timestamp.getTime());
+  const elapsedMinutes = Math.floor(elapsedMs / 60000);
+  return elapsedMinutes <= 0 ? "just now" : `${elapsedMinutes} min`;
+}
+
 // UX4: show onboarding panel when no workspace is loaded, hide it once loaded
 function setOnboardingVisible(visible) {
   const panel = document.getElementById("workspace-onboarding");
@@ -563,9 +648,9 @@ function renderWorkspace(payload) {
   renderMosBenchLibrary();
   renderSectionMemoryProfile(payload.section_memory_profile || null);
   renderMaradminTicker(payload.maradmin_ticker || []);
-  renderTickerStack("navadmin-ticker", payload.navadmin_ticker || [], "No NAVADMIN items loaded yet.");
-  renderTickerStack("alnav-ticker", payload.alnav_ticker || [], "No ALNAV items loaded yet.");
-  renderTickerStack("dod-ticker", payload.dod_ticker || [], "No DoD watch items loaded yet.");
+  renderTickerStack("navadmin-ticker", payload.navadmin_ticker || [], "Nothing here yet.");
+  renderTickerStack("alnav-ticker", payload.alnav_ticker || [], "Nothing here yet.");
+  renderTickerStack("dod-ticker", payload.dod_ticker || [], "Nothing here yet.");
   renderCustomWatchFeeds(payload.custom_watch_feeds || []);
   renderHistory(payload.today_in_history || []);
   renderHistoryLibrary(payload.history_library || []);
@@ -574,6 +659,7 @@ function renderWorkspace(payload) {
   renderTrackedActions(payload.tracked_actions || []);
   renderOpportunities(payload.tracked_opportunities || payload.career_watch?.tracked_opportunities || []);
   renderSourceUpdates(payload.documentation_updates || payload.chief_brief?.documentation_updates || []);
+  renderLastUpdatedStamps();
 }
 
 function renderWorkspaceSummary(summaryLines, warnings) {
@@ -597,7 +683,7 @@ function renderNextDrillReadiness(payload) {
   }
 
   document.getElementById("readiness-posture").textContent =
-    payload.readiness_posture || "No readiness posture loaded yet.";
+    payload.readiness_posture || "Nothing here yet.";
   document.getElementById("readiness-anchor").textContent = payload.anchor_drill_date
     ? `Anchored to next drill: ${payload.anchor_drill_date}`
     : "No next-drill anchor is currently stored.";
@@ -625,7 +711,7 @@ function renderThinStaffAssist(payload) {
   renderEntryRows(
     "thin-staff-next-touchpoint",
     payload.next_touchpoint ? [{ title: payload.next_touchpoint, category: "touchpoint" }] : [],
-    "No touchpoint loaded yet.",
+    "Nothing here yet.",
   );
 }
 
@@ -1017,10 +1103,10 @@ function renderDocumentLibrary(items) {
   if (!items.length) {
     target.className = "document-library empty-state";
     if (summary) {
-      summary.textContent = "No local file previews loaded yet.";
+      summary.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
     }
     if (selector) {
-      selector.innerHTML = '<option value="">No local files loaded yet.</option>';
+      selector.innerHTML = `<option value="">${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</option>`;
       selector.disabled = true;
     }
     if (typeSelect) {
@@ -1037,7 +1123,7 @@ function renderDocumentLibrary(items) {
       suggestionNote.textContent = "No category suggestion yet.";
     }
     target.innerHTML = `
-      <p>No local document previews loaded yet.</p>
+      <p>${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</p>
       <p class="helper-text">Open your personal workspace to review orders, BIO, RQS, receipts, and other local references here.</p>
     `;
     return;
@@ -1142,7 +1228,7 @@ function renderTemplateLibrary(items) {
   if (!items.length) {
     target.className = "row-stack empty-state";
     target.innerHTML = `
-      <p>No templates are loaded yet.</p>
+      <p>${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</p>
       <p class="helper-text">User-saved examples and reusable staff scaffolds will appear here once you promote them into the local template repo.</p>
     `;
     return;
@@ -1190,7 +1276,7 @@ function renderSectionMemoryProfile(profile) {
   if (!entries.length) {
     target.className = "row-stack empty-state";
     target.innerHTML = `
-      <p>No recurring section memory is stored yet.</p>
+      <p>${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</p>
       <p class="helper-text">Start with the section your reserve bench misses most often. This is meant to sharpen lone-planner and gap-cover outputs over time.</p>
     `;
     clearSectionMemoryForm();
@@ -1229,12 +1315,12 @@ function renderReferenceLibrary(items) {
   const selector = document.getElementById("reference-select");
   const target = document.getElementById("reference-library");
   if (!items.length) {
-    summary.textContent = "No reference notes loaded yet.";
-    selector.innerHTML = '<option value="">No reference notes loaded yet.</option>';
+    summary.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
+    selector.innerHTML = `<option value="">${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</option>`;
     selector.disabled = true;
     target.className = "reading-detail empty-state";
     target.innerHTML = `
-      <p>No reference notes loaded yet.</p>
+      <p>${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</p>
       <p class="helper-text">Curated doctrine and staff-source notes from the repo will appear here.</p>
     `;
     return;
@@ -1285,7 +1371,7 @@ function renderReferenceLibrary(items) {
 }
 
 function renderMaradminTicker(items) {
-  renderTickerStack("maradmin-ticker", items, "No source-watch items loaded yet.");
+  renderTickerStack("maradmin-ticker", items, "Nothing here yet.");
 }
 
 function renderCustomWatchFeeds(items) {
@@ -1293,7 +1379,7 @@ function renderCustomWatchFeeds(items) {
   if (!items.length) {
     target.className = "row-stack empty-state";
     target.innerHTML = `
-      <p>No custom watch feeds are configured yet.</p>
+      <p>${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</p>
       <p class="helper-text">This lane is for local-only RSS watches like unit pages, PME sources, or professional feeds you want to keep in your off-drill scan.</p>
     `;
     return;
@@ -1352,7 +1438,7 @@ function renderHistory(items) {
   const target = document.getElementById("history-feed");
   if (!items.length) {
     target.className = "row-stack empty-state";
-    target.textContent = "No Marine Corps history fact is loaded for today.";
+    target.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
     return;
   }
   const item = items[0];
@@ -1389,9 +1475,9 @@ function renderHistoryLibrary(items) {
   populateHistoryDayOptions(daySelect, state.selectedHistoryDay);
 
   if (!state.historyLibrary.length) {
-    summary.textContent = "No history facts loaded yet.";
+    summary.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
     target.className = "row-stack empty-state";
-    target.textContent = "No history facts loaded yet.";
+    target.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
     return;
   }
 
@@ -1430,11 +1516,11 @@ function renderReadingBooks(items) {
   const selector = document.getElementById("reading-book-select");
   const target = document.getElementById("reading-library");
   if (!items.length) {
-    summary.textContent = "No reading-list entries loaded yet.";
-    selector.innerHTML = '<option value="">No reading-list entries loaded yet.</option>';
+    summary.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
+    selector.innerHTML = `<option value="">${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</option>`;
     selector.disabled = true;
     target.className = "reading-detail empty-state";
-    target.textContent = "No reading-list entries loaded yet.";
+    target.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
     return;
   }
   const completedCount = items.filter((item) => (item.progress?.status || "not_started") === "completed").length;
@@ -1619,7 +1705,7 @@ function renderTickerStack(targetId, items, emptyText) {
   const target = document.getElementById(targetId);
   if (!items.length) {
     target.className = "row-stack empty-state";
-    target.textContent = emptyText;
+    target.textContent = state.workspace ? emptyText : PRELOAD_EMPTY_TEXT;
     return;
   }
   target.className = "row-stack";
@@ -1643,7 +1729,7 @@ function renderSourceUpdates(items) {
   const target = document.getElementById("source-updates");
   if (!items.length) {
     target.className = "row-stack empty-state";
-    target.textContent = "No source updates are currently stored.";
+    target.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
     return;
   }
   target.className = "row-stack";
@@ -2468,6 +2554,14 @@ async function refreshSourceLane(lane, button = null) {
   };
   const sequence = refreshers[lane] || [];
   const successMessage = lane === "all" ? "Source-watch stack refreshed." : `${lane.replaceAll("-", " ")} refreshed.`;
+  const timestampKeys = {
+    maradmins: ["maradmins"],
+    reading: ["reading"],
+    navadmins: ["sourceWatch"],
+    alnavs: ["sourceWatch"],
+    dod: ["sourceWatch"],
+    all: ["maradmins", "reading", "sourceWatch"],
+  };
   await withButtonFeedback(
     button,
     "Refreshing...",
@@ -2476,10 +2570,11 @@ async function refreshSourceLane(lane, button = null) {
       for (const [path, method] of sequence) {
         await apiFetch(path, { method, auth: true });
       }
+      markLastUpdated(timestampKeys[lane] || []);
       setWorkspaceNote(successMessage);
       await loadWorkspace();
     },
-    { errorContext: `Failed to refresh source lane: ${lane}` },
+    { disableButtonGroup: "sourceWatch", errorContext: `Failed to refresh source lane: ${lane}` },
   );
 }
 
@@ -2605,6 +2700,14 @@ function renderTimezoneControls() {
       `,
     )
     .join("");
+}
+
+function startLastUpdatedClock() {
+  renderLastUpdatedStamps();
+  if (state.lastUpdatedTimer) {
+    clearInterval(state.lastUpdatedTimer);
+  }
+  state.lastUpdatedTimer = setInterval(renderLastUpdatedStamps, 60000);
 }
 
 function updateTimezoneSelection(optionId, checked) {
@@ -2985,3 +3088,4 @@ function seedSectionMemoryEntry(encodedSeed) {
 loadWorkspace();
 applyLaneVisibility();
 startTimezoneClock();
+startLastUpdatedClock();

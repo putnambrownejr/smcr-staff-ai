@@ -693,18 +693,8 @@ textarea {
   border-radius: 999px;
   background: var(--surface-3);
   color: var(--muted);
-  /* A11: hide static inline text; ::before provides context-aware label */
-  font-size: 0;
-  font-weight: 700;
-}
-
-.drawer-label::before {
   font-size: 0.82rem;
-  content: "Open";
-}
-
-details[open] > summary .drawer-label::before {
-  content: "Close";
+  font-weight: 700;
 }
 
 .reading-drawer {
@@ -734,6 +724,12 @@ details[open] > summary .drawer-label::before {
 
 .empty-state {
   color: var(--muted);
+}
+
+.last-updated {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .empty-state p {
@@ -1037,5 +1033,61 @@ details[open] > summary .drawer-label::before {
   .timezone-panel {
     width: 100%;
     min-width: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar,
+  .summary-grid,
+  .two-column,
+  .three-column,
+  .tool-grid,
+  .brief-grid,
+  .readiness-shell,
+  .readiness-columns,
+  .readiness-footer,
+  .config-grid,
+  .form-row,
+  .command-grid,
+  .document-library,
+  .reading-grid,
+  .library-grid,
+  .workflow-priority-grid,
+  .compact-summary-grid,
+  .onboarding-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar,
+  .layout {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .command-toolbar[role="tablist"] {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+
+  .command-toolbar[role="tablist"] .lane-button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .timezone-panel {
+    width: 100%;
+  }
+
+  .timezone-controls {
+    display: none;
+  }
+
+  .timezone-panel:focus-within .timezone-controls,
+  .timezone-controls:not(.is-hidden) {
+    display: grid;
   }
 }
