@@ -133,3 +133,17 @@ One confirmed correctness bug fixed (commit `af82d14`):
 | CR1 | `config.sections \|\| DEFAULT_BENCH_SECTIONS` treats `[]` as falsy — stored empty state silently reverted to defaults on every reload | Length-guard in JS; `Field(min_length=1)` on schema; post-dedup guard in store | done |
 
 Other reviewed items: REFRESH_BUTTON_GROUPS ID coupling (maintenance note, no fix needed), duplicate dedup logic Python/JS (documented, not fixed — JS is authoritative at save time).
+
+### Round 4 — Discoverability / Quickstart Docs
+
+Created `QUICKSTART.md` (45 lines) for external reviewer onboarding. `.env.example` was already present and comprehensive — no changes needed.
+
+### Round 5 — Continuity Deepening
+
+Audit found three gaps in the handoff → brief → action loop:
+
+| ID | Gap | Status |
+|----|-----|--------|
+| C1 | Stale handoff banner showed raw `PUT /handoffs/{user_key}` API instruction — no UI affordance | **fixed** (`6bb4522`) — replaced with link-button navigating to Workspace lane |
+| C2 | No handoff editor in dashboard — user cannot directly edit/save handoff notes from the UI; must use the API | open — needs a handoff notes form in the Workspace lane |
+| C3 | Action tracker (Act Now + watch lane) shows actions as read-only lists; no "Mark done" affordance; `PATCH /actions/{action_id}` exists but is not wired to any UI | open — needs checkbox/button row on each action item |
