@@ -172,9 +172,16 @@
               <p>Create a profile name to open your personal workspace. Use something short and consistent — e.g. <code>smith-j</code> or <code>maj-jones</code>. It identifies your local data files.</p>
               <div class="onboarding-key-row">
                 <input id="onboarding-key-input" type="text" placeholder="your-profile-name" autocomplete="username" maxlength="60" spellcheck="false" />
-                <button type="button" id="onboarding-create-workspace" class="secondary">Create workspace</button>
+                <button type="button" id="onboarding-create-workspace" class="secondary">Open workspace</button>
               </div>
               <p id="onboarding-key-error" class="helper-text" aria-live="polite"></p>
+              <details class="help-hint" id="onboarding-recover-details" style="margin-top:0.5rem">
+                <summary id="onboarding-recover-trigger">Recover an existing profile</summary>
+                <div class="help-hint-body">
+                  <p id="onboarding-recover-note" class="helper-text">Looking up stored profiles…</p>
+                  <ul id="onboarding-profile-list" class="onboarding-profile-list"></ul>
+                </div>
+              </details>
               <div class="button-row" style="margin-top:0.5rem">
                 <button type="button" id="onboarding-load-demo">Browse demo first</button>
               </div>

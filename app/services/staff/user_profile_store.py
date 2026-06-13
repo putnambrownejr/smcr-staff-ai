@@ -56,6 +56,17 @@ class UserProfileStore:
         path.unlink()
         return True
 
+    def list_keys(self) -> list[str]:
+        """Return all stored user_key values, sorted alphabetically."""
+        keys: list[str] = []
+        for path in self.root_dir.glob("*.json"):
+            try:
+                profile = UserProfile.model_validate_json(path.read_text(encoding="utf-8"))
+                keys.append(profile.user_key)
+            except Exception:  # noqa: BLE001
+                continue
+        return sorted(keys)
+
     def _path(self, user_key: str) -> Path:
         digest = hashlib.sha256(user_key.encode("utf-8")).hexdigest()[:24]
         return self.root_dir / f"{digest}.json"

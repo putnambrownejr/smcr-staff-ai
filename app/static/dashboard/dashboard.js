@@ -162,6 +162,48 @@ document.getElementById("onboarding-switch-profile")?.addEventListener("click", 
   document.getElementById("onboarding-first-run").classList.remove("is-hidden");
   document.getElementById("onboarding-key-input")?.focus();
 });
+
+// Onboarding: load stored profile list when recovery details opens
+document.getElementById("onboarding-recover-details")?.addEventListener("toggle", async (e) => {
+  if (!e.target.open) { return; }
+  const noteEl = document.getElementById("onboarding-recover-note");
+  const listEl = document.getElementById("onboarding-profile-list");
+  if (!listEl) { return; }
+  // Only fetch once — if list already has items, leave it
+  if (listEl.childElementCount > 0) { return; }
+  try {
+    const keys = await apiFetch("/user-profile", { auth: true });
+    if (!keys || keys.length === 0) {
+      if (noteEl) { noteEl.textContent = "No saved profiles found on this machine."; }
+      return;
+    }
+    if (noteEl) { noteEl.textContent = "Select a profile to restore it:"; }
+    listEl.innerHTML = "";
+    for (const key of keys) {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "link-button";
+      btn.textContent = key;
+      btn.addEventListener("click", () => {
+        const input = document.getElementById("onboarding-key-input");
+        if (input) { input.value = key; }
+        const errorEl = document.getElementById("onboarding-key-error");
+        if (errorEl) { errorEl.textContent = ""; }
+        e.target.open = false;
+        input?.focus();
+      });
+      li.appendChild(btn);
+      listEl.appendChild(li);
+    }
+  } catch (err) {
+    if (noteEl) {
+      noteEl.textContent = err.isNetworkError
+        ? "Server not reachable — start the app first."
+        : "Could not load saved profiles.";
+    }
+  }
+});
 document.getElementById("retry-workspace-load")?.addEventListener("click", () => loadWorkspace());
 document.getElementById("reload-demo-workspace")?.addEventListener("click", () => {
   state.mode = "demo";

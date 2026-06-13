@@ -24,6 +24,13 @@ def get_billet_research_store() -> Iterator[BilletResearchStore]:
     yield BilletResearchStore(settings.billet_research_storage_dir)
 
 
+@router.get("", response_model=list[str])
+def list_user_profile_keys(
+    store: Annotated[UserProfileStore, Depends(get_user_profile_store)],
+) -> list[str]:
+    return store.list_keys()
+
+
 @router.get("/{user_key}", response_model=UserProfile)
 def get_user_profile(
     user_key: str,
