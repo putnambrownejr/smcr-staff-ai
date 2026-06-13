@@ -113,8 +113,8 @@ class Settings(BaseSettings):
     app_name: str = "SMCR Staff AI"
     app_version: str = "0.1.0"
     environment: str = "local"
-    database_url: str = default_database_url()
-    vector_store_backend: str = "local-stub"
+    database_url: str = default_database_url()  # Reserved for future use; not currently wired.
+    vector_store_backend: str = "local-stub"  # Reserved for future use; not currently wired.
     local_context_storage_dir: str = str(default_local_context_dir())
     session_handoff_storage_dir: str = str(default_session_handoff_dir())
     product_template_storage_dir: str = str(default_product_template_dir())

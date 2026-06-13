@@ -2,7 +2,6 @@ import re
 
 import pytest
 
-
 PLAYWRIGHT_SETUP_SKIP = "requires: uv add playwright --dev && playwright install chromium && running server"
 
 
