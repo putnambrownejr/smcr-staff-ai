@@ -72,6 +72,23 @@ for (const button of document.querySelectorAll(".lane-button")) {
   });
 }
 
+document.querySelector("[role='tablist']")?.addEventListener("keydown", (event) => {
+  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+    return;
+  }
+  const tabs = Array.from(event.currentTarget.querySelectorAll("[role='tab']"));
+  if (!tabs.length) {
+    return;
+  }
+  event.preventDefault();
+  const currentIndex = Math.max(0, tabs.indexOf(document.activeElement));
+  const offset = event.key === "ArrowRight" ? 1 : -1;
+  const nextIndex = (currentIndex + offset + tabs.length) % tabs.length;
+  const nextTab = tabs[nextIndex];
+  nextTab.focus();
+  openLane(nextTab.dataset.lane || "overview");
+});
+
 document.getElementById("load-demo").addEventListener("click", () => {
   state.mode = "demo";
   state.userKey = "";
@@ -90,7 +107,7 @@ document.getElementById("load-personal").addEventListener("click", () => {
 
 document.getElementById("section-memory-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  await saveSectionMemoryProfile();
+  await saveSectionMemoryProfile(event.submitter);
 });
 
 document.getElementById("clear-section-memory-form").addEventListener("click", () => {
@@ -193,12 +210,12 @@ document.getElementById("planning-cell-form").addEventListener("submit", async (
   renderPlanningCellOutput("planning-cell-output", data);
 });
 
-document.getElementById("refresh-maradmins").addEventListener("click", () => refreshSourceLane("maradmins"));
-document.getElementById("refresh-reading").addEventListener("click", () => refreshSourceLane("reading"));
-document.getElementById("refresh-navadmins").addEventListener("click", () => refreshSourceLane("navadmins"));
-document.getElementById("refresh-alnavs").addEventListener("click", () => refreshSourceLane("alnavs"));
-document.getElementById("refresh-dod-watch").addEventListener("click", () => refreshSourceLane("dod"));
-document.getElementById("refresh-source-watch").addEventListener("click", () => refreshSourceLane("all"));
+document.getElementById("refresh-maradmins").addEventListener("click", (event) => refreshSourceLane("maradmins", event.currentTarget));
+document.getElementById("refresh-reading").addEventListener("click", (event) => refreshSourceLane("reading", event.currentTarget));
+document.getElementById("refresh-navadmins").addEventListener("click", (event) => refreshSourceLane("navadmins", event.currentTarget));
+document.getElementById("refresh-alnavs").addEventListener("click", (event) => refreshSourceLane("alnavs", event.currentTarget));
+document.getElementById("refresh-dod-watch").addEventListener("click", (event) => refreshSourceLane("dod", event.currentTarget));
+document.getElementById("refresh-source-watch").addEventListener("click", (event) => refreshSourceLane("all", event.currentTarget));
 document
   .getElementById("thin-staff-run-lone-planner")
   .addEventListener("click", () => launchThinStaffWorkflow("lone-planner"));
@@ -386,7 +403,7 @@ document.addEventListener("click", async (event) => {
 
   const saveButton = event.target.closest("[data-reading-save]");
   if (saveButton) {
-    await saveReadingProgress(saveButton.dataset.readingSave);
+    await saveReadingProgress(saveButton.dataset.readingSave, saveButton);
   }
 
   const timezoneToggle = event.target.closest("[data-timezone-option]");
@@ -415,6 +432,7 @@ async function loadWorkspace() {
     setOnboardingVisible(false);
     setWorkspaceNote("Workspace refreshed.");
   } catch (error) {
+    console.error("Failed to load workspace", error);
     setWorkspaceNote(error.message, true);
   } finally {
     setLoading(false);
@@ -426,6 +444,82 @@ function setLoading(active) {
   if (overlay) {
     overlay.classList.toggle("is-hidden", !active);
   }
+}
+
+async function withButtonFeedback(button, loadingLabel, successMessage, action, options = {}) {
+  const originalLabel = button?.textContent || "";
+  if (button) {
+    button.disabled = true;
+    button.textContent = loadingLabel;
+  }
+  const initialStatusTarget =
+    typeof options.statusTarget === "function" ? options.statusTarget() : options.statusTarget || button;
+  clearPanelStatus(initialStatusTarget);
+  try {
+    const result = await action();
+    const statusTarget =
+      typeof options.statusTarget === "function" ? options.statusTarget() : options.statusTarget || button;
+    setPanelStatus(statusTarget, successMessage);
+    return result;
+  } catch (error) {
+    console.error(options.errorContext || "Dashboard action failed", error);
+    const message = error instanceof Error ? error.message : String(error);
+    const statusTarget =
+      typeof options.statusTarget === "function" ? options.statusTarget() : options.statusTarget || button;
+    setPanelStatus(statusTarget, message, true);
+    setWorkspaceNote(message, true);
+    return null;
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  }
+}
+
+function setPanelStatus(anchor, message, critical = false) {
+  const status = getPanelStatusElement(anchor);
+  if (!status) {
+    return;
+  }
+  status.textContent = message;
+  status.className = critical ? "helper-text panel-feedback critical" : "helper-text panel-feedback";
+}
+
+function clearPanelStatus(anchor) {
+  const status = getPanelStatusElement(anchor, false);
+  if (status) {
+    status.textContent = "";
+    status.className = "helper-text panel-feedback";
+  }
+}
+
+function getPanelStatusElement(anchor, create = true) {
+  if (!anchor) {
+    return null;
+  }
+  const container =
+    anchor.closest("form") ||
+    anchor.closest(".reading-item") ||
+    anchor.closest(".panel-drawer-body") ||
+    anchor.closest(".panel") ||
+    anchor.parentElement;
+  if (!container) {
+    return null;
+  }
+  let status = container.querySelector(":scope > .panel-feedback");
+  if (!status && create) {
+    status = document.createElement("p");
+    status.className = "helper-text panel-feedback";
+    status.setAttribute("aria-live", "polite");
+    const buttonRow = anchor.closest(".button-row");
+    if (buttonRow && buttonRow.parentElement === container) {
+      buttonRow.insertAdjacentElement("afterend", status);
+    } else {
+      container.append(status);
+    }
+  }
+  return status;
 }
 
 // UX4: show onboarding panel when no workspace is loaded, hide it once loaded
@@ -754,6 +848,7 @@ async function runWorkflowInDialog(title, runFn) {
     outputEl.className = "tool-output";
     await runFn(outputEl);
   } catch (error) {
+    console.error("Workflow dialog action failed", error);
     const outputEl = document.getElementById("workflow-dialog-output");
     if (outputEl) {
       outputEl.textContent = `Error: ${error.message}`;
@@ -1024,6 +1119,7 @@ async function saveSelectedDocumentType() {
     renderDocumentLibrary(state.workspace?.document_details || []);
     setWorkspaceNote(data.message || "File category updated.");
   } catch (error) {
+    console.error("Failed to save file category", error);
     setWorkspaceNote(error.message, true);
   }
 }
@@ -2142,23 +2238,35 @@ function renderList(targetId, items) {
   target.innerHTML = items.length ? items.map((item) => `<li>${escapeHtml(item)}</li>`).join("") : "<li>No items.</li>";
 }
 
-async function saveReadingProgress(slug) {
+async function saveReadingProgress(slug, button = null) {
   if (state.mode !== "personal" || !state.userKey) {
     setWorkspaceNote("Switch to personal mode to save reading state.", true);
+    setPanelStatus(button, "Switch to personal mode to save reading state.", true);
     return;
   }
-  const status = document.querySelector(`[data-reading-status="${CSS.escape(slug)}"]`)?.value || "not_started";
-  const notesValue = document.querySelector(`[data-reading-notes="${CSS.escape(slug)}"]`)?.value || "";
-  await apiFetch(`/reading-list/state/${encodeURIComponent(state.userKey)}/${encodeURIComponent(slug)}`, {
-    method: "PUT",
-    auth: true,
-    body: JSON.stringify({
-      status,
-      notes: splitLines(notesValue),
-    }),
-  });
-  setWorkspaceNote("Reading state saved.");
-  await loadWorkspace();
+  await withButtonFeedback(
+    button,
+    "Saving...",
+    "Reading state saved.",
+    async () => {
+      const status = document.querySelector(`[data-reading-status="${CSS.escape(slug)}"]`)?.value || "not_started";
+      const notesValue = document.querySelector(`[data-reading-notes="${CSS.escape(slug)}"]`)?.value || "";
+      await apiFetch(`/reading-list/state/${encodeURIComponent(state.userKey)}/${encodeURIComponent(slug)}`, {
+        method: "PUT",
+        auth: true,
+        body: JSON.stringify({
+          status,
+          notes: splitLines(notesValue),
+        }),
+      });
+      setWorkspaceNote("Reading state saved.");
+      await loadWorkspace();
+    },
+    {
+      errorContext: "Failed to save reading state",
+      statusTarget: () => document.querySelector(`[data-reading-save="${CSS.escape(slug)}"]`) || button,
+    },
+  );
 }
 
 async function toggleCustomFeed(feedId) {
@@ -2204,6 +2312,7 @@ async function savePlanningCellToBattleRhythm() {
     await loadWorkspace();
     setWorkspaceNote("Battle rhythm board saved from the current planning cell.");
   } catch (error) {
+    console.error("Failed to save planning cell to battle rhythm", error);
     setWorkspaceNote(error.message, true);
   }
 }
@@ -2218,6 +2327,7 @@ async function runLonePlannerMode() {
     
     setWorkspaceNote("Lone planner mode ran against the current planning context.");
   } catch (error) {
+    console.error("Failed to run lone planner mode", error);
     setWorkspaceNote(error.message, true);
   }
 }
@@ -2235,6 +2345,7 @@ async function runSectionGapCover() {
     
     setWorkspaceNote("Built assisted section estimates from the current planning context.");
   } catch (error) {
+    console.error("Failed to build section gap cover", error);
     setWorkspaceNote(error.message, true);
   }
 }
@@ -2265,6 +2376,7 @@ async function runStaffPlanningPackage() {
     renderStaffPlanningPackageOutput("staff-package-output", data);
     setWorkspaceNote("Built the integrated staff package.");
   } catch (error) {
+    console.error("Failed to build staff planning package", error);
     setWorkspaceNote(error.message, true);
   }
 }
@@ -2329,13 +2441,15 @@ async function saveBattleRhythmBoard() {
     await loadWorkspace();
     setWorkspaceNote("Battle rhythm board updated.");
   } catch (error) {
+    console.error("Failed to save battle rhythm board", error);
     setWorkspaceNote(error.message, true);
   }
 }
 
-async function refreshSourceLane(lane) {
+async function refreshSourceLane(lane, button = null) {
   if (state.mode !== "personal") {
     setWorkspaceNote("Open your personal workspace to refresh local source watches.", true);
+    setPanelStatus(button, "Open your personal workspace to refresh local source watches.", true);
     return;
   }
   const refreshers = {
@@ -2353,17 +2467,20 @@ async function refreshSourceLane(lane) {
     ],
   };
   const sequence = refreshers[lane] || [];
-  try {
-    for (const [path, method] of sequence) {
-      await apiFetch(path, { method, auth: true });
-    }
-    setWorkspaceNote(
-      lane === "all" ? "Source-watch stack refreshed." : `${lane.replaceAll("-", " ")} refreshed.`,
-    );
-    await loadWorkspace();
-  } catch (error) {
-    setWorkspaceNote(error.message, true);
-  }
+  const successMessage = lane === "all" ? "Source-watch stack refreshed." : `${lane.replaceAll("-", " ")} refreshed.`;
+  await withButtonFeedback(
+    button,
+    "Refreshing...",
+    successMessage,
+    async () => {
+      for (const [path, method] of sequence) {
+        await apiFetch(path, { method, auth: true });
+      }
+      setWorkspaceNote(successMessage);
+      await loadWorkspace();
+    },
+    { errorContext: `Failed to refresh source lane: ${lane}` },
+  );
 }
 
 async function apiFetch(path, options = {}) {
@@ -2413,6 +2530,7 @@ async function runUniformPhotoReview(formElement) {
     setWorkspaceNote("Uniform photo review completed and stored as local context.");
     await loadWorkspace();
   } catch (error) {
+    console.error("Failed to run uniform photo review", error);
     setWorkspaceNote(error.message, true);
   }
 }
@@ -2497,6 +2615,7 @@ function updateTimezoneSelection(optionId, checked) {
   try {
     window.localStorage.setItem("smcr.dashboard.timezones", JSON.stringify(state.selectedTimezoneIds));
   } catch (_error) {
+    console.error("Failed to save timezone selection", _error);
     // Keep the current in-memory preference if browser storage is unavailable.
   }
   renderTimezoneStrip();
@@ -2553,6 +2672,7 @@ function loadTimezoneSelection() {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) && parsed.length ? parsed : ["local", "zulu", "quantico"];
   } catch (_error) {
+    console.error("Failed to load timezone selection", _error);
     return ["local", "zulu", "quantico"];
   }
 }
@@ -2613,6 +2733,7 @@ function resolveInitialLane() {
       return saved;
     }
   } catch (_e) {
+    console.error("Failed to load saved dashboard lane", _e);
     // storage unavailable
   }
   return "overview";
@@ -2644,6 +2765,7 @@ function applyLaneVisibility(moveFocus = false) {
   try {
     window.localStorage.setItem("smcr.dashboard.lane", active);
   } catch (_e) {
+    console.error("Failed to save active dashboard lane", _e);
     // storage unavailable
   }
 
@@ -2786,6 +2908,7 @@ async function deleteSectionMemoryEntry(entryKey) {
     clearSectionMemoryForm();
     setWorkspaceNote("Section-memory entry removed.");
   } catch (error) {
+    console.error("Failed to delete section-memory entry", error);
     setWorkspaceNote(error.message, true);
   }
 }
@@ -2802,33 +2925,39 @@ function buildSectionMemoryEntryFromForm() {
   };
 }
 
-async function saveSectionMemoryProfile() {
+async function saveSectionMemoryProfile(button = null) {
   if (state.mode !== "personal" || !state.userKey) {
     setWorkspaceNote("Open your personal workspace first so section memory stays local to your profile.", true);
+    setPanelStatus(button || document.getElementById("section-memory-form"), "Open your personal workspace first so section memory stays local to your profile.", true);
     return;
   }
   const form = document.getElementById("section-memory-form");
   const entry = buildSectionMemoryEntryFromForm();
   if (!entry.section || !entry.title) {
     setWorkspaceNote("Section lane and memory title are required.", true);
+    setPanelStatus(button || form, "Section lane and memory title are required.", true);
     return;
   }
   const currentEntries = currentSectionMemoryEntries();
   const existingKey = form.dataset.entryKey || "";
   const nextEntries = currentEntries.filter((item) => sectionMemoryEntryKey(item) !== existingKey);
   nextEntries.push(entry);
-  try {
-    await apiFetch(`/section-memory/${encodeURIComponent(state.userKey)}`, {
-      method: "PUT",
-      auth: true,
-      body: JSON.stringify({ entries: nextEntries }),
-    });
-    await loadWorkspace();
-    populateSectionMemoryForm(entry);
-    setWorkspaceNote(`Saved section memory for ${entry.section}.`);
-  } catch (error) {
-    setWorkspaceNote(error.message, true);
-  }
+  await withButtonFeedback(
+    button,
+    "Saving...",
+    `Saved section memory for ${entry.section}.`,
+    async () => {
+      await apiFetch(`/section-memory/${encodeURIComponent(state.userKey)}`, {
+        method: "PUT",
+        auth: true,
+        body: JSON.stringify({ entries: nextEntries }),
+      });
+      await loadWorkspace();
+      populateSectionMemoryForm(entry);
+      setWorkspaceNote(`Saved section memory for ${entry.section}.`);
+    },
+    { errorContext: "Failed to save section memory", statusTarget: form },
+  );
 }
 
 function encodeSectionMemorySeed(seed) {
@@ -2848,6 +2977,7 @@ function seedSectionMemoryEntry(encodedSeed) {
     
     setWorkspaceNote(`Loaded a section-memory starter for ${seed.section}.`);
   } catch (_error) {
+    console.error("Failed to decode section-memory starter", _error);
     setWorkspaceNote("Could not load that section-memory starter.", true);
   }
 }

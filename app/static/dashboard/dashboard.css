@@ -23,6 +23,11 @@
   box-sizing: border-box;
 }
 
+*:focus-visible {
+  outline: 2px solid var(--accent, #4a90d9);
+  outline-offset: 2px;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -738,6 +743,10 @@ details[open] > summary .drawer-label::before {
 /* A6: #b21f2d fails WCAG AA (3.6:1) on --bg; #e05060 passes at 5.2:1 */
 .critical {
   color: #e05060;
+}
+
+.panel-feedback {
+  min-height: 1.35em;
 }
 
 @media (max-width: 1180px) {
