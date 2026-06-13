@@ -80,6 +80,10 @@ def default_user_profile_dir() -> Path:
     return default_local_context_dir() / "user_profiles"
 
 
+def default_billet_research_dir() -> Path:
+    return default_local_context_dir() / "billet_research"
+
+
 def default_history_storage_dir() -> Path:
     return default_local_context_dir() / "history"
 
@@ -133,6 +137,7 @@ class Settings(BaseSettings):
     section_memory_storage_dir: str = str(default_section_memory_dir())
     bench_sections_storage_dir: str = str(default_bench_sections_dir())
     user_profile_storage_dir: str = str(default_user_profile_dir())
+    billet_research_storage_dir: str = str(default_billet_research_dir())
     history_storage_dir: str = str(default_history_storage_dir())
     active_user_context_storage_dir: str = str(default_active_user_context_dir())
     actions_storage_dir: str = str(default_actions_storage_dir())
@@ -163,6 +168,7 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.section_memory_storage_dir),
         Path(settings.bench_sections_storage_dir),
         Path(settings.user_profile_storage_dir),
+        Path(settings.billet_research_storage_dir),
         Path(settings.history_storage_dir),
         Path(settings.active_user_context_storage_dir),
         Path(settings.actions_storage_dir),

@@ -167,6 +167,7 @@ document.getElementById("manage-bench-sections")?.addEventListener("click", togg
 document.getElementById("add-bench-section")?.addEventListener("click", addBenchSectionFromInput);
 document.getElementById("save-bench-sections")?.addEventListener("click", saveBenchSections);
 document.getElementById("save-profile")?.addEventListener("click", () => saveUserProfile());
+document.getElementById("rerun-research")?.addEventListener("click", () => runBilletResearch());
 document.getElementById("save-template")?.addEventListener("click", () => saveTemplate());
 document.getElementById("bench-section-input")?.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
@@ -501,6 +502,7 @@ async function loadWorkspace() {
     }
     await loadBenchSections();
     await loadUserProfile();
+    await loadBilletResearch();
     await loadTemplates();
     renderWorkspace(state.workspace);
     openDefaultPanels();
@@ -2794,6 +2796,11 @@ async function apiFetch(path, options = {}) {
     httpError.responseText = text;
     throw httpError;
   }
+  if (options.text) {
+    const text = await response.text();
+    recordFetchSuccess();
+    return text;
+  }
   try {
     const data = await response.json();
     recordFetchSuccess();
@@ -3320,9 +3327,12 @@ async function saveUserProfile() {
       body: JSON.stringify(body),
     });
     state.userProfile = response.profile;
-    if (noteEl) {
-      noteEl.textContent = "Preferences saved.";
-      setTimeout(() => { noteEl.textContent = ""; }, 3000);
+    if (noteEl) { noteEl.textContent = "Preferences saved."; }
+    if (body.billet || body.unit || body.mos) {
+      if (noteEl) { noteEl.textContent = "Preferences saved. Compiling billet reference…"; }
+      await runBilletResearch();
+    } else {
+      setTimeout(() => { if (noteEl) { noteEl.textContent = ""; } }, 3000);
     }
   } catch (error) {
     if (noteEl) {
@@ -3330,6 +3340,85 @@ async function saveUserProfile() {
     }
     console.error("Failed to save user profile", error);
   }
+}
+
+async function runBilletResearch() {
+  const noteEl = document.getElementById("profile-note");
+  try {
+    const markdown = await apiFetch(`/user-profile/${encodeURIComponent(state.userKey)}/research`, {
+      method: "POST",
+      auth: true,
+      text: true,
+    });
+    renderBilletResearch(markdown);
+    if (noteEl) {
+      noteEl.textContent = "Preferences saved. Billet reference compiled.";
+      setTimeout(() => { noteEl.textContent = ""; }, 4000);
+    }
+  } catch (error) {
+    console.error("Billet research failed", error);
+    if (noteEl) {
+      noteEl.textContent = "Preferences saved. (Billet reference unavailable.)";
+      setTimeout(() => { noteEl.textContent = ""; }, 4000);
+    }
+  }
+}
+
+async function loadBilletResearch() {
+  if (state.mode !== "personal" || !state.userKey) { return; }
+  try {
+    const markdown = await apiFetch(`/user-profile/${encodeURIComponent(state.userKey)}/research`, {
+      auth: true,
+      text: true,
+    });
+    renderBilletResearch(markdown);
+  } catch (error) {
+    if (error.status !== 404) {
+      console.error("Failed to load billet research", error);
+    }
+  }
+}
+
+function renderBilletResearch(markdown) {
+  const container = document.getElementById("billet-research-result");
+  if (!container) { return; }
+  container.innerHTML = simpleMarkdownToHtml(markdown);
+  container.hidden = false;
+  const rerunBtn = document.getElementById("rerun-research");
+  if (rerunBtn) { rerunBtn.hidden = false; }
+}
+
+function applyInlineMarkdown(escapedText) {
+  return escapedText
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+}
+
+function simpleMarkdownToHtml(markdown) {
+  const lines = markdown.split("\n");
+  let html = "";
+  let inList = false;
+
+  for (const line of lines) {
+    if (line.startsWith("# ")) {
+      if (inList) { html += "</ul>"; inList = false; }
+      html += `<h2 class="research-h1">${escapeHtml(line.slice(2))}</h2>`;
+    } else if (line.startsWith("## ")) {
+      if (inList) { html += "</ul>"; inList = false; }
+      html += `<h3 class="research-h2">${escapeHtml(line.slice(3))}</h3>`;
+    } else if (line.startsWith("- ")) {
+      if (!inList) { html += "<ul>"; inList = true; }
+      html += `<li>${applyInlineMarkdown(escapeHtml(line.slice(2)))}</li>`;
+    } else if (line.trim() === "") {
+      if (inList) { html += "</ul>"; inList = false; }
+    } else {
+      if (inList) { html += "</ul>"; inList = false; }
+      html += `<p>${applyInlineMarkdown(escapeHtml(line))}</p>`;
+    }
+  }
+  if (inList) { html += "</ul>"; }
+  return html;
 }
 
 function renderBenchSectionsSelect(selectedValue = "") {
