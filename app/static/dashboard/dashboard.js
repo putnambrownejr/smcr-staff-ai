@@ -1,3 +1,9 @@
+// Module split readiness: when this file exceeds ~4000 lines or a second contributor joins,
+// split along these seams: state.js, ui.js, lanes/overview.js, lanes/watch.js,
+// lanes/bench.js, lanes/workflows.js, lanes/workspace.js.
+// Add type="module" to the <script> tag in index.html — FastAPI static mount already
+// serves ES modules correctly. No build step required.
+
 const state = {
   mode: "demo",
   userKey: "",

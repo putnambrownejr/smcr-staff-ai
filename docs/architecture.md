@@ -53,3 +53,23 @@ For public doctrine and reading sources, the default repository artifact is a ma
 ## Safety Posture
 
 The system is UNCLASSIFIED-only. Agents include allowed source lists, disallowed inputs, and human-review flags. Runtime guardrails detect likely sensitive inputs and force generic training/checklist style responses.
+
+## Current Storage Architecture (as of 2026-06-12)
+
+The actual storage layer is flat JSON, not SQLite or ORM. `database_url` and `vector_store_backend` are in Settings as reserved fields for future use — they are not wired to any code today.
+
+Every persisted domain (session handoffs, section memory, bench sections, actions, reading state, etc.) uses the same pattern: `SHA256(user_key)[:24] → {digest}.json` under a dedicated subdirectory of `local_context/`. Each store is a standalone class that reads and writes one JSON blob per user key.
+
+**MOS advisor agents** are frozen dataclass rows in `app/services/agents/mos_advisor.py`, not a dynamic registry. They are read-only and resolved at import time. If user-customizable agents are needed in the future, extend via a YAML override file in `local_context/` that the service merges on top of the defaults.
+
+## Multi-User Extension Point
+
+The `user_key` string is the isolation boundary for all stores. To support shared or multi-user workspaces without a full database migration:
+
+- Introduce a `group_key` alongside `user_key` in stores that should be shared.
+- Stores that are personal-only (`section_memory`, `bench_sections`, `handoffs`) reject group keys.
+- Stores that support collaboration (`battle_rhythm`, `drill_plans`) accept either.
+- The SHA256 path scheme works for both; group keys just need a distinct namespace (e.g. `grp_{key}`).
+- Concurrent write safety would require file locking or migration to SQLite at that point.
+
+Do not add `group_key` until a concrete shared-workspace use case exists.
