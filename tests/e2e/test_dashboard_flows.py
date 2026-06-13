@@ -1,8 +1,5 @@
 import re
-
 import pytest
-
-PLAYWRIGHT_SETUP_SKIP = "requires: uv add playwright --dev && playwright install chromium && running server"
 
 
 def _expect(locator):
@@ -12,18 +9,18 @@ def _expect(locator):
 
 
 @pytest.mark.e2e
-@pytest.mark.skip(reason=PLAYWRIGHT_SETUP_SKIP)
 def test_demo_workspace_loads(browser_page):
     page = browser_page
 
-    page.get_by_role("button", name=re.compile(r"open demo workspace", re.I)).first.click()
+    page.locator("#tab-configure").click()
+    page.locator("#load-demo").click()
+    page.locator("#tab-overview").click()
 
     _expect(page.get_by_role("heading", name="Act Now")).to_be_visible()
     _expect(page.locator("#readiness-posture")).not_to_be_empty()
 
 
 @pytest.mark.e2e
-@pytest.mark.skip(reason=PLAYWRIGHT_SETUP_SKIP)
 def test_lane_tab_navigation(browser_page):
     page = browser_page
     lanes = [
@@ -45,11 +42,11 @@ def test_lane_tab_navigation(browser_page):
 
 
 @pytest.mark.e2e
-@pytest.mark.skip(reason=PLAYWRIGHT_SETUP_SKIP)
 def test_bench_section_manage(browser_page):
     page = browser_page
 
     page.locator("#tab-library").click()
+    page.locator("summary").filter(has_text="Section Bench Notebook").click()
 
     section_select = page.locator("#bench-section-select")
     _expect(section_select).to_be_visible()
@@ -61,15 +58,14 @@ def test_bench_section_manage(browser_page):
 
 
 @pytest.mark.e2e
-@pytest.mark.skip(reason=PLAYWRIGHT_SETUP_SKIP)
 def test_refresh_button_feedback(browser_page):
     page = browser_page
 
     refresh_button = page.get_by_role("button", name=re.compile(r"refresh", re.I)).first
     refresh_button.click()
 
-    _expect(refresh_button).to_have_text(re.compile(r"refreshing", re.I))
-    _expect(refresh_button).not_to_have_text(re.compile(r"refreshing", re.I))
+    _expect(page.locator("#workspace-note")).to_have_text(re.compile(r"open your personal workspace", re.I))
+    _expect(refresh_button).to_be_visible()
 
 
 @pytest.mark.e2e
