@@ -46,6 +46,7 @@ from app.api.routes import (
     travel_cases,
     uniform,
     user_context,
+    user_profile,
 )
 from app.core.config import Settings, ensure_storage_dirs, get_settings
 from app.core.logging import configure_logging
@@ -93,6 +94,7 @@ def create_app() -> FastAPI:
     app.include_router(reading.router)
     app.include_router(reading_state.router)
     app.include_router(bench_sections.router)
+    app.include_router(user_profile.router)
     app.include_router(section_memory.router)
     app.include_router(maradmins.router)
     app.include_router(message_watch.router)

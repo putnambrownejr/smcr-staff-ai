@@ -20,6 +20,7 @@ const state = {
   timezoneOptions: buildTimezoneOptions(),
   selectedTimezoneIds: loadTimezoneSelection(),
   benchSections: [],
+  userProfile: null,
   timezonePanelOpen: false,
   clockTimer: null,
   lastUpdatedAt: {
@@ -165,6 +166,7 @@ document.getElementById("clear-section-memory-form").addEventListener("click", (
 document.getElementById("manage-bench-sections")?.addEventListener("click", toggleBenchSectionsEditor);
 document.getElementById("add-bench-section")?.addEventListener("click", addBenchSectionFromInput);
 document.getElementById("save-bench-sections")?.addEventListener("click", saveBenchSections);
+document.getElementById("save-profile")?.addEventListener("click", () => saveUserProfile());
 document.getElementById("bench-section-input")?.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     event.preventDefault();
@@ -497,6 +499,7 @@ async function loadWorkspace() {
       state.workspace = await apiFetch(`/dashboard/data/${encodeURIComponent(userKey)}`, { auth: true });
     }
     await loadBenchSections();
+    await loadUserProfile();
     renderWorkspace(state.workspace);
     openDefaultPanels();
     setOnboardingVisible(false);
@@ -3189,6 +3192,58 @@ async function loadBenchSections() {
   }
   renderBenchSectionsSelect();
   renderBenchSectionsEditor();
+}
+
+async function loadUserProfile() {
+  if (state.mode !== "personal" || !state.userKey) {
+    return;
+  }
+  try {
+    const profile = await apiFetch(`/user-profile/${encodeURIComponent(state.userKey)}`, { auth: true });
+    state.userProfile = profile;
+    document.getElementById("profile-billet").value = profile.billet || "";
+    document.getElementById("profile-unit").value = profile.unit || "";
+    document.getElementById("profile-mos").value = profile.mos || "";
+    document.getElementById("profile-format").value = profile.format_preference || "naval_letter";
+    document.getElementById("profile-one-priority").checked = profile.one_number_one_rule ?? true;
+    document.getElementById("profile-style-notes").value = profile.style_notes || "";
+  } catch (error) {
+    if (error.status !== 404) {
+      console.error("Failed to load user profile", error);
+    }
+  }
+}
+
+async function saveUserProfile() {
+  if (!state.userKey || state.mode !== "personal") {
+    return;
+  }
+  const noteEl = document.getElementById("profile-note");
+  const body = {
+    billet: document.getElementById("profile-billet").value.trim(),
+    unit: document.getElementById("profile-unit").value.trim(),
+    mos: document.getElementById("profile-mos").value.trim(),
+    format_preference: document.getElementById("profile-format").value,
+    one_number_one_rule: document.getElementById("profile-one-priority").checked,
+    style_notes: document.getElementById("profile-style-notes").value.trim(),
+  };
+  try {
+    const response = await apiFetch(`/user-profile/${encodeURIComponent(state.userKey)}`, {
+      method: "PUT",
+      auth: true,
+      body: JSON.stringify(body),
+    });
+    state.userProfile = response.profile;
+    if (noteEl) {
+      noteEl.textContent = "Preferences saved.";
+      setTimeout(() => { noteEl.textContent = ""; }, 3000);
+    }
+  } catch (error) {
+    if (noteEl) {
+      noteEl.textContent = error.message || "Failed to save preferences.";
+    }
+    console.error("Failed to save user profile", error);
+  }
 }
 
 function renderBenchSectionsSelect(selectedValue = "") {

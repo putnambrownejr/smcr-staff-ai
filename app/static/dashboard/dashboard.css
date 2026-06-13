@@ -77,6 +77,31 @@ body {
   display: inline;
 }
 
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  cursor: pointer;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.profile-style-notes-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.profile-style-notes-label textarea {
+  resize: vertical;
+  min-height: 4rem;
+}
+
 .app-shell {
   min-height: 100vh;
 }

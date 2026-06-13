@@ -117,6 +117,45 @@
           <p class="helper-text" id="workspace-note" aria-live="polite">
             Demo mode is a read-only tour. Personal mode opens your local workspace using the profile name above.
           </p>
+          <details id="profile-settings" class="strip profile-settings-drawer">
+            <summary>
+              <span class="drawer-label">Profile &amp; preferences</span>
+            </summary>
+            <div class="config-grid">
+              <label>
+                <span>Billet</span>
+                <input id="profile-billet" type="text" placeholder="e.g. SuppO, S-3, XO" />
+              </label>
+              <label>
+                <span>Unit</span>
+                <input id="profile-unit" type="text" placeholder="e.g. 3rd Bn 14th Marines" />
+              </label>
+              <label>
+                <span>MOS</span>
+                <input id="profile-mos" type="text" placeholder="e.g. 0402" maxlength="6" />
+              </label>
+              <label>
+                <span>Output format preference</span>
+                <select id="profile-format">
+                  <option value="naval_letter">Naval letter</option>
+                  <option value="bullet">Bullet</option>
+                  <option value="smeac">SMEAC</option>
+                </select>
+              </label>
+            </div>
+            <label class="checkbox-row">
+              <input id="profile-one-priority" type="checkbox" checked />
+              <span>Only one #1 priority at a time</span>
+            </label>
+            <label class="profile-style-notes-label">
+              <span>Style notes</span>
+              <textarea id="profile-style-notes" rows="3" placeholder="Anything else about how you like your products written…" maxlength="2000"></textarea>
+            </label>
+            <div class="button-row">
+              <button id="save-profile" class="secondary">Save preferences</button>
+            </div>
+            <p id="profile-note" class="helper-text" aria-live="polite"></p>
+          </details>
         </section>
 
         <!-- UX4: First-run onboarding — visible until a workspace loads successfully -->
