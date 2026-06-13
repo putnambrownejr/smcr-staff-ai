@@ -1,0 +1,17 @@
+services:
+  smcr-staff-ai:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist all local state outside the container
+      - smcr-data:/data
+      # Mount the modules folder so you can drop in module packs without rebuild
+      - ./modules:/app/modules:ro
+    environment:
+      # Point all storage at the persistent volume
+      SMCR_STAFF_AI_HOME: /data
+    restart: unless-stopped
+
+volumes:
+  smcr-data:

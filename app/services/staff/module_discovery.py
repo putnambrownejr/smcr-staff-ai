@@ -16,6 +16,7 @@ from app.schemas.modules import ModuleFile, ModuleManifest, ModulePackDetail, Mo
 logger = logging.getLogger(__name__)
 
 SUPPORTED_EXTENSIONS = {".md", ".txt", ".pdf"}
+PROFILE_SEED_FILENAME = "smcr-profile.json"
 CONTENT_TYPES: dict[str, str] = {
     ".md": "text/markdown",
     ".txt": "text/plain",
@@ -108,6 +109,6 @@ class ModuleDiscovery:
             return None
         if not candidate.is_file():
             return None
-        if candidate.suffix.lower() not in SUPPORTED_EXTENSIONS:
+        if candidate.name != PROFILE_SEED_FILENAME and candidate.suffix.lower() not in SUPPORTED_EXTENSIONS:
             return None
         return candidate

@@ -1,8 +1,9 @@
+import json
 from collections.abc import Iterator
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
@@ -69,6 +70,31 @@ def delete_user_profile(
     store: Annotated[UserProfileStore, Depends(get_user_profile_store)],
 ) -> None:
     store.delete(user_key)
+
+
+@router.get("/{user_key}/export")
+def export_user_profile(
+    user_key: str,
+    store: Annotated[UserProfileStore, Depends(get_user_profile_store)],
+) -> Response:
+    profile = store.get(user_key)
+    if profile is None:
+        raise HTTPException(status_code=404, detail=f"No profile stored for {user_key}.")
+    seed = {
+        k: v for k, v in {
+            "billet": profile.billet,
+            "unit": profile.unit,
+            "mos": profile.mos,
+            "format_preference": profile.format_preference,
+            "style_notes": profile.style_notes,
+        }.items() if v
+    }
+    payload = json.dumps(seed, indent=2)
+    return Response(
+        content=payload,
+        media_type="application/json",
+        headers={"Content-Disposition": 'attachment; filename="smcr-profile.json"'},
+    )
 
 
 @router.get("/{user_key}/research", response_class=PlainTextResponse)

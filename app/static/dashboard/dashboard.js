@@ -135,16 +135,43 @@ document.getElementById("onboarding-key-input")?.addEventListener("keydown", (e)
   if (e.key === "Enter") { onboardingCreateWorkspace(); }
 });
 
-// Onboarding: return visit — open saved workspace
-document.getElementById("onboarding-open-saved")?.addEventListener("click", () => {
-  const saved = localStorage.getItem("smcr_user_key");
-  if (saved) {
-    state.mode = "personal";
-    state.userKey = saved;
-    state.apiKey = document.getElementById("api-key").value.trim();
-    document.getElementById("user-key").value = saved;
-    loadWorkspace();
+// Advanced workspace settings: apply custom key and/or passkey
+document.getElementById("apply-advanced-settings")?.addEventListener("click", () => {
+  const customKey = (document.getElementById("custom-profile-key")?.value || "").trim();
+  const passkey = (document.getElementById("api-key")?.value || "").trim();
+
+  if (customKey) {
+    if (!isValidProfileName(customKey)) {
+      setWorkspaceNote("Profile name cannot contain / \\ or < >.");
+      return;
+    }
+    localStorage.setItem(SAVED_KEY_STORAGE, customKey);
+    document.getElementById("user-key").value = customKey;
+    state.userKey = customKey;
+    const idDisplay = document.getElementById("profile-id-display");
+    if (idDisplay) { idDisplay.textContent = customKey; }
   }
+
+  if (passkey !== undefined) {
+    state.apiKey = passkey;
+  }
+
+  state.mode = "personal";
+  loadWorkspace();
+});
+
+// Advanced workspace settings: copy profile ID to clipboard
+document.getElementById("copy-profile-id")?.addEventListener("click", () => {
+  const id = document.getElementById("profile-id-display")?.textContent || "";
+  if (!id) { return; }
+  navigator.clipboard?.writeText(id).then(() => {
+    const btn = document.getElementById("copy-profile-id");
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    }
+  });
 });
 
 // Onboarding: return visit — demo button
@@ -155,12 +182,14 @@ document.getElementById("onboarding-load-demo-return")?.addEventListener("click"
   loadWorkspace();
 });
 
-// Onboarding: switch to a different profile
+// Onboarding: switch profile — show recovery panel without clearing the current key
 document.getElementById("onboarding-switch-profile")?.addEventListener("click", () => {
-  localStorage.removeItem("smcr_user_key");
-  document.getElementById("onboarding-welcome-back").classList.add("is-hidden");
-  document.getElementById("onboarding-first-run").classList.remove("is-hidden");
-  document.getElementById("onboarding-key-input")?.focus();
+  document.getElementById("onboarding-welcome-back")?.classList.add("is-hidden");
+  document.getElementById("onboarding-first-run")?.classList.remove("is-hidden");
+  const msgEl = document.getElementById("onboarding-first-run-msg");
+  if (msgEl) { msgEl.textContent = "Select a stored profile or enter a name / ID below."; }
+  const recoverDetails = document.getElementById("onboarding-recover-details");
+  if (recoverDetails) { recoverDetails.open = true; }
 });
 
 // Onboarding: load stored profile list when recovery details opens
@@ -253,6 +282,7 @@ document.getElementById("add-bench-section")?.addEventListener("click", addBench
 document.getElementById("save-bench-sections")?.addEventListener("click", saveBenchSections);
 document.getElementById("save-profile")?.addEventListener("click", () => saveUserProfile());
 document.getElementById("rerun-research")?.addEventListener("click", () => runBilletResearch());
+document.getElementById("export-profile")?.addEventListener("click", () => exportUserProfile());
 document.getElementById("save-template")?.addEventListener("click", () => saveTemplate());
 document.getElementById("bench-section-input")?.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
@@ -770,17 +800,44 @@ function formatElapsedMinutes(timestamp) {
 }
 
 // ------------------------------------------------------------------
-// Onboarding: profile key creation and localStorage persistence
+// Onboarding: auto-UUID profile key + localStorage persistence
 // ------------------------------------------------------------------
 
 const SAVED_KEY_STORAGE = "smcr_user_key";
 
+function generateProfileKey() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+}
+
 function initOnboardingState() {
-  const saved = localStorage.getItem(SAVED_KEY_STORAGE);
-  if (saved) {
-    document.getElementById("user-key").value = saved;
+  let saved = localStorage.getItem(SAVED_KEY_STORAGE);
+  const isFirstVisit = !saved;
+
+  if (isFirstVisit) {
+    saved = generateProfileKey();
+    localStorage.setItem(SAVED_KEY_STORAGE, saved);
+  }
+
+  // Sync the hidden input so loadWorkspace() picks it up
+  const keyInput = document.getElementById("user-key");
+  if (keyInput) { keyInput.value = saved; }
+
+  // Auto-use personal mode — no button click required
+  state.mode = "personal";
+  state.userKey = saved;
+
+  // Profile ID display in advanced settings
+  const idDisplay = document.getElementById("profile-id-display");
+  if (idDisplay) { idDisplay.textContent = saved; }
+
+  if (!isFirstVisit) {
+    // Show welcome-back with truncated ID (friendly label)
+    const label = saved.length > 20 ? saved.slice(0, 8) + "…" : saved;
     const display = document.getElementById("onboarding-profile-display");
-    if (display) { display.textContent = saved; }
+    if (display) { display.textContent = label; }
     document.getElementById("onboarding-first-run")?.classList.add("is-hidden");
     document.getElementById("onboarding-welcome-back")?.classList.remove("is-hidden");
   }
@@ -790,6 +847,7 @@ function isValidProfileName(name) {
   return name.length > 0 && name.length <= 60 && !/[/\\<>]/.test(name);
 }
 
+// Used when manually switching profiles from the onboarding recovery panel
 function onboardingCreateWorkspace() {
   const input = document.getElementById("onboarding-key-input");
   const errorEl = document.getElementById("onboarding-key-error");
@@ -798,7 +856,7 @@ function onboardingCreateWorkspace() {
   if (!isValidProfileName(name)) {
     if (errorEl) {
       errorEl.textContent = name.length === 0
-        ? "Enter a profile name to continue."
+        ? "Enter a profile name or ID to switch."
         : "Profile name cannot contain / \\ or < >. Keep it short and memorable.";
     }
     input?.focus();
@@ -811,6 +869,10 @@ function onboardingCreateWorkspace() {
   state.mode = "personal";
   state.userKey = name;
   state.apiKey = document.getElementById("api-key").value.trim();
+
+  const idDisplay = document.getElementById("profile-id-display");
+  if (idDisplay) { idDisplay.textContent = name; }
+
   loadWorkspace();
 }
 
@@ -1590,11 +1652,64 @@ async function activateModulePack(packName, button) {
     });
     if (noteEl) { noteEl.textContent = result.message || "Activated."; }
     if (button) { button.textContent = "Activated ✓"; }
+
+    // If the pack ships a smcr-profile.json, offer to apply the profile defaults
+    if (result.profile_seed && state.userKey) {
+      const seed = result.profile_seed;
+      const fields = Object.entries(seed).filter(([, v]) => v).map(([k]) => k).join(", ");
+      if (fields && confirm(`This pack includes profile defaults (${fields}). Apply them to your profile?`)) {
+        await applyProfileSeed(seed);
+        if (noteEl) { noteEl.textContent += " Profile defaults applied."; }
+      }
+    }
   } catch (err) {
     if (noteEl) { noteEl.textContent = err.message || "Activation failed."; }
     if (button) { button.textContent = originalLabel; button.disabled = false; }
   }
 }
+
+async function applyProfileSeed(seed) {
+  if (!state.userKey) { return; }
+  // Load current profile to merge (don't overwrite fields the user already set)
+  let current = {};
+  try {
+    current = await apiFetch(`/user-profile/${encodeURIComponent(state.userKey)}`, { auth: true });
+  } catch (_) { /* 404 = no profile yet, that's fine */ }
+  const merged = {
+    billet: current.billet || seed.billet || "",
+    unit: current.unit || seed.unit || "",
+    mos: current.mos || seed.mos || "",
+    format_preference: current.format_preference || seed.format_preference || "bullet",
+    style_notes: current.style_notes || seed.style_notes || "",
+  };
+  await apiFetch(`/user-profile/${encodeURIComponent(state.userKey)}`, {
+    method: "PUT",
+    auth: true,
+    body: JSON.stringify(merged),
+  });
+}
+
+// Git pull — refresh module packs from remote
+document.getElementById("git-pull-modules")?.addEventListener("click", async (e) => {
+  await withButtonFeedback(e.currentTarget, "Pulling…", async () => {
+    const noteEl = document.getElementById("git-pull-note");
+    if (noteEl) { noteEl.style.display = ""; noteEl.textContent = "Running git pull…"; }
+    try {
+      const result = await apiFetch("/git/pull", { method: "POST", auth: true });
+      if (noteEl) {
+        noteEl.textContent = result.message + (result.stdout ? ` (${result.stdout})` : "");
+      }
+      if (result.success) {
+        // Reload pack list so newly pulled packs appear
+        const listEl = document.getElementById("module-pack-list");
+        if (listEl) { delete listEl.dataset.loaded; }
+        await loadModulePacks();
+      }
+    } catch (err) {
+      if (noteEl) { noteEl.textContent = err.message || "git pull failed."; }
+    }
+  });
+});
 
 // ------------------------------------------------------------------
 
@@ -3016,6 +3131,11 @@ async function apiFetch(path, options = {}) {
     recordFetchSuccess();
     return text;
   }
+  if (options.blob) {
+    const blob = await response.blob();
+    recordFetchSuccess();
+    return blob;
+  }
   try {
     const data = await response.json();
     recordFetchSuccess();
@@ -3496,6 +3616,8 @@ async function loadUserProfile() {
     document.getElementById("profile-format").value = profile.format_preference || "naval_letter";
     document.getElementById("profile-one-priority").checked = profile.one_number_one_rule ?? true;
     document.getElementById("profile-style-notes").value = profile.style_notes || "";
+    const exportBtn = document.getElementById("export-profile");
+    if (exportBtn) { exportBtn.hidden = false; }
   } catch (error) {
     if (error.status !== 404) {
       console.error("Failed to load user profile", error);
@@ -3557,6 +3679,26 @@ async function saveUserProfile() {
   }
 }
 
+async function exportUserProfile() {
+  if (!state.userKey || state.mode !== "personal") { return; }
+  const noteEl = document.getElementById("profile-note");
+  try {
+    const blob = await apiFetch(`/user-profile/${encodeURIComponent(state.userKey)}/export`, {
+      auth: true,
+      blob: true,
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "smcr-profile.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    if (noteEl) { noteEl.textContent = "Profile exported."; setTimeout(() => { noteEl.textContent = ""; }, 3000); }
+  } catch (err) {
+    if (noteEl) { noteEl.textContent = err.message || "Export failed."; }
+  }
+}
+
 async function runBilletResearch() {
   const noteEl = document.getElementById("profile-note");
   try {
@@ -3601,6 +3743,8 @@ function renderBilletResearch(markdown) {
   container.hidden = false;
   const rerunBtn = document.getElementById("rerun-research");
   if (rerunBtn) { rerunBtn.hidden = false; }
+  const exportBtn = document.getElementById("export-profile");
+  if (exportBtn) { exportBtn.hidden = false; }
 }
 
 function applyInlineMarkdown(escapedText) {

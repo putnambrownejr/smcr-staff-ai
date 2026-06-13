@@ -99,24 +99,41 @@
               <li>If you have only one local workspace, use the same profile name each time.</li>
             </ul>
           </div>
-          <div class="config-grid">
-            <label>
-              <span>Profile name</span>
-              <input id="user-key" type="text" placeholder="capt-example" />
-            </label>
-            <label>
-              <span>Workspace passkey (optional)</span>
-              <input id="api-key" type="password" placeholder="Only if you set one" />
-            </label>
-          </div>
+          <!-- Hidden input keeps the rest of the codebase working unchanged -->
+          <input id="user-key" type="hidden" />
           <div class="button-row">
             <button id="load-demo">Open demo workspace</button>
-            <button id="load-personal" class="secondary">Open my workspace</button>
+            <button id="load-personal" class="secondary">Reload my workspace</button>
           </div>
-          <!-- A4: aria-live so screen readers announce status messages from all button actions -->
           <p class="helper-text" id="workspace-note" aria-live="polite">
-            Demo mode is a read-only tour. Personal mode opens your local workspace using the profile name above.
+            Demo mode is a read-only tour. Your personal workspace loads automatically on startup.
           </p>
+          <details class="strip" id="advanced-workspace-settings">
+            <summary><span class="drawer-label">Security &amp; advanced</span></summary>
+            <div class="config-grid">
+              <label>
+                <span>Passkey (optional)</span>
+                <input id="api-key" type="password" placeholder="Must match LOCAL_API_KEY in .env" autocomplete="current-password" />
+              </label>
+              <label>
+                <span>Custom profile name (optional)</span>
+                <input id="custom-profile-key" type="text" placeholder="e.g. smith-j — leave blank to keep auto ID" maxlength="60" spellcheck="false" />
+              </label>
+            </div>
+            <div class="button-row">
+              <button type="button" id="apply-advanced-settings" class="secondary">Apply</button>
+            </div>
+            <details class="help-hint" style="margin-top:0.5rem">
+              <summary>Your profile ID (for recovery)</summary>
+              <div class="help-hint-body">
+                <p class="helper-text">Save this if you want to recover your workspace after clearing browser data.</p>
+                <div class="onboarding-key-row">
+                  <code id="profile-id-display" class="profile-id-code"></code>
+                  <button type="button" class="secondary small" id="copy-profile-id">Copy</button>
+                </div>
+              </div>
+            </details>
+          </details>
           <details id="profile-settings" class="strip profile-settings-drawer">
             <summary>
               <span class="drawer-label">Profile &amp; preferences</span>
@@ -154,6 +171,7 @@
             <div class="button-row">
               <button id="save-profile" class="secondary">Save preferences</button>
               <button id="rerun-research" class="secondary" hidden>Refresh billet reference</button>
+              <button id="export-profile" class="secondary" hidden>Export profile</button>
             </div>
             <p id="profile-note" class="helper-text" aria-live="polite"></p>
             <div id="billet-research-result" class="billet-research-panel" hidden aria-live="polite"></div>
@@ -167,19 +185,19 @@
               <h2>Welcome to SMCR Staff AI</h2>
             </div>
 
-            <!-- First-run: no saved profile key found in localStorage -->
+            <!-- First-run (auto-UUID) or manual profile switch -->
             <div id="onboarding-first-run" class="onboarding-step">
-              <p>Create a profile name to open your personal workspace. Use something short and consistent — e.g. <code>smith-j</code> or <code>maj-jones</code>. It identifies your local data files.</p>
-              <div class="onboarding-key-row">
-                <input id="onboarding-key-input" type="text" placeholder="your-profile-name" autocomplete="username" maxlength="60" spellcheck="false" />
-                <button type="button" id="onboarding-create-workspace" class="secondary">Open workspace</button>
-              </div>
-              <p id="onboarding-key-error" class="helper-text" aria-live="polite"></p>
+              <p id="onboarding-first-run-msg">Opening your workspace…</p>
               <details class="help-hint" id="onboarding-recover-details" style="margin-top:0.5rem">
-                <summary id="onboarding-recover-trigger">Recover an existing profile</summary>
+                <summary>Switch to a different profile</summary>
                 <div class="help-hint-body">
                   <p id="onboarding-recover-note" class="helper-text">Looking up stored profiles…</p>
                   <ul id="onboarding-profile-list" class="onboarding-profile-list"></ul>
+                  <div class="onboarding-key-row" style="margin-top:0.5rem">
+                    <input id="onboarding-key-input" type="text" placeholder="Name or profile ID" autocomplete="username" maxlength="60" spellcheck="false" />
+                    <button type="button" id="onboarding-create-workspace" class="secondary">Switch</button>
+                  </div>
+                  <p id="onboarding-key-error" class="helper-text" aria-live="polite"></p>
                 </div>
               </details>
               <div class="button-row" style="margin-top:0.5rem">
@@ -189,9 +207,8 @@
 
             <!-- Return visit: saved profile key found -->
             <div id="onboarding-welcome-back" class="onboarding-step is-hidden">
-              <p>Profile: <strong id="onboarding-profile-display"></strong></p>
+              <p>Welcome back, <strong id="onboarding-profile-display"></strong>. Opening workspace…</p>
               <div class="button-row">
-                <button type="button" id="onboarding-open-saved" class="secondary">Open workspace</button>
                 <button type="button" id="onboarding-load-demo-return">Demo mode</button>
               </div>
               <button type="button" class="link-button" id="onboarding-switch-profile" style="margin-top:0.5rem">Use a different profile</button>
@@ -900,6 +917,10 @@
               </summary>
               <div class="panel-drawer-body">
                 <p class="helper-text">Packs are sub-folders inside the <code>modules/</code> directory at the repo root. Activate a pack to ingest its files into your local context.</p>
+                <div class="button-row" style="margin-bottom:0.5rem">
+                  <button type="button" id="git-pull-modules" class="secondary small">Pull latest modules</button>
+                </div>
+                <p id="git-pull-note" class="helper-text" aria-live="polite" style="display:none"></p>
                 <div id="module-pack-list" class="row-stack empty-state" aria-live="polite">Load workspace to see this</div>
               </div>
             </details>

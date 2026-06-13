@@ -43,6 +43,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+extend-ignore = ["E501"]  # formatter handles line length; long string literals in data dicts are fine
 
 [tool.mypy]
 python_version = "3.12"

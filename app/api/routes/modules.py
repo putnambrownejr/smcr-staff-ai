@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from typing import Annotated
 
@@ -7,9 +8,11 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
-from app.schemas.modules import ModuleIngestResult, ModulePackDetail, ModulePackSummary
+from app.schemas.modules import ModuleIngestResult, ModulePackDetail, ModulePackSummary, ProfileSeed
 from app.services.staff.module_discovery import ModuleDiscovery
 from app.services.storage.local_context_store import LocalContextStore
+
+PROFILE_SEED_FILENAME = "smcr-profile.json"
 
 router = APIRouter(prefix="/modules", tags=["modules"], dependencies=[LocalApiKeyDependency])
 
@@ -63,8 +66,20 @@ def ingest_module_pack(
 
     ingested: list[str] = []
     skipped: list[str] = []
+    profile_seed: ProfileSeed | None = None
 
     for module_file in detail.files:
+        # smcr-profile.json is metadata, not a document — parse it separately
+        if module_file.filename == PROFILE_SEED_FILENAME:
+            file_path = discovery.pack_file_path(pack_name, module_file.filename)
+            if file_path is not None:
+                try:
+                    data = json.loads(file_path.read_text(encoding="utf-8"))
+                    profile_seed = ProfileSeed.model_validate(data)
+                except Exception:  # noqa: BLE001
+                    pass
+            continue
+
         file_path = discovery.pack_file_path(pack_name, module_file.filename)
         if file_path is None:
             skipped.append(module_file.filename)
@@ -90,6 +105,8 @@ def ingest_module_pack(
         parts.append(f"Replaced {replaced} previous version(s).")
     if skipped:
         parts.append(f"Skipped {len(skipped)} file(s) (too large or unsupported).")
+    if profile_seed:
+        parts.append("Pack includes profile defaults.")
 
     return ModuleIngestResult(
         pack_name=pack_name,
@@ -97,4 +114,5 @@ def ingest_module_pack(
         skipped=skipped,
         replaced=replaced,
         message=" ".join(parts),
+        profile_seed=profile_seed,
     )

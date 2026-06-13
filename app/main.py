@@ -21,6 +21,7 @@ from app.api.routes import (
     dashboard,
     demo,
     documents,
+    git_ops,
     handoffs,
     health,
     history,
@@ -100,6 +101,7 @@ def create_app() -> FastAPI:
     app.include_router(maradmins.router)
     app.include_router(message_watch.router)
     app.include_router(modules.router)
+    app.include_router(git_ops.router)
     app.include_router(social.router)
     app.include_router(staff.router)
     app.include_router(staff_products.router)

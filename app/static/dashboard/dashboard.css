@@ -129,6 +129,54 @@ body {
   padding: 0.1rem 0;
 }
 
+.profile-id-code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  word-break: break-all;
+  color: var(--muted);
+  flex: 1 1 auto;
+}
+
+/* Advanced workspace settings strip — collapsible card inside config area */
+#advanced-workspace-settings {
+  margin-top: 12px;
+}
+
+#advanced-workspace-settings > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+#advanced-workspace-settings > summary::-webkit-details-marker {
+  display: none;
+}
+
+#advanced-workspace-settings > summary::before {
+  content: "▸";
+  transition: transform 0.15s;
+}
+
+#advanced-workspace-settings[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+#advanced-workspace-settings > div {
+  display: grid;
+  gap: 12px;
+  padding-top: 10px;
+}
+
+button.small {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
 .module-pack-row .module-pack-note {
   margin-top: 0.25rem;
 }

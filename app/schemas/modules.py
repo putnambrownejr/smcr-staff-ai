@@ -28,9 +28,19 @@ class ModulePackDetail(ModulePackSummary):
     files: list[ModuleFile]
 
 
+class ProfileSeed(BaseModel):
+    """Profile defaults extracted from smcr-profile.json in a module pack."""
+    billet: str | None = None
+    unit: str | None = None
+    mos: str | None = None
+    format_preference: str | None = None
+    style_notes: str | None = None
+
+
 class ModuleIngestResult(BaseModel):
     pack_name: str
     ingested: list[str]
     skipped: list[str]
     replaced: int
     message: str
+    profile_seed: ProfileSeed | None = None

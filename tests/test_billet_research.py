@@ -11,7 +11,6 @@ from app.main import app
 from app.services.staff.billet_research_service import build_research_note
 from app.services.staff.billet_research_store import BilletResearchStore
 
-
 # ---------------------------------------------------------------------------
 # Service unit tests
 # ---------------------------------------------------------------------------
