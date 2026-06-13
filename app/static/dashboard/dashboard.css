@@ -15,6 +15,7 @@
   --field-soft: #171c22;
   --amber: #b4892f;
   --amber-soft: #2d2618;
+  --accent: #5a9fd4;
   --shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
   --radius: 6px;
 }
@@ -26,6 +27,10 @@
 *:focus-visible {
   outline: 2px solid var(--accent, #4a90d9);
   outline-offset: 2px;
+}
+
+*, *::before, *::after {
+  transition: filter 120ms ease, background-color 120ms ease, opacity 120ms ease, border-color 120ms ease, outline-offset 80ms ease;
 }
 
 body {
@@ -43,7 +48,7 @@ body {
   padding: 10px 12px;
   border-radius: 6px;
   background: var(--scarlet);
-  color: #fff;
+  color: #f5ebe9;
   font-weight: 700;
   text-decoration: none;
 }
@@ -72,7 +77,7 @@ body {
   align-items: flex-start;
   padding: 24px 28px 18px;
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, #08090b 0%, #11161b 100%);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
 }
 
 .title-stack h1,
@@ -435,12 +440,26 @@ button,
 .lane-button.active {
   background: var(--scarlet);
   border-color: var(--scarlet);
-  color: #fff;
+  color: #f5ebe9;
 }
 
 .lane-button:hover,
 button:hover {
   filter: brightness(1.06);
+}
+
+button:active,
+.lane-button:active {
+  filter: brightness(0.88);
+}
+
+button:disabled,
+button[disabled],
+.lane-button:disabled,
+.lane-button[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 input,
@@ -453,6 +472,14 @@ textarea {
   background: var(--surface-3);
   color: var(--text);
   font: inherit;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  outline: none;
 }
 
 label {
@@ -1162,5 +1189,12 @@ textarea {
   .timezone-panel:focus-within .timezone-controls,
   .timezone-controls:not(.is-hidden) {
     display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }
