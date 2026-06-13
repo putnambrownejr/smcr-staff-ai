@@ -105,7 +105,7 @@ Four cut-or-wire decisions resolved:
 
 | ID | Action | Status |
 |----|--------|--------|
-| B1 | Add `MAX_FEED_ENTRIES = 200` trim to MARADMIN feed store on write | in-progress |
-| B2 | Remove `database_url` / `vector_store_backend` dead config or mark reserved | in-progress |
+| B1 | Add `MAX_FEED_ENTRIES = 200` trim to MARADMIN feed store on write | done |
+| B2 | Remove `database_url` / `vector_store_backend` dead config or mark reserved | done |
 | B3 | Document `user_key` → `group_key` extension point in `docs/architecture.md` | done |
 | B4 | Add module-split readiness note to `dashboard.js` header | done |
