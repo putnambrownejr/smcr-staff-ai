@@ -165,21 +165,29 @@
           <article id="workspace-onboarding" class="panel onboarding-panel full-span">
             <div class="panel-header">
               <h2>Welcome to SMCR Staff AI</h2>
-              <p>Open the demo workspace to see the dashboard with safe sample data.</p>
             </div>
-            <div class="onboarding-step">
-              <div class="button-row">
-                <button type="button" id="onboarding-load-demo">Open demo workspace</button>
+
+            <!-- First-run: no saved profile key found in localStorage -->
+            <div id="onboarding-first-run" class="onboarding-step">
+              <p>Create a profile name to open your personal workspace. Use something short and consistent — e.g. <code>smith-j</code> or <code>maj-jones</code>. It identifies your local data files.</p>
+              <div class="onboarding-key-row">
+                <input id="onboarding-key-input" type="text" placeholder="your-profile-name" autocomplete="username" maxlength="60" spellcheck="false" />
+                <button type="button" id="onboarding-create-workspace" class="secondary">Create workspace</button>
               </div>
-              <details class="help-hint">
-                <summary>More setup options</summary>
-                <div class="help-hint-body">
-                  <p>Demo mode is a read-only tour. To use local personal data, enter your profile name in the Workspace tab and add your passkey if you configured one.</p>
-                  <div class="button-row">
-                    <button type="button" class="secondary" id="onboarding-open-setup">Open workspace setup</button>
-                  </div>
-                </div>
-              </details>
+              <p id="onboarding-key-error" class="helper-text" aria-live="polite"></p>
+              <div class="button-row" style="margin-top:0.5rem">
+                <button type="button" id="onboarding-load-demo">Browse demo first</button>
+              </div>
+            </div>
+
+            <!-- Return visit: saved profile key found -->
+            <div id="onboarding-welcome-back" class="onboarding-step is-hidden">
+              <p>Profile: <strong id="onboarding-profile-display"></strong></p>
+              <div class="button-row">
+                <button type="button" id="onboarding-open-saved" class="secondary">Open workspace</button>
+                <button type="button" id="onboarding-load-demo-return">Demo mode</button>
+              </div>
+              <button type="button" class="link-button" id="onboarding-switch-profile" style="margin-top:0.5rem">Use a different profile</button>
             </div>
           </article>
 

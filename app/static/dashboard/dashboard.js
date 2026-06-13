@@ -126,6 +126,42 @@ document.getElementById("load-demo").addEventListener("click", () => {
   document.getElementById("api-key").value = "";
   loadWorkspace();
 });
+
+// Onboarding: first-run key creation
+document.getElementById("onboarding-create-workspace")?.addEventListener("click", () => {
+  onboardingCreateWorkspace();
+});
+document.getElementById("onboarding-key-input")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { onboardingCreateWorkspace(); }
+});
+
+// Onboarding: return visit — open saved workspace
+document.getElementById("onboarding-open-saved")?.addEventListener("click", () => {
+  const saved = localStorage.getItem("smcr_user_key");
+  if (saved) {
+    state.mode = "personal";
+    state.userKey = saved;
+    state.apiKey = document.getElementById("api-key").value.trim();
+    document.getElementById("user-key").value = saved;
+    loadWorkspace();
+  }
+});
+
+// Onboarding: return visit — demo button
+document.getElementById("onboarding-load-demo-return")?.addEventListener("click", () => {
+  state.mode = "demo";
+  state.userKey = "";
+  state.apiKey = "";
+  loadWorkspace();
+});
+
+// Onboarding: switch to a different profile
+document.getElementById("onboarding-switch-profile")?.addEventListener("click", () => {
+  localStorage.removeItem("smcr_user_key");
+  document.getElementById("onboarding-welcome-back").classList.add("is-hidden");
+  document.getElementById("onboarding-first-run").classList.remove("is-hidden");
+  document.getElementById("onboarding-key-input")?.focus();
+});
 document.getElementById("retry-workspace-load")?.addEventListener("click", () => loadWorkspace());
 document.getElementById("reload-demo-workspace")?.addEventListener("click", () => {
   state.mode = "demo";
@@ -148,8 +184,15 @@ window.addEventListener("popstate", (event) => {
 });
 
 document.getElementById("load-personal").addEventListener("click", () => {
+  const name = document.getElementById("user-key").value.trim();
+  if (!isValidProfileName(name)) {
+    setWorkspaceNote(name.length === 0
+      ? "Enter a profile name above to open your workspace."
+      : "Profile name cannot contain / \\ or < >.", true);
+    return;
+  }
   state.mode = "personal";
-  state.userKey = document.getElementById("user-key").value.trim();
+  state.userKey = name;
   state.apiKey = document.getElementById("api-key").value.trim();
   loadWorkspace();
 });
@@ -334,7 +377,7 @@ document.getElementById("document-select")?.addEventListener("change", (event) =
   state.selectedDocumentId = event.target.value || null;
   renderDocumentLibrary(state.workspace?.document_details || []);
 });
-// Onboarding card buttons — visible until first workspace load
+// Onboarding card — demo button (first-run step)
 document.getElementById("onboarding-load-demo").addEventListener("click", () => {
   state.mode = "demo";
   state.userKey = "";
@@ -342,9 +385,6 @@ document.getElementById("onboarding-load-demo").addEventListener("click", () => 
   document.getElementById("user-key").value = "";
   document.getElementById("api-key").value = "";
   loadWorkspace();
-});
-document.getElementById("onboarding-open-setup").addEventListener("click", () => {
-  openLane("configure", "Enter your profile name to load your personal workspace.");
 });
 
 // Workflow dialog — close button and backdrop click
@@ -499,6 +539,7 @@ async function loadWorkspace() {
         return;
       }
       state.workspace = await apiFetch(`/dashboard/data/${encodeURIComponent(userKey)}`, { auth: true });
+      persistUserKey(userKey);
     }
     await loadBenchSections();
     await loadUserProfile();
@@ -685,6 +726,57 @@ function formatElapsedMinutes(timestamp) {
   const elapsedMinutes = Math.floor(elapsedMs / 60000);
   return elapsedMinutes <= 0 ? "just now" : `${elapsedMinutes} min`;
 }
+
+// ------------------------------------------------------------------
+// Onboarding: profile key creation and localStorage persistence
+// ------------------------------------------------------------------
+
+const SAVED_KEY_STORAGE = "smcr_user_key";
+
+function initOnboardingState() {
+  const saved = localStorage.getItem(SAVED_KEY_STORAGE);
+  if (saved) {
+    document.getElementById("user-key").value = saved;
+    const display = document.getElementById("onboarding-profile-display");
+    if (display) { display.textContent = saved; }
+    document.getElementById("onboarding-first-run")?.classList.add("is-hidden");
+    document.getElementById("onboarding-welcome-back")?.classList.remove("is-hidden");
+  }
+}
+
+function isValidProfileName(name) {
+  return name.length > 0 && name.length <= 60 && !/[/\\<>]/.test(name);
+}
+
+function onboardingCreateWorkspace() {
+  const input = document.getElementById("onboarding-key-input");
+  const errorEl = document.getElementById("onboarding-key-error");
+  const name = (input?.value || "").trim();
+
+  if (!isValidProfileName(name)) {
+    if (errorEl) {
+      errorEl.textContent = name.length === 0
+        ? "Enter a profile name to continue."
+        : "Profile name cannot contain / \\ or < >. Keep it short and memorable.";
+    }
+    input?.focus();
+    return;
+  }
+  if (errorEl) { errorEl.textContent = ""; }
+
+  localStorage.setItem(SAVED_KEY_STORAGE, name);
+  document.getElementById("user-key").value = name;
+  state.mode = "personal";
+  state.userKey = name;
+  state.apiKey = document.getElementById("api-key").value.trim();
+  loadWorkspace();
+}
+
+function persistUserKey(key) {
+  if (key) { localStorage.setItem(SAVED_KEY_STORAGE, key); }
+}
+
+// ------------------------------------------------------------------
 
 // UX4: show onboarding panel when no workspace is loaded, hide it once loaded
 function setOnboardingVisible(visible) {
@@ -3635,6 +3727,7 @@ function seedSectionMemoryEntry(encodedSeed) {
 
 applyLaneVisibility();
 initializeLaneHistory();
+initOnboardingState();
 loadWorkspace();
 startTimezoneClock();
 startLastUpdatedClock();
