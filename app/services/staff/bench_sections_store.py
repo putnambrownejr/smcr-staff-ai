@@ -24,9 +24,12 @@ class BenchSectionsStore:
     def upsert(self, user_key: str, sections: list[str]) -> BenchSectionsConfig:
         if not is_valid_user_key(user_key):
             raise ValueError("Invalid user_key.")
+        deduped = _dedupe_sections(sections)
+        if not deduped:
+            raise ValueError("sections list must contain at least one entry after deduplication.")
         config = BenchSectionsConfig(
             user_key=user_key,
-            sections=_dedupe_sections(sections),
+            sections=deduped,
             updated_at=datetime.now(UTC),
         )
         self._path(user_key).write_text(config.model_dump_json(indent=2), encoding="utf-8")

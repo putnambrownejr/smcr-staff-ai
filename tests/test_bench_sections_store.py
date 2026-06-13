@@ -35,3 +35,10 @@ def test_upsert_raises_value_error_for_invalid_user_key(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError):
         store.upsert("/", ["S-1/Admin"])
+
+
+def test_upsert_raises_value_error_when_all_entries_blank_after_dedup(tmp_path: Path) -> None:
+    store = BenchSectionsStore(tmp_path / "bench-sections")
+
+    with pytest.raises(ValueError, match="at least one entry"):
+        store.upsert("capt-bench", ["", "  ", "\t"])

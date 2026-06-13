@@ -3174,7 +3174,7 @@ async function loadBenchSections() {
   }
   try {
     const config = await apiFetch(`/bench-sections/${encodeURIComponent(state.userKey)}`, { auth: true });
-    state.benchSections = dedupeBenchSections(config.sections || DEFAULT_BENCH_SECTIONS);
+    state.benchSections = dedupeBenchSections(config.sections?.length ? config.sections : DEFAULT_BENCH_SECTIONS);
   } catch (error) {
     if (error.status === 404) {
       state.benchSections = [...DEFAULT_BENCH_SECTIONS];

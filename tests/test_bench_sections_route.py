@@ -35,5 +35,11 @@ def test_bench_sections_routes(tmp_path: Path) -> None:
         delete_response = client.delete("/bench-sections/capt-bench")
         assert delete_response.status_code == 204
         assert not delete_response.content
+
+        empty_response = client.put(
+            "/bench-sections/capt-bench",
+            json={"sections": []},
+        )
+        assert empty_response.status_code == 422
     finally:
         app.dependency_overrides.clear()

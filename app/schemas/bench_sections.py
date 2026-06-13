@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class BenchSectionsConfig(BaseModel):
@@ -10,7 +10,7 @@ class BenchSectionsConfig(BaseModel):
 
 
 class BenchSectionsUpsertRequest(BaseModel):
-    sections: list[str]
+    sections: list[str] = Field(min_length=1)
 
 
 class BenchSectionsResponse(BaseModel):
