@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from app.schemas.source_verification import (
     SourceVerificationFinding,
@@ -38,7 +38,7 @@ class SourceVerifier:
 
 def resolve_repo_local_path(path: str) -> Path:
     candidate = Path(path)
-    if candidate.is_absolute():
+    if candidate.is_absolute() or PureWindowsPath(path).is_absolute():
         raise FileNotFoundError("Absolute local paths are not allowed for source verification in this prototype.")
 
     repo_root = Path(__file__).resolve().parents[3]
