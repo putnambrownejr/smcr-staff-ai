@@ -130,3 +130,39 @@ Full inventory: `http://localhost:8000/docs`
   not implemented. The `connector-adapter` skill handles normalization of externally
   collected data.
 - **No deployed backend.** Local only. `uvicorn app.main:app --reload` from the repo root.
+
+---
+
+## Storage Pattern Detail
+
+Every persisted domain uses the same scheme: `SHA256(user_key)[:24] → {digest}.json`
+under a dedicated subdirectory of `local_context/`. Each store is a standalone class
+that reads and writes one JSON blob per user key.
+
+`database_url` and `vector_store_backend` exist in `Settings` as reserved fields for
+future use — they are not wired to any code today. The SQLite file is created by setup
+but unused by the running application.
+
+---
+
+## Multi-User Extension Point
+
+`user_key` is the isolation boundary for all stores. To support shared workspaces without
+a full database migration:
+
+- Introduce a `group_key` alongside `user_key` in stores that should be shared.
+- Personal-only stores (`section_memory`, `bench_sections`, `handoffs`) reject group keys.
+- Collaborative stores (`battle_rhythm`, `drill_plans`) accept either.
+- The SHA256 path scheme works for both; group keys need a distinct namespace (e.g. `grp_{key}`).
+- Concurrent write safety would require file locking or a move to SQLite at that point.
+
+Do not add `group_key` until a concrete shared-workspace use case exists.
+
+---
+
+## Safety Posture
+
+UNCLASSIFIED-only. Agents include allowed-source lists, disallowed inputs, and
+human-review flags. `app/core/security.py` detects likely sensitive inputs and forces
+generic training/checklist-style responses. All outputs are advisory drafts requiring
+human review before any action is taken.
