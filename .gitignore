@@ -33,5 +33,6 @@ USAGE_NOTES.md
 docs/IMPROVEMENT_PLAN_*.md
 docs/UPSTREAM_INSIGHTS_*.md
 
-# Claude Code local config — contains machine-specific paths and session state.
-.claude/
+# Claude Code local config — machine-specific paths and session state.
+.claude/settings.local.json
+.claude/todos.json
