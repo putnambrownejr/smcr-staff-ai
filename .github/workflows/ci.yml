@@ -26,6 +26,15 @@ jobs:
       - name: Install Playwright browsers
         run: uv run --frozen playwright install chromium --with-deps
 
+      - name: Start application server
+        run: uv run --frozen uvicorn app.main:app --port 8000 &
+
+      - name: Wait for server to be ready
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/health && break || sleep 1
+          done
+
       - name: Run tests
         run: uv run --frozen pytest tests/ -q
 
