@@ -62,6 +62,8 @@ def test_bench_section_manage(browser_page):
 def test_refresh_button_feedback(browser_page):
     page = browser_page
 
+    # first-run profile nudge redirects to configure; navigate to overview where refresh buttons live
+    page.locator("#tab-overview").click()
     refresh_button = page.get_by_role("button", name=re.compile(r"refresh", re.I)).first
     refresh_button.click()
 
