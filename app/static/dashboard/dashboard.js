@@ -32,9 +32,15 @@ const state = {
   consecutiveFetchFailures: 0,
   connectionLostDismissed: false,
   firstEmptyOrientationDismissed: false,
+  todayInHistory: [],
+  historyIndex: 0,
 };
 
 const PRELOAD_EMPTY_TEXT = "Load workspace to see this";
+
+function emptyStateHtml(headline, detail) {
+  return `<div class="empty-state"><p class="empty-state-headline">${headline}</p><p class="empty-state-detail">${detail}</p></div>`;
+}
 const DEFAULT_BENCH_SECTIONS = ["S-1/Admin", "S-2/Intel", "S-3", "S-4", "S-6"];
 const REFRESH_BUTTON_GROUPS = {
   sourceWatch: [
@@ -622,6 +628,9 @@ async function loadWorkspace() {
     setOnboardingVisible(false);
     updateFirstEmptyOrientation(isWorkspaceAllEmpty(state.workspace));
     setWorkspaceNote("Workspace refreshed.");
+    if (state.mode === "personal" && isMessageFeedsEmpty(state.workspace)) {
+      autoPreloadMessageFeeds();
+    }
   } catch (error) {
     console.error("Failed to load workspace", error);
     if (error.isNetworkError) {
@@ -923,9 +932,9 @@ function renderWorkspace(payload) {
   renderMosBenchLibrary();
   renderSectionMemoryProfile(payload.section_memory_profile || null);
   renderMaradminTicker(payload.maradmin_ticker || []);
-  renderTickerStack("navadmin-ticker", payload.navadmin_ticker || [], "Nothing here yet.");
-  renderTickerStack("alnav-ticker", payload.alnav_ticker || [], "Nothing here yet.");
-  renderTickerStack("dod-ticker", payload.dod_ticker || [], "Nothing here yet.");
+  renderTickerStack("navadmin-ticker", payload.navadmin_ticker || [], "No NAVADMINs tracked.");
+  renderTickerStack("alnav-ticker", payload.alnav_ticker || [], "No ALNAVs tracked.");
+  renderTickerStack("dod-ticker", payload.dod_ticker || [], "No DoD updates tracked.");
   renderCustomWatchFeeds(payload.custom_watch_feeds || []);
   renderHistory(payload.today_in_history || []);
   renderHistoryLibrary(payload.history_library || []);
@@ -997,7 +1006,7 @@ function renderNextDrillReadiness(payload) {
   }
 
   document.getElementById("readiness-posture").textContent =
-    payload.readiness_posture || "Nothing here yet.";
+    payload.readiness_posture || "No posture assessed.";
   document.getElementById("readiness-anchor").textContent = payload.anchor_drill_date
     ? `Anchored to next drill: ${payload.anchor_drill_date}`
     : "No next-drill anchor is currently stored.";
@@ -1025,7 +1034,7 @@ function renderThinStaffAssist(payload) {
   renderEntryRows(
     "thin-staff-next-touchpoint",
     payload.next_touchpoint ? [{ title: payload.next_touchpoint, category: "touchpoint" }] : [],
-    "Nothing here yet.",
+    "No next touchpoint logged.",
   );
 }
 
@@ -1414,10 +1423,10 @@ function renderDocumentLibrary(items) {
   if (!items.length) {
     target.className = "document-library empty-state";
     if (summary) {
-      summary.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
+      summary.textContent = state.workspace ? "No documents uploaded." : PRELOAD_EMPTY_TEXT;
     }
     if (selector) {
-      selector.innerHTML = `<option value="">${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</option>`;
+      selector.innerHTML = `<option value="">${state.workspace ? "No documents uploaded." : PRELOAD_EMPTY_TEXT}</option>`;
       selector.disabled = true;
     }
     if (typeSelect) {
@@ -1433,10 +1442,9 @@ function renderDocumentLibrary(items) {
     if (suggestionNote) {
       suggestionNote.textContent = "No category suggestion yet.";
     }
-    target.innerHTML = `
-      <p>${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</p>
-      <p class="helper-text">Open your personal workspace to review orders, BIO, RQS, receipts, and other local references here.</p>
-    `;
+    target.innerHTML = state.workspace
+      ? emptyStateHtml("No documents in this workspace.", "Orders, BIO data, receipts, and other personal references appear here after upload.")
+      : `<p class="empty-state-detail">${PRELOAD_EMPTY_TEXT}</p>`;
     return;
   }
   if (!state.selectedDocumentId || !items.some((item) => item.context_id === state.selectedDocumentId)) {
@@ -1538,10 +1546,9 @@ function renderTemplateLibrary(items) {
   const target = document.getElementById("template-library");
   if (!items.length) {
     target.className = "row-stack empty-state";
-    target.innerHTML = `
-      <p>${state.workspace ? "No templates saved yet." : PRELOAD_EMPTY_TEXT}</p>
-      <p class="helper-text">Use the form above to save a brief format, heading structure, or any example you want to reuse.</p>
-    `;
+    target.innerHTML = state.workspace
+      ? emptyStateHtml("No templates saved.", "Brief formats, heading structures, and reusable examples appear here after saving from the form above.")
+      : `<p class="empty-state-detail">${PRELOAD_EMPTY_TEXT}</p>`;
     return;
   }
   target.className = "row-stack";
@@ -1610,8 +1617,8 @@ function renderModulePackList(packs) {
   const listEl = document.getElementById("module-pack-list");
   if (!listEl) { return; }
   if (!packs.length) {
-    listEl.className = "row-stack empty-state";
-    listEl.textContent = "No module packs found. Add a sub-folder to the modules/ directory in the repo.";
+    listEl.className = "row-stack";
+    listEl.innerHTML = emptyStateHtml("No module packs found.", "Add a sub-folder to the modules/ directory in the repo to create a pack.");
     return;
   }
   listEl.className = "row-stack";
@@ -1785,10 +1792,9 @@ function renderSectionMemoryProfile(profile) {
   const entries = profile?.entries || [];
   if (!entries.length) {
     target.className = "row-stack empty-state";
-    target.innerHTML = `
-      <p>${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</p>
-      <p class="helper-text">Start with the section your reserve bench misses most often. This is meant to sharpen lone-planner and gap-cover outputs over time.</p>
-    `;
+    target.innerHTML = state.workspace
+      ? emptyStateHtml("No section memory logged.", "Staff section gap patterns appear here after the first entry is added. Start with whichever section your bench misses most.")
+      : `<p class="empty-state-detail">${PRELOAD_EMPTY_TEXT}</p>`;
     clearSectionMemoryForm();
     return;
   }
@@ -1825,14 +1831,13 @@ function renderReferenceLibrary(items) {
   const selector = document.getElementById("reference-select");
   const target = document.getElementById("reference-library");
   if (!items.length) {
-    summary.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
-    selector.innerHTML = `<option value="">${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</option>`;
+    summary.textContent = state.workspace ? "No reference notes loaded." : PRELOAD_EMPTY_TEXT;
+    selector.innerHTML = `<option value="">${state.workspace ? "No reference notes loaded." : PRELOAD_EMPTY_TEXT}</option>`;
     selector.disabled = true;
-    target.className = "reading-detail empty-state";
-    target.innerHTML = `
-      <p>${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</p>
-      <p class="helper-text">Curated doctrine and staff-source notes from the repo will appear here.</p>
-    `;
+    target.className = "reading-detail";
+    target.innerHTML = state.workspace
+      ? emptyStateHtml("No reference notes loaded.", "Curated doctrine and staff-source notes from the active module pack appear here once activated.")
+      : `<p class="empty-state-detail">${PRELOAD_EMPTY_TEXT}</p>`;
     return;
   }
   summary.textContent = `${items.length} curated reference note(s) loaded from the repo source bench.`;
@@ -1881,17 +1886,16 @@ function renderReferenceLibrary(items) {
 }
 
 function renderMaradminTicker(items) {
-  renderTickerStack("maradmin-ticker", items, "Nothing here yet.");
+  renderTickerStack("maradmin-ticker", items, "No MARADMINs tracked.");
 }
 
 function renderCustomWatchFeeds(items) {
   const target = document.getElementById("custom-feed-watch");
   if (!items.length) {
-    target.className = "row-stack empty-state";
-    target.innerHTML = `
-      <p>${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</p>
-      <p class="helper-text">This lane is for local-only RSS watches like unit pages, PME sources, or professional feeds you want to keep in your off-drill scan.</p>
-    `;
+    target.className = "row-stack";
+    target.innerHTML = state.workspace
+      ? emptyStateHtml("No custom feeds configured.", "Local RSS watches — unit pages, PME sources, professional feeds — appear here once a feed URL is added.")
+      : `<p class="empty-state-detail">${PRELOAD_EMPTY_TEXT}</p>`;
     return;
   }
   target.className = "row-stack";
@@ -1948,33 +1952,65 @@ function renderHistory(items) {
   const target = document.getElementById("history-feed");
   const overviewTarget = document.getElementById("overview-history-fact");
   if (!items.length) {
-    target.className = "row-stack empty-state";
-    target.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
+    target.className = "row-stack";
+    target.innerHTML = state.workspace
+      ? emptyStateHtml("No history facts loaded.", "Unit and USMC historical facts for this date appear here once sources are checked.")
+      : `<p class="empty-state-detail">${PRELOAD_EMPTY_TEXT}</p>`;
     if (overviewTarget) {
-      overviewTarget.className = "row-stack empty-state";
-      overviewTarget.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
+      overviewTarget.className = "row-stack";
+      overviewTarget.innerHTML = target.innerHTML;
     }
     return;
   }
-  const item = items[0];
+  state.todayInHistory = items;
+  state.historyIndex = Math.min(state.historyIndex, items.length - 1);
+  const item = items[state.historyIndex];
   target.className = "row-stack";
-  target.innerHTML = renderHistoryFactCard(item);
+  target.innerHTML = renderHistoryFactCard(item, state.historyIndex, items.length);
   if (overviewTarget) {
     overviewTarget.className = "row-stack";
-    overviewTarget.innerHTML = renderHistoryFactCard(item);
+    overviewTarget.innerHTML = renderHistoryFactCard(item, state.historyIndex, items.length);
   }
 }
 
-function renderHistoryFactCard(item) {
+function cycleHistoryFact() {
+  if (!state.todayInHistory.length) { return; }
+  state.historyIndex = (state.historyIndex + 1) % state.todayInHistory.length;
+  renderHistory(state.todayInHistory);
+}
+
+function renderHistoryFactCard(item, index = 0, total = 1) {
   const significance = (item.significance || []).slice(0, 2);
+  const sourceUrl = (item.references || []).find((r) => r.startsWith("http"));
+  const sourceLink = sourceUrl
+    ? `<p class="meta-inline"><a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">Source →</a></p>`
+    : "";
+  const nextBtn = total > 1
+    ? `<button type="button" class="secondary small" onclick="cycleHistoryFact()">Next fact (${index + 1}/${total})</button>`
+    : "";
+  const shortMonths = ["","JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+  const dateLabel = `${item.day} ${shortMonths[item.month] || ""} ${item.year_label}`.trim();
+  const today = new Date();
+  const isToday = item.month === today.getMonth() + 1 && item.day === today.getDate();
+  const fallbackNote = !isToday
+    ? `<p class="meta-inline" style="color:var(--muted)">No entry for ${today.toLocaleDateString("en-US", { month: "short", day: "numeric" })} — showing a related entry.</p>`
+    : "";
+  // Nov 10: surface the Commandant's annual birthday message when it's actually the birthday
+  const birthdayLink = item.month === 11 && item.day === 10 && isToday
+    ? `<p class="meta-inline"><a href="https://www.marines.mil/News/Messages/" target="_blank" rel="noopener noreferrer">Commandant's Birthday Message →</a></p>`
+    : "";
   return `
     <article class="data-row">
       <div class="data-row-head">
-        <span class="strip-label">${escapeHtml(item.year_label)}</span>
+        <span class="strip-label">${escapeHtml(dateLabel)}</span>
         <strong>${escapeHtml(item.title)}</strong>
       </div>
       <p>${escapeHtml(item.summary)}</p>
-      <ul>${significance.map((entry) => `<li>${escapeHtml(entry)}</li>`).join("")}</ul>
+      ${significance.length ? `<ul>${significance.map((entry) => `<li>${escapeHtml(entry)}</li>`).join("")}</ul>` : ""}
+      ${fallbackNote}
+      ${birthdayLink}
+      ${sourceLink}
+      ${nextBtn ? `<div class="button-row compact-controls">${nextBtn}</div>` : ""}
     </article>
   `;
 }
@@ -1998,9 +2034,11 @@ function renderHistoryLibrary(items) {
   populateHistoryDayOptions(daySelect, state.selectedHistoryDay);
 
   if (!state.historyLibrary.length) {
-    summary.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
-    target.className = "row-stack empty-state";
-    target.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
+    summary.textContent = state.workspace ? "No history facts loaded." : PRELOAD_EMPTY_TEXT;
+    target.className = "row-stack";
+    target.innerHTML = state.workspace
+      ? emptyStateHtml("No history facts loaded.", "Check sources to populate unit and USMC historical facts for this date.")
+      : `<p class="empty-state-detail">${PRELOAD_EMPTY_TEXT}</p>`;
     return;
   }
 
@@ -2039,11 +2077,13 @@ function renderReadingBooks(items) {
   const selector = document.getElementById("reading-book-select");
   const target = document.getElementById("reading-library");
   if (!items.length) {
-    summary.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
-    selector.innerHTML = `<option value="">${state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT}</option>`;
+    summary.textContent = state.workspace ? "No books loaded." : PRELOAD_EMPTY_TEXT;
+    selector.innerHTML = `<option value="">${state.workspace ? "No books loaded." : PRELOAD_EMPTY_TEXT}</option>`;
     selector.disabled = true;
-    target.className = "reading-detail empty-state";
-    target.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
+    target.className = "reading-detail";
+    target.innerHTML = state.workspace
+      ? emptyStateHtml("No reading list loaded.", "PME and Commandant's reading list items appear here once sources are checked.")
+      : `<p class="empty-state-detail">${PRELOAD_EMPTY_TEXT}</p>`;
     return;
   }
   const completedCount = items.filter((item) => (item.progress?.status || "not_started") === "completed").length;
@@ -2178,8 +2218,8 @@ function renderAnalystBrief(payload) {
 function renderOpportunities(items) {
   const target = document.getElementById("opportunity-watch");
   if (!items.length) {
-    target.className = "row-stack empty-state";
-    target.textContent = "No tracked opportunities available yet.";
+    target.className = "row-stack";
+    target.innerHTML = emptyStateHtml("No tracked opportunities.", "Billet and career opportunities appear here once added to the tracker.");
     return;
   }
   target.className = "row-stack";
@@ -2202,8 +2242,8 @@ function renderOpportunities(items) {
 function renderTrackedActions(items) {
   const target = document.getElementById("action-watch");
   if (!items.length) {
-    target.className = "row-stack empty-state";
-    target.textContent = "No tracked POAM items available yet.";
+    target.className = "row-stack";
+    target.innerHTML = emptyStateHtml("No tracked POAM items.", "Open action items and suspenses appear here once added.");
     return;
   }
   target.className = "row-stack";
@@ -2251,8 +2291,10 @@ function renderTickerStack(targetId, items, emptyText) {
 function renderSourceUpdates(items) {
   const target = document.getElementById("source-updates");
   if (!items.length) {
-    target.className = "row-stack empty-state";
-    target.textContent = state.workspace ? "Nothing here yet." : PRELOAD_EMPTY_TEXT;
+    target.className = "row-stack";
+    target.innerHTML = state.workspace
+      ? emptyStateHtml("No source updates detected.", "Changes to tracked doctrine and admin sources appear here after the next source check.")
+      : `<p class="empty-state-detail">${PRELOAD_EMPTY_TEXT}</p>`;
     return;
   }
   target.className = "row-stack";
@@ -2278,8 +2320,8 @@ function renderQueue(items, hotItems = []) {
   const normalizedHotItems = Array.isArray(hotItems) ? hotItems : [];
   const combined = buildActionStack(normalizedItems, normalizedHotItems);
   if (!combined.length) {
-    target.className = "row-stack empty-state";
-    target.textContent = "No priority items returned yet.";
+    target.className = "row-stack";
+    target.innerHTML = emptyStateHtml("No action brief for this drill period.", "Build a brief to compile obligations, deadlines, and source updates before next drill.");
     return;
   }
   target.className = "row-stack";
@@ -3050,6 +3092,36 @@ async function saveBattleRhythmBoard() {
   } catch (error) {
     console.error("Failed to save battle rhythm board", error);
     setWorkspaceNote(error.message, true);
+  }
+}
+
+function isMessageFeedsEmpty(workspace) {
+  return (
+    !workspace?.maradmin_ticker?.length &&
+    !workspace?.navadmin_ticker?.length &&
+    !workspace?.alnav_ticker?.length &&
+    !workspace?.history_library?.length
+  );
+}
+
+async function autoPreloadMessageFeeds() {
+  try {
+    await Promise.all([
+      apiFetch("/maradmins/refresh", { method: "POST", auth: true }),
+      apiFetch("/message-watch/navadmins/refresh", { method: "POST", auth: true }),
+      apiFetch("/message-watch/alnavs/refresh", { method: "POST", auth: true }),
+      apiFetch("/message-watch/dod/refresh", { method: "POST", auth: true }),
+      apiFetch("/history/seed", { method: "POST", auth: true }),
+      apiFetch("/history/refresh", { method: "POST", auth: true }),
+    ]);
+    state.workspace = await apiFetch(
+      `/dashboard/data/${encodeURIComponent(state.userKey)}`,
+      { auth: true },
+    );
+    renderWorkspace(state.workspace);
+    markLastUpdated(["maradmins", "sourceWatch"]);
+  } catch {
+    // silent — user can manually refresh if auto-preload fails
   }
 }
 

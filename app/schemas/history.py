@@ -12,6 +12,14 @@ class TodayInMarineHistoryItem(BaseModel):
     references: list[str] = Field(default_factory=list)
 
 
+class HistoryRefreshResponse(BaseModel):
+    fetched_count: int
+    imported_count: int
+    total_available: int
+    date_checked: str
+    warnings: list[str] = Field(default_factory=list)
+
+
 class HistoryImportRequest(BaseModel):
     markdown_paths: list[str] = Field(default_factory=list)
     replace_existing: bool = False

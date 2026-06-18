@@ -941,7 +941,42 @@ textarea {
 }
 
 .empty-state {
+  display: grid;
+  gap: 8px;
+  max-width: 54ch;
+  padding: 20px 0 4px;
   color: var(--muted);
+}
+
+.empty-state-headline {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.empty-state-detail {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.empty-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.empty-state-flag {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 2px;
 }
 
 .last-updated {
