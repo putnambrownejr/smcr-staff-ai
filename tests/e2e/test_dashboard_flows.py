@@ -67,7 +67,8 @@ def test_refresh_button_feedback(browser_page):
     refresh_button = page.get_by_role("button", name=re.compile(r"refresh", re.I)).first
     refresh_button.click()
 
-    _expect(page.locator("#workspace-note")).to_have_text(re.compile(r"open your personal workspace", re.I))
+    # auto-UUID means a workspace is always loaded; refresh produces a "refreshed" status note
+    _expect(page.locator("#workspace-note")).to_have_text(re.compile(r"refresh", re.I))
     _expect(refresh_button).to_be_visible()
 
 
