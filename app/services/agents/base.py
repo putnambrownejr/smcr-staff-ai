@@ -98,9 +98,11 @@ class PlaceholderAgent(Agent):
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
         lines = "\n".join(f"- {item}" for item in self.checklist)
         answer = (
-            f"{self.metadata.name} placeholder response.\n\n"
-            "Use this as a planning draft, not as an order or authoritative decision.\n\n"
-            f"Suggested checklist:\n{lines}"
+            f"[{self.metadata.name} — no LLM connected. "
+            "Paste this into your AI assistant to get a real response. "
+            "The checklist below is structured context for that conversation, "
+            "not AI-generated output.]\n\n"
+            f"Checklist items:\n{lines}"
         )
         return self._response(
             answer=answer,

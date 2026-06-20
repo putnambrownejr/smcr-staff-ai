@@ -119,14 +119,24 @@ tests/                 Offline fixture-based tests
 
 ## Setup
 
-```powershell
-cd <repo-root>
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev]"
-copy .env.example .env
-uvicorn app.main:app --reload
+See [QUICKSTART.md](QUICKSTART.md) for the full walkthrough. The short version:
+
+**Windows:**
+```cmd
+start.bat
 ```
+
+**Linux / macOS:**
+```sh
+./start.sh
+```
+
+**Docker:**
+```sh
+docker compose up
+```
+
+All three options check for [uv](https://github.com/astral-sh/uv), sync dependencies from `pyproject.toml`, and start the server.
 
 Open the API docs:
 
@@ -139,10 +149,8 @@ Open the lightweight dashboard:
 ```text
 http://127.0.0.1:8000/dashboard
 ```
-
-Run the local app with `uvicorn app.main:app --reload`.
 For a fast repo map, see [docs/README.md](docs/README.md).
-For tooling-oriented repo discovery, see [AGENTS.md](AGENTS.md).
+For AI assistant context (Claude / Codex / Gemini / Copilot), see [CLAUDE.md](CLAUDE.md).
 For hosted-AI/repo-only orientation, see [docs/compatibility/ai_assistant_guide.md](docs/compatibility/ai_assistant_guide.md).
 For the lowest-friction GitHub-plus-local workflow, see [docs/handoffs/README.md](docs/handoffs/README.md).
 For project purpose and scope, see [docs/core_documents/project_purpose.md](docs/core_documents/project_purpose.md).
@@ -1353,7 +1361,7 @@ APP_NAME="SMCR Staff AI"
 APP_VERSION="0.1.0"
 ENVIRONMENT="local"
 VECTOR_STORE_BACKEND="local-stub"
-LOCAL_API_KEY=""
+# LOCAL_API_KEY=your-secret-here   # leave unset for open local access
 MAX_UPLOAD_BYTES="50000000"
 PUBLIC_SOURCE_ONLY="true"
 ```
@@ -1376,9 +1384,9 @@ SQLite is the default for quick local development. Docker Compose includes Postg
 Run checks:
 
 ```powershell
-python -m ruff check .
-python -m mypy app tests
-python -m pytest tests/ -q
+uv run ruff check .
+uv run mypy app tests
+uv run pytest tests/ -q
 ```
 
 Use fixture-based tests for parsers and network-adjacent features. Tests should not require live network access.
@@ -1421,7 +1429,7 @@ If an AI tool is connected to this repo, it should search the repo for the relev
 Start with:
 
 1. `README.md`
-2. `AGENTS.md`
+2. `CLAUDE.md`
 3. `docs/core_documents/project_purpose.md`
 4. `docs/compatibility/ai_assistant_guide.md`
 5. `app/services/agents/registry.py`

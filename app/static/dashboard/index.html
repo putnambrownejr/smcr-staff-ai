@@ -135,6 +135,36 @@
               </div>
             </details>
           </details>
+          <details id="handoff-settings" class="strip">
+            <summary>
+              <span class="drawer-label">Session handoff</span>
+            </summary>
+            <p class="helper-text" style="margin:0 0 0.75rem">
+              Continuity data used by the chief brief and Act Now queue. Fill in what applies — leave the rest blank.
+            </p>
+            <div class="config-grid">
+              <label>
+                <span>Display name</span>
+                <input id="handoff-display-name" type="text" placeholder="e.g. Capt Smith" maxlength="80" />
+              </label>
+              <label>
+                <span>Rank</span>
+                <input id="handoff-rank" type="text" placeholder="e.g. CPT, MAJ, GySgt" maxlength="20" />
+              </label>
+            </div>
+            <label style="display:grid;gap:4px;margin-top:0.5rem">
+              <span>Admin watch items <span class="helper-text">(one per line)</span></span>
+              <textarea id="handoff-admin-watch" rows="3" placeholder="PME deadline&#10;FitRep due&#10;Unit move orders"></textarea>
+            </label>
+            <label style="display:grid;gap:4px;margin-top:0.5rem">
+              <span>Recurring drill notes <span class="helper-text">(one per line)</span></span>
+              <textarea id="handoff-drill-notes" rows="3" placeholder="Check ammo account&#10;Review training schedule&#10;Submit travel claims"></textarea>
+            </label>
+            <div class="button-row" style="margin-top:0.75rem">
+              <button type="button" id="save-handoff" class="secondary">Save handoff</button>
+            </div>
+            <p id="handoff-note" class="helper-text" aria-live="polite"></p>
+          </details>
           <details id="profile-settings" class="strip profile-settings-drawer">
             <summary>
               <span class="drawer-label">Profile &amp; preferences</span>
@@ -739,6 +769,7 @@
                     <p><strong>Action tracker:</strong> Your tracked POAMs (owner, status, suspense). Use for items that need to survive multiple sessions — not one-off notes.</p>
                     <p><strong>Opportunity watch:</strong> ADOS/SMCR opportunities you're tracking from your local career stack.</p>
                     <p><strong>Source updates:</strong> Potential doctrine or admin-reference changes flagged by scans. Review before relying on older policy summaries.</p>
+                    <p><strong>Quick links:</strong> Common military portals (MOL, MyPay, DVIDS, MarineNet, VetTix, etc.) plus any unit-specific links you add. Click any chip to open it in a new tab.</p>
                   </div>
                 </details>
               </div>
@@ -776,6 +807,37 @@
             </div>
             <div id="source-updates" class="row-stack empty-state">Load workspace to see this</div>
             <p id="source-watch-last-updated" class="last-updated is-hidden" aria-live="polite"></p>
+          </article>
+
+          <article class="panel full-span" id="quick-links-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Quick links</h2>
+                <p>Common military portals and resources. Add unit-specific links below.</p>
+              </div>
+              <button type="button" class="secondary" id="quick-links-add-btn">+ Add link</button>
+            </div>
+            <div id="quick-links-filter" class="row-stack" style="flex-wrap:wrap;gap:0.4rem;margin-bottom:0.75rem;display:none"></div>
+            <div id="quick-links-list" class="row-stack empty-state">Load workspace to see links</div>
+            <form id="quick-links-add-form" class="is-hidden" style="margin-top:0.75rem;display:flex;flex-direction:column;gap:0.5rem;">
+              <input type="text" id="ql-title" placeholder="Link title" required maxlength="80" />
+              <input type="url" id="ql-url" placeholder="https://..." required maxlength="500" />
+              <input type="text" id="ql-description" placeholder="Short description (optional)" maxlength="200" />
+              <select id="ql-category">
+                <option value="unit">Unit-specific</option>
+                <option value="admin_pay">Admin &amp; pay</option>
+                <option value="training_pme">Training &amp; PME</option>
+                <option value="news_info">News &amp; info</option>
+                <option value="benefits">Benefits</option>
+                <option value="comms">Communications</option>
+                <option value="reserve">Reserve affairs</option>
+                <option value="reference">Reference</option>
+              </select>
+              <div style="display:flex;gap:0.5rem;">
+                <button type="submit" class="primary">Save link</button>
+                <button type="button" class="secondary" id="quick-links-cancel-btn">Cancel</button>
+              </div>
+            </form>
           </article>
         </section>
 

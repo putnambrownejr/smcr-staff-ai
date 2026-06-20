@@ -286,6 +286,7 @@ document.getElementById("clear-section-memory-form").addEventListener("click", (
 document.getElementById("manage-bench-sections")?.addEventListener("click", toggleBenchSectionsEditor);
 document.getElementById("add-bench-section")?.addEventListener("click", addBenchSectionFromInput);
 document.getElementById("save-bench-sections")?.addEventListener("click", saveBenchSections);
+document.getElementById("save-handoff")?.addEventListener("click", () => saveHandoff());
 document.getElementById("save-profile")?.addEventListener("click", () => saveUserProfile());
 document.getElementById("rerun-research")?.addEventListener("click", () => runBilletResearch());
 document.getElementById("export-profile")?.addEventListener("click", () => exportUserProfile());
@@ -621,6 +622,7 @@ async function loadWorkspace() {
     }
     await loadBenchSections();
     await loadUserProfile();
+    await loadHandoff();
     await loadBilletResearch();
     await loadTemplates();
     renderWorkspace(state.workspace);
@@ -943,6 +945,7 @@ function renderWorkspace(payload) {
   renderTrackedActions(payload.tracked_actions || []);
   renderOpportunities(payload.tracked_opportunities || payload.career_watch?.tracked_opportunities || []);
   renderSourceUpdates(payload.documentation_updates || payload.chief_brief?.documentation_updates || []);
+  loadQuickLinks();
   renderLastUpdatedStamps();
 }
 
@@ -2313,6 +2316,158 @@ function renderSourceUpdates(items) {
     )
     .join("");
 }
+
+// ── Quick Links ────────────────────────────────────────────────────────────
+const CATEGORY_ORDER = [
+  "admin_pay", "training_pme", "news_info", "benefits", "comms", "reserve", "reference", "unit",
+];
+
+async function loadQuickLinks() {
+  if (!state.userKey) return;
+  const listEl = document.getElementById("quick-links-list");
+  const filterEl = document.getElementById("quick-links-filter");
+  if (!listEl) return;
+  listEl.className = "row-stack";
+  listEl.textContent = "Loading…";
+  try {
+    const res = await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    renderQuickLinks(data.links || [], data.categories || {}, listEl, filterEl);
+  } catch (e) {
+    listEl.className = "row-stack empty-state";
+    listEl.textContent = "Could not load links.";
+  }
+}
+
+function renderQuickLinks(links, categoryLabels, listEl, filterEl) {
+  if (!links.length) {
+    listEl.className = "row-stack empty-state";
+    listEl.textContent = "No links yet. Add one above.";
+    filterEl.style.display = "none";
+    return;
+  }
+  // Collect categories present in this link set
+  const usedCats = [...new Set(links.map((l) => l.category))].sort(
+    (a, b) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b),
+  );
+  // Filter bar
+  filterEl.style.display = "flex";
+  let activeCat = null;
+  const renderLinks = () => {
+    const visible = activeCat ? links.filter((l) => l.category === activeCat) : links;
+    if (!visible.length) {
+      listEl.className = "row-stack empty-state";
+      listEl.textContent = "No links in this category.";
+      return;
+    }
+    // Group by category
+    const groups = {};
+    for (const link of visible) {
+      (groups[link.category] = groups[link.category] || []).push(link);
+    }
+    listEl.className = "row-stack";
+    listEl.innerHTML = Object.entries(groups)
+      .sort(([a], [b]) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b))
+      .map(
+        ([cat, catLinks]) => `
+        <div class="ql-category-group">
+          <p class="meta-inline" style="margin-bottom:0.3rem;font-weight:600">${escapeHtml(categoryLabels[cat] || cat)}</p>
+          <div class="ql-link-grid" style="display:flex;flex-wrap:wrap;gap:0.4rem;">
+            ${catLinks
+              .map(
+                (l) => `
+              <div class="ql-link-chip" style="display:flex;align-items:center;gap:0.25rem;">
+                <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer"
+                   class="strip-label" title="${escapeHtml(l.description || l.title)}"
+                   style="text-decoration:none">${escapeHtml(l.title)}</a>
+                ${!l.is_seed ? `<button type="button" class="ql-delete-btn" data-link-id="${escapeHtml(l.id)}"
+                   aria-label="Remove ${escapeHtml(l.title)}" style="background:none;border:none;cursor:pointer;padding:0;line-height:1">✕</button>` : ""}
+              </div>`,
+              )
+              .join("")}
+          </div>
+        </div>`,
+      )
+      .join("");
+    listEl.querySelectorAll(".ql-delete-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.linkId;
+        if (!state.userKey || !id) return;
+        try {
+          await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}/${encodeURIComponent(id)}`, {
+            method: "DELETE",
+          });
+          await loadQuickLinks();
+        } catch (_) {}
+      });
+    });
+  };
+  // Build filter chips
+  filterEl.innerHTML = `
+    <button type="button" class="strip-label ql-filter-chip ${!activeCat ? "active" : ""}" data-cat="">All</button>
+    ${usedCats
+      .map(
+        (c) =>
+          `<button type="button" class="strip-label ql-filter-chip" data-cat="${escapeHtml(c)}">${escapeHtml(categoryLabels[c] || c)}</button>`,
+      )
+      .join("")}`;
+  filterEl.querySelectorAll(".ql-filter-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      activeCat = chip.dataset.cat || null;
+      filterEl.querySelectorAll(".ql-filter-chip").forEach((c) => c.classList.toggle("active", c === chip));
+      renderLinks();
+    });
+  });
+  renderLinks();
+}
+
+function initQuickLinksForm() {
+  const addBtn = document.getElementById("quick-links-add-btn");
+  const cancelBtn = document.getElementById("quick-links-cancel-btn");
+  const form = document.getElementById("quick-links-add-form");
+  if (!addBtn || !form) return;
+  addBtn.addEventListener("click", () => {
+    form.classList.toggle("is-hidden", false);
+    addBtn.disabled = true;
+    document.getElementById("ql-title")?.focus();
+  });
+  cancelBtn?.addEventListener("click", () => {
+    form.classList.add("is-hidden");
+    form.reset();
+    addBtn.disabled = false;
+  });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!state.userKey) return;
+    const title = document.getElementById("ql-title")?.value.trim();
+    const url = document.getElementById("ql-url")?.value.trim();
+    const description = document.getElementById("ql-description")?.value.trim() || null;
+    const category = document.getElementById("ql-category")?.value || "unit";
+    if (!title || !url) return;
+    const submitBtn = form.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Saving…";
+    try {
+      const res = await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, url, description, category, tags: [] }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      form.classList.add("is-hidden");
+      form.reset();
+      addBtn.disabled = false;
+      await loadQuickLinks();
+    } catch (_) {
+      submitBtn.textContent = "Error — retry";
+    } finally {
+      submitBtn.disabled = false;
+      if (submitBtn.textContent === "Saving…") submitBtn.textContent = "Save link";
+    }
+  });
+}
+// ── End Quick Links ────────────────────────────────────────────────────────
 
 function renderQueue(items, hotItems = []) {
   const target = document.getElementById("priority-queue");
@@ -3716,6 +3871,44 @@ function maybePromptFirstRunProfile() {
   openLane("configure", "");
 }
 
+async function loadHandoff() {
+  if (state.mode !== "personal" || !state.userKey) { return; }
+  try {
+    const handoff = await apiFetch(`/handoffs/${encodeURIComponent(state.userKey)}`, { auth: true });
+    document.getElementById("handoff-display-name").value = handoff.display_name || "";
+    document.getElementById("handoff-rank").value = handoff.rank || "";
+    document.getElementById("handoff-admin-watch").value = (handoff.admin_watch_items || []).join("\n");
+    document.getElementById("handoff-drill-notes").value = (handoff.recurring_drill_notes || []).join("\n");
+  } catch (err) {
+    if (err.status !== 404) { console.error("Failed to load handoff", err); }
+    // 404 = no handoff yet, form stays blank — that's the prompt to fill it in
+  }
+}
+
+async function saveHandoff() {
+  if (!state.userKey || state.mode !== "personal") { return; }
+  const noteEl = document.getElementById("handoff-note");
+  const toLines = (id) => document.getElementById(id).value
+    .split("\n").map(s => s.trim()).filter(Boolean);
+  const body = {
+    user_key: state.userKey,
+    display_name: document.getElementById("handoff-display-name").value.trim() || null,
+    rank: document.getElementById("handoff-rank").value.trim() || null,
+    admin_watch_items: toLines("handoff-admin-watch"),
+    recurring_drill_notes: toLines("handoff-drill-notes"),
+  };
+  try {
+    await apiFetch(`/handoffs/${encodeURIComponent(state.userKey)}`, {
+      method: "PUT",
+      auth: true,
+      body: JSON.stringify(body),
+    });
+    if (noteEl) { noteEl.textContent = "Handoff saved."; setTimeout(() => { noteEl.textContent = ""; }, 3000); }
+  } catch (err) {
+    if (noteEl) { noteEl.textContent = err.message || "Failed to save handoff."; }
+  }
+}
+
 async function saveUserProfile() {
   if (!state.userKey || state.mode !== "personal") {
     return;
@@ -4067,6 +4260,7 @@ function seedSectionMemoryEntry(encodedSeed) {
 applyLaneVisibility();
 initializeLaneHistory();
 initOnboardingState();
+initQuickLinksForm();
 loadWorkspace();
 startTimezoneClock();
 startLastUpdatedClock();

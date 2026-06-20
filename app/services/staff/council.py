@@ -73,7 +73,7 @@ class StaffCouncilService:
                     confidence=response.confidence.value,
                 )
             )
-        synthesis = _build_council_synthesis(perspectives)
+        synthesis = _synthesis_prompt("council")
         return StaffCouncilResponse(
             question=request.question,
             echelon=request.echelon,
@@ -121,7 +121,7 @@ class StaffCouncilService:
             question=request.question,
             phases=phases,
             councils=councils,
-            synthesis=_build_round_robin_synthesis(councils),
+            synthesis=_synthesis_prompt("round_robin"),
             warnings=[
                 *DEFAULT_WARNINGS,
                 "Round robin is an advisory staff simulation, not command guidance or an order.",
@@ -165,40 +165,21 @@ def _extract_section(answer: str, marker: str) -> list[str]:
     return lines[:4]
 
 
-def _build_council_synthesis(perspectives: list[StaffPerspective]) -> str:
-    if not perspectives:
-        return "No staff perspectives ran. Confirm the right roles and restate the problem more clearly."
-
-    roles = ", ".join(p.role.upper() for p in perspectives[:4])
-    first_concern = next((item for p in perspectives for item in p.concerns if item), None)
-    first_recommendation = next((item for p in perspectives for item in p.recommendations if item), None)
-    synthesis = (
-        f"Staff view from {roles}: do not confuse a well-organized draft for an executable plan. "
-        "The next move is to resolve the first real friction point, assign the owner, and force a command decision "
-        "where assumptions are still carrying too much weight."
+def _synthesis_prompt(mode: str) -> str:
+    if mode == "round_robin":
+        return (
+            "[Round robin complete — no LLM is connected. "
+            "Paste this response into your AI assistant and ask it to: "
+            "identify the dominant cross-staff friction, cut what cannot be resourced, "
+            "assign owners, and surface the commander decision points. "
+            "Verify every claim against official sources before action.]"
+        )
+    return (
+        "[Staff council complete — no LLM is connected. "
+        "Paste this response into your AI assistant and ask it to synthesize the perspectives, "
+        "identify the first friction point, and recommend a commander decision. "
+        "All outputs are advisory drafts requiring human review.]"
     )
-    if first_concern:
-        synthesis += f" First friction to settle: {first_concern}"
-    if first_recommendation:
-        synthesis += f" Best immediate move: {first_recommendation}"
-    return synthesis
-
-
-def _build_round_robin_synthesis(councils: list[StaffCouncilResponse]) -> str:
-    concerns = [item for council in councils for perspective in council.perspectives for item in perspective.concerns]
-    recommendations = [
-        item for council in councils for perspective in council.perspectives for item in perspective.recommendations
-    ]
-    synthesis = (
-        "Round robin complete. Treat this like a real staff fight, not a stack of polite comments: identify the "
-        "assumption that will break execution first, cut what cannot be resourced, assign owners, and verify every "
-        "important claim against official sources or user-confirmed local context before action."
-    )
-    if concerns:
-        synthesis += f" First cross-staff friction: {concerns[0]}"
-    if recommendations:
-        synthesis += f" First action to drive: {recommendations[0]}"
-    return synthesis
 
 
 def _build_estimate(role: str, focus: tuple[str, ...], question: str) -> list[str]:

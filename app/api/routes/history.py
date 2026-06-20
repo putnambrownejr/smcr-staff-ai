@@ -9,11 +9,15 @@ from fastapi import APIRouter, Depends
 
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
-from app.schemas.history import HistoryImportRequest, HistoryImportResponse, HistoryRefreshResponse
+from app.schemas.history import (
+    HistoryImportRequest,
+    HistoryImportResponse,
+    HistoryRefreshResponse,
+    TodayInMarineHistoryItem,
+)
 from app.services.history.local_history_store import LocalHistoryStore
 from app.services.history.today_in_history import extract_history_items_from_markdown
 from app.services.history.wikipedia_history_service import WikipediaOnThisDayService
-from app.schemas.history import TodayInMarineHistoryItem
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 _SEED_PATH = _REPO_ROOT / "data" / "seed" / "usmc_history_on_this_day.example.yaml"

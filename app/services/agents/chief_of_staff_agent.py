@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
 
@@ -35,6 +37,9 @@ class ChiefOfStaffAideAgent(Agent):
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
         handoff = context.extra.get("handoff", {})
+        if not isinstance(handoff, dict):
+            handoff = {}
+
         pme_lines = _format_list(handoff, "pme", "No PME watch items supplied.")
         fitrep_lines = _format_list(handoff, "fitreps", "No FitRep watch items supplied.")
         drill_lines = _format_list(handoff, "drill_dates", "No annual drill dates supplied.")
@@ -68,17 +73,77 @@ class ChiefOfStaffAideAgent(Agent):
             "- Calendar: local ICS exists; Microsoft Graph and Google Calendar remain stubs.\n"
             "- Session handoff: local JSON persistence exists for minimum necessary user context."
         )
+
         return self._response(
             answer=answer,
             input_text=input_text,
-            follow_up_questions=[
-                "What is the next drill date?",
-                "Which mailbox/calendar provider should be connected first?",
-                "What PME, FitRep, or admin suspense should be added to the handoff?",
-                "Which staff echelon should vet this idea: company, battalion, or division/group?",
-            ],
-            confidence=Confidence.low,
+            follow_up_questions=_follow_up_questions(handoff),
+            confidence=_confidence(handoff),
         )
+
+
+def _confidence(handoff: dict) -> Confidence:  # type: ignore[type-arg]
+    """Confidence scales with how much handoff data is present."""
+    if not handoff:
+        return Confidence.low
+    populated = sum([
+        bool(handoff.get("pme")),
+        bool(handoff.get("fitreps")),
+        bool(handoff.get("drill_dates")),
+        bool(handoff.get("admin_watch_items")),
+    ])
+    if populated >= 3:
+        return Confidence.medium
+    return Confidence.low
+
+
+def _follow_up_questions(handoff: dict) -> list[str]:  # type: ignore[type-arg]
+    """Generate up to 4 targeted questions: context-specific first, then gap-fill."""
+    questions: list[str] = []
+
+    pme = handoff.get("pme") or []
+    fitreps = handoff.get("fitreps") or []
+    drill_dates = handoff.get("drill_dates") or []
+    admin_items = handoff.get("admin_watch_items") or []
+    recurring = handoff.get("recurring_checks") or []
+
+    # Context-specific questions when data is present (most actionable)
+    if drill_dates:
+        next_drill = _first_str(drill_dates, "drill_date")
+        questions.append(f"Drill date on record: {next_drill} — should we generate a drill-prep plan?")
+    if pme:
+        program = _first_str(pme, "program")
+        questions.append(f"Is {program!r} on track? Any completion certificates to log?")
+    if fitreps:
+        occasion = _first_str(fitreps, "occasion")
+        due = _first_str(fitreps, "due_date")
+        due_text = f", due {due}" if due and due != "None" else ""
+        questions.append(f"FitRep for {occasion!r}{due_text} — ready to draft talking points?")
+    if admin_items and isinstance(admin_items, list):
+        questions.append(f"Most urgent admin item: {admin_items[0]!r} — what's the suspense date?")
+
+    # Gap-filling questions for missing sections
+    if not drill_dates:
+        questions.append("What are your upcoming drill weekend dates?")
+    if not pme:
+        questions.append("What PME programs are you enrolled in or targeting for promotion?")
+    if not fitreps:
+        questions.append("When is your next FitRep due, and who is your reporting senior?")
+    if not admin_items:
+        questions.append("What admin items should be tracked heading into next drill?")
+    if not recurring:
+        questions.append("What checks should repeat every drill weekend (ammo account, training schedule, claims)?")
+
+    return questions[:4]
+
+
+def _first_str(items: list, key: str) -> str:  # type: ignore[type-arg]
+    if not items:
+        return "unknown"
+    first = items[0]
+    if isinstance(first, dict):
+        return str(first.get(key, "unknown"))
+    return str(first)
 
 
 def build_chief_of_staff_agent() -> ChiefOfStaffAideAgent:

@@ -116,6 +116,10 @@ def default_source_states_dir() -> Path:
     return default_local_context_dir() / "source_states"
 
 
+def default_resource_links_dir() -> Path:
+    return default_local_context_dir() / "resource_links"
+
+
 def default_database_url() -> str:
     database_path = default_local_state_root() / "smcr_staff_ai.db"
     return f"sqlite:///{database_path.as_posix()}"
@@ -150,6 +154,7 @@ class Settings(BaseSettings):
     drill_plans_storage_dir: str = str(default_drill_plans_dir())
     opportunities_storage_dir: str = str(default_opportunities_dir())
     source_states_storage_dir: str = str(default_source_states_dir())
+    resource_links_storage_dir: str = str(default_resource_links_dir())
     local_api_key: str | None = None
     max_upload_bytes: int = 50_000_000
     public_source_only: bool = True
@@ -181,6 +186,7 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.drill_plans_storage_dir),
         Path(settings.opportunities_storage_dir),
         Path(settings.source_states_storage_dir),
+        Path(settings.resource_links_storage_dir),
     ]
 
 

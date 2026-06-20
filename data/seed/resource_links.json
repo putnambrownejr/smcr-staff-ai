@@ -1,0 +1,170 @@
+[
+  {
+    "id": "mol",
+    "title": "My Online Marine (MOL)",
+    "url": "https://www.mol.usmc.mil",
+    "category": "admin_pay",
+    "description": "Personnel records, leave, and admin self-service"
+  },
+  {
+    "id": "mypay",
+    "title": "MyPay (DFAS)",
+    "url": "https://mypay.dfas.mil",
+    "category": "admin_pay",
+    "description": "Pay stubs, allotments, W-2s, and LES"
+  },
+  {
+    "id": "milconnect",
+    "title": "MilConnect",
+    "url": "https://milconnect.dmdc.osd.mil",
+    "category": "admin_pay",
+    "description": "Benefits, dependents, CAC, and ID card management"
+  },
+  {
+    "id": "myaccess",
+    "title": "My Access Center",
+    "url": "https://myaccess.dmdc.osd.mil",
+    "category": "admin_pay",
+    "description": "CAC-based portal access and PKI management"
+  },
+  {
+    "id": "marinenet",
+    "title": "MarineNet",
+    "url": "https://www.marinenet.usmc.mil",
+    "category": "training_pme",
+    "description": "Online training courses and PME resources"
+  },
+  {
+    "id": "tecom",
+    "title": "TECOM",
+    "url": "https://www.trngcmd.marines.mil",
+    "category": "training_pme",
+    "description": "Training and Education Command"
+  },
+  {
+    "id": "mcu-online",
+    "title": "Marine Corps University (MCU)",
+    "url": "https://www.usmcu.edu",
+    "category": "training_pme",
+    "description": "EWS, CSC, SAW, and online PME courses"
+  },
+  {
+    "id": "jko",
+    "title": "Joint Knowledge Online (JKO)",
+    "url": "https://jko.jten.mil",
+    "category": "training_pme",
+    "description": "Joint online training and certifications"
+  },
+  {
+    "id": "dvids",
+    "title": "DVIDS",
+    "url": "https://www.dvidshub.net",
+    "category": "news_info",
+    "description": "Defense Visual Information Distribution Service — news, photos, video"
+  },
+  {
+    "id": "marines-news",
+    "title": "Marines.mil news",
+    "url": "https://www.marines.mil/News/",
+    "category": "news_info",
+    "description": "Official USMC news and press releases"
+  },
+  {
+    "id": "maradmin-portal",
+    "title": "MARADMIN portal",
+    "url": "https://www.marines.mil/News/Messages/MARADMINs/",
+    "category": "news_info",
+    "description": "Marine administrative messages"
+  },
+  {
+    "id": "almar-portal",
+    "title": "ALMAR / message search",
+    "url": "https://www.marines.mil/News/Messages/",
+    "category": "news_info",
+    "description": "Search all Marine administrative and general messages"
+  },
+  {
+    "id": "va",
+    "title": "VA.gov",
+    "url": "https://www.va.gov",
+    "category": "benefits",
+    "description": "Veterans Affairs — healthcare, education, disability, home loans"
+  },
+  {
+    "id": "tricare",
+    "title": "Tricare",
+    "url": "https://www.tricare.mil",
+    "category": "benefits",
+    "description": "Military healthcare enrollment and coverage"
+  },
+  {
+    "id": "vettix",
+    "title": "VetTix",
+    "url": "https://www.vettix.org",
+    "category": "benefits",
+    "description": "Free event tickets for active duty and veterans"
+  },
+  {
+    "id": "sgli",
+    "title": "SGLI / VGLI (VA)",
+    "url": "https://www.va.gov/life-insurance/options-eligibility/sgli/",
+    "category": "benefits",
+    "description": "Servicemembers and Veterans Group Life Insurance"
+  },
+  {
+    "id": "webmail",
+    "title": "OWA Webmail",
+    "url": "https://webmail.apps.mil",
+    "category": "comms",
+    "description": "DoD webmail — verify your unit's specific OWA URL"
+  },
+  {
+    "id": "dts",
+    "title": "Defense Travel System (DTS)",
+    "url": "https://www.defensetravel.dod.mil",
+    "category": "comms",
+    "description": "Travel authorizations and vouchers"
+  },
+  {
+    "id": "gtcc",
+    "title": "GTCC (Citi)",
+    "url": "https://www.citibank.com/tts/solutions/commercial-cards/assets/docs/govt/Travel-Card.pdf",
+    "category": "comms",
+    "description": "Government Travel Charge Card information and support"
+  },
+  {
+    "id": "reserve-affairs",
+    "title": "Reserve Affairs (MARFORRES)",
+    "url": "https://www.marines.mil/About/Reserve-Affairs/",
+    "category": "reserve",
+    "description": "MARFORRES, SMCR, and reserve policy"
+  },
+  {
+    "id": "marines-mil",
+    "title": "Marines.mil",
+    "url": "https://www.marines.mil",
+    "category": "reference",
+    "description": "Official United States Marine Corps website"
+  },
+  {
+    "id": "mcpel",
+    "title": "MCPEL (publications)",
+    "url": "https://www.marines.mil/News/Publications/MCPEL/",
+    "category": "reference",
+    "description": "Marine Corps Publications Electronic Library — orders, doctrine, manuals"
+  },
+  {
+    "id": "navy-med",
+    "title": "Navy Medicine Online",
+    "url": "https://www.med.navy.mil",
+    "category": "reference",
+    "description": "Medical readiness, dental, and health records"
+  },
+  {
+    "id": "ipps-a",
+    "title": "IPPS-A",
+    "url": "https://www.ipps-a.army.mil",
+    "category": "reference",
+    "description": "Integrated Personnel and Pay System"
+  }
+]

@@ -37,6 +37,7 @@ from app.api.routes import (
     product_templates,
     reading,
     reading_state,
+    resource_links,
     section_memory,
     sharing,
     skills,
@@ -96,6 +97,7 @@ def create_app() -> FastAPI:
     app.include_router(reading.router)
     app.include_router(reading_state.router)
     app.include_router(bench_sections.router)
+    app.include_router(resource_links.router)
     app.include_router(user_profile.router)
     app.include_router(section_memory.router)
     app.include_router(maradmins.router)

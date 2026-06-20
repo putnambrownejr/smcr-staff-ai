@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 from datetime import date
 
 import httpx
@@ -58,19 +57,21 @@ class WikipediaOnThisDayService:
             warnings=warnings,
         )
 
-    def _fetch_events(self, month: int, day: int) -> tuple[list[dict], int, int]:
+    def _fetch_events(self, month: int, day: int) -> tuple[list[dict[str, object]], int, int]:
         url = f"{_FEED_BASE}/{month:02d}/{day:02d}"
         with httpx.Client(timeout=self.timeout_seconds, headers=_HEADERS, follow_redirects=True) as client:
             response = client.get(url)
             response.raise_for_status()
-        return response.json().get("events", []), month, day
+        events: list[dict[str, object]] = response.json().get("events", [])
+        return events, month, day
 
-    def _convert(self, event: dict, month: int, day: int) -> TodayInMarineHistoryItem | None:
-        text: str = event.get("text", "")
+    def _convert(self, event: dict[str, object], month: int, day: int) -> TodayInMarineHistoryItem | None:
+        text: str = str(event.get("text", ""))
         if not _is_military(text):
             return None
         year = str(event.get("year", ""))
-        pages: list[dict] = event.get("pages", [])
+        raw_pages = event.get("pages", [])
+        pages: list[dict[str, object]] = raw_pages if isinstance(raw_pages, list) else []
         title = _best_title(text, pages)
         summary = text.strip()[:500]
         source_url = _source_url(pages)
@@ -92,20 +93,26 @@ def _is_military(text: str) -> bool:
     return any(kw in lower for kw in _MILITARY_KEYWORDS)
 
 
-def _best_title(text: str, pages: list[dict]) -> str:
+def _best_title(text: str, pages: list[dict[str, object]]) -> str:
     if pages:
-        candidate = pages[0].get("title", "").strip()
+        candidate = str(pages[0].get("title", "")).strip()
         if candidate and len(candidate) < 80:
             return candidate
     first_sentence = text.split(".")[0].strip()
     return first_sentence[:80] if first_sentence else text[:80]
 
 
-def _source_url(pages: list[dict]) -> str:
+def _source_url(pages: list[dict[str, object]]) -> str:
     if not pages:
         return ""
-    urls = pages[0].get("content_urls", {}).get("desktop", {})
-    return urls.get("page", "")
+    content_urls = pages[0].get("content_urls", {})
+    if not isinstance(content_urls, dict):
+        return ""
+    desktop = content_urls.get("desktop", {})
+    if not isinstance(desktop, dict):
+        return ""
+    page = desktop.get("page", "")
+    return str(page) if page else ""
 
 
 def _slugify(value: str) -> str:
