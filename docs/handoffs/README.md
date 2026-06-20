@@ -40,6 +40,7 @@ workflow") rather than including the detail.
 
 ## Index (newest first)
 
+- 5edc209 — Merge: Quick Links + Session Handoff panels, agent consolidation (MEF/HQMC gone, planning advisor), mypy/ruff fixes on new files. 567 tests green.
 - c504473 — uv lock and Dependabot setup; dependency lock strategy decided and automated update path added.
 - da0c967 — Ruff cleanup and CI; pre-existing lint errors fixed and ruff added to CI.
 - [HANDOFF_2026-06-10_codex-security-pass.md](HANDOFF_2026-06-10_codex-security-pass.md) — Codex security-workflow pass; auth-gap confirmation, app-key scoping note, and follow-up test recommendations (negative-auth tests since delivered).
@@ -58,6 +59,8 @@ The living "where are we" list. Update when you open or close a thread.
   future doctrine-ingestion schema. Decide to keep-as-documented or remove.
 
 ### Decided and done
+- **Quick Links panel delivered** (2026-06-20) — `/resource-links/` API + seed data (military portals); user can add/delete custom links; chips render in Workspace lane.
+- **Session Handoff drawer delivered** (2026-06-20) — display name, rank, admin watch, recurring drill notes stored via `/handoffs/` endpoint in Workspace configure tab.
 - **Dependency lock added with uv** (2026-06-12) — `uv.lock` is now present and Dependabot is configured for the dependency update path.
 - **Ruff errors fixed and in CI** (2026-06-12) — pre-existing ruff failures were cleaned up and `ruff check .` is part of CI.
 - **First CI run watched** (2026-06-12) — initial CI follow-up thread is closed as done.
