@@ -2330,9 +2330,7 @@ async function loadQuickLinks() {
   listEl.className = "row-stack";
   listEl.textContent = "Loading…";
   try {
-    const res = await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    const data = await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`);
     renderQuickLinks(data.links || [], data.categories || {}, listEl, filterEl);
   } catch (e) {
     listEl.className = "row-stack empty-state";
@@ -2398,8 +2396,8 @@ function renderQuickLinks(links, categoryLabels, listEl, filterEl) {
           await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}/${encodeURIComponent(id)}`, {
             method: "DELETE",
           });
-          await loadQuickLinks();
         } catch (_) {}
+        await loadQuickLinks();
       });
     });
   };
@@ -2449,12 +2447,10 @@ function initQuickLinksForm() {
     submitBtn.disabled = true;
     submitBtn.textContent = "Saving…";
     try {
-      const res = await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`, {
+      await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, url, description, category, tags: [] }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       form.classList.add("is-hidden");
       form.reset();
       addBtn.disabled = false;
