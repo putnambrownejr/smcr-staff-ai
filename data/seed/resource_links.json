@@ -1,24 +1,66 @@
 [
   {
+    "id": "marines-mil",
+    "title": "Marines.mil",
+    "url": "https://www.marines.mil",
+    "category": "usmc_official",
+    "description": "Official United States Marine Corps website"
+  },
+  {
+    "id": "command-messages",
+    "title": "Command Messages",
+    "url": "https://www.marines.mil/News/Messages/",
+    "category": "usmc_official",
+    "description": "MARADMINs, NAVADMINs, ALNAVs on marines.mil"
+  },
+  {
+    "id": "usmc-youtube",
+    "title": "USMC YouTube",
+    "url": "https://www.youtube.com/@marines",
+    "category": "usmc_official",
+    "description": "Commandant's birthday message and official video releases"
+  },
+  {
+    "id": "mcu-online",
+    "title": "Marine Corps University (MCU)",
+    "url": "https://www.usmcu.edu",
+    "category": "usmc_official",
+    "description": "EWS, CSC, SAW, and online PME courses"
+  },
+  {
+    "id": "mc-gazette",
+    "title": "Marine Corps Gazette",
+    "url": "https://www.mca-marines.org/gazette/",
+    "category": "usmc_official",
+    "description": "Professional military journal"
+  },
+  {
+    "id": "mcpel",
+    "title": "MCPEL (publications)",
+    "url": "https://www.marines.mil/News/Publications/MCPEL/",
+    "category": "usmc_official",
+    "description": "Marine Corps Publications Electronic Library — orders, doctrine, manuals"
+  },
+  {
     "id": "mol",
-    "title": "My Online Marine (MOL)",
+    "title": "Marine Online (MOL)",
     "url": "https://www.mol.usmc.mil",
     "category": "admin_pay",
-    "description": "Personnel records, leave, and admin self-service"
+    "description": "Leave, pay, admin, and personnel transactions"
   },
   {
     "id": "mypay",
-    "title": "MyPay (DFAS)",
+    "title": "myPay (DFAS)",
     "url": "https://mypay.dfas.mil",
     "category": "admin_pay",
     "description": "Pay stubs, allotments, W-2s, and LES"
   },
   {
     "id": "milconnect",
-    "title": "MilConnect",
+    "title": "milConnect",
     "url": "https://milconnect.dmdc.osd.mil",
     "category": "admin_pay",
-    "description": "Benefits, dependents, CAC, and ID card management"
+    "description": "Benefits, dependents, and DoD ID card management"
   },
   {
     "id": "myaccess",
@@ -28,11 +70,18 @@
     "description": "CAC-based portal access and PKI management"
   },
   {
+    "id": "ipps-a",
+    "title": "IPPS-A",
+    "url": "https://www.ipps-a.army.mil",
+    "category": "admin_pay",
+    "description": "Integrated Personnel and Pay System"
+  },
+  {
     "id": "marinenet",
     "title": "MarineNet",
     "url": "https://www.marinenet.usmc.mil",
     "category": "training_pme",
-    "description": "Online training courses and PME resources"
+    "description": "Online training courses and MCI enrollment"
   },
   {
     "id": "tecom",
@@ -40,13 +89,6 @@
     "url": "https://www.trngcmd.marines.mil",
     "category": "training_pme",
     "description": "Training and Education Command"
-  },
-  {
-    "id": "mcu-online",
-    "title": "Marine Corps University (MCU)",
-    "url": "https://www.usmcu.edu",
-    "category": "training_pme",
-    "description": "EWS, CSC, SAW, and online PME courses"
   },
   {
     "id": "jko",
@@ -84,11 +126,11 @@
     "description": "Search all Marine administrative and general messages"
   },
   {
-    "id": "va",
-    "title": "VA.gov",
-    "url": "https://www.va.gov",
+    "id": "military-onesource",
+    "title": "Military One Source",
+    "url": "https://www.militaryonesource.mil",
     "category": "benefits",
-    "description": "Veterans Affairs — healthcare, education, disability, home loans"
+    "description": "24/7 counseling, financial coaching, and family resources"
   },
   {
     "id": "tricare",
@@ -96,6 +138,13 @@
     "url": "https://www.tricare.mil",
     "category": "benefits",
     "description": "Military healthcare enrollment and coverage"
+  },
+  {
+    "id": "va",
+    "title": "VA.gov",
+    "url": "https://www.va.gov",
+    "category": "benefits",
+    "description": "Veterans Affairs — healthcare, education, disability, home loans"
   },
   {
     "id": "vettix",
@@ -140,18 +189,25 @@
     "description": "MARFORRES, SMCR, and reserve policy"
   },
   {
-    "id": "marines-mil",
-    "title": "Marines.mil",
-    "url": "https://www.marines.mil",
-    "category": "reference",
-    "description": "Official United States Marine Corps website"
+    "id": "dod-webmail",
+    "title": "DoD Webmail",
+    "url": "https://webmail.apps.mil",
+    "category": "it_access",
+    "description": "OWA / apps.mil webmail (requires CAC)"
   },
   {
-    "id": "mcpel",
-    "title": "MCPEL (publications)",
-    "url": "https://www.marines.mil/News/Publications/MCPEL/",
-    "category": "reference",
-    "description": "Marine Corps Publications Electronic Library — orders, doctrine, manuals"
+    "id": "dod-pki",
+    "title": "DoD PKI / CAC",
+    "url": "https://public.cyber.mil/pki-pke/",
+    "category": "it_access",
+    "description": "DISA PKI cert downloads, trust store, and CAC guidance"
+  },
+  {
+    "id": "militarycac",
+    "title": "MilitaryCAC.com",
+    "url": "https://militarycac.com",
+    "category": "it_access",
+    "description": "Unofficial but widely used CAC troubleshooting and setup guide"
   },
   {
     "id": "navy-med",
@@ -159,12 +215,5 @@
     "url": "https://www.med.navy.mil",
     "category": "reference",
     "description": "Medical readiness, dental, and health records"
-  },
-  {
-    "id": "ipps-a",
-    "title": "IPPS-A",
-    "url": "https://www.ipps-a.army.mil",
-    "category": "reference",
-    "description": "Integrated Personnel and Pay System"
   }
 ]

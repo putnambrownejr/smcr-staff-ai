@@ -13,9 +13,6 @@ const state = {
   selectedDocumentId: null,
   selectedReadingSlug: "",
   selectedReferenceSlug: "",
-  historyLibrary: [],
-  selectedHistoryMonth: "",
-  selectedHistoryDay: "",
   apiBase: resolveApiBase(),
   timezoneOptions: buildTimezoneOptions(),
   selectedTimezoneIds: loadTimezoneSelection(),
@@ -58,7 +55,6 @@ const DOCUMENT_TYPE_OPTIONS = [
   "doctrine",
   "admin_reference",
   "training_reference",
-  "uniform_photo",
   "product_template",
   "training_media",
   "orders",
@@ -358,11 +354,6 @@ document.getElementById("brief-clinic-form").addEventListener("submit", async (e
   renderBriefClinicOutput("brief-clinic-output", data);
 });
 
-document.getElementById("uniform-photo-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  await runUniformPhotoReview(event.currentTarget);
-});
-
 document.getElementById("mos-advisor-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   await runMosAdvisorFromForm();
@@ -434,23 +425,11 @@ document.getElementById("reference-select").addEventListener("change", (event) =
   state.selectedReferenceSlug = event.target.value || "";
   renderReferenceLibrary(state.workspace?.reference_library || []);
 });
-document.getElementById("history-library-show-date").addEventListener("click", () => {
-  renderHistoryLibrary(state.historyLibrary);
-});
-document.getElementById("history-library-use-today").addEventListener("click", () => {
-  setHistoryLibraryToToday();
-});
 document.getElementById("save-document-type").addEventListener("click", () => {
   saveSelectedDocumentType();
 });
 document.getElementById("apply-document-suggestion").addEventListener("click", () => {
   applySuggestedDocumentType();
-});
-document.getElementById("history-library-month").addEventListener("change", (event) => {
-  state.selectedHistoryMonth = event.target.value || "";
-});
-document.getElementById("history-library-day").addEventListener("change", (event) => {
-  state.selectedHistoryDay = event.target.value || "";
 });
 document.getElementById("document-select")?.addEventListener("change", (event) => {
   state.selectedDocumentId = event.target.value || null;
@@ -939,13 +918,13 @@ function renderWorkspace(payload) {
   renderTickerStack("dod-ticker", payload.dod_ticker || [], "No DoD updates tracked.");
   renderCustomWatchFeeds(payload.custom_watch_feeds || []);
   renderHistory(payload.today_in_history || []);
-  renderHistoryLibrary(payload.history_library || []);
   renderReferenceLibrary(payload.reference_library || []);
   renderReadingBooks(payload.reading_books || []);
   renderTrackedActions(payload.tracked_actions || []);
   renderOpportunities(payload.tracked_opportunities || payload.career_watch?.tracked_opportunities || []);
   renderSourceUpdates(payload.documentation_updates || payload.chief_brief?.documentation_updates || []);
   loadQuickLinks();
+  loadGoodLinks();
   renderLastUpdatedStamps();
 }
 
@@ -2018,62 +1997,6 @@ function renderHistoryFactCard(item, index = 0, total = 1) {
   `;
 }
 
-function renderHistoryLibrary(items) {
-  state.historyLibrary = Array.isArray(items) ? items : [];
-  const monthSelect = document.getElementById("history-library-month");
-  const daySelect = document.getElementById("history-library-day");
-  const summary = document.getElementById("history-library-summary");
-  const target = document.getElementById("history-library-results");
-  const today = new Date();
-
-  if (!state.selectedHistoryMonth) {
-    state.selectedHistoryMonth = String(today.getMonth() + 1);
-  }
-  if (!state.selectedHistoryDay) {
-    state.selectedHistoryDay = String(today.getDate());
-  }
-
-  populateHistoryMonthOptions(monthSelect, state.selectedHistoryMonth);
-  populateHistoryDayOptions(daySelect, state.selectedHistoryDay);
-
-  if (!state.historyLibrary.length) {
-    summary.textContent = state.workspace ? "No history facts loaded." : PRELOAD_EMPTY_TEXT;
-    target.className = "row-stack";
-    target.innerHTML = state.workspace
-      ? emptyStateHtml("No history facts loaded.", "Check sources to populate unit and USMC historical facts for this date.")
-      : `<p class="empty-state-detail">${PRELOAD_EMPTY_TEXT}</p>`;
-    return;
-  }
-
-  const month = Number(state.selectedHistoryMonth || today.getMonth() + 1);
-  const day = Number(state.selectedHistoryDay || today.getDate());
-  const filtered = state.historyLibrary.filter((item) => item.month === month && item.day === day);
-  summary.textContent = `${state.historyLibrary.length} history fact(s) loaded. Showing ${filtered.length} for ${formatHistoryMonth(month)} ${day}.`;
-  if (!filtered.length) {
-    target.className = "row-stack empty-state";
-    target.textContent = "No history facts are stored for that date yet.";
-    return;
-  }
-  target.className = "row-stack";
-  target.innerHTML = filtered
-    .map(
-      (item) => `
-        <article class="data-row">
-          <div class="data-row-head">
-            <span class="strip-label">${escapeHtml(item.year_label)}</span>
-            <strong>${escapeHtml(item.title)}</strong>
-          </div>
-          <p>${escapeHtml(item.summary)}</p>
-          ${
-            (item.references || []).length
-              ? `<p class="meta-inline">${escapeHtml(item.references[0])}</p>`
-              : ""
-          }
-        </article>
-      `,
-    )
-    .join("");
-}
 
 function renderReadingBooks(items) {
   const summary = document.getElementById("reading-summary");
@@ -2138,64 +2061,6 @@ function renderReadingBooks(items) {
   `;
 }
 
-function populateHistoryMonthOptions(select, selectedValue) {
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  select.innerHTML = months
-    .map(
-      (label, index) =>
-        `<option value="${index + 1}" ${String(index + 1) === String(selectedValue) ? "selected" : ""}>${escapeHtml(label)}</option>`,
-    )
-    .join("");
-}
-
-function populateHistoryDayOptions(select, selectedValue) {
-  select.innerHTML = Array.from({ length: 31 }, (_, index) => index + 1)
-    .map(
-      (day) =>
-        `<option value="${day}" ${String(day) === String(selectedValue) ? "selected" : ""}>${day}</option>`,
-    )
-    .join("");
-}
-
-function setHistoryLibraryToToday() {
-  const today = new Date();
-  state.selectedHistoryMonth = String(today.getMonth() + 1);
-  state.selectedHistoryDay = String(today.getDate());
-  renderHistoryLibrary(state.historyLibrary);
-  setWorkspaceNote("History library set to today.");
-}
-
-function formatHistoryMonth(month) {
-  const months = [
-    "",
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  return months[month] || "Unknown";
-}
 
 function renderDailyBrief(payload) {
   renderList("daily-executive", payload.executive_snapshot || []);
@@ -2319,7 +2184,7 @@ function renderSourceUpdates(items) {
 
 // ── Quick Links ────────────────────────────────────────────────────────────
 const CATEGORY_ORDER = [
-  "admin_pay", "training_pme", "news_info", "benefits", "comms", "reserve", "reference", "unit",
+  "usmc_official", "admin_pay", "training_pme", "news_info", "benefits", "comms", "reserve", "it_access", "reference", "unit",
 ];
 
 async function loadQuickLinks() {
@@ -2338,7 +2203,7 @@ async function loadQuickLinks() {
   }
 }
 
-function renderQuickLinks(links, categoryLabels, listEl, filterEl) {
+function renderQuickLinks(links, categoryLabels, listEl, filterEl, onDelete) {
   if (!links.length) {
     listEl.className = "row-stack empty-state";
     listEl.textContent = "No links yet. Add one above.";
@@ -2398,6 +2263,7 @@ function renderQuickLinks(links, categoryLabels, listEl, filterEl) {
           });
         } catch (_) {}
         await loadQuickLinks();
+        if (onDelete) await onDelete();
       });
     });
   };
@@ -2463,7 +2329,67 @@ function initQuickLinksForm() {
     }
   });
 }
-// ── End Quick Links ────────────────────────────────────────────────────────
+// ── A Few Good Links tab (reuses renderQuickLinks) ────────────────────────
+async function loadGoodLinks() {
+  if (!state.userKey) return;
+  const listEl = document.getElementById("good-links-grid");
+  const filterEl = document.getElementById("good-links-filters");
+  if (!listEl) return;
+  listEl.className = "row-stack";
+  listEl.textContent = "Loading…";
+  try {
+    const data = await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`);
+    renderQuickLinks(data.links || [], data.categories || {}, listEl, filterEl, loadGoodLinks);
+  } catch (_) {
+    listEl.className = "row-stack empty-state";
+    listEl.textContent = "Could not load links.";
+  }
+}
+
+function initGoodLinksForm() {
+  const form = document.getElementById("good-links-add-form");
+  const cancelBtn = document.getElementById("good-links-cancel");
+  const drawer = document.getElementById("good-links-add-drawer");
+  const catSelect = document.getElementById("good-links-category-select");
+  if (!form || !catSelect) return;
+  catSelect.innerHTML = CATEGORY_ORDER.map(
+    (c) => `<option value="${c}">${escapeHtml(c.replace(/_/g, " "))}</option>`,
+  ).join("");
+  cancelBtn?.addEventListener("click", () => {
+    drawer.removeAttribute("open");
+    form.reset();
+  });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!state.userKey) return;
+    const fd = new FormData(form);
+    const title = fd.get("title")?.toString().trim();
+    const url = fd.get("url")?.toString().trim();
+    const description = fd.get("description")?.toString().trim() || null;
+    const category = fd.get("category")?.toString() || "unit";
+    if (!title || !url) return;
+    const submitBtn = form.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Saving…";
+    try {
+      await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`, {
+        method: "POST",
+        body: JSON.stringify({ title, url, description, category, tags: [] }),
+      });
+      drawer.removeAttribute("open");
+      form.reset();
+      await loadGoodLinks();
+      await loadQuickLinks();
+    } catch (_) {
+      submitBtn.textContent = "Error — retry";
+    } finally {
+      submitBtn.disabled = false;
+      if (submitBtn.textContent === "Saving…") submitBtn.textContent = "Save link";
+    }
+  });
+}
+initGoodLinksForm();
+// ── End Good Links ────────────────────────────────────────────────────────
 
 function renderQueue(items, hotItems = []) {
   const target = document.getElementById("priority-queue");
@@ -2771,52 +2697,6 @@ function renderBriefClinicOutput(targetId, payload) {
     <section>
       <span class="strip-label">Citations</span>
       <ul>${(payload.citations || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No citations returned.</li>"}</ul>
-    </section>
-  `;
-}
-
-function renderUniformPhotoReviewOutput(targetId, payload) {
-  const target = document.getElementById(targetId);
-  target.className = "tool-output";
-  target.innerHTML = `
-    <section>
-      <span class="strip-label">${escapeHtml(payload.review_posture || "Uniform review")}</span>
-      <h3>${escapeHtml(payload.filename || "Uploaded photo")}</h3>
-      <p>${escapeHtml(`Uniform type: ${payload.uniform_type || "unknown"}${payload.event_context ? ` | Event: ${payload.event_context}` : ""}`)}</p>
-      <p class="meta-inline">Local context ID: ${escapeHtml(payload.photo_context_id || "not stored")}</p>
-    </section>
-    <section>
-      <span class="strip-label">Summary</span>
-      <ul>${(payload.summary_lines || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No summary returned.</li>"}</ul>
-    </section>
-    <section>
-      <span class="strip-label">What to verify in the image</span>
-      <ul>${(payload.what_to_verify_in_image || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No verification items returned.</li>"}</ul>
-    </section>
-    <section>
-      <span class="strip-label">Grooming checks</span>
-      <ul>${(payload.grooming_checks || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No grooming checks returned.</li>"}</ul>
-    </section>
-    <section>
-      <span class="strip-label">Likely issue areas</span>
-      <ul>${(payload.likely_issue_areas || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No issue areas returned.</li>"}</ul>
-    </section>
-    <section>
-      <span class="strip-label">Follow-up actions</span>
-      <ul>${(payload.follow_up_actions || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No follow-up actions returned.</li>"}</ul>
-    </section>
-    <section>
-      <span class="strip-label">Warnings</span>
-      <ul>${(payload.warnings || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>No warnings returned.</li>"}</ul>
-    </section>
-    <section>
-      <span class="strip-label">Official sources</span>
-      <ul>${(payload.structured_citations || [])
-        .map(
-          (item) =>
-            `<li><a href="${escapeAttribute(item.url || "#")}" target="_blank" rel="noreferrer">${escapeHtml(item.title || item.url || "Source")}</a></li>`,
-        )
-        .join("") || "<li>No sources returned.</li>"}</ul>
     </section>
   `;
 }
@@ -3250,8 +3130,7 @@ function isMessageFeedsEmpty(workspace) {
   return (
     !workspace?.maradmin_ticker?.length &&
     !workspace?.navadmin_ticker?.length &&
-    !workspace?.alnav_ticker?.length &&
-    !workspace?.history_library?.length
+    !workspace?.alnav_ticker?.length
   );
 }
 
@@ -3379,52 +3258,6 @@ function recordFetchFailure() {
   state.consecutiveFetchFailures += 1;
   if (state.consecutiveFetchFailures >= 3 && !state.connectionLostDismissed) {
     setConnectionLostVisible(true);
-  }
-}
-
-async function runUniformPhotoReview(formElement) {
-  if (state.mode !== "personal") {
-    setWorkspaceNote("Open your personal workspace to upload and review a uniform photo.", true);
-    return;
-  }
-  const form = new FormData(formElement);
-  const photo = form.get("uniform_photo");
-  if (!(photo instanceof File) || !photo.name) {
-    setWorkspaceNote("Choose a uniform photo first.", true);
-    return;
-  }
-  const headers = {};
-  if (state.apiKey) {
-    headers["X-Local-API-Key"] = state.apiKey;
-  }
-  try {
-    let response;
-    try {
-      response = await fetch(`${state.apiBase}/uniform/photo-review`, {
-        method: "POST",
-        headers,
-        body: form,
-      });
-    } catch (error) {
-      recordFetchFailure();
-      const networkError = new Error("Cannot reach local server.");
-      networkError.isNetworkError = true;
-      networkError.cause = error;
-      throw networkError;
-    }
-    if (!response.ok) {
-      const text = await response.text();
-      recordFetchFailure();
-      throw new Error(`Request failed (${response.status}): ${text}`);
-    }
-    const data = await response.json();
-    recordFetchSuccess();
-    renderUniformPhotoReviewOutput("uniform-photo-output", data);
-    setWorkspaceNote("Uniform photo review completed and stored as local context.");
-    await loadWorkspace();
-  } catch (error) {
-    console.error("Failed to run uniform photo review", error);
-    setWorkspaceNote(error.message, true);
   }
 }
 

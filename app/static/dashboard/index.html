@@ -825,12 +825,14 @@
               <input type="text" id="ql-description" placeholder="Short description (optional)" maxlength="200" />
               <select id="ql-category">
                 <option value="unit">Unit-specific</option>
+                <option value="usmc_official">USMC official</option>
                 <option value="admin_pay">Admin &amp; pay</option>
                 <option value="training_pme">Training &amp; PME</option>
                 <option value="news_info">News &amp; info</option>
                 <option value="benefits">Benefits</option>
                 <option value="comms">Communications</option>
                 <option value="reserve">Reserve affairs</option>
+                <option value="it_access">IT &amp; access</option>
                 <option value="reference">Reference</option>
               </select>
               <div style="display:flex;gap:0.5rem;">
@@ -1002,38 +1004,6 @@
               </summary>
               <div class="panel-drawer-body">
                 <div id="mos-bench-library" class="row-stack empty-state">Load workspace to see this</div>
-              </div>
-            </details>
-          </article>
-
-          <article class="panel full-span collapsible-panel">
-            <details class="panel-drawer">
-              <summary>
-                <div class="panel-header">
-                  <div>
-                    <h2>Marine Corps History Facts</h2>
-                    <p>Quick facts by date, not a giant library panel pretending to be something bigger.</p>
-                  </div>
-                  <span class="drawer-label">Open</span>
-                </div>
-              </summary>
-              <div class="panel-drawer-body">
-                <div class="form-row">
-                  <label>
-                    <span>Month</span>
-                    <select id="history-library-month"></select>
-                  </label>
-                  <label>
-                    <span>Day</span>
-                    <select id="history-library-day"></select>
-                  </label>
-                </div>
-                <div class="button-row">
-                  <button type="button" class="secondary" id="history-library-show-date">Show facts</button>
-                  <button type="button" class="secondary" id="history-library-use-today">Use today</button>
-                </div>
-                <div id="history-library-summary" class="meta-inline">Load workspace to see this</div>
-                <div id="history-library-results" class="row-stack empty-state">Load workspace to see this</div>
               </div>
             </details>
           </article>
@@ -1507,85 +1477,52 @@
           </article>
 
           <article class="panel tool-panel">
-            <details id="drawer-uniform-review" class="tool-drawer">
+            <details id="drawer-uniform-ref" class="tool-drawer">
             <summary>
               <div class="panel-header">
-                <h2>Uniform Photo Review</h2>
-                <p>Upload a local uniform photo and run a source-anchored advisory review against the uniform order.</p>
+                <h2>Uniform Quick Reference</h2>
+                <p>Common spacing, placement, and wear rules from MCO 1020.34H — the stuff you always have to look up.</p>
               </div>
               <span class="drawer-label"></span>
             </summary>
             <div class="tool-drawer-body">
-            <details class="help-hint">
-              <summary>How to use this</summary>
-              <div class="help-hint-body">
-                <p><strong>When:</strong> Pre-drill inspection prep, ceremony uniform check, or when you have a specific wear question you want to run against MCO 1020.34H.</p>
-                <p><strong>What it does:</strong> Gives you a source-anchored checklist of what to verify in the image — it does NOT perform automated AI image analysis. The review framework is the value, not computer vision.</p>
-                <p><strong>Visible items:</strong> List what's actually visible in the photo (rank insignia, ribbons/badges, cover, belt/buckle, footwear, grooming/hair).</p>
-                <p><strong>Photo is stored locally only</strong> — it stays on your machine, not sent to any external service.</p>
-                <p><strong>Ambiguous calls:</strong> The output will tell you to route unresolved questions through the chain of command or SEL.</p>
-              </div>
-            </details>
-            <form id="uniform-photo-form" class="tool-form">
-              <div class="form-row">
-                <label>
-                  <span>Uniform photo</span>
-                  <input name="uniform_photo" type="file" accept="image/*" />
-                </label>
-                <label>
-                  <span>Uniform type</span>
-                  <select name="uniform_type">
-                    <option value="service_alpha">Service Alpha</option>
-                    <option value="service_bravo">Service Bravo</option>
-                    <option value="service_charlie">Service Charlie</option>
-                    <option value="blue_dress">Blue Dress</option>
-                    <option value="utility_cammies">Utility / cammies</option>
-                    <option value="pt">PT</option>
-                    <option value="unknown">Unknown / need help identifying</option>
-                  </select>
-                </label>
-              </div>
-              <div class="form-row">
-                <label>
-                  <span>Event context</span>
-                  <input name="event_context" type="text" placeholder="Drill, ceremony, inspection, PME event" />
-                </label>
-                <label>
-                  <span>Visible items (comma-separated)</span>
-                  <input
-                    name="visible_items"
-                    type="text"
-                    placeholder="rank insignia, ribbons/badges, cover, belt/buckle, footwear, grooming/hair"
-                  />
-                </label>
-              </div>
-              <div class="form-row">
-                <label>
-                  <span>Observed concerns</span>
-                  <textarea
-                    name="observed_concerns"
-                    rows="4"
-                    placeholder="Collar device looks off, ribbon spacing unclear, haircut may be marginal"
-                  ></textarea>
-                </label>
-                <label>
-                  <span>Local guidance or notes</span>
-                  <textarea
-                    name="local_guidance"
-                    rows="4"
-                    placeholder="Unit requested sleeves down, event is a formal ceremony, seasonal variation in effect"
-                  ></textarea>
-                </label>
-              </div>
-              <div class="button-row">
-                <button type="submit">Review uniform photo</button>
-              </div>
-            </form>
-            <div id="uniform-photo-output" class="tool-output empty-state">
-              Photo-assisted uniform review will appear here, anchored to MCO 1020.34H and official follow-on links.
+            <div class="uniform-ref-card">
+              <h3>Ribbon &amp; medal spacing</h3>
+              <ul class="bullet-list">
+                <li><strong>Ribbons:</strong> ⅛″ between rows, no gap between ribbons in a row. Centered on left breast pocket, ⅛″ above top edge of pocket.</li>
+                <li><strong>Large medals:</strong> Suspended from holding bar, ⅛″ between rows. Overlapping authorized when 4+ medals per row.</li>
+                <li><strong>Miniature medals:</strong> Worn on mess dress / evening dress only. Centered on left lapel.</li>
+                <li><strong>Unit awards:</strong> Right breast, same height as personal awards on left.</li>
+                <li><strong>Badges (shooting):</strong> Centered ⅛″ below bottom ribbon row. Marksmanship badge left, rifle qual right when both worn.</li>
+              </ul>
+
+              <h3>Rank insignia placement</h3>
+              <ul class="bullet-list">
+                <li><strong>Enlisted chevrons (Service):</strong> Centered on outer half of sleeve, halfway between shoulder and elbow.</li>
+                <li><strong>Officer insignia (Service coat):</strong> Collar devices ½″ from front edge, centered on collar, bisecting the notch.</li>
+                <li><strong>Utility (MCCUU):</strong> Rank worn centered on front of cover. Collar insignia not worn.</li>
+                <li><strong>Cover insignia (Service/Dress):</strong> Officer EGA centered on cover, 1 EGA for company grade, 1 for field grade (different size).</li>
+              </ul>
+
+              <h3>Common inspection items</h3>
+              <ul class="bullet-list">
+                <li><strong>Gig line:</strong> Shirt edge, belt buckle edge, and trouser fly form a straight vertical line.</li>
+                <li><strong>Name tags (Service):</strong> Centered ⅛″ above right breast pocket. "U.S. MARINES" tag centered ⅛″ above left pocket (below ribbons).</li>
+                <li><strong>Belt / buckle:</strong> Anodized brass buckle, tip of belt extends to wearer's left. No more than 2″ past buckle.</li>
+                <li><strong>Cover:</strong> Worn squarely, visor parallel to deck. Two fingers above bridge of nose.</li>
+                <li><strong>Grooming:</strong> Hair above ears, graduated to at least 3″ on top. Sideburns no lower than top of ear opening. Clean shave.</li>
+              </ul>
+
+              <h3>Official sources</h3>
+              <ul class="bullet-list">
+                <li><a href="https://www.marines.mil/portals/1/Publications/MCO%201020.34H%20v2.pdf" target="_blank" rel="noopener noreferrer">MCO 1020.34H — Marine Corps Uniform Regulations (PDF)</a></li>
+                <li><a href="https://www.hqmc.marines.mil/Agencies/Marine-Corps-Uniform-Board/Frequently-Asked-Questions/" target="_blank" rel="noopener noreferrer">Marine Corps Uniform Board FAQ</a></li>
+                <li><a href="https://www.marines.mil/News/Publications/MCPEL/" target="_blank" rel="noopener noreferrer">MCPEL — Publications library</a></li>
+              </ul>
+              <p class="meta-inline">All measurements and rules are advisory summaries. Verify against the current MCO and any local command guidance before inspection.</p>
             </div>
             </div><!-- /tool-drawer-body -->
-            </details><!-- /drawer-uniform-review -->
+            </details><!-- /drawer-uniform-ref -->
           </article>
 
           <article class="panel tool-panel">
@@ -1879,64 +1816,49 @@
             <div class="panel-header compact">
               <div>
                 <h2>A Few Good Links</h2>
-                <p>Quick-access bookmarks for the sites SMCR officers actually use. Opens in a new tab — nothing is sent from this dashboard.</p>
+                <p>Quick-access bookmarks for the sites SMCR officers actually use. Add your own with the button below — they sync with the Quick Links panel in Watch.</p>
               </div>
             </div>
           </article>
 
-          <article class="panel">
-            <div class="panel-header compact">
-              <h2>USMC Official</h2>
-            </div>
-            <ul class="bullet-list">
-              <li><a href="https://www.marines.mil" target="_blank" rel="noopener noreferrer">Marines.mil</a> — official Corps portal, news, and policy</li>
-              <li><a href="https://www.marines.mil/News/Messages/" target="_blank" rel="noopener noreferrer">Command Messages</a> — MARADMINs, NAVADMINs, ALNAVs on marines.mil</li>
-              <li><a href="https://www.youtube.com/@marines" target="_blank" rel="noopener noreferrer">USMC YouTube</a> — Commandant's birthday message and official video releases</li>
-              <li><a href="https://www.usmcu.edu" target="_blank" rel="noopener noreferrer">Marine Corps University</a> — MCU academic programs and publications</li>
-              <li><a href="https://www.mca-marines.org/gazette/" target="_blank" rel="noopener noreferrer">Marine Corps Gazette</a> — professional military journal</li>
-            </ul>
-          </article>
-
-          <article class="panel">
-            <div class="panel-header compact">
-              <h2>Personnel &amp; Admin</h2>
-            </div>
-            <ul class="bullet-list">
-              <li><a href="https://www.mol.usmc.mil" target="_blank" rel="noopener noreferrer">Marine Online (MOL)</a> — leave, pay, admin, and personnel transactions</li>
-              <li><a href="https://mypay.dfas.mil" target="_blank" rel="noopener noreferrer">myPay</a> — DFAS pay statements, allotments, W-2</li>
-              <li><a href="https://milconnect.dmdc.osd.mil" target="_blank" rel="noopener noreferrer">milConnect</a> — benefits, dependents, and DoD ID card management</li>
-            </ul>
-          </article>
-
-          <article class="panel">
-            <div class="panel-header compact">
-              <h2>Training &amp; PME</h2>
-            </div>
-            <ul class="bullet-list">
-              <li><a href="https://www.marinenet.usmc.mil" target="_blank" rel="noopener noreferrer">MarineNet</a> — online training courses and MCI enrollment</li>
-            </ul>
-          </article>
-
-          <article class="panel">
-            <div class="panel-header compact">
-              <h2>Benefits &amp; Wellness</h2>
-            </div>
-            <ul class="bullet-list">
-              <li><a href="https://www.militaryonesource.mil" target="_blank" rel="noopener noreferrer">Military One Source</a> — 24/7 counseling, financial coaching, and family resources</li>
-              <li><a href="https://www.tricare.mil" target="_blank" rel="noopener noreferrer">TRICARE</a> — health plan enrollment, providers, and claims</li>
-              <li><a href="https://www.vettix.org" target="_blank" rel="noopener noreferrer">VetTix</a> — free event tickets for service members and veterans</li>
-            </ul>
-          </article>
-
-          <article class="panel">
-            <div class="panel-header compact">
-              <h2>IT &amp; Access</h2>
-            </div>
-            <ul class="bullet-list">
-              <li><a href="https://webmail.apps.mil" target="_blank" rel="noopener noreferrer">DoD Webmail</a> — OWA / apps.mil webmail (requires CAC)</li>
-              <li><a href="https://public.cyber.mil/pki-pke/" target="_blank" rel="noopener noreferrer">DoD PKI / CAC</a> — DISA PKI cert downloads, trust store, and CAC guidance</li>
-              <li><a href="https://militarycac.com" target="_blank" rel="noopener noreferrer">MilitaryCAC.com</a> — unofficial but widely used CAC troubleshooting and setup guide</li>
-            </ul>
+          <article class="panel full-span">
+            <div id="good-links-filters" class="chip-bar"></div>
+            <div id="good-links-grid" class="row-stack empty-state">Loading links&hellip;</div>
+            <details class="panel-drawer" id="good-links-add-drawer">
+              <summary>
+                <div class="panel-header compact">
+                  <span class="drawer-label">+ Add link</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
+                <form id="good-links-add-form" class="tool-form">
+                  <div class="form-row">
+                    <label>
+                      <span>Link title</span>
+                      <input name="title" type="text" required placeholder="My unit SharePoint" />
+                    </label>
+                    <label>
+                      <span>URL</span>
+                      <input name="url" type="url" required placeholder="https://..." />
+                    </label>
+                  </div>
+                  <div class="form-row">
+                    <label>
+                      <span>Short description</span>
+                      <input name="description" type="text" placeholder="What this link is for" />
+                    </label>
+                    <label>
+                      <span>Category</span>
+                      <select name="category" id="good-links-category-select"></select>
+                    </label>
+                  </div>
+                  <div class="button-row">
+                    <button type="submit">Save link</button>
+                    <button type="button" class="secondary" id="good-links-cancel">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </details>
           </article>
         </section>
 
@@ -1955,7 +1877,7 @@
     <script>
       (function loadDashboardAssets() {
         const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
-        const assetVersion = "20260621a";
+        const assetVersion = "20260621b";
         const stylesheet = document.getElementById("dashboard-style");
         stylesheet.href = `${staticBase}/dashboard.css?v=${assetVersion}`;
 

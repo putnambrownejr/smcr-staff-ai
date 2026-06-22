@@ -47,7 +47,6 @@ from app.api.routes import (
     staff_products,
     training,
     travel_cases,
-    uniform,
     user_context,
     user_profile,
 )
@@ -112,7 +111,6 @@ def create_app() -> FastAPI:
     app.include_router(source_updates.router)
     app.include_router(training.router)
     app.include_router(travel_cases.router)
-    app.include_router(uniform.router)
     app.include_router(user_context.router)
     # Use absolute path so the dashboard serves correctly regardless of
     # the working directory the server is launched from (fixes #21 extension)

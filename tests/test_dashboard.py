@@ -63,7 +63,7 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Staff update cycle" in response.text
     assert "Planning Cell" in response.text
     assert "Brief Clinic" in response.text
-    assert "Uniform Photo Review" in response.text
+    assert "Uniform Quick Reference" in response.text
     assert "Time watch" in response.text
     assert "Time zones" in response.text
     assert "Battle Rhythm Board" in response.text
@@ -71,13 +71,8 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Section Bench Notebook" in response.text
     assert "MOS bench" in response.text
     assert "MOS advisor" in response.text
-    assert "Marine Corps History Facts" in response.text
     assert "Doctrine / Reference Library" in response.text
     assert "Use suggestion" in response.text
-    assert "Show facts" in response.text
-    assert "Use today" in response.text
-    assert 'id="history-library-month"' in response.text
-    assert 'id="history-library-day"' in response.text
     assert 'id="reference-select"' in response.text
     assert "Open reference library" in response.text
     assert "Save section memory" in response.text
@@ -160,8 +155,6 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "save-planning-cell-board",
         "save-document-type",
         "apply-document-suggestion",
-        "history-library-show-date",
-        "history-library-use-today",
     ]
     for button_id in button_ids:
         assert f'id="{button_id}"' in html
@@ -172,7 +165,6 @@ def test_dashboard_button_inventory_has_wiring() -> None:
         "personnel-form",
         "staff-form",
         "brief-clinic-form",
-        "uniform-photo-form",
         "staff-cycle-form",
         "planning-cell-form",
         "section-memory-form",
@@ -204,10 +196,6 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'id="section-memory-library"' in html
     assert 'id="mos-bench-library"' in html
     assert 'id="reading-book-select"' in html
-    assert 'id="history-library-month"' in html
-    assert 'id="history-library-day"' in html
-    assert 'id="history-library-summary"' in html
-    assert 'id="history-library-results"' in html
     assert 'id="reference-summary"' in html
     assert 'id="reference-select"' in html
     assert 'id="document-select"' in html
@@ -215,7 +203,6 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'id="mos-advisor-output"' in html
     assert 'renderSectionMemoryProfile(' in js
     assert 'renderMosBenchLibrary(' in js
-    assert 'renderHistoryLibrary(' in js
     assert 'renderReferenceLibrary(' in js
     assert 'renderReadingBooks(' in js
     assert 'renderAgentAdvisoryOutput(' in js
@@ -225,11 +212,9 @@ def test_dashboard_button_inventory_has_wiring() -> None:
     assert 'data-mos-bench' in js
     assert 'id="document-type-select"' in html
     assert 'id="document-type-suggestion"' in html
-    assert 'id="uniform-photo-output"' in html
     assert 'DOCUMENT_TYPE_OPTIONS' in js
     assert 'saveSelectedDocumentType(' in js
     assert 'applySuggestedDocumentType(' in js
-    assert 'runUniformPhotoReview(' in js
     assert 'runStaffPlanningPackage(' in js
 
 
