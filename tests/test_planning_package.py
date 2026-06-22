@@ -311,7 +311,7 @@ def test_frago_to_conop_runs_xo_sel_review_for_formal_event() -> None:
     payload = response.json()
     assert payload["planning_approach"]["recommended_method"] == "mcpp"
     assert payload["xo_sel_review"] is not None
-    assert payload["xo_sel_review"]["roles_run"] == ["xo", "firstsgt"]
+    assert payload["xo_sel_review"]["roles_run"] == ["xo", "sel"]
 
 
 def test_frago_to_conop_can_skip_tdg_when_requested() -> None:

@@ -31,31 +31,31 @@ def test_registry_includes_chief_and_staff_agents() -> None:
     ids = {metadata.id for metadata in registry.list_metadata()}
 
     assert "chief-of-staff-aide" in ids
-    assert "staff-company-xo" in ids
-    assert "staff-battalion-chief" in ids
-    assert "staff-battalion-battle_captain" in ids
-    assert "staff-company-doc" in ids
-    assert "staff-company-safety" in ids
-    assert "staff-battalion-s2" in ids
-    assert "staff-battalion-surgeon" in ids
-    assert "staff-battalion-sja" in ids
-    assert "staff-battalion-pao" in ids
-    assert "staff-battalion-safety" in ids
-    assert "staff-regiment_meu_wing-airo" in ids
-    assert "staff-regiment_meu_wing-sja" in ids
-    assert "staff-regiment_meu_wing-ace" in ids
-    assert "staff-regiment_meu_wing-lce" in ids
-    assert "staff-division_group-g2" in ids
-    assert "staff-division_group-g7" in ids
-    assert "staff-division_group-g8" in ids
-    assert "staff-division_group-g9" in ids
-    assert "staff-division_group-wing_ops" in ids
-    assert "staff-division_group-mlg_log" in ids
-    assert "staff-division_group-surgeon" in ids
-    # MEF and HQMC echelons were intentionally removed — division_group is the
-    # top supported echelon for an SMCR-focused tool.
-    assert not any(id_.startswith("staff-mef-") for id_ in ids)
-    assert not any(id_.startswith("staff-hqmc-") for id_ in ids)
+    assert "staff-xo" in ids
+    assert "staff-chief" in ids
+    assert "staff-battle_captain" in ids
+    assert "staff-opso" in ids
+    assert "staff-s1" in ids
+    assert "staff-s2" in ids
+    assert "staff-s4" in ids
+    assert "staff-s6" in ids
+    assert "staff-sel" in ids
+    assert "staff-surgeon" in ids
+    assert "staff-sja" in ids
+    assert "staff-pao" in ids
+    assert "staff-safety" in ids
+    assert "staff-aviation" in ids
+    assert "staff-lce" in ids
+    assert "staff-g8" in ids
+    assert "staff-g9" in ids
+    assert "staff-ig" in ids
+    assert "staff-provost" in ids
+    assert "staff-chaplain" in ids
+    # Echelon-specific IDs were removed — archetypes adapt to echelon at runtime
+    assert not any(id_.startswith("staff-company-") for id_ in ids)
+    assert not any(id_.startswith("staff-battalion-") for id_ in ids)
+    assert not any(id_.startswith("staff-regiment_") for id_ in ids)
+    assert not any(id_.startswith("staff-division_") for id_ in ids)
 
 
 def test_chief_of_staff_agent_surfaces_handoff_watch_items() -> None:
@@ -144,7 +144,7 @@ def test_staff_council_firstsgt_uses_sel_grounding() -> None:
     )
 
     assert len(response.perspectives) == 1
-    assert response.perspectives[0].role == "firstsgt"
+    assert response.perspectives[0].role == "sel"
     assert "sequence control" in response.perspectives[0].answer
     assert response.perspectives[0].structured_citations
 
@@ -195,15 +195,15 @@ def test_staff_council_special_staff_builds_exercise_products() -> None:
     )
 
     roles = {perspective.role for perspective in response.perspectives}
-    assert roles == {"airo", "sja", "pao", "safety", "provost", "chaplain"}
-    airo = next(perspective for perspective in response.perspectives if perspective.role == "airo")
+    assert roles == {"aviation", "sja", "pao", "safety", "provost", "chaplain"}
+    aviation = next(perspective for perspective in response.perspectives if perspective.role == "aviation")
     sja = next(perspective for perspective in response.perspectives if perspective.role == "sja")
 
-    assert MagtfLens.ace in airo.magtf_lenses
-    assert "Air support estimate" in airo.recommended_products
-    assert any("airspace" in item.lower() for item in airo.critical_questions)
-    assert any("qualified aviation" in item.lower() for item in airo.assumptions_to_test)
-    assert "Legal estimate" in sja.recommended_products
+    assert MagtfLens.ace in aviation.magtf_lenses
+    assert "Air support estimate" in aviation.recommended_products
+    assert any("airspace" in item.lower() for item in aviation.critical_questions)
+    assert any("qualified aviation" in item.lower() for item in aviation.assumptions_to_test)
+    assert "Legal issue-spotter" in sja.recommended_products
     assert any("not legal advice" in item.lower() for item in sja.assumptions_to_test)
     assert all(perspective.structured_citations for perspective in response.perspectives)
     assert any(
@@ -263,11 +263,11 @@ def test_staff_council_g8_and_ig_recommend_new_products() -> None:
 
     assert "resource estimate" in [item.lower() for item in g8.recommended_products]
     assert "resourcing decision point" in [item.lower() for item in g8.recommended_products]
-    assert "inspection readiness plan" in [item.lower() for item in ig.recommended_products]
+    assert "ig inspection touchpoints" in [item.lower() for item in ig.recommended_products]
     assert "readiness trend memo" in [item.lower() for item in ig.recommended_products]
 
 
-def test_staff_round_robin_runs_airo_sja_where_available() -> None:
+def test_staff_round_robin_runs_aviation_sja_at_all_echelons() -> None:
     service = StaffCouncilService()
     response = service.round_robin(
         StaffRoundRobinRequest(
@@ -278,7 +278,7 @@ def test_staff_round_robin_runs_airo_sja_where_available() -> None:
 
     roles_run = {role for council in response.councils for role in council.roles_run}
     echelons_run = {council.echelon for council in response.councils}
-    assert {"airo", "sja"}.issubset(roles_run)
+    assert {"aviation", "sja"}.issubset(roles_run)
     assert StaffEchelon.regiment_meu_wing in echelons_run
     assert StaffEchelon.division_group in echelons_run
     assert all(council.roles_missing == [] for council in response.councils)
@@ -298,7 +298,7 @@ def test_staff_council_route_serializes_special_staff_fields() -> None:
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["roles_run"] == ["airo", "sja"]
+    assert set(payload["roles_run"]) == {"aviation", "sja"}
     assert payload["perspectives"][0]["recommended_products"]
     assert payload["perspectives"][0]["magtf_lenses"]
     assert payload["perspectives"][0]["mcpp_step"]
@@ -626,7 +626,7 @@ def test_staff_council_normalizes_doc_alias() -> None:
     )
 
     assert len(response.perspectives) == 1
-    assert response.perspectives[0].role == "doc"
+    assert response.perspectives[0].role == "surgeon"
 
 
 def test_staff_council_synthesis_pushes_to_resolve_friction() -> None:

@@ -64,36 +64,36 @@ const DOCUMENT_TYPE_OPTIONS = [
 
 const MOS_BENCH_CATALOG = [
   {
-    id: "mos-adjutant-0102",
-    label: "0102 / Adjutant",
+    id: "staff-s1",
+    label: "S-1 / Administration",
     parent: "S-1",
-    summary: "Accountability, correspondence, awards, staffing discipline, and reserve admin continuity.",
+    summary: "Administration, manpower, rosters, awards, FitReps, correspondence, and reserve admin continuity.",
     starter:
       "Help me tighten accountability and correspondence continuity between drills and show me what an XO will ask first.",
   },
   {
-    id: "mos-logistics-0402",
-    label: "0402 / Logistics officer",
+    id: "staff-s4",
+    label: "S-4 / Logistics",
     parent: "S-4",
-    summary: "Supportability, sustainment judgment, lead times, and what breaks the plan first.",
+    summary: "Logistics, sustainment, supply accountability, movement support, and what breaks the plan first.",
     starter:
       "Help me clean up the logistics estimate for AT and show me the first supportability problem I should brief.",
   },
   {
-    id: "mos-supply-3002",
-    label: "3002 / Supply officer",
-    parent: "S-4",
-    summary: "Supply accountability, fiscal discipline, inventory readiness, and command supply risk.",
-    starter:
-      "Help me think through supply accountability before drill and surface the risks that are easiest to miss.",
-  },
-  {
-    id: "mos-magtf-planner-0511",
-    label: "0511 / MAGTF planner",
+    id: "staff-opso",
+    label: "OpsO / S-3 / Operations",
     parent: "S-3",
-    summary: "Mission analysis, planning support, assumption control, and staff-integration discipline.",
+    summary: "Operations, training planning, mission analysis, staff integration, and MCPP discipline.",
     starter:
       "Help me keep mission analysis and staff integration clean so the planning process does not drift into busy slides.",
+  },
+  {
+    id: "staff-s2",
+    label: "S-2 / Intelligence",
+    parent: "S-2",
+    summary: "Intelligence, public-source context, estimate support, PIR framing, and OSINT tie-in.",
+    starter:
+      "Help me shape a public-source estimate for the commander and show me what assumptions need testing.",
   },
 ];
 
@@ -911,6 +911,7 @@ function renderWorkspace(payload) {
   renderDocumentLibrary(payload.document_details || []);
   renderTemplateLibrary(payload.template_library || []);
   renderMosBenchLibrary();
+  loadCustomMosRecipes();
   renderSectionMemoryProfile(payload.section_memory_profile || null);
   renderMaradminTicker(payload.maradmin_ticker || []);
   renderTickerStack("navadmin-ticker", payload.navadmin_ticker || [], "No NAVADMINs tracked.");
@@ -1768,6 +1769,106 @@ function renderMosBenchLibrary() {
     `,
   ).join("");
 }
+
+async function loadCustomMosRecipes() {
+  const target = document.getElementById("custom-mos-recipes");
+  if (!state.workspace?.user_key) {
+    target.innerHTML = "";
+    return;
+  }
+  try {
+    const data = await apiFetch(`/custom-mos-recipes/${encodeURIComponent(state.workspace.user_key)}`, { auth: true });
+    renderCustomMosRecipes(data.recipes || []);
+  } catch {
+    target.innerHTML = "";
+  }
+}
+
+function renderCustomMosRecipes(recipes) {
+  const target = document.getElementById("custom-mos-recipes");
+  if (!recipes.length) {
+    target.innerHTML = "";
+    return;
+  }
+  target.innerHTML = `<h3 style="margin:0.5rem 0 0.25rem">Your custom MOS lanes</h3>` + recipes.map(
+    (r) => `
+      <article class="data-row">
+        <div class="data-row-head">
+          <span class="strip-label">${escapeHtml(r.mos_code)}</span>
+          <strong>${escapeHtml(r.title)}</strong>
+          <span class="meta-inline">→ ${escapeHtml(r.parent_agent)}</span>
+        </div>
+        <p>${escapeHtml(r.focus_areas.join(", "))}</p>
+        <div class="button-row compact-controls">
+          <button type="button" class="secondary" data-custom-mos-run="${escapeHtml(r.mos_code)}"
+            data-parent="${escapeHtml(r.parent_agent)}"
+            data-starter="${escapeHtml(r.starter_prompt || "")}">Open ${escapeHtml(r.mos_code)} lane</button>
+          <button type="button" class="secondary" data-custom-mos-delete="${escapeHtml(r.mos_code)}">Delete</button>
+        </div>
+      </article>
+    `,
+  ).join("");
+}
+
+document.getElementById("custom-mos-recipe-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!state.workspace?.user_key) {
+    setWorkspaceNote("Load a workspace first.", true);
+    return;
+  }
+  const form = e.target;
+  const focusRaw = form.focus_areas.value;
+  const focusAreas = focusRaw.split(",").map((s) => s.trim()).filter(Boolean);
+  if (!focusAreas.length) {
+    setWorkspaceNote("Enter at least one focus area.", true);
+    return;
+  }
+  try {
+    const data = await apiFetch(`/custom-mos-recipes/${encodeURIComponent(state.workspace.user_key)}`, {
+      method: "POST",
+      auth: true,
+      body: JSON.stringify({
+        mos_code: form.mos_code.value.trim(),
+        title: form.title.value.trim(),
+        parent_agent: form.parent_agent.value,
+        focus_areas: focusAreas,
+        starter_prompt: form.starter_prompt.value.trim(),
+      }),
+    });
+    renderCustomMosRecipes(data.recipes || []);
+    setWorkspaceNote(data.message || "Custom MOS recipe saved.");
+    form.reset();
+  } catch (err) {
+    setWorkspaceNote(err.message || "Failed to save custom MOS recipe.", true);
+  }
+});
+
+document.addEventListener("click", async (e) => {
+  const deleteBtn = e.target.closest("[data-custom-mos-delete]");
+  if (deleteBtn && state.workspace?.user_key) {
+    const mosCode = deleteBtn.dataset.customMosDelete;
+    try {
+      const data = await apiFetch(
+        `/custom-mos-recipes/${encodeURIComponent(state.workspace.user_key)}/${encodeURIComponent(mosCode)}`,
+        { method: "DELETE", auth: true },
+      );
+      renderCustomMosRecipes(data.recipes || []);
+      setWorkspaceNote(data.message || "Custom MOS recipe deleted.");
+    } catch (err) {
+      setWorkspaceNote(err.message || "Failed to delete recipe.", true);
+    }
+    return;
+  }
+
+  const runBtn = e.target.closest("[data-custom-mos-run]");
+  if (runBtn) {
+    const parentAgent = runBtn.dataset.parent;
+    const starter = runBtn.dataset.starter;
+    const mosCode = runBtn.dataset.customMosRun;
+    openMosBenchLane(parentAgent, starter || `Help me think through ${mosCode} concerns for the next event.`);
+    return;
+  }
+});
 
 function renderSectionMemoryProfile(profile) {
   const target = document.getElementById("section-memory-library");
@@ -3057,17 +3158,26 @@ async function runStaffPlanningPackage() {
   }
 }
 
-function openMosBenchLane(agentId) {
+function openMosBenchLane(agentId, starterOverride) {
   const item = MOS_BENCH_CATALOG.find((entry) => entry.id === agentId);
-  if (!item) {
+  const form = document.getElementById("mos-advisor-form");
+  if (item) {
+    form.elements.mos_tool.value = item.id;
+    form.elements.prompt.value = item.starter;
+    openToolDrawer("drawer-mos-advisor");
+    setWorkspaceNote(`MOS Advisor is open — ${item.label} lane loaded.`);
+    return;
+  }
+  const selectEl = form.elements.mos_tool;
+  const hasOption = Array.from(selectEl.options).some((o) => o.value === agentId);
+  if (!hasOption) {
     setWorkspaceNote("That MOS lane is not available.", true);
     return;
   }
-  const form = document.getElementById("mos-advisor-form");
-  form.elements.mos_tool.value = item.id;
-  form.elements.prompt.value = item.starter;
+  selectEl.value = agentId;
+  form.elements.prompt.value = starterOverride || "";
   openToolDrawer("drawer-mos-advisor");
-  setWorkspaceNote(`MOS Advisor is open — ${item.label} lane loaded.`);
+  setWorkspaceNote(`MOS Advisor is open — custom lane via ${agentId}.`);
 }
 
 function openLane(lane, message = "", options = {}) {

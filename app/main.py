@@ -17,6 +17,7 @@ from app.api.routes import (
     chief,
     connectors,
     context,
+    custom_mos_recipes,
     custom_watch_feeds,
     dashboard,
     demo,
@@ -78,6 +79,7 @@ def create_app() -> FastAPI:
     app.include_router(billets.router)
     app.include_router(career.router)
     app.include_router(context.router)
+    app.include_router(custom_mos_recipes.router)
     app.include_router(custom_watch_feeds.router)
     app.include_router(demo.router)
     app.include_router(connectors.router)

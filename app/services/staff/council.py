@@ -22,19 +22,18 @@ class StaffCouncilService:
 
     def vet_idea(self, request: StaffCouncilRequest) -> StaffCouncilResponse:
         selected_roles = {_normalize_role(role) for role in request.roles}
-        available_roles = {role.role for role in self._roles if role.echelon == request.echelon}
+        available_roles = {role.role for role in self._roles}
         roles_missing = sorted(selected_roles - available_roles)
         if roles_missing:
-            raise ValueError(f"Unknown roles for {request.echelon.value}: {', '.join(roles_missing)}")
+            raise ValueError(f"Unknown roles: {', '.join(roles_missing)}")
         g9_relevant = _is_g9_relevant(request.question, request.context)
         candidates = [
             role
             for role in self._roles
-            if role.echelon == request.echelon
-            and (not selected_roles or role.role in selected_roles)
+            if (not selected_roles or role.role in selected_roles)
             and (selected_roles or role.role != "g9" or g9_relevant)
         ]
-        context = AgentContext(extra=request.context)
+        context = AgentContext(extra={**request.context, "echelon": request.echelon.value})
         perspectives: list[StaffPerspective] = []
         for role in candidates:
             agent = self._agents[role.agent_id]
@@ -45,7 +44,7 @@ class StaffCouncilService:
                 StaffPerspective(
                     agent_id=role.agent_id,
                     role=role.role,
-                    echelon=role.echelon,
+                    echelon=request.echelon,
                     phase=phase,
                     magtf_lenses=list(definition.magtf_lenses),
                     answer=response.answer,
@@ -101,12 +100,7 @@ class StaffCouncilService:
             for echelon in echelons:
                 phase_roles = request.roles
                 if request.roles:
-                    available_roles = {role.role for role in self._roles if role.echelon == echelon}
-                    phase_roles = [
-                        role for role in {_normalize_role(role) for role in request.roles} if role in available_roles
-                    ]
-                    if not phase_roles:
-                        continue
+                    phase_roles = [_normalize_role(role) for role in request.roles]
                 councils.append(
                     self.vet_idea(
                         StaffCouncilRequest(
@@ -192,7 +186,7 @@ def _build_estimate(role: str, focus: tuple[str, ...], question: str) -> list[st
 
 def _build_critical_questions(role: str) -> list[str]:
     special = {
-        "airo": [
+        "aviation": [
             "What supported aviation effect is required?",
             "What airspace, control, fires, comm, and safety deconfliction is unresolved?",
             "Who is the qualified aviation reviewer and when do they review the plan?",
@@ -207,11 +201,6 @@ def _build_critical_questions(role: str) -> list[str]:
             "What is releasable, who can release it, and when?",
             "What imagery, media, visitor, or community touchpoint creates OPSEC risk?",
             "What response-to-query line is needed before execution?",
-        ],
-        "commstrat": [
-            "What public impact could the plan create?",
-            "What message should the exercise reinforce?",
-            "How do PAO, S-2, S-3, S-6, SJA, and G-9 synchronize information actions?",
         ],
         "g8": [
             "What resource or funding assumption is most likely to break first?",
@@ -244,18 +233,18 @@ def _build_critical_questions(role: str) -> list[str]:
 
 def _build_assumptions(role: str) -> list[str]:
     base = ["Local SOPs, current orders, and qualified human reviewers remain authoritative."]
-    if role in {"airo", "ace", "wing_ops"}:
+    if role == "aviation":
         return [
             *base,
             "Aviation support is hypothetical until approved by qualified aviation reviewers through proper channels.",
         ]
     if role == "sja":
         return [*base, "This is issue-spotting only and not legal advice."]
-    if role in {"pao", "commstrat", "g7"}:
+    if role == "pao":
         return [*base, "Public release authority and OPSEC review must be verified."]
-    if role in {"g8"}:
+    if role == "g8":
         return [*base, "Resource availability, fiscal controls, and comptroller review must be verified locally."]
-    if role in {"chaplain", "rp"}:
+    if role == "chaplain":
         return [*base, "Confidential communications are not exposed to the staff estimate."]
     if role == "ig":
         return [*base, "IG independence, complaint routing, and inspection authorities must remain protected."]
@@ -272,10 +261,9 @@ def _build_critique_points(role: str) -> list[str]:
 
 def _build_cross_staff_risks(role: str) -> list[str]:
     mapping = {
-        "airo": ["AirO/S-3/S-6/safety/fires deconfliction is late or fragmented."],
+        "aviation": ["AirO/S-3/S-6/safety/fires deconfliction is late or fragmented."],
         "sja": ["Legal review is delayed until after the plan has already shaped behavior."],
         "pao": ["Public affairs, OPSEC, SJA, and G-9 tell different stories externally."],
-        "commstrat": ["Information effects are detached from the actual scheme of maneuver."],
         "g8": ["The staff builds a plan whose cost, lead time, or controls were never tested honestly."],
         "safety": ["ORM exists as a form but not as command-owned risk acceptance."],
         "provost": ["Access control or force protection blocks movement after the schedule hardens."],
@@ -291,7 +279,7 @@ def _default_products(role: str) -> list[str]:
 
 def _build_coordination_notes(role: str) -> list[str]:
     mapping = {
-        "airo": ["Coordinate with S-3, fires, S-6, safety, ACE, GCE, LCE, and range/control authorities."],
+        "aviation": ["Coordinate with S-3, fires, S-6, safety, ACE, GCE, LCE, and range/control authorities."],
         "sja": ["Coordinate with commander/XO, S-3, PAO/COMMSTRAT, safety, provost, and IG as applicable."],
         "pao": ["Coordinate with S-2, S-3, S-6, SJA, COMMSTRAT, G-9, and release authority."],
         "g8": ["Coordinate with commander/XO, S-3, S-4, S-1, and comptroller/resource reviewers as applicable."],
@@ -313,7 +301,7 @@ def _build_branch_prompts(role: str) -> list[str]:
 def _build_commander_decisions(role: str) -> list[str]:
     if role == "safety":
         return ["Accept, reduce, transfer, or reject residual risk."]
-    if role == "airo":
+    if role == "aviation":
         return ["Approve the desired aviation effect, control method, and no-go criteria for planning."]
     if role == "sja":
         return ["Direct formal SJA review before the plan is briefed as executable."]
@@ -333,15 +321,15 @@ def _mcpp_step_for_phase(phase: str) -> str:
 
 
 def _mcpp_discipline_for_role(role: str) -> str:
-    if role in {"s3", "opso", "meu_s3", "g3"}:
+    if role == "opso":
         return "Tie the event to objectives, standards, timeline, assessment, and AAR."
-    if role in {"airo", "ace", "wing_ops"}:
+    if role == "aviation":
         return "State supported aviation effect, control method, deconfliction, and qualified-review needs."
     if role == "sja":
         return "Issue-spot authorities, review triggers, and boundaries before execution."
-    if role in {"pao", "commstrat", "g7"}:
+    if role == "pao":
         return "Connect public posture, OPSEC, release authority, and information effects."
-    if role in {"g8"}:
+    if role == "g8":
         return "Translate resource posture into command tradeoffs, controls, and decisions."
     if role == "ig":
         return "Protect inquiry boundaries while surfacing readiness trends and inspection friction."
@@ -351,35 +339,53 @@ def _mcpp_discipline_for_role(role: str) -> str:
 def _normalize_role(role: str) -> str:
     value = role.lower().replace("-", "").replace(" ", "")
     aliases = {
-        "1stsgt": "firstsgt",
-        "firstsergeant": "firstsgt",
-        "companygunnerysergeant": "cogysgt",
-        "cogunny": "cogysgt",
-        "corpsman": "doc",
+        # Senior enlisted
+        "1stsgt": "sel",
+        "firstsgt": "sel",
+        "firstsergeant": "sel",
+        "sgtmaj": "sel",
+        "sergeantmajor": "sel",
+        "seniorenlistedleader": "sel",
+        # Medical
+        "corpsman": "surgeon",
         "medicalofficer": "surgeon",
         "medicalplanner": "surgeon",
-        "doc": "doc",
+        "doc": "surgeon",
         "battalionsurgeon": "surgeon",
-        "s3": "s3",
-        "opso": "opso",
+        # Operations
+        "s3": "opso",
+        "g3": "opso",
+        "meus3": "opso",
         "operationsofficer": "opso",
-        "airofficer": "airo",
-        "airo": "airo",
-        "air": "airo",
+        # Aviation
+        "airofficer": "aviation",
+        "airo": "aviation",
+        "air": "aviation",
+        "ace": "aviation",
+        "wingops": "aviation",
+        # Legal
         "jag": "sja",
         "legal": "sja",
         "legalofficer": "sja",
+        # Public affairs
         "publicaffairs": "pao",
         "publicaffairsofficer": "pao",
         "pa": "pao",
-        "communicationstrategy": "commstrat",
-        "comstrat": "commstrat",
-        "information": "commstrat",
+        "communicationstrategy": "pao",
+        "commstrat": "pao",
+        "comstrat": "pao",
+        "information": "pao",
+        "g7": "pao",
+        # Safety
         "safetyofficer": "safety",
+        # Provost
         "provostmarshal": "provost",
         "mp": "provost",
         "militarypolice": "provost",
-        "religiousprogramspecialist": "rp",
+        # Chaplain
+        "religiousprogramspecialist": "chaplain",
+        "rp": "chaplain",
+        # IG
         "inspector": "ig",
         "inspectorgeneral": "ig",
     }

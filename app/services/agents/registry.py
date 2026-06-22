@@ -3,32 +3,21 @@ from collections.abc import Iterable
 import yaml
 
 from app.schemas.agents import AgentMetadata
-from app.services.agents.airo_agent import build_airo_agent
+from app.services.agents.artillery_08xx_agent import build_artillery_08xx_agent
 from app.services.agents.assessment_learning_agent import build_assessment_learning_agent
 from app.services.agents.base import Agent
-from app.services.agents.chaplain_agent import build_chaplain_agent
 from app.services.agents.chief_of_staff_agent import build_chief_of_staff_agent
 from app.services.agents.drill_prep_agent import build_drill_prep_agent
-from app.services.agents.g9_civil_military_agent import build_g9_civil_military_agent
 from app.services.agents.infantry_03xx_agent import build_infantry_03xx_agent
 from app.services.agents.installation_agent import build_installation_agent
-from app.services.agents.jag_agent import build_jag_agent
 from app.services.agents.leadership_agent import build_leadership_agent
 from app.services.agents.map_agent import build_map_agent
-from app.services.agents.medical_doc_agent import build_medical_doc_agent
-from app.services.agents.mos_advisor import build_mos_advisor_agents
 from app.services.agents.orm_agent import build_orm_agent
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.pki_agent import build_pki_troubleshooter_agent
 from app.services.agents.planning_advisor_agent import build_planning_advisor_agent
 from app.services.agents.privacy_hygiene_agent import build_privacy_hygiene_agent
 from app.services.agents.red_team_agent import build_red_team_agent
-from app.services.agents.s1_admin_chief_agent import build_s1_admin_chief_agent
-from app.services.agents.s2_intel_agent import build_s2_intel_agent
-from app.services.agents.s3_opso_agent import build_s3_opso_agent
-from app.services.agents.s4_logistics_agent import build_s4_logistics_agent
-from app.services.agents.s6_comms_agent import build_s6_comms_agent
-from app.services.agents.sel_enlisted_leader_agent import build_sel_enlisted_leader_agent
 from app.services.agents.staff_advisor_agent import build_staff_advisor_agents
 from app.services.agents.staff_products_agent import build_staff_products_agent
 from app.services.agents.uniform_agent import build_uniform_agent
@@ -62,16 +51,8 @@ class AgentRegistry:
 
 def default_agents() -> list[Agent]:
     return [
-        build_airo_agent(),
-        build_chaplain_agent(),
-        build_s1_admin_chief_agent(),
-        build_s2_intel_agent(),
-        build_s3_opso_agent(),
-        build_s4_logistics_agent(),
-        build_s6_comms_agent(),
-        build_sel_enlisted_leader_agent(),
+        # Standalone utility agents
         build_chief_of_staff_agent(),
-        build_medical_doc_agent(),
         build_planning_advisor_agent(),
         build_red_team_agent(),
         build_assessment_learning_agent(),
@@ -81,15 +62,14 @@ def default_agents() -> list[Agent]:
         build_staff_products_agent(),
         build_orm_agent(),
         build_installation_agent(),
-        build_g9_civil_military_agent(),
         build_infantry_03xx_agent(),
-        build_jag_agent(),
+        build_artillery_08xx_agent(),
         build_pki_troubleshooter_agent(),
         build_privacy_hygiene_agent(),
         build_leadership_agent(),
         build_osint_agent(),
         build_map_agent(),
-        *build_mos_advisor_agents(),
+        # Consolidated staff archetypes (echelon-adaptive, MOS depth merged in)
         *build_staff_advisor_agents(),
     ]
 

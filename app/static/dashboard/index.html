@@ -1004,6 +1004,56 @@
               </summary>
               <div class="panel-drawer-body">
                 <div id="mos-bench-library" class="row-stack empty-state">Load workspace to see this</div>
+                <div id="custom-mos-recipes" class="row-stack"></div>
+                <details class="inline-drawer">
+                  <summary class="secondary">Build custom MOS advisor</summary>
+                  <form id="custom-mos-recipe-form" class="tool-form">
+                    <div class="form-row">
+                      <label>
+                        <span>MOS code</span>
+                        <input name="mos_code" type="text" placeholder="e.g. 1302" maxlength="10" required />
+                      </label>
+                      <label>
+                        <span>Title</span>
+                        <input name="title" type="text" placeholder="e.g. Combat Engineer Officer" maxlength="120" required />
+                      </label>
+                    </div>
+                    <div class="form-row">
+                      <label>
+                        <span>Parent staff section</span>
+                        <select name="parent_agent" required>
+                          <option value="staff-opso">OpsO / S-3 / Operations</option>
+                          <option value="staff-s1">S-1 / Administration</option>
+                          <option value="staff-s2">S-2 / Intelligence</option>
+                          <option value="staff-s4">S-4 / Logistics</option>
+                          <option value="staff-s6">S-6 / Communications</option>
+                          <option value="staff-sja">SJA / Legal</option>
+                          <option value="staff-aviation">Aviation / Air Officer</option>
+                          <option value="staff-g9">G-9 / Civil-Military</option>
+                          <option value="staff-sel">SEL / Enlisted Leader</option>
+                          <option value="staff-surgeon">Surgeon / Medical</option>
+                          <option value="staff-pao">PAO / CommStrat</option>
+                          <option value="staff-safety">Safety</option>
+                          <option value="staff-lce">LCE / Logistics Element</option>
+                          <option value="staff-g8">G-8 / Resource Management</option>
+                          <option value="infantry-03xx-advisor">Infantry / 03XX</option>
+                          <option value="artillery-08xx-advisor">Artillery / 08XX</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label>
+                      <span>Focus areas (comma-separated)</span>
+                      <input name="focus_areas" type="text" placeholder="e.g. obstacle planning, mobility/counter-mobility, range operations" required />
+                    </label>
+                    <label>
+                      <span>Starter prompt (optional)</span>
+                      <input name="starter_prompt" type="text" placeholder="e.g. Help me shape an engineer support plan for a training exercise." maxlength="500" />
+                    </label>
+                    <div class="button-row">
+                      <button type="submit">Save MOS recipe</button>
+                    </div>
+                  </form>
+                </details>
               </div>
             </details>
           </article>
@@ -1551,10 +1601,14 @@
                 <label>
                   <span>MOS lane</span>
                   <select name="mos_tool">
-                    <option value="mos-adjutant-0102">0102 / Adjutant</option>
-                    <option value="mos-logistics-0402">0402 / Logistics officer</option>
-                    <option value="mos-supply-3002">3002 / Supply officer</option>
-                    <option value="mos-magtf-planner-0511">0511 / MAGTF planner</option>
+                    <option value="staff-s1">S-1 / Administration</option>
+                    <option value="staff-s2">S-2 / Intelligence</option>
+                    <option value="staff-opso">OpsO / S-3 / Operations</option>
+                    <option value="staff-s4">S-4 / Logistics</option>
+                    <option value="staff-s6">S-6 / Communications</option>
+                    <option value="staff-sja">SJA / Legal</option>
+                    <option value="staff-aviation">Aviation / Air Officer</option>
+                    <option value="staff-g9">G-9 / Civil-Military</option>
                   </select>
                 </label>
                 <label>

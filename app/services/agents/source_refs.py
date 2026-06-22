@@ -1152,6 +1152,46 @@ MAP_REFERENCES: tuple[SourceRef, ...] = (
 )
 
 
+ARTILLERY_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCWP 3-16 Fire Support Coordination in the Ground Combat Element",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899837/mcwp-3-16/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Core doctrine for fire support coordination, the FSCC, and fire support planning "
+            "in the context of MAGTF ground operations."
+        ),
+    ),
+    SourceRef(
+        title="MCDP 3 Expeditionary Operations",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899543/mcdp-3/",
+        publisher="United States Marine Corps",
+        notes="Frames fire support and fires integration within the broader expeditionary context.",
+    ),
+    SourceRef(
+        title="MCWP 3-31 MAGTF Fires",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899845/mcwp-3-31/",
+        publisher="United States Marine Corps",
+        notes="MAGTF fires doctrine covering artillery, NSFS, and air-delivered fires integration.",
+    ),
+    SourceRef(
+        title="Training Command Mission",
+        url="https://www.trngcmd.marines.mil/Unit-Home/About/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Public framing for standards-based MOS skill training, evaluation, and delivery of "
+            "combat-capable Marines to the operating forces — applicable to 08xx artillery training."
+        ),
+    ),
+    SourceRef(
+        title="Joint Publication 3-09 Joint Fire Support",
+        url="https://www.jcs.mil/Portals/36/Documents/Doctrine/pubs/jp3_09.pdf",
+        publisher="Department of Defense",
+        notes="Joint fires doctrine useful for understanding fire support coordination at echelons above battalion.",
+    ),
+)
+
+
 def citation_titles(refs: tuple[SourceRef, ...]) -> list[str]:
     return [ref.title for ref in refs]
 

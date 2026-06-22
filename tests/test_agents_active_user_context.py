@@ -23,7 +23,7 @@ def test_agent_run_uses_stored_active_user_context(tmp_path: Path) -> None:
     client = TestClient(app)
     try:
         response = client.post(
-            "/agents/s6-comms/run",
+            "/agents/staff-s6/run",
             json={
                 "input": "Help me think through a reserve comm plan.",
                 "context": {"user_key": "capt-commo", "request_is_training_or_fictional": True},
