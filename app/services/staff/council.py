@@ -186,11 +186,6 @@ def _build_estimate(role: str, focus: tuple[str, ...], question: str) -> list[st
 
 def _build_critical_questions(role: str) -> list[str]:
     special = {
-        "aviation": [
-            "What supported aviation effect is required?",
-            "What airspace, control, fires, comm, and safety deconfliction is unresolved?",
-            "Who is the qualified aviation reviewer and when do they review the plan?",
-        ],
         "sja": [
             "What legal authority, review trigger, or ROE/RUF assumption is being used?",
             "Does the exercise include investigations, claims, public release, detainee role-play, "
@@ -206,11 +201,6 @@ def _build_critical_questions(role: str) -> list[str]:
             "What resource or funding assumption is most likely to break first?",
             "What should be cut, deferred, or rephased if full resourcing is not available?",
             "What resourcing decision belongs to command instead of staying at staff level?",
-        ],
-        "safety": [
-            "What is the most likely hazard and the most severe hazard?",
-            "Who accepts residual risk?",
-            "Who can stop or modify training?",
         ],
         "provost": [
             "What access-control, traffic, or force-protection issue can delay execution?",
@@ -233,11 +223,6 @@ def _build_critical_questions(role: str) -> list[str]:
 
 def _build_assumptions(role: str) -> list[str]:
     base = ["Local SOPs, current orders, and qualified human reviewers remain authoritative."]
-    if role == "aviation":
-        return [
-            *base,
-            "Aviation support is hypothetical until approved by qualified aviation reviewers through proper channels.",
-        ]
     if role == "sja":
         return [*base, "This is issue-spotting only and not legal advice."]
     if role == "pao":
@@ -261,11 +246,9 @@ def _build_critique_points(role: str) -> list[str]:
 
 def _build_cross_staff_risks(role: str) -> list[str]:
     mapping = {
-        "aviation": ["AirO/S-3/S-6/safety/fires deconfliction is late or fragmented."],
         "sja": ["Legal review is delayed until after the plan has already shaped behavior."],
         "pao": ["Public affairs, OPSEC, SJA, and G-9 tell different stories externally."],
         "g8": ["The staff builds a plan whose cost, lead time, or controls were never tested honestly."],
-        "safety": ["ORM exists as a form but not as command-owned risk acceptance."],
         "provost": ["Access control or force protection blocks movement after the schedule hardens."],
         "chaplain": ["Support access is planned too late for high-stress or casualty injects."],
         "ig": ["The staff confuses IG independence with command-tasking convenience."],
@@ -279,11 +262,9 @@ def _default_products(role: str) -> list[str]:
 
 def _build_coordination_notes(role: str) -> list[str]:
     mapping = {
-        "aviation": ["Coordinate with S-3, fires, S-6, safety, ACE, GCE, LCE, and range/control authorities."],
         "sja": ["Coordinate with commander/XO, S-3, PAO/COMMSTRAT, safety, provost, and IG as applicable."],
         "pao": ["Coordinate with S-2, S-3, S-6, SJA, COMMSTRAT, G-9, and release authority."],
         "g8": ["Coordinate with commander/XO, S-3, S-4, S-1, and comptroller/resource reviewers as applicable."],
-        "safety": ["Coordinate with S-3, S-4, medical, AirO/ACE, range control, and the risk-acceptance authority."],
         "provost": ["Coordinate with S-2, S-3, S-4, SJA, safety, installation access, and local security partners."],
         "chaplain": ["Coordinate with commander, S-1, medical, RP, PAO for public ceremonies, and SJA for boundaries."],
         "ig": ["Coordinate carefully with commander and SJA while preserving IG independence."],
@@ -299,10 +280,6 @@ def _build_branch_prompts(role: str) -> list[str]:
 
 
 def _build_commander_decisions(role: str) -> list[str]:
-    if role == "safety":
-        return ["Accept, reduce, transfer, or reject residual risk."]
-    if role == "aviation":
-        return ["Approve the desired aviation effect, control method, and no-go criteria for planning."]
     if role == "sja":
         return ["Direct formal SJA review before the plan is briefed as executable."]
     if role == "g8":
@@ -323,8 +300,6 @@ def _mcpp_step_for_phase(phase: str) -> str:
 def _mcpp_discipline_for_role(role: str) -> str:
     if role == "opso":
         return "Tie the event to objectives, standards, timeline, assessment, and AAR."
-    if role == "aviation":
-        return "State supported aviation effect, control method, deconfliction, and qualified-review needs."
     if role == "sja":
         return "Issue-spot authorities, review triggers, and boundaries before execution."
     if role == "pao":
@@ -357,12 +332,6 @@ def _normalize_role(role: str) -> str:
         "g3": "opso",
         "meus3": "opso",
         "operationsofficer": "opso",
-        # Aviation
-        "airofficer": "aviation",
-        "airo": "aviation",
-        "air": "aviation",
-        "ace": "aviation",
-        "wingops": "aviation",
         # Legal
         "jag": "sja",
         "legal": "sja",
@@ -376,8 +345,6 @@ def _normalize_role(role: str) -> str:
         "comstrat": "pao",
         "information": "pao",
         "g7": "pao",
-        # Safety
-        "safetyofficer": "safety",
         # Provost
         "provostmarshal": "provost",
         "mp": "provost",

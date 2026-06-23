@@ -6,13 +6,13 @@ from app.services.agents.base import Agent, AgentContext
 
 class ChiefOfStaffAideAgent(Agent):
     metadata = AgentMetadata(
-        id="chief-of-staff-aide",
-        name="Chief of Staff / Aide de Camp",
+        id="chief-of-staff",
+        name="Chief of Staff",
         description=(
-            "Coordinates drill weekend prep, general news, MARADMIN awareness, calendar/email task triage, "
-            "and user session handoff watch items."
+            "Senior staff coordinator — battle rhythm, continuity, due-outs, brief posture, turnover, "
+            "drill weekend prep, MARADMIN awareness, calendar/email triage, and session handoff watch items."
         ),
-        domain="staff coordination",
+        domain="staff coordination and command-post continuity",
         intended_users=["SMCR officers", "staff officers", "command teams"],
         allowed_sources=[
             "local session handoff",
@@ -47,7 +47,7 @@ class ChiefOfStaffAideAgent(Agent):
         admin_lines = _format_list(handoff, "admin_watch_items", "No admin watch items supplied.")
 
         answer = (
-            "Chief of Staff / Aide de Camp advisory brief.\n\n"
+            "Chief of Staff advisory brief.\n\n"
             "Immediate triage:\n"
             "- Check next drill date and generate/update drill-prep plan.\n"
             "- Review MARADMIN/news tags for Reserve, Officer, PME, Uniform, Training, Admin, Travel, Pay, Fitness, "
@@ -58,6 +58,11 @@ class ChiefOfStaffAideAgent(Agent):
             "- Keep a visible battle rhythm for running estimates, CUBs, CPBs, and commander decision points.\n"
             "- Force assumption, decision, and due-out logs to survive between drills.\n"
             "- Route planning problems toward deliberate MCPP when the staff still lacks shared understanding.\n\n"
+            "Continuity and turnover:\n"
+            "- Maintain a rolling due-out tracker that survives drill-to-drill gaps.\n"
+            "- Brief posture: who needs to know what before the next drill weekend.\n"
+            "- Turnover checklist: hot items, open suspenses, commander guidance, pending decisions.\n"
+            "- Staff section health: which sections are manned, which are single-threaded.\n\n"
             f"PME watch items:\n{pme_lines}\n\n"
             f"FitRep watch items:\n{fitrep_lines}\n\n"
             f"Stored drill dates:\n{drill_lines}\n\n"

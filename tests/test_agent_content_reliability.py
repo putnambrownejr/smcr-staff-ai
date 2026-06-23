@@ -5,14 +5,14 @@ from app.services.agents.registry import AgentRegistry
 
 DEFAULT_PROMPTS: dict[str, str] = {
     # Standalone utility agents
-    "chief-of-staff-aide": "Help me triage a reserve drill weekend and upcoming admin suspense.",
+    "chief-of-staff": "Help me triage a reserve drill weekend and upcoming admin suspense.",
     "leadership-advisor": "Help me frame a PME on standards and command climate.",
     "planning-advisor": "Help me conduct deliberate MCPP for a new reserve planning problem.",
     "red-team-assumptions-challenge": "Pressure-test this plan before we brief it to the commander.",
     "assessment-learning-advisor": "Help me connect this AAR to the next drill's actual fixes.",
     "writing-briefing-coach": "Help me sharpen a command brief so the decision is clear.",
-    "infantry-03xx-advisor": "Help me shape a training-safe infantry familiarization event for support Marines.",
-    "artillery-08xx-advisor": "Help me shape a call-for-fire refresher drill for reserve artillery Marines.",
+    "infantry-tactics-advisor": "Help me shape a training-safe infantry familiarization event for support Marines.",
+    "fires-advisor": "Help me shape a call-for-fire refresher drill for reserve artillery Marines.",
     "installation-practical-advisor": "Help me think through visitor access for a base event.",
     "uniform-advisor": "Help me think through the uniform and grooming prep for next drill.",
     "drill-prep-calendar": "Help me plan recurring drill reminders for next month.",
@@ -21,10 +21,12 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "pki-cac-troubleshooter": "MarineNet is not prompting for my CAC certificate.",
     "osint-research-assistant": "Help me summarize public-source trends for a training scenario.",
     "terrain-map-advisor": "Help me find the right public terrain and topo references for a training area.",
-    "repo-privacy-sweeper": "Review this repo before I push and look for personal data backflow.",
+    "ace": "Help me think through generic air-support coordination for an exercise.",
+    "gce": "Help me think through ground scheme of maneuver for a combined-arms exercise.",
+    "lce": "Help me think through LCE sustainment and distribution support.",
     # Consolidated staff archetypes
     "staff-xo": "Help me build an XO sync for the next drill weekend.",
-    "staff-chief": "Help me tighten command-group continuity and due-out discipline.",
+    # staff-chief removed — merged into chief-of-staff standalone
     "staff-battle_captain": "Help me shape watchboard control and escalation triggers.",
     "staff-opso": "Help me build a training plan for next drill weekend.",
     "staff-s1": "Help me organize DTS, orders, and FitRep due-outs.",
@@ -35,12 +37,12 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "staff-surgeon": "Help me think through a training-safe CASEVAC plan.",
     "staff-sja": "Issue-spot this matter before routing it further.",
     "staff-pao": "Help me think through public affairs posture for a training event.",
-    "staff-safety": "Help me build a realistic ORM posture for a field event.",
+    # staff-safety removed — merged into orm-risk-management
     "staff-chaplain": "Help me think through a morale and welfare issue.",
     "staff-provost": "Help me think through security and access control for a base event.",
     "staff-ig": "Help me think through inspection readiness and systemic friction.",
-    "staff-aviation": "Help me think through generic air-support coordination.",
-    "staff-lce": "Help me think through LCE sustainment and distribution support.",
+    # staff-aviation removed — replaced by ace standalone
+    # staff-lce removed — replaced by lce standalone
     "staff-g8": "Help me think through resource constraints and funding tradeoffs.",
     "staff-g9": "Help me think through civil considerations for a reserve event.",
 }

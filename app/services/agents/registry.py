@@ -3,20 +3,22 @@ from collections.abc import Iterable
 import yaml
 
 from app.schemas.agents import AgentMetadata
+from app.services.agents.ace_agent import build_ace_agent
 from app.services.agents.artillery_08xx_agent import build_artillery_08xx_agent
 from app.services.agents.assessment_learning_agent import build_assessment_learning_agent
 from app.services.agents.base import Agent
 from app.services.agents.chief_of_staff_agent import build_chief_of_staff_agent
 from app.services.agents.drill_prep_agent import build_drill_prep_agent
+from app.services.agents.gce_agent import build_gce_agent
 from app.services.agents.infantry_03xx_agent import build_infantry_03xx_agent
 from app.services.agents.installation_agent import build_installation_agent
+from app.services.agents.lce_agent import build_lce_agent
 from app.services.agents.leadership_agent import build_leadership_agent
 from app.services.agents.map_agent import build_map_agent
 from app.services.agents.orm_agent import build_orm_agent
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.pki_agent import build_pki_troubleshooter_agent
 from app.services.agents.planning_advisor_agent import build_planning_advisor_agent
-from app.services.agents.privacy_hygiene_agent import build_privacy_hygiene_agent
 from app.services.agents.red_team_agent import build_red_team_agent
 from app.services.agents.staff_advisor_agent import build_staff_advisor_agents
 from app.services.agents.staff_products_agent import build_staff_products_agent
@@ -65,10 +67,13 @@ def default_agents() -> list[Agent]:
         build_infantry_03xx_agent(),
         build_artillery_08xx_agent(),
         build_pki_troubleshooter_agent(),
-        build_privacy_hygiene_agent(),
         build_leadership_agent(),
         build_osint_agent(),
         build_map_agent(),
+        # MAGTF element agents (standalone)
+        build_ace_agent(),
+        build_gce_agent(),
+        build_lce_agent(),
         # Consolidated staff archetypes (echelon-adaptive, MOS depth merged in)
         *build_staff_advisor_agents(),
     ]

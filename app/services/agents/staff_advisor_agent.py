@@ -32,8 +32,6 @@ from app.services.agents.source_refs import (
     MOS_0511_REFERENCES,
     MOS_3002_REFERENCES,
     MOS_4402_REFERENCES,
-    MOS_7200_REFERENCES,
-    ORM_REFERENCES,
     PAO_REFERENCES,
     S1_REFERENCES,
     S2_REFERENCES,
@@ -132,14 +130,7 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
         magtf_lenses=(MagtfLens.ce_c2,),
         products=("XO sync matrix", "decision support matrix", "due-out tracker"),
     ),
-    StaffRoleArchetype(
-        role="chief",
-        title="Chief / Chief of Staff Aide",
-        scope="Command-group continuity, due-out discipline, and turnover quality",
-        focus=("continuity", "due-outs", "brief posture"),
-        magtf_lenses=(MagtfLens.ce_c2,),
-        products=("due-out tracker", "command update brief", "turnover handoff notes"),
-    ),
+    # chief: merged into standalone chief-of-staff agent
     StaffRoleArchetype(
         role="battle_captain",
         title="Battle Captain / Watch Officer",
@@ -282,14 +273,7 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "response-to-query lines", "themes and messages",
         ),
     ),
-    StaffRoleArchetype(
-        role="safety",
-        title="Safety / ORM",
-        scope="ORM, mishap prevention, risk acceptance, and stop-training criteria",
-        focus=("ORM", "risk acceptance", "mishap prevention", "no-go criteria"),
-        magtf_lenses=(MagtfLens.ce_c2, MagtfLens.gce, MagtfLens.ace, MagtfLens.lce),
-        products=("ORM worksheet", "no-go criteria", "residual-risk decision note", "rehearsal safety brief"),
-    ),
+    # safety: merged into standalone orm-risk-management agent
     StaffRoleArchetype(
         role="chaplain",
         title="Chaplain / Religious Support",
@@ -314,30 +298,8 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
         magtf_lenses=(MagtfLens.ce_c2,),
         products=("IG inspection touchpoints", "inquiry boundary note", "readiness trend memo"),
     ),
-    StaffRoleArchetype(
-        role="aviation",
-        title="Aviation / Air Officer",
-        scope="Air support, aviation effects, airspace coordination, and air-ground integration",
-        focus=("supported aviation effect", "airspace/control", "air-ground deconfliction"),
-        magtf_lenses=(MagtfLens.ace, MagtfLens.ce_c2, MagtfLens.gce),
-        products=("Air support estimate", "air-ground coordination matrix", "airspace/control questions"),
-        mos_depth=(
-            "7200 Aviation Officer depth:\n"
-            "- Whether the training event is supportable by aircraft, crews, maintenance, ranges, and weather.\n"
-            "- Whether safety and ORM concerns are being handled as command decisions.\n"
-            "- Whether MAWTS-style standardization and debrief discipline are being considered.\n"
-            "- Whether wing staff sections can preserve continuity across drill gaps."
-        ),
-        references_extra=MOS_7200_REFERENCES,
-    ),
-    StaffRoleArchetype(
-        role="lce",
-        title="LCE / MLG Representative",
-        scope="Logistics combat element sustainment, distribution, health services, and recovery",
-        focus=("sustainment", "distribution", "health services"),
-        magtf_lenses=(MagtfLens.lce, MagtfLens.ce_c2),
-        products=("LCE estimate", "sustainment support matrix", "recovery and reconstitution checklist"),
-    ),
+    # aviation: moved to standalone ace agent
+    # lce: moved to standalone lce agent
     StaffRoleArchetype(
         role="g8",
         title="G-8 / Resources",
@@ -490,29 +452,6 @@ def _build_answer(
             "Recommended next action:\n"
             "- Reduce this to a workable plan with owners, suspense dates, and one commander decision.\n"
             "- Push unresolved friction back to the responsible staff section before calling it ready."
-            f"{active_context_block}{mos_section}{osint_note}"
-        )
-
-    if role == "chief":
-        return (
-            f"{title} staff-vetting perspective.\n\n"
-            f"Scope: {arch.scope}\n\n"
-            "My read:\n"
-            "- My job is continuity and pressure, not theater.\n"
-            "- If the due-out tracker lies, the whole command picture lies a little behind it.\n"
-            "- Every suspense needs an owner, every late item needs a disposition, and every turnover "
-            "needs the truth.\n"
-            "- If the brief posture and the actual staff posture differ, fix the staff posture first.\n\n"
-            f"Primary lenses:\n{focus_lines}\n\n"
-            "Concerns to test:\n"
-            "- What is actually late right now?\n"
-            "- What has drifted because nobody wanted to reassign it clearly?\n"
-            "- What must the next commander or XO touchpoint understand in one minute?\n"
-            "- What is still being carried verbally instead of on a tracker or turnover note?\n"
-            "- Which staff lane needs pressure, not another polite reminder?\n\n"
-            "Recommended next action:\n"
-            "- Clean the due-out tracker, strip it to real suspense items, and mark every line owner and status.\n"
-            "- Rewrite the turnover note so the relieving watch inherits one true picture, not three versions of it."
             f"{active_context_block}{mos_section}{osint_note}"
         )
 
@@ -720,26 +659,6 @@ def _build_answer(
             f"{active_context_block}{mos_section}{osint_note}"
         )
 
-    if role == "safety":
-        return (
-            f"{title} staff-vetting perspective.\n\n"
-            f"Scope: {arch.scope}\n\n"
-            "My read:\n"
-            "- ORM is not a signature block; it is how the commander decides what risk is worth taking.\n"
-            "- A realistic exercise plan needs hazards, controls, residual risk, risk owner, and stop-training "
-            "criteria in plain language.\n\n"
-            f"Primary lenses:\n{focus_lines}\n\n"
-            "Concerns to test:\n"
-            "- What hazard is most likely, and what hazard is most severe?\n"
-            "- Who has authority to stop, pause, or modify training?\n"
-            "- What residual risk needs command acceptance instead of staff optimism?\n"
-            "- What rehearsal proves the control measure is executable?\n\n"
-            "Recommended next action:\n"
-            "- Build the ORM worksheet, no-go criteria, residual-risk decision note, and rehearsal safety brief "
-            "before the event timeline hardens."
-            f"{active_context_block}{mos_section}{osint_note}"
-        )
-
     if role == "chaplain":
         return (
             f"{title} staff-vetting perspective.\n\n"
@@ -792,44 +711,6 @@ def _build_answer(
             "- What inspection or inquiry boundary must be protected?\n\n"
             "Recommended next action:\n"
             "- Build an inspection readiness plan, inquiry boundary note, and readiness trend memo."
-            f"{active_context_block}{mos_section}{osint_note}"
-        )
-
-    if role == "aviation":
-        return (
-            f"{title} staff-vetting perspective.\n\n"
-            f"Scope: {arch.scope}\n\n"
-            "My read:\n"
-            "- Start with the supported effect, not the aircraft wish list.\n"
-            "- Air-ground integration becomes fragile when airspace, control, comm, fires, safety, and timelines "
-            "are handled as separate conversations.\n"
-            "- Keep real-world tasking details out of this tool.\n\n"
-            f"Primary lenses:\n{focus_lines}\n\n"
-            "Concerns to test:\n"
-            "- What aviation effect supports the exercise objective or commander decision?\n"
-            "- What airspace, fires, comm, range-control, and safety deconfliction must be solved first?\n"
-            "- What request, approval, or support relationship has the longest lead time?\n"
-            "- What no-go condition should stop the aviation portion?\n\n"
-            "Recommended next action:\n"
-            "- Build an air support estimate with supported effect, control method, comm/PACE, deconfliction "
-            "questions, required approvals, and branch/no-go criteria."
-            f"{active_context_block}{mos_section}{osint_note}"
-        )
-
-    if role == "lce":
-        return (
-            f"{title} staff-vetting perspective.\n\n"
-            f"Scope: {arch.scope}\n\n"
-            "My read:\n"
-            "- If sustainment, distribution, and health services are briefed as separate stories, "
-            "the LCE integration value is lost.\n\n"
-            f"Primary lenses:\n{focus_lines}\n\n"
-            "Concerns to test:\n"
-            "- What sustainment assumption is carrying too much weight?\n"
-            "- What distribution or health-service gap surfaces first under friction?\n"
-            "- What recovery/reconstitution timeline is unrealistic?\n\n"
-            "Recommended next action:\n"
-            "- Build the LCE estimate, sustainment support matrix, and recovery checklist."
             f"{active_context_block}{mos_section}{osint_note}"
         )
 
@@ -891,7 +772,7 @@ def _build_answer(
 def _role_references(role: str) -> tuple[SourceRef, ...]:
     mapping: dict[str, tuple[SourceRef, ...]] = {
         "xo": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "chief": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        # chief: moved to standalone chief-of-staff
         "battle_captain": STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "opso": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "s1": S1_REFERENCES,
@@ -902,12 +783,12 @@ def _role_references(role: str) -> tuple[SourceRef, ...]:
         "surgeon": MEDICAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "sja": LEGAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "pao": PAO_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "safety": ORM_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        # safety: merged into orm-risk-management
         "chaplain": LEADERSHIP_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "provost": FORCE_PROTECTION_REFERENCES + LEGAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "ig": IG_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "aviation": S3_REFERENCES + ORM_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "lce": S4_REFERENCES + MEDICAL_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        # aviation: moved to standalone ace
+        # lce: moved to standalone lce
         "g8": G8_REFERENCES + STAFF_PROCESS_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "g9": G9_REFERENCES + STAFF_PRODUCT_REFERENCES,
     }

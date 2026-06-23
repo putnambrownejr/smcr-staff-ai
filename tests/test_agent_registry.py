@@ -12,7 +12,7 @@ from app.services.agents.registry import AgentRegistry
         ("doctrine-opord-assistant", "staff-products"),
         ("training-planner", "staff-opso"),
         ("fitrep-assistant", "staff-s1"),
-        ("maradmin-monitor", "chief-of-staff-aide"),
+        ("maradmin-monitor", "chief-of-staff"),
         ("joint-interagency-frame-advisor", "staff-opso"),
         # Agents consolidated into staff archetypes
         ("s1-admin-chief", "staff-s1"),
@@ -22,7 +22,7 @@ from app.services.agents.registry import AgentRegistry
         ("s6-comms", "staff-s6"),
         ("sel-enlisted-leader", "staff-sel"),
         ("medical-doc-advisor", "staff-surgeon"),
-        ("airo-advisor", "staff-aviation"),
+        ("airo-advisor", "ace"),
         ("jag-legal-advisor", "staff-sja"),
         ("chaplain-advisor", "staff-chaplain"),
         ("g9-civil-military", "staff-g9"),
@@ -36,7 +36,7 @@ from app.services.agents.registry import AgentRegistry
         ("mos-commo-0602", "staff-s6"),
         ("mos-commo", "staff-s6"),
         ("mos-jag-4402", "staff-sja"),
-        ("mos-avso-7200", "staff-aviation"),
+        ("mos-avso-7200", "ace"),
         ("mos-civil-affairs", "staff-g9"),
     ],
 )
@@ -56,7 +56,7 @@ def test_agent_registry_loads_expected_agents() -> None:
 
     assert {
         # Standalone utility agents
-        "chief-of-staff-aide",
+        "chief-of-staff",
         "planning-advisor",
         "red-team-assumptions-challenge",
         "assessment-learning-advisor",
@@ -68,14 +68,16 @@ def test_agent_registry_loads_expected_agents() -> None:
         "installation-practical-advisor",
         "pki-cac-troubleshooter",
         "leadership-advisor",
-        "infantry-03xx-advisor",
-        "artillery-08xx-advisor",
+        "infantry-tactics-advisor",
+        "fires-advisor",
         "osint-research-assistant",
         "terrain-map-advisor",
-        "repo-privacy-sweeper",
+        # MAGTF element agents
+        "ace",
+        "gce",
+        "lce",
         # Consolidated staff archetypes
         "staff-xo",
-        "staff-chief",
         "staff-battle_captain",
         "staff-opso",
         "staff-s1",
@@ -86,12 +88,9 @@ def test_agent_registry_loads_expected_agents() -> None:
         "staff-surgeon",
         "staff-sja",
         "staff-pao",
-        "staff-safety",
         "staff-chaplain",
         "staff-provost",
         "staff-ig",
-        "staff-aviation",
-        "staff-lce",
         "staff-g8",
         "staff-g9",
     }.issubset(ids)
@@ -267,9 +266,9 @@ def test_staff_surgeon_returns_medical_structure() -> None:
     assert response.source_trust
 
 
-def test_staff_aviation_returns_planning_structure() -> None:
+def test_ace_agent_returns_planning_structure() -> None:
     registry = AgentRegistry()
-    agent = registry.get("staff-aviation")
+    agent = registry.get("ace")
     assert agent is not None
 
     response = agent.run(
@@ -277,19 +276,49 @@ def test_staff_aviation_returns_planning_structure() -> None:
         context=AgentContext(),
     )
 
-    assert "Aviation" in response.answer
+    assert "ACE" in response.answer
     assert response.structured_citations
     assert response.source_trust
 
 
-def test_staff_aviation_includes_merged_mos_depth() -> None:
+def test_ace_agent_includes_7200_depth() -> None:
     registry = AgentRegistry()
-    agent = registry.get("staff-aviation")
+    agent = registry.get("ace")
     assert agent is not None
 
     response = agent.run("Check aviation support.", context=AgentContext())
 
     assert "7200" in response.answer
+
+
+def test_gce_agent_returns_maneuver_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("gce")
+    assert agent is not None
+
+    response = agent.run(
+        "Help me think through ground scheme of maneuver for a combined-arms exercise.",
+        context=AgentContext(),
+    )
+
+    assert "GCE" in response.answer
+    assert response.structured_citations
+    assert response.source_trust
+
+
+def test_lce_agent_returns_sustainment_structure() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("lce")
+    assert agent is not None
+
+    response = agent.run(
+        "Help me think through LCE sustainment and distribution support.",
+        context=AgentContext(),
+    )
+
+    assert "LCE" in response.answer
+    assert response.structured_citations
+    assert response.source_trust
 
 
 def test_staff_sja_is_explicitly_non_authoritative() -> None:
@@ -407,9 +436,9 @@ def test_writing_briefing_agent_returns_product_discipline_structure() -> None:
     assert response.structured_citations
 
 
-def test_infantry_03xx_agent_returns_s3_family_training_structure() -> None:
+def test_infantry_tactics_agent_returns_s3_family_training_structure() -> None:
     registry = AgentRegistry()
-    agent = registry.get("infantry-03xx-advisor")
+    agent = registry.get("infantry-tactics-advisor")
     assert agent is not None
 
     response = agent.run(
@@ -483,9 +512,9 @@ def test_echelon_adapts_in_staff_agent_output() -> None:
     assert "division/group-level" in div_response.answer
 
 
-def test_artillery_08xx_agent_returns_fire_support_structure() -> None:
+def test_fires_advisor_returns_fire_support_structure() -> None:
     registry = AgentRegistry()
-    agent = registry.get("artillery-08xx-advisor")
+    agent = registry.get("fires-advisor")
     assert agent is not None
 
     response = agent.run(
@@ -493,16 +522,15 @@ def test_artillery_08xx_agent_returns_fire_support_structure() -> None:
         context=AgentContext(),
     )
 
-    assert "Artillery" in response.answer
+    assert "Fires" in response.answer
     assert "Fire Support" in response.answer
-    assert "08xx" in response.answer.lower() or "08XX" in response.answer
     assert response.structured_citations
     assert response.source_trust
 
 
-def test_artillery_08xx_agent_includes_mos_depth() -> None:
+def test_fires_advisor_includes_mos_depth() -> None:
     registry = AgentRegistry()
-    agent = registry.get("artillery-08xx-advisor")
+    agent = registry.get("fires-advisor")
     assert agent is not None
 
     response = agent.run("Check fire support readiness.", context=AgentContext())
@@ -510,3 +538,15 @@ def test_artillery_08xx_agent_includes_mos_depth() -> None:
     assert "0802" in response.answer
     assert "0861" in response.answer
     assert "FSCC" in response.answer
+
+
+def test_fires_advisor_covers_broad_fires_function() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("fires-advisor")
+    assert agent is not None
+
+    response = agent.run("What fires delivery means are available?", context=AgentContext())
+
+    assert "NSFS" in response.answer
+    assert "Mortars" in response.answer or "mortar" in response.answer.lower()
+    assert "air-delivered" in response.answer.lower() or "Air-delivered" in response.answer

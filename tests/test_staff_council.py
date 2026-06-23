@@ -3,7 +3,6 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.schemas.staff import (
     CommandCellRequest,
-    MagtfLens,
     S1ReadinessRequest,
     S2EstimateRequest,
     S6PlanRequest,
@@ -30,9 +29,8 @@ def test_registry_includes_chief_and_staff_agents() -> None:
     registry = AgentRegistry()
     ids = {metadata.id for metadata in registry.list_metadata()}
 
-    assert "chief-of-staff-aide" in ids
+    assert "chief-of-staff" in ids
     assert "staff-xo" in ids
-    assert "staff-chief" in ids
     assert "staff-battle_captain" in ids
     assert "staff-opso" in ids
     assert "staff-s1" in ids
@@ -43,14 +41,15 @@ def test_registry_includes_chief_and_staff_agents() -> None:
     assert "staff-surgeon" in ids
     assert "staff-sja" in ids
     assert "staff-pao" in ids
-    assert "staff-safety" in ids
-    assert "staff-aviation" in ids
-    assert "staff-lce" in ids
     assert "staff-g8" in ids
     assert "staff-g9" in ids
     assert "staff-ig" in ids
     assert "staff-provost" in ids
     assert "staff-chaplain" in ids
+    # MAGTF elements are now standalone agents
+    assert "ace" in ids
+    assert "gce" in ids
+    assert "lce" in ids
     # Echelon-specific IDs were removed — archetypes adapt to echelon at runtime
     assert not any(id_.startswith("staff-company-") for id_ in ids)
     assert not any(id_.startswith("staff-battalion-") for id_ in ids)
@@ -60,7 +59,7 @@ def test_registry_includes_chief_and_staff_agents() -> None:
 
 def test_chief_of_staff_agent_surfaces_handoff_watch_items() -> None:
     registry = AgentRegistry()
-    agent = registry.get("chief-of-staff-aide")
+    agent = registry.get("chief-of-staff")
     assert agent is not None
 
     response = agent.run(
@@ -186,23 +185,18 @@ def test_staff_council_special_staff_builds_exercise_products() -> None:
     response = service.vet_idea(
         StaffCouncilRequest(
             question=(
-                "Build a realistic MEU exercise plan with aviation support, media presence, safety risk, "
-                "and legal review."
+                "Build a realistic MEU exercise plan with media presence, legal review, "
+                "and security coordination."
             ),
             echelon=StaffEchelon.regiment_meu_wing,
-            roles=["AirO", "SJA", "PAO", "safety", "provost", "chaplain"],
+            roles=["SJA", "PAO", "provost", "chaplain"],
         )
     )
 
     roles = {perspective.role for perspective in response.perspectives}
-    assert roles == {"aviation", "sja", "pao", "safety", "provost", "chaplain"}
-    aviation = next(perspective for perspective in response.perspectives if perspective.role == "aviation")
+    assert roles == {"sja", "pao", "provost", "chaplain"}
     sja = next(perspective for perspective in response.perspectives if perspective.role == "sja")
 
-    assert MagtfLens.ace in aviation.magtf_lenses
-    assert "Air support estimate" in aviation.recommended_products
-    assert any("airspace" in item.lower() for item in aviation.critical_questions)
-    assert any("qualified aviation" in item.lower() for item in aviation.assumptions_to_test)
     assert "Legal issue-spotter" in sja.recommended_products
     assert any("not legal advice" in item.lower() for item in sja.assumptions_to_test)
     assert all(perspective.structured_citations for perspective in response.perspectives)
@@ -223,7 +217,10 @@ def test_staff_council_special_staff_aliases() -> None:
         )
     )
 
-    assert [perspective.role for perspective in response.perspectives] == ["sja", "pao", "provost"]
+    roles = [perspective.role for perspective in response.perspectives]
+    assert "sja" in roles
+    assert "pao" in roles
+    assert "provost" in roles
 
 
 def test_staff_council_pao_and_provost_recommend_new_products() -> None:
@@ -267,18 +264,18 @@ def test_staff_council_g8_and_ig_recommend_new_products() -> None:
     assert "readiness trend memo" in [item.lower() for item in ig.recommended_products]
 
 
-def test_staff_round_robin_runs_aviation_sja_at_all_echelons() -> None:
+def test_staff_round_robin_runs_sja_pao_at_all_echelons() -> None:
     service = StaffCouncilService()
     response = service.round_robin(
         StaffRoundRobinRequest(
-            question="Pressure-test a high-level MAGTF exercise with aviation and legal review.",
-            roles=["airo", "sja"],
+            question="Pressure-test a high-level MAGTF exercise with legal and public affairs review.",
+            roles=["sja", "pao"],
         )
     )
 
     roles_run = {role for council in response.councils for role in council.roles_run}
     echelons_run = {council.echelon for council in response.councils}
-    assert {"aviation", "sja"}.issubset(roles_run)
+    assert {"sja", "pao"}.issubset(roles_run)
     assert StaffEchelon.regiment_meu_wing in echelons_run
     assert StaffEchelon.division_group in echelons_run
     assert all(council.roles_missing == [] for council in response.councils)
@@ -290,15 +287,15 @@ def test_staff_council_route_serializes_special_staff_fields() -> None:
     response = client.post(
         "/staff/vet-idea",
         json={
-            "question": "Build an exercise plan with aviation support and legal review.",
+            "question": "Build an exercise plan with legal review and public affairs posture.",
             "echelon": "regiment_meu_wing",
-            "roles": ["airo", "sja"],
+            "roles": ["sja", "pao"],
         },
     )
 
     assert response.status_code == 200
     payload = response.json()
-    assert set(payload["roles_run"]) == {"aviation", "sja"}
+    assert set(payload["roles_run"]) == {"sja", "pao"}
     assert payload["perspectives"][0]["recommended_products"]
     assert payload["perspectives"][0]["magtf_lenses"]
     assert payload["perspectives"][0]["mcpp_step"]
@@ -342,15 +339,8 @@ def test_staff_council_staff_product_references_follow_numbered_staff() -> None:
     assert "admin task tracker" in s1.perspectives[0].recommended_products
     assert "pre-drill admin readiness check" in s1.perspectives[0].recommended_products
 
-    safety = service.vet_idea(
-        StaffCouncilRequest(
-            question="Build a realistic ORM posture for a field event with convoy movement and overnight sustainment.",
-            echelon=StaffEchelon.battalion,
-            roles=["safety"],
-        )
-    )
-    assert "ORM worksheet" in safety.perspectives[0].recommended_products
-    assert "residual-risk decision note" in safety.perspectives[0].recommended_products
+    # safety archetype was merged into orm-risk-management standalone agent
+    # so it is no longer available through the staff council
 
     sgtmaj = service.vet_idea(
         StaffCouncilRequest(

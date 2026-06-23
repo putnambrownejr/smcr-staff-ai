@@ -11,8 +11,8 @@ from app.services.agents.source_refs import (
 class Infantry03xxAdvisorAgent(Agent):
     def __init__(self) -> None:
         self.metadata = AgentMetadata(
-            id="infantry-03xx-advisor",
-            name="Infantry / 03XX Advisor",
+            id="infantry-tactics-advisor",
+            name="Infantry Tactics Advisor",
             description=(
                 "Supports the S-3 family with infantry-flavored training design, basic tactical framing, "
                 "patrolling refreshers, urban familiarization, and leader rehearsal worksheets while refusing "
