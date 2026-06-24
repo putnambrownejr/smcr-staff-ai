@@ -114,6 +114,24 @@ S2_REFERENCES: tuple[SourceRef, ...] = (
         notes="Reference for structured problem framing, assumptions, and information gaps.",
     ),
     SourceRef(
+        title="MCWP 2-10 Marine Corps Intelligence",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899774/mcwp-2-10/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Core S-2/G-2 warfighting pub covering IPB methodology, collection management, "
+            "all-source fusion, intelligence estimate, and INTSUM production."
+        ),
+    ),
+    SourceRef(
+        title="MCTP 2-10B Intelligence Preparation of the Battlespace",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899553/mctp-2-10b/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Four-step IPB methodology (define, describe, evaluate, determine) with "
+            "practical worksheets, templates, and echelon-appropriate application guidance."
+        ),
+    ),
+    SourceRef(
         title="CIA World Factbook",
         url="https://www.cia.gov/the-world-factbook/",
         publisher="Central Intelligence Agency",
@@ -193,6 +211,42 @@ OSINT_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
         publisher="United States Marine Corps",
         notes="Staff-action reference for turning sourced information into usable command support.",
+    ),
+    SourceRef(
+        title="MCRP 2-10A.3 Open-Source Intelligence",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3631282/mcrp-2-10a3/",
+        publisher="United States Marine Corps",
+        notes=(
+            "2024 Marine OSINT pub: five-step methodology (frame, acquire PAI/CAI, evaluate, "
+            "exploit, disseminate/fuse), source reliability, and analytic standards."
+        ),
+    ),
+    SourceRef(
+        title="Copernicus Browser (Sentinel Hub)",
+        url="https://browser.dataspace.copernicus.eu/",
+        publisher="European Space Agency / European Commission",
+        notes=(
+            "Free Sentinel-2 multispectral imagery (10 m) with near-daily revisit. "
+            "Useful for change detection, vegetation analysis, and terrain context."
+        ),
+    ),
+    SourceRef(
+        title="NASA Worldview",
+        url="https://worldview.earthdata.nasa.gov/",
+        publisher="National Aeronautics and Space Administration",
+        notes=(
+            "Near-real-time global imagery layers (MODIS, VIIRS) for weather, fires, "
+            "thermal anomalies, and large-area environmental monitoring."
+        ),
+    ),
+    SourceRef(
+        title="NGA Tearline",
+        url="https://www.tearline.mil/",
+        publisher="National Geospatial-Intelligence Agency",
+        notes=(
+            "Unclassified geospatial intelligence assessments with GEOINT tradecraft "
+            "useful for OSINT methodology modeling."
+        ),
     ),
 )
 
@@ -422,6 +476,15 @@ S6_REFERENCES: tuple[SourceRef, ...] = (
         publisher="United States Marine Corps",
         notes="Communications training standards and readiness framing.",
     ),
+    SourceRef(
+        title="MCWP 3-31 Marine Air-Ground Task Force C4",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899782/mcwp-3-31/",
+        publisher="United States Marine Corps",
+        notes=(
+            "MAGTF C4I architecture — enterprise, tactical, and transport layers; "
+            "Annex K structure (6 appendices), PACE planning, and EMCON guidance."
+        ),
+    ),
 )
 
 MOS_4402_REFERENCES: tuple[SourceRef, ...] = (
@@ -508,6 +571,33 @@ G9_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899782/mcwp-3-331/",
         publisher="United States Marine Corps",
         notes="Civil-military integration and external coordination reference.",
+    ),
+    SourceRef(
+        title="MCRP 3-03A.2 MAGTF Civil-Military Operations Planning",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899779/mcrp-3-03a2/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Best current Marine planning source for G-9/CMO products across MCPP, "
+            "Annex G, CPB, civil estimate, Green Cell, and transition."
+        ),
+    ),
+    SourceRef(
+        title="MCRP 3-03A.1 Civil Affairs Tactics, Techniques, and Procedures",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899778/mcrp-3-03a1/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Civil reconnaissance, civil engagement, CIM, MARCIMS, network analysis, "
+            "and civil-information methods reference."
+        ),
+    ),
+    SourceRef(
+        title="MCWP 8-10 Information",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3077947/mcwp-8-10/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Generate, preserve, deny, project framework; Annex I and information-staff "
+            "responsibilities for CMO integration into the information function."
+        ),
     ),
 )
 
@@ -599,6 +689,15 @@ INSTALLATION_REFERENCES: tuple[SourceRef, ...] = (
         publisher="United States Marine Corps",
         notes="Current public example of visitor-control, DBIDS, IARA, and local access-process reality.",
     ),
+    SourceRef(
+        title="Marine Forces Reserve (MARFORRES)",
+        url="https://www.marforres.marines.mil/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Official MARFORRES public hub for RTC network, I&I support structure, "
+            "and reserve force management across 160+ sites."
+        ),
+    ),
 )
 
 PAO_REFERENCES: tuple[SourceRef, ...] = (
@@ -627,6 +726,15 @@ PAO_REFERENCES: tuple[SourceRef, ...] = (
         notes=(
             "Official Marine Corps communication and COMMSTRAT hub describing the mission, posture, and public "
             "information responsibilities of the force."
+        ),
+    ),
+    SourceRef(
+        title="MCWP 3-33.3 Marine Corps Public Affairs",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899784/mcwp-3-333/",
+        publisher="United States Marine Corps",
+        notes=(
+            "PA/COMMSTRAT doctrine: media engagement, Annex F structure, community relations, "
+            "information environment generate/preserve/deny/project functions."
         ),
     ),
 )
@@ -1014,7 +1122,10 @@ DRILL_PREP_REFERENCES: tuple[SourceRef, ...] = (
         title="MCO 1001R.1L w/ Ch-2 Marine Corps Reserve Administrative Management Manual",
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900627/mco-1001r1l-w-ch-2/index.html",
         publisher="United States Marine Corps",
-        notes="Reserve admin and participation reality baseline for drill preparation.",
+        notes=(
+            "Reserve admin and participation reality baseline. Key facts: "
+            "48 IDT + 14 days AT minimum, 7 Mar 2025 revision."
+        ),
     ),
     SourceRef(
         title="MCO 1553.3C Unit Training Management",
@@ -1027,6 +1138,24 @@ DRILL_PREP_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.travel.dod.mil/Training/Travel-Explorer/",
         publisher="Department of Defense",
         notes="Official DTS training and continuity aid for drill-prep reminders.",
+    ),
+    SourceRef(
+        title="Marine Online (MOL)",
+        url="https://mol.tfs.usmc.mil/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Self-service portal for Marine Corps personnel: LES, OMPF, training records, "
+            "duty status, and leave/liberty management."
+        ),
+    ),
+    SourceRef(
+        title="Marine Corps Total Force System (MCTFS)",
+        url="https://www.manpower.usmc.mil/webcenter/portal/MCTFS",
+        publisher="United States Marine Corps",
+        notes=(
+            "Authoritative system of record for personnel status. "
+            "Unit diaries drive all status changes (gains, losses, promotions, duty status)."
+        ),
     ),
 )
 
@@ -1117,6 +1246,25 @@ LEGAL_REFERENCES: tuple[SourceRef, ...] = (
         notes=(
             "Marine Corps legal-support manual volume covering military justice organization, pretrial matters, "
             "Article 32, courts-martial, discovery, and post-trial processing."
+        ),
+    ),
+    SourceRef(
+        title="MCWP 11-10 Marine Corps Legal Support",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899768/mcwp-11-10/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Six functional areas of legal support: military justice, international/operational law, "
+            "administrative law, civil law, legal assistance, legal administration. "
+            "Reserve-specific UCMJ jurisdiction and mobilization legal readiness."
+        ),
+    ),
+    SourceRef(
+        title="MCO P1900.16 Separation and Retirement Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899428/mco-p190016/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Enlisted separations including unsatisfactory participation, administrative discharge boards, "
+            "and reserve-component involuntary separation procedures."
         ),
     ),
 )

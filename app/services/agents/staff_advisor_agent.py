@@ -158,19 +158,29 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
     StaffRoleArchetype(
         role="s1",
         title="S-1 / G-1 / Administration",
-        scope="Administration, manpower, and personnel readiness",
-        focus=("rosters", "orders", "FitReps", "awards", "accountability", "correspondence"),
+        scope="Administration, manpower, personnel readiness, and reserve admin systems",
+        focus=(
+            "rosters", "orders", "FitReps", "awards", "accountability",
+            "correspondence", "Drill Manager", "MROWS", "MOL", "DTS",
+        ),
         magtf_lenses=(MagtfLens.ce_c2,),
         products=(
             "admin estimate", "admin task tracker", "routing matrix",
-            "pre-drill admin readiness check",
+            "pre-drill admin readiness check", "drill-to-pay workflow",
         ),
         mos_depth=(
             "0102 Adjutant depth:\n"
+            "- Admin system responsibilities: Drill Manager (IDT pay), MROWS (ADT/AT orders), "
+            "MOL (self-service), DTS (travel), MCTFS/Unit Diary (status changes).\n"
+            "- Baseline: 48 IDT + 14 days AT per year (MCO 1001R.1L w/CH-2, 7 Mar 2025).\n"
+            "- MARADMIN 157/25: $750 IDT travel reimbursement cap.\n"
+            "- Drill-to-pay: attendance captured → Drill Manager → pay run; errors delay entire cycle.\n"
+            "- FitRep timeline: officer reporting periods, submission windows, RS/RO responsibilities.\n"
+            "- Reserve friction points: asynchronous admin between drills, dual-status civilians, "
+            "geographic dispersion, system fragmentation across 6+ platforms.\n"
             "- Whether adjutant systems are actually under control instead of just claimed on a tracker.\n"
             "- Whether files, directives, awards, and accountability can survive a gap between drills.\n"
-            "- Whether correspondence and staffing actions are being routed cleanly enough to brief the XO.\n"
-            "- Whether the unit can answer simple admin questions without a scavenger hunt."
+            "- Whether correspondence and staffing actions route cleanly enough to brief the XO."
         ),
         references_extra=MOS_0102_REFERENCES,
     ),
@@ -178,14 +188,25 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
         role="s2",
         title="S-2 / G-2 / Intelligence",
         scope="Intelligence, public-source context, and estimate support",
-        focus=("assumptions", "information gaps", "source confidence", "PIR framing"),
+        focus=(
+            "IPB methodology", "collection management", "PIR framing",
+            "source confidence", "information gaps", "all-source fusion",
+        ),
         osint_enabled=True,
+        products=(
+            "intelligence estimate", "INTSUM", "collection plan",
+            "IPB products (MCOO, doctrinal template, event template)",
+        ),
         mos_depth=(
             "0202 Intelligence Officer depth:\n"
-            "- A harder read on whether the intelligence question is tied to a real command decision.\n"
-            "- Whether collection, analysis, and briefing effort are being wasted on trivia.\n"
+            "- IPB four-step methodology: define, describe, evaluate threat, determine COAs.\n"
+            "- Collection management: translate PIR into specific collection requests with indicators.\n"
+            "- All-source fusion: cross-reference HUMINT/SIGINT/OSINT into a single intelligence picture.\n"
+            "- Whether the intelligence question is tied to a real command decision, not trivia.\n"
             "- Whether assumptions, gaps, and confidence are visible enough for the XO and commander.\n"
-            "- Whether continuity notes will let the next drill pick the estimate back up fast."
+            "- Whether continuity notes will let the next drill pick the estimate back up fast.\n"
+            "- OSINT methodology: frame requirement → acquire PAI/CAI → evaluate reliability → exploit → disseminate.\n"
+            "- Force Design shift: organic sensors and reconnaissance increasingly decentralized to battalion."
         ),
         references_extra=MOS_0202_REFERENCES,
     ),
@@ -214,16 +235,29 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
     StaffRoleArchetype(
         role="s6",
         title="S-6 / G-6 / Communications",
-        scope="Communications, C2 support, and information management",
-        focus=("C2", "PACE", "permissions", "operator readiness"),
+        scope="Communications, C4I architecture, PACE planning, and information management",
+        focus=(
+            "PACE planning", "Annex K", "C2 architecture", "SATCOM",
+            "MANET/mesh", "EMCON", "operator readiness",
+        ),
         magtf_lenses=(MagtfLens.ce_c2,),
-        products=("PACE plan", "comm plan outline", "radio guard chart"),
+        products=(
+            "PACE plan by echelon", "Annex K (6 appendices)",
+            "comm plan outline", "radio guard chart", "SATCOM request",
+        ),
         mos_depth=(
             "0602 Communications Officer depth:\n"
+            "- MAGTF C4I layers: enterprise (MCEN), tactical (radio nets), transport (SATCOM/relay).\n"
+            "- Key radios: AN/PRC-117G (30-2000 MHz SATCOM/LOS), AN/PRC-160 (HF LPI/LPD), "
+            "AN/PRC-158 (dual-channel 30-2500 MHz).\n"
+            "- MANET/NOTM: Silvus StreamCaster 4400 for ad-hoc mesh at company and below.\n"
+            "- MUOS for narrowband SATCOM; JENM for radio frequency planning.\n"
+            "- PACE planning: Primary-Alternate-Contingency-Emergency for each reporting requirement.\n"
+            "- Annex K structure: 6 appendices (signal, EMCON, spectrum, SATCOM, data, cyber).\n"
+            "- Force Design 2030: mesh-first, EMCON-aware, reduced signature communications.\n"
             "- Whether the PACE plan is tied to actual reports, users, and decision points.\n"
             "- Whether operators, accounts, equipment, and permissions are ready before drill starts.\n"
-            "- Whether rehearsals prove the reporting rhythm instead of only checking gear status.\n"
-            "- Whether the plan can survive tired users, missing permissions, or a compressed timeline."
+            "- Whether rehearsals prove the reporting rhythm instead of only checking gear status."
         ),
         references_extra=S6_REFERENCES,
     ),
@@ -249,13 +283,28 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
     StaffRoleArchetype(
         role="sja",
         title="SJA / Legal",
-        scope="Legal issue-spotting, ROE/RUF guardrails, investigations, and command legal routing",
-        focus=("legal review", "ROE/RUF", "investigation boundaries", "issue spotting"),
+        scope="Legal issue-spotting, ROE/RUF guardrails, military justice, admin law, and command legal routing",
+        focus=(
+            "military justice", "administrative law", "international/operational law",
+            "legal assistance", "ROE/RUF", "issue spotting", "investigation boundaries",
+        ),
         magtf_lenses=(MagtfLens.ce_c2,),
-        products=("Legal issue-spotter", "ROE/RUF guardrails", "legal review trigger list"),
+        products=(
+            "Legal issue-spotter", "ROE/RUF guardrails", "legal review trigger list",
+            "NJP vs courts-martial routing", "mobilization legal readiness checklist",
+        ),
         mos_depth=(
             "4402 Judge Advocate depth:\n"
-            "- Whether the matter is military justice, admin law, legal assistance, ethics, claims, or another lane.\n"
+            "- Six functional areas: military justice, international/operational law, administrative law, "
+            "civil law, legal assistance, legal administration.\n"
+            "- NJP: commanding officer authority under Article 15; accused right to demand trial; "
+            "24-hr reflection; appeal within 5 days.\n"
+            "- Courts-martial: summary (no right to counsel), special (BCD-authorized), "
+            "general (Article 32 hearing required, felony-level).\n"
+            "- Reserve-specific: UCMJ jurisdiction applies when on Title 10 orders or in IDT status; "
+            "unsatisfactory participation separation under MCO P1900.16.\n"
+            "- Mobilization legal readiness: powers of attorney, wills, SCRA protections, "
+            "family care plans, employer notification.\n"
             "- What facts are missing before a lawyer can responsibly advise.\n"
             "- What command action should pause until the SJA or responsible counsel reviews it.\n"
             "- How to preserve clean routing, privilege awareness, and continuity between drills."
@@ -265,12 +314,28 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
     StaffRoleArchetype(
         role="pao",
         title="PAO / COMMSTRAT / Information",
-        scope="Public affairs, media posture, release authority, OPSEC coordination, and info effects",
-        focus=("public posture", "release authority", "OPSEC coordination", "narrative coherence"),
+        scope="Public affairs, COMMSTRAT, media posture, release authority, OPSEC coordination, and info effects",
+        focus=(
+            "COMMSTRAT", "public posture", "release authority",
+            "OPSEC coordination", "narrative coherence",
+            "generate/preserve/deny/project",
+        ),
         magtf_lenses=(MagtfLens.ce_c2,),
         products=(
-            "Public affairs plan", "release approval matrix",
+            "Annex F (public affairs)", "COMMSTRAT plan", "release approval matrix",
             "response-to-query lines", "themes and messages",
+            "media engagement plan", "community relations plan",
+        ),
+        mos_depth=(
+            "COMMSTRAT / PAO depth:\n"
+            "- Information environment functions: generate, preserve, deny, project (MCWP 8-10).\n"
+            "- Annex F structure: media engagement, community relations, visual information, "
+            "internal information.\n"
+            "- PA vs COMMSTRAT: same function, evolving name — subordinate to the information staff.\n"
+            "- Media engagement: accreditation, escort procedures, media rounds, embed rules.\n"
+            "- Release authority: who can authorize public release at each echelon.\n"
+            "- Integration: works with G-9/CMO for civil engagement and with S-2 for OPSEC review.\n"
+            "- Whether themes and messages align with commander intent and higher guidance."
         ),
     ),
     # safety: merged into standalone orm-risk-management agent
@@ -311,10 +376,32 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
     StaffRoleArchetype(
         role="g9",
         title="G-9 / Civil-Military",
-        scope="Civil-military integration, community context, partner coordination, and civil affairs",
-        focus=("civil impact", "external coordination", "continuity", "civil reconnaissance"),
+        scope="Civil-military operations, civil affairs, community context, and partner coordination",
+        focus=(
+            "civil estimate", "CPB", "ASCOPE/PMESII", "Annex G",
+            "civil reconnaissance", "external coordination", "transition planning",
+        ),
         magtf_lenses=(MagtfLens.ce_c2,),
-        products=("civil situation frame", "partner coordination plan", "continuity note"),
+        products=(
+            "civil estimate", "Annex G (civil-military operations)",
+            "civil preparation of the battlespace (CPB)", "civil information requirements (CIR)",
+            "partner coordination plan", "transition plan",
+        ),
+        mos_depth=(
+            "G-9 / CMO depth:\n"
+            "- CPB parallels IPB for the civil dimension: ASCOPE (areas, structures, capabilities, "
+            "organizations, people, events) crossed with PMESII.\n"
+            "- Civil estimate feeds Annex G — includes civil situation, impact on operations, "
+            "requirements, resources, and recommendations.\n"
+            "- CIR format: civil information requirement with indicators, collection means, "
+            "and responsible section.\n"
+            "- Echelon differences: battalion has no organic G-9; regiment may have a civil affairs "
+            "detachment; MEF has a full G-9 section.\n"
+            "- Information environment integration: generate/preserve/deny/project (MCWP 8-10) — "
+            "CMO supports the information function through civil engagement.\n"
+            "- Targeting integration: civil considerations shape no-strike lists and collateral damage.\n"
+            "- Transition planning: conditions-based handoff to host nation or follow-on force."
+        ),
     ),
 )
 

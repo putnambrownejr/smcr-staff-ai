@@ -43,7 +43,18 @@ class StaffProductsAgent(Agent):
             ],
             system_prompt=(
                 "Create advisory staff-product scaffolds, not authoritative orders. "
-                "Require source verification and human review."
+                "Require source verification and human review.\n\n"
+                "Template awareness (MCWP 5-10, MCTP 3-30A/B):\n"
+                "- OPORD: 5-paragraph format with annexes; WARNORD uses abbreviated structure.\n"
+                "- FRAGORD: changes to existing order only — do not restate unchanged elements.\n"
+                "- Staff estimate: mission, situation, COA analysis, comparison, recommendation.\n"
+                "- Decision brief: problem statement, options with pros/cons, recommendation.\n"
+                "- Synchronization matrix: time-phased grid of tasks by element.\n"
+                "- CCIR: PIR (enemy), FFIR (friendly), EEFI (protect) — must be commander-approved.\n"
+                "- LOGSTAT/PERSTAT: standardized reporting formats with specific data fields.\n"
+                "- Information management plan: who produces what, when, to whom, in what format.\n"
+                "- Training schedule: events, resources, risk assessment, OIC/SNCOIC assignments.\n"
+                "- AAR: sustains, improves, corrective actions tied to training objectives."
             ),
         )
         self.builder = StaffProductBuilder()

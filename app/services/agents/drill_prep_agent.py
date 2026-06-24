@@ -20,7 +20,24 @@ class DrillPrepCalendarAgent(Agent):
             disallowed_inputs=["calendar tokens", "PII not required for planning", "sensitive personal data"],
             system_prompt=(
                 "Turn drill dates into practical advisory preparation timelines. Emphasize recurring checks, "
-                "travel-admin friction, and what needs to happen before Marines walk in the door."
+                "travel-admin friction, and what needs to happen before Marines walk in the door.\n\n"
+                "Admin system awareness:\n"
+                "- Drill Manager: captures IDT attendance → drives pay. Errors delay the entire pay cycle.\n"
+                "- MROWS: generates ADT/AT orders. Must be submitted with enough lead time for approval.\n"
+                "- DTS: travel vouchers. Post-drill voucher completion is the most common drop.\n"
+                "- MOL: self-service for LES, OMPF, training records. Marines should verify before drill.\n"
+                "- MCTFS/Unit Diary: authoritative system of record for all status changes.\n"
+                "- MRRS/RHRP/PHA: medical readiness tracking — dental, PHA, IMR must be current.\n\n"
+                "Key policy baselines:\n"
+                "- 48 IDT + 14 days AT per year (MCO 1001R.1L w/CH-2, 7 Mar 2025).\n"
+                "- MARADMIN 157/25: $750 IDT travel reimbursement cap.\n"
+                "- AT planning triggers: T-45 (MROWS submission), T-30 (DTS authorization), T-15 (final coordination).\n\n"
+                "Reserve friction points to front-load:\n"
+                "- Asynchronous admin between drills (things break during the 28-day gap).\n"
+                "- Dual-status civilians with employer notification requirements.\n"
+                "- Geographic dispersion — Marines traveling from multiple states.\n"
+                "- System fragmentation across 6+ platforms with different access requirements.\n"
+                "- Compressed training year — 48 IDT periods to accomplish a full training plan."
             ),
         )
 
@@ -36,11 +53,20 @@ class DrillPrepCalendarAgent(Agent):
             "- Drill weekends fall apart when recurring checks live only in somebody's memory.\n"
             "- The best reminder plans are boring, repeatable, and tied to real due dates.\n"
             "- If post-drill cleanup is ignored, next month's prep starts already behind.\n\n"
-            "Checklist:\n"
-            "- Confirm next drill date, travel requirements, and any must-hit suspense items.\n"
-            "- Build pre-drill reminders for grooming, uniform, gear, medical, DTS/GTCC, and required training.\n"
-            "- Capture in-drill action items while the right people are present.\n"
-            "- Schedule post-drill cleanup for vouchers, unresolved admin, and handoff updates.\n"
+            "Pre-drill (T-14 to T-1):\n"
+            "- Confirm drill date, travel requirements, and must-hit suspense items.\n"
+            "- Verify MOL access, LES accuracy, and medical readiness (dental, PHA, IMR).\n"
+            "- Check DTS: prior voucher settled? New authorization needed?\n"
+            "- Uniform, gear, and required annual training (MarineNet) complete.\n"
+            "- MROWS: any ADT/AT orders pending approval?\n\n"
+            "During drill:\n"
+            "- Drill Manager attendance captured accurately (drives pay).\n"
+            "- Capture action items while the right people are present.\n"
+            "- FitRep counseling, awards routing, admin corrections — do it now or it waits 28 days.\n\n"
+            "Post-drill (release + 5 days):\n"
+            "- DTS voucher completion (most common drop).\n"
+            "- Handoff notes updated for continuity between drills.\n"
+            "- Unresolved admin items tracked with owners and deadlines.\n"
         )
         return self._response(
             answer=answer,

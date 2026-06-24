@@ -236,7 +236,7 @@ def test_staff_council_pao_and_provost_recommend_new_products() -> None:
     pao = next(perspective for perspective in response.perspectives if perspective.role == "pao")
     provost = next(perspective for perspective in response.perspectives if perspective.role == "provost")
 
-    assert "Public affairs plan" in pao.recommended_products
+    assert "COMMSTRAT plan" in pao.recommended_products
     assert "response-to-query lines" in pao.recommended_products
     assert "Security annex" in provost.recommended_products
     assert "visitor control checklist" in provost.recommended_products
