@@ -99,6 +99,9 @@ Only if nothing local fits, search external registries:
 | "what to automate" | `automated-skill-builder` skill |
 | "at division level" | `echelon-context` skill (sets echelon modifier) |
 | "how does this differ at regiment" | `echelon-context` skill (comparison mode) |
+| "add a new agent" | `agent-scaffolder` skill (multi-file checklist) |
+| "compare agent responses" | `scenario-runner` skill |
+| "check source references" | `source-audit` skill |
 
 ## Rules
 
