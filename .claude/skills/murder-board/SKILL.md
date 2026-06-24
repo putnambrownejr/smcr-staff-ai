@@ -1,9 +1,9 @@
 ---
-name: grill-me
+name: murder-board
 description: Relentless one-question-at-a-time design review before implementation. Walks every branch of the decision tree, auto-explores the codebase to skip questions the code already answers, and enforces this project's security and architecture constraints.
 ---
 
-# Grill Me — smcr-staff-ai Design Review
+# Murder Board — smcr-staff-ai Design Review
 
 ## Purpose
 
@@ -20,8 +20,8 @@ Force a thorough design conversation before touching implementation. Ask one foc
 ## When Not to Use
 
 - Trivial changes: typo fixes, single-line patches, copy edits
-- When `grill-with-docs` is better (the area has recorded decisions in CLAUDE.md or PRODUCT.md)
-- When the design was already grilled and this is pure execution
+- When `murder-board-docs` is better (the area has recorded decisions in CLAUDE.md or PRODUCT.md)
+- When the design was already murder-boarded and this is pure execution
 - Hotfixes where the correct fix is unambiguous
 
 ## Workflow
@@ -62,5 +62,5 @@ During the grill, actively challenge designs that violate these:
 - **No leading questions.** Present options neutrally.
 - **State what code already tells you.** Cite file and lines.
 - **Defer is valid.** Record deferred decisions, don't re-ask.
-- **No code mid-grill.** No writing, scaffolding, or stubbing until the design summary is accepted.
+- **No code mid-board.** No writing, scaffolding, or stubbing until the design summary is accepted.
 - **Record the full decision log.** Suitable for pasting into a commit message or PR description.

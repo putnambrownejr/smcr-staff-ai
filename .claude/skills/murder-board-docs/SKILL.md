@@ -1,9 +1,9 @@
 ---
-name: grill-with-docs
-description: Design grilling session anchored to CLAUDE.md, PRODUCT.md, and the project's domain model. Challenges plans against documented decisions, sharpens terminology, and surfaces conflicts between proposed changes and existing architecture.
+name: murder-board-docs
+description: Murder board session anchored to CLAUDE.md, PRODUCT.md, and the project's domain model. Challenges plans against documented decisions, sharpens terminology, and surfaces conflicts between proposed changes and existing architecture.
 ---
 
-# Grill With Docs — smcr-staff-ai
+# Murder Board With Docs — smcr-staff-ai
 
 Interview relentlessly about every aspect of a plan, anchoring each question to existing project documentation. Walk each branch of the decision tree, resolving dependencies one by one. For each question, provide a recommended answer.
 
@@ -57,7 +57,7 @@ Any design that would introduce classified info, PII beyond what's needed, exter
 
 - **One question at a time.** Wait for the answer.
 - **Anchor every challenge to a specific file.** Don't make abstract objections — cite the file and what it says.
-- **No code mid-grill.** Don't write, scaffold, or stub until the design summary is accepted.
+- **No code mid-board.** Don't write, scaffold, or stub until the design summary is accepted.
 - **Deferred is valid.** Record it, move on, don't re-ask.
-- **Produce a decision log.** Numbered list of decisions, chosen options, and reasons when the grill completes.
+- **Produce a decision log.** Numbered list of decisions, chosen options, and reasons when the board completes.
 - **UNCLASSIFIED only.** Do not discuss or design features that would handle classified information.

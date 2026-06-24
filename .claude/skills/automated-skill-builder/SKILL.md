@@ -1,15 +1,15 @@
 ---
-name: weekly-skill-harvest
-description: Mine recent Claude Code session transcripts and git logs for smcr-staff-ai to surface repeated manual work, unmet agent gaps, and automation opportunities — then draft concrete proposals. Use when asked for a weekly review, skill harvest, or "what should we automate."
+name: automated-skill-builder
+description: Mine recent Claude Code session transcripts and git logs for smcr-staff-ai to surface repeated manual work, unmet agent gaps, and automation opportunities — then draft concrete skills, agents, or automation proposals. Use when asked "what should we automate", "build me a skill", "skill harvest", or "find automation opportunities."
 ---
 
-# Weekly Skill Harvest — smcr-staff-ai
+# Automated Skill Builder — smcr-staff-ai
 
-Surface what's been done manually that a skill, agent, hook, or CLAUDE.md rule should handle instead.
+Surface what's been done manually that a skill, agent, hook, or CLAUDE.md rule should handle instead — then draft the concrete implementation.
 
 ## When to Use
 
-- Weekly on-demand: "what should we automate", "run the harvest", "weekly review"
+- On-demand: "what should we automate", "build a skill for X", "find automation opportunities"
 - After a sprint of agent or dashboard work
 - When the agent registry or skill set feels stale
 
@@ -87,7 +87,7 @@ Aim for 3–6 concrete proposals. More is noise.
 ### Phase 4 — Report
 
 ```markdown
-# Skill Harvest — <YYYY-MM-DD>
+# Automated Skill Builder Report — <YYYY-MM-DD>
 
 ## Summary
 <2–3 sentences: what dominated the week, biggest gap>

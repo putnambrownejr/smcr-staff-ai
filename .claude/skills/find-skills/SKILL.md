@@ -95,8 +95,8 @@ Only if nothing local fits, search external registries:
 | "plan a training event" | `planning-advisor` or `staff-opso` |
 | "uniform inspection" | `uniform-advisor` |
 | "risk assessment" | `orm-risk-management` |
-| "design review" | `grill-me` skill |
-| "what to automate" | `weekly-skill-harvest` skill |
+| "design review" | `murder-board` skill |
+| "what to automate" | `automated-skill-builder` skill |
 
 ## Rules
 
