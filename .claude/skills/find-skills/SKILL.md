@@ -97,6 +97,8 @@ Only if nothing local fits, search external registries:
 | "risk assessment" | `orm-risk-management` |
 | "design review" | `murder-board` skill |
 | "what to automate" | `automated-skill-builder` skill |
+| "at division level" | `echelon-context` skill (sets echelon modifier) |
+| "how does this differ at regiment" | `echelon-context` skill (comparison mode) |
 
 ## Rules
 
