@@ -9,10 +9,10 @@ see [ARCHITECTURE.md](../../ARCHITECTURE.md).
 
 These are implemented, tested, and in active use.
 
-- **Advisory agent layer** — ~30 agent files covering S/G-staff lanes, MOS slices
-  (0102/0202/0402/0430/0511/3002/CommO/Civil Affairs, compiled to data), staff
-  council echelons (company → division/group), and functional advisors (ORM, OSINT, PKI,
-  red-team, writing/briefing, uniform, drill prep, privacy hygiene).
+- **Advisory agent layer** — 35 agents: 19 standalone advisors + 16 echelon-adaptive
+  staff archetypes (platoon → division/group). Includes MAGTF elements (ACE/GCE/LCE),
+  functional advisors (ORM, OSINT, PKI, red-team, writing/briefing, uniform, drill prep),
+  and MOS-specific advisors (infantry 03xx, artillery 08xx, custom MOS recipes).
 - **JSON file-store continuity** — handoffs, actions/POAMs, travel cases, battle
   rhythm, section memory, opportunities, drill plans. Survives between drills.
 - **Dashboard** — single-page operator surface with lane navigation, readiness
@@ -24,7 +24,8 @@ These are implemented, tested, and in active use.
 - **SMCR billet discovery** — public BIC parsing and MOS/rank/location ranking.
 - **Admin workflows** — DTS, GTCC, MROWS rebuttal, RIDT scaffolds.
 - **Staff products** — WARNO/OPORD/FRAGO/SITREP/AAR and correspondence scaffolds.
-- **Skill layer** — 9 operator skills steering AI tools toward existing routes.
+- **Skill layer** — 13 project-level Claude Code skills for agent routing, echelon
+  detection, doctrine lookup, adversarial review, scenario comparison, and more.
 - **Safety posture** — UNCLASSIFIED enforcement, PII detection + redaction,
   sensitive-content refusal, local-first storage, API-key gating.
 - **MOS advisor expansion** — added 0602 CommO, 4402 JAG, and 7200 Aviation
