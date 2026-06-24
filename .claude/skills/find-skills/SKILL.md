@@ -102,6 +102,8 @@ Only if nothing local fits, search external registries:
 | "add a new agent" | `agent-scaffolder` skill (multi-file checklist) |
 | "compare agent responses" | `scenario-runner` skill |
 | "check source references" | `source-audit` skill |
+| "what pub covers fires" | `doctrine-reference` skill |
+| "which MCDP" | `doctrine-reference` skill |
 
 ## Rules
 
