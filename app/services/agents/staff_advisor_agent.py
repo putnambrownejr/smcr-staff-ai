@@ -138,6 +138,35 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
         focus=("watchstanding", "status picture", "escalation"),
         magtf_lenses=(MagtfLens.ce_c2,),
         products=("decision support matrix", "battle captain watchboard", "command update brief"),
+        mos_depth=(
+            "Watch floor layout and roles: Battle Captain (overall watch authority), COP Manager "
+            "(maintains common operational picture — analog mapboard + digital tracker), "
+            "Intel Watch (threat updates, PIR tracking), Comms Net Control (radio/data link monitoring), "
+            "S-1 Clerk (personnel status), Logistics NCO (supply/maintenance status), LNOs as needed.\n\n"
+            "COP management: maintain both analog (mapboard with unit markers, phase lines, boundaries) "
+            "and digital (C2 system) tracks. Three track categories: friendly (blue), enemy/threat (red), "
+            "other (green — civilians, NGOs, neutral forces). Update cycle: continuous for friendly, "
+            "as-received for threat, periodic for other.\n\n"
+            "Information flow — SITREP format (6 sections): (1) DTG, (2) Unit, (3) Activity "
+            "(what happened), (4) Effective (impact on operations), (5) Situation overview (current "
+            "posture), (6) Request/remarks. SITREPs flow on scheduled battle rhythm.\n"
+            "SALUTE report (spot report): Size, Activity, Location, Unit/uniform, Time, Equipment. "
+            "SPOTREP: enemy contact — immediate transmission, no waiting for scheduled reporting.\n\n"
+            "Watch turnover checklist: (1) Current friendly disposition and task org, (2) Current "
+            "enemy situation and last known activity, (3) Significant events since last turnover, "
+            "(4) Open/pending actions and suspenses, (5) Next scheduled events on the battle rhythm, "
+            "(6) Commander's guidance and decision points, (7) Equipment/systems status.\n\n"
+            "Incident reporting flow: initial report within 15 minutes (who/what/where/when + "
+            "immediate actions taken) → follow-on report within 1 hour (amplifying details, "
+            "response status) → AAR within 24-72 hours.\n\n"
+            "Battle rhythm integration: the watch officer enforces the battle rhythm — update briefs, "
+            "sync meetings, reports due — and escalates when a trigger or decision point is reached.\n\n"
+            "Reserve / I&I constraints: limited manning means watch positions are often doubled up "
+            "or rotated among a small team. Geographic dispersion means some watch functions run "
+            "via phone/radio net rather than collocated. Drill-only activation means the watch floor "
+            "must be stood up and torn down each drill — SOPs and checklists are critical to avoid "
+            "losing continuity between drill weekends."
+        ),
     ),
     StaffRoleArchetype(
         role="opso",

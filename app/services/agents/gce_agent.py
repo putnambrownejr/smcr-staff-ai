@@ -2,6 +2,7 @@ from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import (
     INFANTRY_REFERENCES,
+    LEADERSHIP_REFERENCES,
     ORM_REFERENCES,
     S3_REFERENCES,
     STAFF_PRODUCT_REFERENCES,
@@ -13,7 +14,7 @@ from app.services.agents.source_refs import (
 
 class GceAgent(Agent):
     def __init__(self) -> None:
-        refs = S3_REFERENCES + INFANTRY_REFERENCES + ORM_REFERENCES + STAFF_PRODUCT_REFERENCES
+        refs = S3_REFERENCES + INFANTRY_REFERENCES + LEADERSHIP_REFERENCES + ORM_REFERENCES + STAFF_PRODUCT_REFERENCES
         self.metadata = AgentMetadata(
             id="gce",
             name="GCE / Ground Combat Element",
@@ -36,7 +37,31 @@ class GceAgent(Agent):
             ],
             system_prompt=(
                 "Respond like a GCE representative advising the MAGTF CE. Focus on ground scheme of maneuver, "
-                "combined-arms integration, and close combat coordination. Stay training-safe and advisory."
+                "combined-arms integration, and close combat coordination. Stay training-safe and advisory.\n\n"
+                "GCE task organization:\n"
+                "- Infantry Battalion: 3 rifle companies + 1 weapons company + H&S company. "
+                "Each rifle company has 3 rifle platoons + 1 weapons platoon. Weapons company "
+                "includes mortar, anti-armor, and assault platoons.\n"
+                "- LAR Battalion: 3 LAR companies (each ~6 LAV-25s) + HQ/Service company. "
+                "Under Force Design 2030, reconfiguring into Mobile Reconnaissance Battalions (MRBs) "
+                "with Maritime Recon Companies fielding Multi-Mission Recon Craft.\n"
+                "- Tank Battalion: 3 tank companies + HQ/Service company.\n"
+                "- AAV/ACV Battalion: 3 assault vehicle companies + HQ/Service company.\n"
+                "- Combat Engineer Battalion: 3-4 engineer companies (mobility, assault, utilities) + HQ.\n"
+                "- Reconnaissance: Scout Sniper platoons (organic to infantry bn), "
+                "Force Recon / Division Recon companies.\n\n"
+                "Combined arms (MCDP 1): 'To counteract one arm, the enemy must become more "
+                "vulnerable to another.' Companies combine infantry, armor, engineers, artillery, "
+                "and CAS so that shifting to counter one threat exposes the enemy to others. "
+                "Decentralized command aligned by intent, seeking speed and surprise.\n\n"
+                "Offensive operations: combined-arms assaults and raids; intelligence and recon shape "
+                "the approach. Defense: integrate fires, obstacles, and infantry ambushes in depth. "
+                "Offense and defense are not strictly separate — units must transition between them.\n\n"
+                "Force Design 2030 changes: Fires & Reconnaissance company integrates ISR with "
+                "infantry/anti-armor fires. Advanced Reconnaissance Vehicle (ARV) replacing LAV-25. "
+                "Infantry squads expanded to 13 Marines with precision-fires specialist operating "
+                "drones and loitering munitions. Sensor-to-shooter kill chain: squad UAS or G/ATOR "
+                "detects target → data link → F-35 or HIMARS engages."
             ),
         )
         self._refs = refs
@@ -64,22 +89,39 @@ class GceAgent(Agent):
             "- Are fires, obstacles, and air integrated into the ground plan or bolted on?\n"
             "- What combined-arms coordination must be rehearsed before execution?\n"
             "- What friction in movement, sustainment, or C2 will break the plan first?\n"
-            "- Where are the decision points for the ground commander?\n\n"
+            "- Where are the decision points for the ground commander?\n"
+            "- Is the task organization right for the mission, or is it inherited from the last op?\n"
+            "- How does the sensor-to-shooter chain close for this fight?\n\n"
+            "GCE task organization:\n"
+            "- Infantry Bn: 3 rifle companies + 1 weapons company (mortars, anti-armor, assault) + H&S\n"
+            "- LAR Bn: 3 LAR companies (~6 LAV-25s each) + HQ/Svc — transitioning to MRBs under FD2030\n"
+            "- Tank Bn: 3 tank companies + HQ/Svc\n"
+            "- AAV/ACV Bn: 3 assault vehicle companies + HQ/Svc\n"
+            "- Engineer Bn: 3-4 engineer companies (mobility, assault, utilities) + HQ\n"
+            "- Recon: Scout Sniper plt (organic to infantry bn), Force Recon / Division Recon\n\n"
+            "Combined arms principle (MCDP 1): employ arms in combination so that countering one "
+            "exposes the enemy to another. If the enemy shifts anti-armor assets to counter tanks, "
+            "mortars and machine guns exploit the reduced infantry coverage.\n\n"
             "What this lane is good for:\n"
             "- Ground scheme of maneuver development and refinement\n"
             "- Combined-arms rehearsal design: how fires, obstacles, air, and maneuver meet\n"
+            "- GCE task organization analysis for specific missions\n"
             "- GCE sustainment and movement planning within the MAGTF\n"
             "- Ground tactical decision games and wargaming support\n"
-            "- Reserve infantry and ground unit training event design\n\n"
+            "- Reserve infantry and ground unit training event design\n"
+            "- Force Design 2030 implications: MRBs, expanded squads, sensor-to-shooter integration\n\n"
             "My read:\n"
             "- A ground plan that cannot be briefed at a rehearsal in five minutes is too complicated "
             "for the force to execute.\n"
             "- The GCE representative's job is to make fires, obstacles, air, and sustainment serve "
             "the ground scheme — not the other way around.\n"
             "- Reserve ground units that drill coordination and rehearsals between AT will get more "
-            "out of their limited field time.\n\n"
+            "out of their limited field time.\n"
+            "- Force Design is shifting the GCE toward distributed, sensor-rich formations — "
+            "reserve units should understand MRBs, expanded squads, and how ISR feeds fires.\n\n"
             "Checklist:\n"
             "- State the ground scheme of maneuver clearly: task, purpose, and main effort.\n"
+            "- Validate the task organization against the mission, not against habit.\n"
             "- Integrate fires, obstacles, and air support into the ground plan.\n"
             "- Identify decision points, branches, and sequels for the ground commander.\n"
             "- Coordinate C2, sustainment, and movement with ACE and LCE.\n"

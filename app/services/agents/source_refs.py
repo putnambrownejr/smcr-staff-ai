@@ -368,6 +368,16 @@ S4_REFERENCES: tuple[SourceRef, ...] = (
         publisher="United States Marine Corps",
         notes="Logistics training expectations and professional development baseline.",
     ),
+    SourceRef(
+        title="MCWP 4-1 Logistics Operations",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899853/mcwp-4-1/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Keystone logistics operations doctrine covering the six logistics functions "
+            "(supply, maintenance, transportation, general engineering, health services, services), "
+            "CSS estimate format, and logistics synchronization within the MAGTF."
+        ),
+    ),
 )
 
 MOS_0402_REFERENCES: tuple[SourceRef, ...] = (
@@ -526,6 +536,24 @@ MOS_7200_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.marines.mil/Portals/1/Publications/MCO%205100.29C%20Vol.%204%20Change%201.pdf",
         publisher="United States Marine Corps",
         notes="Marine Corps aviation safety management, command safety, and mishap-prevention reference.",
+    ),
+    SourceRef(
+        title="MCWP 3-20 Aviation Operations",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899843/mcwp-3-20/",
+        publisher="United States Marine Corps",
+        notes=(
+            "MAGTF ACE doctrine defining the six functions of Marine aviation, MACCS agencies and roles, "
+            "and the MAGTF air tasking cycle."
+        ),
+    ),
+    SourceRef(
+        title="MCWP 3-25 Control of Aircraft and Missiles",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcwp-3-25/",
+        publisher="United States Marine Corps",
+        notes=(
+            "MACCS operations doctrine covering TACC, DASC, MASS, TAOC employment "
+            "and command relationships for ACE C2."
+        ),
     ),
 )
 
@@ -1336,6 +1364,15 @@ ARTILLERY_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.jcs.mil/Portals/36/Documents/Doctrine/pubs/jp3_09.pdf",
         publisher="Department of Defense",
         notes="Joint fires doctrine useful for understanding fire support coordination at echelons above battalion.",
+    ),
+    SourceRef(
+        title="MCRP 3-16.6A Supporting Arms Observer, Spotter, and Controller",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899673/mcrp-3-166a/",
+        publisher="United States Marine Corps",
+        notes=(
+            "Call-for-fire format, observer procedures, adjustment techniques, and fire support "
+            "coordination measures reference for FOs and supporting arms coordinators."
+        ),
     ),
 )
 
