@@ -11,11 +11,15 @@ Thanks for helping make `smcr-staff-ai` useful and safe.
 
 ## Adding an Agent
 
-1. Create a new file in `app/services/agents/`.
-2. Define metadata, guardrails, allowed sources, and disallowed inputs.
-3. Register the builder in `app/services/agents/registry.py`.
-4. Add manifest metadata in `data/seed/agent_registry.example.yaml`.
-5. Add doctrine source mappings in `data/seed/doctrine_manifest.example.yaml`.
-6. Add tests.
+See [docs/contributing-agents.md](docs/contributing-agents.md) for the full checklist
+(agent file, registry, tests, dashboard dropdowns, source references).
 
-Run `ruff check .`, `mypy app tests`, and `pytest` before opening a pull request.
+## Running Checks
+
+```bash
+uv run pytest tests/ -q
+uv run mypy app tests
+uv run ruff check .
+```
+
+Run all three before opening a pull request.

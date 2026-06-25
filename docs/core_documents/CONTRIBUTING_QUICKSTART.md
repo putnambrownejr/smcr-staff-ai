@@ -17,12 +17,17 @@ All outputs are advisory drafts — human review required before acting on anyth
 ```bash
 git clone https://github.com/putnambrownejr/smcr-staff-ai
 cd smcr-staff-ai
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # Mac/Linux
-pip install -e ".[dev]"
-python -m pytest tests/ -q    # all tests should pass
-uvicorn app.main:app --reload  # starts at http://localhost:8000
+
+# Windows
+start.bat
+
+# Mac / Linux
+./start.sh
+
+# Or manually:
+uv sync --frozen --extra dev
+uv run pytest tests/ -q            # all tests should pass
+uv run uvicorn app.main:app --reload  # starts at http://localhost:8000
 ```
 
 Open the dashboard: **http://localhost:8000/dashboard**
@@ -39,15 +44,12 @@ app/
   schemas/          Pydantic models — source of truth for data shapes
   static/dashboard/ single-file dashboard (HTML + JS + CSS)
   core/             auth, config, security, logging
-  db/               SQLModel models and session
 
 docs/
-  agents_setup/     agent catalog and design notes
   core_documents/   project purpose, roadmap, architecture
   sources/          doctrine and reference notes (feed the reference library)
   compatibility/    how AI tools should read and use this repo
 
-skills/             operator-facing skill overlays (SKILL.md files)
 data/seed/          example seed data for first-run experience
 tests/              Offline tests — run before every commit
 ```
@@ -57,10 +59,7 @@ tests/              Offline tests — run before every commit
 ## Where To Start By Contribution Type
 
 ### Adding a new agent
-1. Read `app/services/agents/base.py` — all agents extend `Agent`
-2. Copy the pattern from any existing agent (e.g., `app/services/agents/s3_opso_agent.py`)
-3. Register it in `app/services/agents/registry.py`
-4. Add a test in `tests/` following `tests/test_agent_registry.py`
+See [docs/contributing-agents.md](../contributing-agents.md) for the full checklist.
 
 ### Adding a new route
 1. Add schema to `app/schemas/` (Pydantic model)
@@ -70,24 +69,18 @@ tests/              Offline tests — run before every commit
 5. Add test following any existing route test pattern
 6. Consider adding a `/demo/*` equivalent for stateless access
 
-### Adding a skill
-1. Create `skills/<name>/SKILL.md` with YAML frontmatter (`name`, `description`)
-2. Point to existing routes rather than inventing new logic
-3. Update `skills/README.md`
-
 ### Updating docs/sources
-Files in `docs/sources/` feed the dashboard reference library automatically.
+Files in `docs/sources/` feed the reference library.
 Use the format in any existing file: `# Title`, `## Primary Sources`, `## Expected Uses`, `## Notes`.
 
 ---
 
 ## What Not To Build
 
-The repo already has opinions on this — see `docs/core_documents/capability_reuse_audit.md`.
+See `docs/core_documents/capability_reuse_audit.md` for the full policy.
 
 Short version:
 - **Do not** rebuild OAuth, email auth, or calendar connector auth — use the stub interfaces
-- **Do not** add more specialist agents until packaging and discoverability improve
 - **Do not** break the local-first, UNCLASSIFIED-only posture
 - **Do not** store user context (handoffs, uploads, API keys) in the repo
 
@@ -96,14 +89,12 @@ Short version:
 ## Before You Commit
 
 ```bash
-python -m pytest tests/ -q         # all tests must pass
-python -m ruff check app/ tests/   # lint
-python -m mypy app/                # type check (strict)
+uv run pytest tests/ -q       # all tests must pass
+uv run ruff check .            # lint
+uv run mypy app tests          # type check
 ```
 
-CI enforces: **all tests passing, mypy clean** (`.github/workflows/ci.yml`).
-Ruff is a recommended local check — run it before committing, but it is not yet
-a CI gate and the existing tree still has lint debt to clear.
+CI enforces all three (`.github/workflows/ci.yml`).
 
 ---
 
@@ -115,7 +106,7 @@ a CI gate and the existing tree still has lint debt to clear.
 | `app/services/agents/registry.py` | Every agent, its ID, and description |
 | `docs/core_documents/project_purpose.md` | Why this exists and who it's for |
 | `docs/core_documents/workflow_map.md` | How routes combine into real workflows |
-| `docs/agents_setup/AGENTS.md` | Agent design philosophy |
+| `docs/contributing-agents.md` | Agent development guide |
 | `data/seed/` | Example data shapes for every major entity |
 | `docs/examples/` | Canonical request/response examples |
 

@@ -24,8 +24,8 @@ These are implemented, tested, and in active use.
 - **SMCR billet discovery** — public BIC parsing and MOS/rank/location ranking.
 - **Admin workflows** — DTS, GTCC, MROWS rebuttal, RIDT scaffolds.
 - **Staff products** — WARNO/OPORD/FRAGO/SITREP/AAR and correspondence scaffolds.
-- **Skill layer** — 13 project-level Claude Code skills for agent routing, echelon
-  detection, doctrine lookup, adversarial review, scenario comparison, and more.
+- **Portable knowledge docs** — doctrine reference, echelon guide, and agent
+  contributor guide extracted to `docs/` for tool-agnostic use.
 - **Safety posture** — UNCLASSIFIED enforcement, PII detection + redaction,
   sensitive-content refusal, local-first storage, API-key gating.
 - **MOS advisor expansion** — added 0602 CommO, 4402 JAG, and 7200 Aviation

@@ -12,9 +12,9 @@ Before answering non-trivial capability or workflow questions, search the repo. 
 Priority search targets:
 
 1. `README.md` — project overview and feature index
-2. `docs/agents_setup/AGENTS.md` — agent catalog and intended uses
-3. `docs/core_documents/project_purpose.md` — mission fit and scope
-4. `docs/architecture.md` — service layout and key design decisions
+2. `docs/core_documents/project_purpose.md` — mission fit and scope
+3. `ARCHITECTURE.md` — service layout and key design decisions
+4. `docs/contributing-agents.md` — agent development guide
 5. `app/services/agents/registry.py` — authoritative list of all agents
 6. `app/api/routes/` — all available endpoints
 7. `docs/examples/` — canonical example payloads
@@ -61,7 +61,7 @@ The repo provides:
 ## How to Use This Repo as an AI Assistant
 
 ### If you only have the repo (no local runtime)
-1. Read `README.md` and `docs/agents_setup/AGENTS.md` first
+1. Read `README.md` and `docs/contributing-agents.md` first
 2. Use `/demo/*` routes as the reference for what the system produces
 3. Help the user shape a request payload from `docs/examples/`
 4. Refer the user to `http://127.0.0.1:8000/docs` to execute it locally

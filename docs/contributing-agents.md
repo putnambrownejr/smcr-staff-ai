@@ -224,8 +224,26 @@ After changes that touch the UI, verify manually:
 | Quick Links | Workspace → Quick Links section | Links render, filter works |
 | Empty state | Clear localStorage, reload | Onboarding or graceful empty state |
 
+## OSINT Agent Notes
+
+The OSINT agent is a public-source trend and evidence aggregation assistant. It
+consumes user-supplied trusted public source items before turning to outside sources,
+preferring institutional/trusted and validated sources. Outputs must include citations,
+counterarguments or alternative explanations, confidence weighting, source caveats,
+and human-review prompts.
+
+It must not collect private personal data, bypass access controls, evade rate limits,
+or infer sensitive operational details from public chatter.
+
+The vetted social connector at `/social/ingest` normalizes public news/social trend
+records into the `context.extra.source_items` shape. Future live platform adapters
+should be explicit, terms-aware, rate-limited, fixture-tested, and disabled by default.
+
 ## Rules
 
 - **One agent per domain.** Extend an existing agent before creating a new one.
 - **UNCLASSIFIED only.** Agent content, sources, and prompts must stay unclassified.
 - **All outputs are advisory drafts.** Agents never claim authority.
+- **No placeholders.** Tests enforce that registered agents return usable advisory
+  responses with citations or source-trust markers. Do not register stubs.
+- **Prefer checklists and templates** over authoritative outputs.
