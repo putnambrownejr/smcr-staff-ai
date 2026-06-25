@@ -33,6 +33,8 @@ USAGE_NOTES.md
 docs/IMPROVEMENT_PLAN_*.md
 docs/UPSTREAM_INSIGHTS_*.md
 
-# Claude Code local config — machine-specific paths and session state.
+# Claude Code local config — machine-specific paths, session state, skills.
+# Skills are AI-tool-specific; portable knowledge lives in docs/ instead.
 .claude/settings.local.json
 .claude/todos.json
+.claude/skills/
