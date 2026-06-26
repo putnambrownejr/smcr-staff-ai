@@ -7,34 +7,108 @@ from app.services.agents.source_refs import (
     structured_citations,
 )
 
+_RESOURCE_CATEGORIES = {
+    "topo": (
+        "Topographic & Elevation",
+        "Contour lines, elevation models, slope analysis, viewshed planning.",
+        ("USGS The National Map", "USGS topoView", "USGS National Map Downloader", "OpenTopoMap", "OpenTopography"),
+    ),
+    "imagery": (
+        "Satellite Imagery",
+        "Current and historical overhead imagery, multispectral analysis, change detection.",
+        ("USGS EarthExplorer", "Sentinel Hub EO Browser", "Google Earth (Web)"),
+    ),
+    "hydro": (
+        "Hydrology & Waterways",
+        "Rivers, streams, flood zones, water levels, nautical charts, port approach.",
+        ("USGS National Water Dashboard", "NOAA Nautical Charts (Office of Coast Survey)"),
+    ),
+    "weather": (
+        "Weather & Climate",
+        "Wind, precipitation, visibility, temperature overlays for exercise planning.",
+        ("Windy.com", "NWS Forecast Maps"),
+    ),
+    "political": (
+        "Political, Borders & Administrative",
+        "Country/state boundaries, demographics, populated places, infrastructure baselines.",
+        ("Natural Earth", "CIA World Factbook"),
+    ),
+    "conflict": (
+        "Conflict, Humanitarian & OSINT",
+        "Active conflict events, displacement, humanitarian access, security situation maps.",
+        ("ACLED (Armed Conflict Location & Event Data)", "ReliefWeb Maps", "Liveuamap"),
+    ),
+    "infra": (
+        "Infrastructure & Transportation",
+        "Roads, bridges, railroads, buildings, land use, LOC analysis.",
+        ("OpenStreetMap", "OpenRailwayMap"),
+    ),
+    "historical": (
+        "Historical Maps",
+        "Campaign maps, historical boundaries, terrain change over time.",
+        ("David Rumsey Map Collection", "Library of Congress Map Collections", "USGS topoView"),
+    ),
+    "terrain3d": (
+        "Terrain Analysis & 3D",
+        "LiDAR, high-res DEMs, 3D terrain visualization, slope/aspect modeling.",
+        ("OpenTopography", "Fatmap / Strava Heatmap (terrain)", "Google Earth (Web)"),
+    ),
+}
+
+_CATEGORY_SIGNALS: dict[str, list[str]] = {
+    "topo": ["topo", "elevation", "contour", "relief", "slope", "viewshed", "hilltop", "ridge", "valley"],
+    "imagery": ["satellite", "imagery", "overhead", "aerial", "photo", "sentinel", "landsat", "multispectral"],
+    "hydro": ["river", "stream", "water", "flood", "crossing", "waterway", "port", "harbor", "nautical", "coastal", "littoral", "amphibious"],
+    "weather": ["weather", "wind", "rain", "visibility", "climate", "forecast", "precipitation"],
+    "political": ["political", "border", "boundar", "country", "demographic", "population", "administrative"],
+    "conflict": ["conflict", "fighting", "attack", "violence", "humanitarian", "refugee", "displaced", "crisis", "security situation"],
+    "infra": ["road", "bridge", "rail", "infrastructure", "transport", "route", "msr", "asr", "loc", "building"],
+    "historical": ["histor", "old map", "campaign", "civil war", "wwi", "wwii", "colonial", "boundary change"],
+    "terrain3d": ["3d", "lidar", "dem", "slope analysis", "aspect", "viewshed", "rugged", "mountain"],
+}
+
+
+def _detect_categories(text: str) -> list[str]:
+    lowered = text.lower()
+    hits: list[str] = []
+    for cat, signals in _CATEGORY_SIGNALS.items():
+        if any(s in lowered for s in signals):
+            hits.append(cat)
+    return hits
+
 
 class TerrainMapAdvisorAgent(Agent):
     def __init__(self) -> None:
         self.metadata = AgentMetadata(
             id="terrain-map-advisor",
-            name="Terrain / Map Advisor",
+            name="Map & Geospatial OSINT Resource Finder",
             description=(
-                "Supports public-source terrain and map discovery for staff planning, area familiarization, and "
-                "training-scenario grounding using authoritative public map references such as USGS."
+                "Find and recommend public map and geospatial OSINT resources for area analysis, exercise "
+                "planning, and staff familiarization. Covers topographic, satellite imagery, political, "
+                "conflict, hydrological, historical, infrastructure, weather, and 3D terrain sources."
             ),
-            domain="terrain and map planning",
-            intended_users=["SMCR officers", "S-2", "S-3", "G-9", "planners", "chief of staff / aide"],
+            domain="map and geospatial OSINT",
+            intended_users=["SMCR officers", "S-2", "S-3", "G-9", "planners", "OSINT analysts"],
             allowed_sources=[
-                "USGS public map and terrain products",
-                "public topographic and elevation references",
-                "public hydrography and transport-layer references",
+                "public geospatial data portals (USGS, NOAA, ESA, OSM)",
+                "public conflict and humanitarian mapping (ACLED, ReliefWeb, Liveuamap)",
+                "public historical map archives (LOC, David Rumsey)",
+                "public weather and hydrological services",
                 "training-only scenarios and user-provided area names",
             ],
             disallowed_inputs=[
-                "classified geospatial products",
-                "sensitive facility targeting",
+                "classified geospatial products or NGA data",
+                "sensitive facility targeting or real-world fire missions",
                 "real-world hostile-action planning",
-                "private location tracking",
+                "private location tracking or PII-linked geolocation",
             ],
             system_prompt=(
-                "Respond like a practical terrain and map planning advisor under the public-source S-2/S-3 lane. "
-                "Focus on what public map products to pull, what terrain questions matter, and how to use USGS "
-                "products safely for training, familiarization, and staff planning. Stay advisory."
+                "You are a map and geospatial OSINT resource finder. When given an area or scenario, "
+                "recommend the specific public map resources to pull — not generic advice, but actual "
+                "sources with URLs organized by what they answer. Think like an S-2 building an area "
+                "study: what does the terrain look like, what's the infrastructure, where's the water, "
+                "what's the political situation, what's the conflict history, what did it look like "
+                "historically. Match resources to the planning question."
             ),
         )
 
@@ -45,40 +119,44 @@ class TerrainMapAdvisorAgent(Agent):
             active_context_block = "Active local operating context:\n" + "\n".join(
                 f"- {line}" for line in active_context_lines
             ) + "\n\n"
+
+        detected = _detect_categories(input_text)
+        if not detected:
+            detected = list(_RESOURCE_CATEGORIES.keys())
+
+        resource_blocks: list[str] = []
+        for cat_key in detected:
+            cat_name, cat_desc, cat_sources = _RESOURCE_CATEGORIES[cat_key]
+            ref_lines = []
+            for ref in MAP_REFERENCES:
+                if ref.title in cat_sources:
+                    ref_lines.append(f"  - {ref.title}: {ref.url}\n    {ref.notes}")
+            if ref_lines:
+                resource_blocks.append(f"**{cat_name}** — {cat_desc}\n" + "\n".join(ref_lines))
+
+        all_categories = "\n\n".join(resource_blocks) if resource_blocks else "No specific category detected — showing all resources."
+
         answer = (
-            "Terrain / map advisory draft.\n\n"
-            "Use this to decide what public maps or terrain products to pull for a location, not as authoritative "
-            "geospatial tasking.\n\n"
+            "Map & geospatial OSINT resource advisory.\n\n"
             f"{active_context_block}"
-            "Primary map-planning lenses:\n"
-            "- What area needs terrain or map familiarization?\n"
-            "- What matters most: elevation, hydrography, transport routes, structures, land cover, or historical "
-            "map comparison?\n"
-            "- Is the need current terrain awareness, training-scenario grounding, movement planning context, or "
-            "a simple topo-map pull?\n\n"
-            "Recommended first-line public sources:\n"
-            "- USGS The National Map for current topographic and terrain layers.\n"
-            "- USGS topoView for historical and current topo maps by area.\n"
-            "- USGS National Map Downloader when you need a specific map product or layer export.\n"
-            "- USGS EarthExplorer when imagery or land-use context matters.\n\n"
-            "My read:\n"
-            "- If the question is just 'what does this ground look like,' start with USGS before wandering into "
-            "random map sites.\n"
-            "- Pull only the layers that answer the planning question. More layers are not automatically more useful.\n"
-            "- For training design, the best map is usually the one that makes the decision point, mobility issue, "
-            "or civil constraint obvious.\n\n"
-            "Map pull checklist:\n"
-            "- Name the area, nearest city, or coordinate reference.\n"
-            "- Decide whether you need topo, imagery, hydrography, transportation, or historical comparison.\n"
-            "- Pull one overview product and one detailed product before adding more.\n"
-            "- Capture the product name, URL, scale, and retrieval date.\n"
-            "- Treat public map products as planning context; verify any real access, ownership, or use restriction "
-            "through the proper local authority.\n\n"
-            "Useful outputs:\n"
-            "- Recommended map products by area\n"
-            "- Terrain questions to answer before planning continues\n"
-            "- Sketch-map prompts for TDGs or rehearsals\n"
-            "- Civil or mobility constraints worth handing to S-3, G-9, or Doc\n"
+            "Based on your query, here are the relevant public map resources:\n\n"
+            f"{all_categories}\n\n"
+            "How to use this for area analysis:\n"
+            "1. Start with the planning question — what do you need to know about this area?\n"
+            "2. Pull one resource per category that answers your question.\n"
+            "3. Layer them: topo base → imagery overlay → infrastructure → hydro → political context.\n"
+            "4. For exercise design: add conflict/humanitarian context and historical comparison.\n"
+            "5. Capture each product with source URL, retrieval date, and scale/resolution.\n\n"
+            "Available resource categories (ask for any by name):\n"
+            "- topo: Topographic maps and elevation data\n"
+            "- imagery: Satellite and aerial imagery\n"
+            "- hydro: Rivers, water levels, nautical charts\n"
+            "- weather: Wind, precipitation, visibility\n"
+            "- political: Borders, demographics, country profiles\n"
+            "- conflict: Active conflicts, humanitarian situations\n"
+            "- infra: Roads, bridges, rail, buildings\n"
+            "- historical: Campaign maps, historical boundaries\n"
+            "- terrain3d: LiDAR, 3D visualization, slope analysis\n"
         )
         return self._response(
             answer=answer,
@@ -87,16 +165,14 @@ class TerrainMapAdvisorAgent(Agent):
             structured_citations=structured_citations(MAP_REFERENCES),
             source_trust=source_trust_markers(
                 MAP_REFERENCES,
-                notes_prefix=(
-                    "Use these as first-line public terrain and map references before "
-                    "less authoritative sites."
-                ),
+                notes_prefix="Public geospatial sources — verify currency and accuracy before operational use.",
             ),
             confidence=Confidence.medium,
             follow_up_questions=[
-                "What exact area, city, or coordinate reference do you need to map?",
-                "Do you need topographic context, imagery, hydrography, movement routes, or a historical comparison?",
-                "Is this for training design, public-source familiarization, a TDG, or staff planning support?",
+                "What area or region do you need to analyze?",
+                "What's the planning purpose — exercise design, area study, route analysis, or familiarization?",
+                "Do you need current conditions (imagery, water, weather) or historical context?",
+                "What specific map layers matter most: terrain, infrastructure, waterways, political, or conflict?",
             ],
         )
 

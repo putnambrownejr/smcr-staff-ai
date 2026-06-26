@@ -489,7 +489,7 @@ def test_map_agent_returns_usgs_grounded_terrain_structure() -> None:
         context=AgentContext(),
     )
 
-    assert "Terrain / map advisory" in response.answer
+    assert "geospatial" in response.answer.lower()
     assert any("USGS" in citation.title for citation in response.structured_citations)
     assert response.source_trust
 

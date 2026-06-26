@@ -1298,32 +1298,146 @@ LEGAL_REFERENCES: tuple[SourceRef, ...] = (
 )
 
 MAP_REFERENCES: tuple[SourceRef, ...] = (
+    # --- Topographic & Elevation ---
     SourceRef(
         title="USGS The National Map",
         url="https://www.usgs.gov/the-national-map",
         publisher="United States Geological Survey",
-        notes=(
-            "Primary public source for elevation, hydrography, structures, transport layers, "
-            "and topographic context."
-        ),
+        notes="Primary public source for elevation, hydrography, structures, transport layers, and topographic context.",
     ),
     SourceRef(
         title="USGS topoView",
         url="https://ngmdb.usgs.gov/topoview/",
         publisher="United States Geological Survey",
-        notes="Public source for downloadable historical and current topographic maps by area.",
+        notes="Downloadable historical and current USGS topographic maps by area. Good for terrain change over time.",
     ),
     SourceRef(
         title="USGS National Map Downloader",
         url="https://apps.nationalmap.gov/downloader/",
         publisher="United States Geological Survey",
-        notes="Public source for specific map products and geospatial layers by location and product type.",
+        notes="Specific map products and geospatial layers by location and product type (DEM, ortho, hydro, etc.).",
     ),
+    SourceRef(
+        title="OpenTopoMap",
+        url="https://opentopomap.org/",
+        publisher="OpenTopoMap contributors",
+        notes="Free topographic map rendering of OpenStreetMap data with contour lines and terrain shading.",
+    ),
+    # --- Satellite Imagery ---
     SourceRef(
         title="USGS EarthExplorer",
         url="https://earthexplorer.usgs.gov/",
         publisher="United States Geological Survey",
-        notes="Public discovery portal for imagery and geospatial products when terrain or land-use context matters.",
+        notes="Discovery portal for Landsat, Sentinel, aerial imagery. Free account required for downloads.",
+    ),
+    SourceRef(
+        title="Sentinel Hub EO Browser",
+        url="https://apps.sentinel-hub.com/eo-browser/",
+        publisher="Sinergise / ESA Copernicus",
+        notes="Free Sentinel-2 multispectral imagery (10m resolution). Vegetation, water, burn scars, change detection.",
+    ),
+    SourceRef(
+        title="Google Earth (Web)",
+        url="https://earth.google.com/web/",
+        publisher="Google",
+        notes="High-res satellite imagery with 3D terrain, historical imagery slider, and measurement tools.",
+    ),
+    # --- Hydrology & Waterways ---
+    SourceRef(
+        title="USGS National Water Dashboard",
+        url="https://dashboard.waterdata.usgs.gov/",
+        publisher="United States Geological Survey",
+        notes="Real-time streamflow, water levels, and flood conditions. Critical for river crossing and water source planning.",
+    ),
+    SourceRef(
+        title="NOAA Nautical Charts (Office of Coast Survey)",
+        url="https://nauticalcharts.noaa.gov/",
+        publisher="NOAA",
+        notes="Coastal and waterway charts for amphibious planning, port approach, and littoral operations.",
+    ),
+    # --- Weather & Climate ---
+    SourceRef(
+        title="Windy.com",
+        url="https://www.windy.com/",
+        publisher="Windyty SE",
+        notes="Real-time wind, precipitation, waves, visibility overlays. Useful for exercise weather planning.",
+    ),
+    SourceRef(
+        title="NWS Forecast Maps",
+        url="https://www.weather.gov/",
+        publisher="NOAA National Weather Service",
+        notes="Official US weather forecasts, radar, and alerts by location.",
+    ),
+    # --- Political, Borders & Administrative ---
+    SourceRef(
+        title="Natural Earth",
+        url="https://www.naturalearthdata.com/",
+        publisher="Natural Earth contributors",
+        notes="Free vector/raster data: country boundaries, populated places, roads, rivers at 1:10m/50m/110m scales.",
+    ),
+    SourceRef(
+        title="CIA World Factbook",
+        url="https://www.cia.gov/the-world-factbook/",
+        publisher="Central Intelligence Agency",
+        notes="Country profiles: political maps, demographics, infrastructure, military, geography. Unclassified reference.",
+    ),
+    # --- Conflict, Humanitarian & OSINT ---
+    SourceRef(
+        title="ACLED (Armed Conflict Location & Event Data)",
+        url="https://acleddata.com/",
+        publisher="ACLED",
+        notes="Conflict event data mapped globally. Political violence, protests, strategic developments. Free for research.",
+    ),
+    SourceRef(
+        title="ReliefWeb Maps",
+        url="https://reliefweb.int/maps",
+        publisher="UN OCHA",
+        notes="Humanitarian situation maps: displacement, infrastructure damage, access constraints, crisis overviews.",
+    ),
+    SourceRef(
+        title="Liveuamap",
+        url="https://liveuamap.com/",
+        publisher="Liveuamap LLC",
+        notes="Real-time conflict and security event mapping. Useful for OSINT familiarization in active conflict zones.",
+    ),
+    # --- Infrastructure & Transportation ---
+    SourceRef(
+        title="OpenStreetMap",
+        url="https://www.openstreetmap.org/",
+        publisher="OpenStreetMap contributors",
+        notes="Crowd-sourced global map with roads, buildings, land use, POIs. Best free infrastructure baseline.",
+    ),
+    SourceRef(
+        title="OpenRailwayMap",
+        url="https://www.openrailwaymap.org/",
+        publisher="OpenRailwayMap contributors",
+        notes="Global rail network overlay on OSM. Useful for LOC analysis and transportation planning.",
+    ),
+    # --- Historical Maps ---
+    SourceRef(
+        title="David Rumsey Map Collection",
+        url="https://www.davidrumsey.com/",
+        publisher="David Rumsey Map Center, Stanford Libraries",
+        notes="150,000+ historical maps. Georeferenced overlays available. Colonial, wartime, and boundary maps.",
+    ),
+    SourceRef(
+        title="Library of Congress Map Collections",
+        url="https://www.loc.gov/maps/",
+        publisher="Library of Congress",
+        notes="Military campaign maps, historical terrain, city plans. Strong Civil War, WWI, WWII collections.",
+    ),
+    # --- Terrain Analysis & 3D ---
+    SourceRef(
+        title="OpenTopography",
+        url="https://opentopography.org/",
+        publisher="OpenTopography Facility",
+        notes="High-resolution LiDAR and DEM data. Useful for detailed terrain analysis and slope/viewshed modeling.",
+    ),
+    SourceRef(
+        title="Fatmap / Strava Heatmap (terrain)",
+        url="https://www.fatmap.com/",
+        publisher="Strava / Fatmap",
+        notes="3D terrain visualization for mountainous/rugged areas. Activity heatmaps show human movement patterns.",
     ),
 )
 
