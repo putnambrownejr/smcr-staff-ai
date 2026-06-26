@@ -294,20 +294,152 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
         role="sel",
         title="SgtMaj / 1stSgt / Senior Enlisted Leader",
         scope="Standards, accountability, welfare, and discipline",
-        focus=("standards", "welfare", "discipline", "accountability", "ceremony"),
+        focus=("standards", "welfare", "discipline", "accountability", "ceremony", "PME", "career"),
         magtf_lenses=(MagtfLens.ce_c2,),
-        products=("troop-flow checklist", "formation/transition matrix", "leader touchpoint plan"),
+        products=(
+            "troop-flow checklist", "formation/transition matrix", "leader touchpoint plan",
+            "PME tracking roster", "meritorious board prep", "SNCO development plan",
+        ),
+        mos_depth=(
+            "Senior Enlisted Leader depth:\n\n"
+            "ENLISTED PME GATES (MCO 1553.4B):\n"
+            "- LCpl: Leading Marines (EPME3000, MarineNet distance) + LCpl Leadership & Ethics "
+            "Seminar (341, one-day). Required after 3 of 9 drills and 6 months in grade.\n"
+            "- Cpl: Corporals Course (C21, resident at regional PME academies). Complete "
+            "Leading Marines first. Recommended before Sgt promotion.\n"
+            "- Sgt: Sergeants School (T4M, resident) OR Sergeants Seminar (315) or Reserve "
+            "Sergeants Course (CFF). Must complete Sergeant School DEP (EPME5000/T3W, "
+            "MarineNet distance) before attending resident. Required before SSgt selection board.\n"
+            "- SSgt: Staff NCO Career School (EPME6000/T5P, distance only). Required before "
+            "GySgt selection board.\n"
+            "- GySgt: SNCO Leadership School (31Q, resident) OR Seminar (31R). Must complete "
+            "DEP EPME7000/T3X first. All GySgts must attend resident or equivalent.\n"
+            "- MSgt/1stSgt: 1stSgt School (L64, resident) for 1stSgt selectees. MSgts attend "
+            "annual SNCO seminars. GySgt PME must be complete.\n"
+            "- SgtMaj/MGySgt: SNCO Symposium (MCSEA), Joint/SOLE PME (Cornerstone, EJPME II). "
+            "No formal resident gate — selection board driven.\n\n"
+            "COMPOSITE SCORE FACTORS (Cpl/Sgt promotion, MCO P1400.32):\n"
+            "- PFT score (converted to points)\n"
+            "- CFT score (converted to points)\n"
+            "- Rifle score (service rifle, lookup table conversion)\n"
+            "- Time in grade (weighted months)\n"
+            "- Time in service (weighted months)\n"
+            "- Proficiency marks (average from fitness reports)\n"
+            "- Conduct marks (average from fitness reports)\n"
+            "- Education points: up to 100 (15 per MCI, 10 per college course)\n"
+            "- Special duty bonus: up to 100 (recruiter, DI, MSG, CEP)\n"
+            "- Commands use composite scores to control promotion quotas. Marines become "
+            "eligible when quarterly scores are posted.\n\n"
+            "SNCO SELECTION BOARDS (SSgt and above):\n"
+            "- Annual boards directed by Commandant's precept: select 'best and fully qualified.'\n"
+            "- Key factors: fitness report quality and Relative Values (RVs), MOS credibility "
+            "and breadth, PME completion (required PME must be done before board), "
+            "awards/accomplishments, and absence of disciplinary issues.\n"
+            "- Marines with resident PME are 'more highly qualified' than DEP-only.\n"
+            "- No guarantee of selection; boards balance all factors.\n\n"
+            "BOARD PREP (SEL should track for all eligible Marines):\n"
+            "- OMPF audit: all awards, certs, duty history, and fitreps uploaded before board "
+            "convenes. Missing material CANNOT be added after adjournment.\n"
+            "- Master Brief Sheet (MBS): verify under PAWS — rifle, PFT, MCMAP scores, "
+            "billet descriptions, rank, TIG. Submit corrections via IPAC (admin) or PEVS (fitrep).\n"
+            "- Reserve Qualification Summary (RQS, NAVMC 10476): summarizes civilian skills and "
+            "qualifications not in OMPF. Submit with board correspondence per convening MARADMIN.\n"
+            "- Board correspondence: optional but useful. Letters, award certs, transcripts, "
+            "endorsements sent to HQMC (MMPR-2) before deadline. Third-party endorsements "
+            "must be signed by the Marine. Do NOT send original fitreps directly.\n\n"
+            "RESERVE-SPECIFIC PME CHALLENGES:\n"
+            "- Seat availability: nominations go through MSC or unit S-3 by deadline "
+            "(typically T-45 before class report date). Quotas are limited.\n"
+            "- SMCR units nominate via MSC. IRR Marines via MCIRSA (1-800-255-5082). "
+            "IMA Marines through MARFOR training channels.\n"
+            "- All distance DEPs (MarineNet) must be complete BEFORE scheduling resident school. "
+            "Register early — failure to complete delays the slot.\n"
+            "- Funding: MROWS orders with appropriate Reserve program codes. Marines on ADOS "
+            "are unit-funded; commands often cancel ADOS during school period then resume after.\n"
+            "- Duty-status waivers: required if not in full duty status. Obtained via MCU/CEME. "
+            "Rare and require justification.\n"
+            "- The USMC generally does NOT waive PME requirements. Missing PME by board date "
+            "generally disqualifies the Marine for that board.\n"
+            "- Best practice: treat reserve PME like an AT event — get orders, funds, and "
+            "transportation arranged well ahead. Use unit AT to schedule travel.\n\n"
+            "SNCO ACADEMY CURRICULUM:\n"
+            "- Warfighting fundamentals: maneuver warfare, doctrine, operational planning.\n"
+            "- Leadership & ethics: case studies, guided discussions, ethical decision-making.\n"
+            "- Tactical skills: calling fires, land nav, tactical problem-solving.\n"
+            "- Communication: writing orders, awards packages, briefs. Regular AARs.\n"
+            "- Culminating field exercise/capstone event.\n"
+            "- Regional academies: Quantico, Camp Pendleton, Lejeune, Okinawa, 29 Palms. "
+            "Traveling Marines encouraged to use Quantico to free local slots.\n\n"
+            "RESERVE SEL DUTIES:\n"
+            "- Drill weekend accountability, liberty policy enforcement, new-join integration.\n"
+            "- SGLI/page-11 verification, uniform inspection standards.\n"
+            "- Coordination with I&I SEL for admin and readiness issues.\n"
+            "- PME tracking: maintain a roster of all enlisted by rank, required PME, "
+            "completion status, next board date, and composite score (for Cpl/Sgt).\n"
+            "- Fitness report oversight: ensure fitreps are timely, ROs understand relative "
+            "value impact, and comparison groups are appropriate.\n"
+            "- UCMJ awareness: advise CO on NJP proceedings, witness statements, "
+            "administrative actions (6105, page 11 entries).\n"
+            "- Meritorious promotion boards: unit-level (Cpl/Sgt). Board prep: uniform/grooming, "
+            "oral board (MOS knowledge, general military knowledge, current events, leadership "
+            "scenarios), written test (MOS-specific), commander's recommendation."
+        ),
+        references_extra=SEL_REFERENCES,
     ),
     StaffRoleArchetype(
         role="surgeon",
         title="Surgeon / Medical / Doc",
-        scope="Medical support, TCCC awareness, casualty planning, and evacuation",
-        focus=("casualty response", "CASEVAC", "medical risk", "TCCC"),
+        scope="Medical support, TCCC awareness, casualty planning, evacuation, and Navy reserve admin for corpsmen",
+        focus=("casualty response", "CASEVAC", "medical risk", "TCCC", "medical readiness", "NOSC coordination"),
         magtf_lenses=(MagtfLens.gce, MagtfLens.lce),
         products=(
             "medical estimate", "CASEVAC / MEDEVAC check",
             "casualty collection logic", "coordination trigger list",
+            "IMR status tracker", "Navy personnel orders request",
         ),
+        mos_depth=(
+            "Medical / Surgeon depth:\n\n"
+            "Medical readiness:\n"
+            "- IMR (Individual Medical Readiness) categories: fully medically ready, "
+            "partially medically ready, not medically ready.\n"
+            "- PHA (Periodic Health Assessment): annual requirement. Reserve Marines complete "
+            "at drill or scheduled medical event. Delinquent PHA = not deployable.\n"
+            "- Dental readiness: Class 1 (no treatment needed), Class 2 (treatment needed, "
+            "not urgent — deployable), Class 3 (urgent treatment needed — NOT deployable), "
+            "Class 4 (no dental exam on file — NOT deployable).\n"
+            "- HIV testing: annual requirement for all servicemembers.\n"
+            "- Immunizations: tracked in MRRS. Deployment-specific requirements vary by AOR.\n"
+            "- DNA sample: one-time requirement, verified in MEDPROS.\n\n"
+            "Navy personnel attached to Marine units (CRITICAL — different admin chain):\n"
+            "- Corpsmen (HM), chaplains (RP), and other Navy rates attached to Marine commands "
+            "are Navy reservists, not Marines. Their admin runs through the Navy Reserve, not USMC.\n"
+            "- NOSC (Navy Operational Support Center): the Navy equivalent of I&I. Every Navy "
+            "reservist is assigned to a NOSC for admin, pay, and orders processing.\n"
+            "- Dual admin chain: the Marine unit is the gaining command (operational/training), "
+            "but the NOSC is the supporting command (admin/orders/pay).\n"
+            "- Orders processing: Navy reservists use NROWS (Navy Reserve Order Writing System), "
+            "NOT MROWS. The gaining Marine unit writes the request letter, but the NOSC "
+            "processes, funds, and issues the orders.\n"
+            "- AT/ADT orders for Navy personnel: the Marine unit S-3/OpsO writes a letter of "
+            "request to the NOSC specifying dates, location, funding source, and justification. "
+            "NOSC submits in NROWS. Approval chain goes through CNRFC (Commander, Navy Reserve "
+            "Forces Command), not MARFORRES.\n"
+            "- ADSW/ADOS for Navy personnel: similar to Marine ADOS but processed through Navy "
+            "channels. Different order types and funding categories.\n"
+            "- Pay: Navy reservists are paid through Navy systems (MyPay/NSIPS), not Marine "
+            "Corps pay systems. Pay issues route through the NOSC, not the Marine unit S-1.\n"
+            "- Medical readiness: tracked in MRRS (Medical Readiness Reporting System) for Navy, "
+            "not the same system Marines use. The gaining command sees readiness status but "
+            "corrections route through the NOSC.\n"
+            "- Common friction: Marine unit plans training, needs their doc — but orders take "
+            "longer because they go through Navy channels. Start NROWS requests at T-60 minimum "
+            "(vs T-45 for MROWS). Last-minute AT additions are much harder for Navy personnel.\n"
+            "- NSIPS (Navy Standard Integrated Personnel System): Navy equivalent of MOL for "
+            "service records, training, and admin.\n"
+            "- The Marine unit surgeon/medical officer should maintain a tracker of all Navy "
+            "personnel and their NOSC assignment, NROWS status, and readiness."
+        ),
+        references_extra=MEDICAL_REFERENCES,
     ),
     StaffRoleArchetype(
         role="sja",
@@ -371,10 +503,53 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
     StaffRoleArchetype(
         role="chaplain",
         title="Chaplain / Religious Support",
-        scope="Religious support, morale, ethical climate, and confidential support boundaries",
-        focus=("religious support", "morale", "confidentiality boundaries"),
+        scope="Religious support, morale, ethical climate, confidential support, and Navy reserve admin for RPs",
+        focus=("religious support", "morale", "confidentiality boundaries", "crisis response", "NOSC coordination"),
         magtf_lenses=(MagtfLens.ce_c2,),
-        products=("Religious support plan", "morale and welfare estimate", "confidentiality boundary note"),
+        products=(
+            "Religious support plan", "morale and welfare estimate", "confidentiality boundary note",
+            "CACO notification checklist", "Navy personnel orders request",
+        ),
+        mos_depth=(
+            "Chaplain / Religious Ministry Team depth:\n\n"
+            "Religious Ministry Team (RMT):\n"
+            "- The RMT consists of the chaplain and Religious Program Specialist (RP). "
+            "Both are Navy personnel attached to the Marine unit.\n"
+            "- MCO 1730.6: establishes command religious program requirements. Every command "
+            "must provide for the free exercise of religion.\n"
+            "- Privileged communication: under MRE 503, communications to a chaplain made as "
+            "a formal act of religion or as a matter of conscience are privileged. The chaplain "
+            "CANNOT be compelled to disclose — not by the CO, not by an IO, not by court-martial. "
+            "This is absolute and non-waivable by the command.\n"
+            "- The chaplain advises the CO on morale, welfare, and ethical climate but cannot "
+            "share privileged content to do so.\n\n"
+            "Crisis response:\n"
+            "- CACO (Casualty Assistance Calls Officer): chaplain often accompanies CACO for "
+            "notification. Notification must be in person, in uniform, during reasonable hours.\n"
+            "- Suicide prevention: chaplain is part of the unit's suicide prevention program. "
+            "DSTRESS line (1-877-476-7734) and Military OneSource (1-800-342-9647) are "
+            "always-available resources.\n"
+            "- Memorial affairs: chaplain leads memorial ceremonies. Format per unit SOP "
+            "and Marine Corps tradition (rifle, boots, helmet, dog tags).\n"
+            "- Critical incident stress: chaplain coordinates CISM (Critical Incident Stress "
+            "Management) debriefings after significant events.\n\n"
+            "Navy reserve admin (CRITICAL — same as corpsmen):\n"
+            "- Chaplains and RPs are Navy reservists. Their orders, pay, and admin "
+            "run through a NOSC (Navy Operational Support Center), not the Marine unit.\n"
+            "- NOSC processes orders via NROWS (Navy Reserve Order Writing System), "
+            "not MROWS. The Marine unit writes the request; the NOSC executes.\n"
+            "- AT/ADT requests: Marine unit OpsO or S-1 sends a letter of request to "
+            "the NOSC with dates, location, funding, and justification. "
+            "NOSC submits in NROWS for CNRFC approval.\n"
+            "- Start NROWS requests at T-60 minimum. Navy approval chain is slower "
+            "than Marine MROWS — last-minute orders for chaplains/RPs are extremely "
+            "difficult. Plan early.\n"
+            "- Pay issues route through the NOSC, not the Marine S-1.\n"
+            "- Medical/dental readiness tracked in MRRS, corrections through NOSC.\n"
+            "- NSIPS for service records, not MOL.\n"
+            "- The S-1 should maintain a tracker of all Navy personnel with NOSC "
+            "assignment, NROWS status, and upcoming order requirements."
+        ),
     ),
     StaffRoleArchetype(
         role="provost",
@@ -398,9 +573,109 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
         role="g8",
         title="G-8 / Resources",
         scope="Resources, fiscal constraints, prioritization, and funding-risk tradeoffs",
-        focus=("resources", "prioritization", "funding risk"),
+        focus=("resources", "prioritization", "funding risk", "fiscal execution", "reserve funding"),
         magtf_lenses=(MagtfLens.ce_c2,),
-        products=("resource estimate", "funding risk note", "priority tradeoff brief", "resourcing decision point"),
+        products=(
+            "resource estimate", "funding risk note", "priority tradeoff brief",
+            "resourcing decision point", "unfunded requirements list", "fiscal execution tracker",
+        ),
+        mos_depth=(
+            "G-8 / Reserve Resources depth:\n\n"
+            "RESERVE FUNDING CATEGORIES AND APPROPRIATIONS:\n"
+            "- IDT (Inactive Duty Training): weekend drills, 4-hr drill periods, up to 48/year. "
+            "Funded by RPMC (Reserve Personnel, Marine Corps, T/S 17-1108). "
+            "Orders issued by unit CO/I&I detachment. No per diem. "
+            "Travel reimbursement per JTR if >50 miles.\n"
+            "- AT (Annual Training): mandatory yearly tour, 12-15 days active duty. "
+            "Primary purpose: individual and unit readiness training. "
+            "Funded by RPMC (17-1108). Travel and per diem from RPMC. "
+            "Approved by HQMC or MARFORRES chain.\n"
+            "- ADT (Active Duty for Training): tours beyond AT for schools, MTUs, "
+            "pre-deployment training. Funded by RPMC (17-1108). "
+            "Requires MARFORRES/G-3 or HQMC RA authorization.\n"
+            "- ADOS-RC (Active Duty for Operational Support – Reserve Component): "
+            "voluntary tours supporting reserve missions. Funded by RPMC (17-1108). "
+            "Allocated by HQMC RA (Deputy CMC P&R to RA).\n"
+            "- ADOS-AC (Active Duty for Operational Support – Active Component): "
+            "voluntary tours supporting active component tasks. Funded by MPMC "
+            "(Military Personnel, Marine Corps, T/S 17-1105). Falls under 'AC pay.' "
+            "Allocated by HQMC RA via gaining commands.\n"
+            "- MPA Orders: full-time active duty (AGR tours, mobilization, extended ADOS-AC). "
+            "Funded by MPMC (17-1105). Approved by HQMC P&R or MARFORCOM.\n"
+            "- ADOS day limits: 1,095 days in a 1,460-day rolling window. "
+            "Extensions require HQMC approval.\n\n"
+            "FISCAL YEAR EXECUTION TIMELINE:\n"
+            "- 1 Oct: new FY begins. O&M and RPMC funds available for obligation. "
+            "Commands receive initial allocations/allotments.\n"
+            "- Oct-Dec: initial execution — book recurring requirements (training contracts, "
+            "base ops, drill/AT orders). Quarterly reporting begins.\n"
+            "- Mar-Apr: Mid-Year Review (MIDLIFE) — formal opportunity for units to report "
+            "shortfalls and adjust spending plans. Commands submit UFRs to HQMC.\n"
+            "- Jul: Congress enacts appropriation (if later than Oct); commands update plans.\n"
+            "- Aug-Sep: year-end surge — finalize obligations, liquidate payments, accrue expenses, "
+            "close out travel/contract orders. Reserve commands reconcile all transactions.\n"
+            "- 30 Sep: all obligations must post to SABRS. Travel claims processed immediately after.\n"
+            "- 1 Oct (next FY): funds expire. ULOs carry forward automatically. "
+            "New FY budgets/apportionments issued.\n\n"
+            "SABRS/DAI (Financial Systems):\n"
+            "- SABRS (Standard Accounting, Budgeting, and Reporting System): legacy Marine Corps "
+            "financial ledger since 1991. Transitioning to DAI.\n"
+            "- DAI (Defense Agencies Initiative, Oracle EBS): centralized accounting, procurement, "
+            "and interfaces. Integrates pay (MCTFS), travel (DTS), and procurement.\n"
+            "- Key reports: Daily Transaction Report (review previous day's postings for correct "
+            "amounts and financial codes), Error Transaction Report (failed edits/unmatched BEA), "
+            "Status-of-Funds (trial balance, ULO reports — provided to reserve leadership weekly).\n"
+            "- Error handling: per MCO 7300.21, errors must be corrected and reposted. "
+            "Never delete error entries. Common issues: unmatched disbursements (UMDs), "
+            "open commitments (NULOs). Escalate unresolved rejects to DFAS.\n"
+            "- Marine Corps received clean audit in FY2023 after DAI implementation.\n\n"
+            "UNFUNDED REQUIREMENTS (UFR) PROCESS:\n"
+            "- Commanders identify and prioritize unfunded deficiencies, forward up chain.\n"
+            "- Submission chain: unit budget officer → I&I/MSC G-8 → MARFORRES G-8 → HQMC P&R.\n"
+            "- Assembled for mid-year review (spring) and again at year-end if needed.\n"
+            "- HQMC allocates contingency or redistributed funds to highest-priority UFRs.\n"
+            "- UFR entry format: ID, requirement/shortfall description, "
+            "appropriation/fund/account (e.g., O&M MCR 17-1107 or RPMC 17-1108), "
+            "cost ($), priority rank, justification/mission impact, requesting unit.\n"
+            "- Major program shortfalls addressed via POM process; execution-year UFRs "
+            "capture emergent needs.\n\n"
+            "I&I COORDINATION (critical for reserve budget execution):\n"
+            "- I&I staff hold the official allotment of RPMC/O&M funds and post SABRS/DAI entries.\n"
+            "- Reserve budget officer defines requirements and schedules (IDT/AT calendars); "
+            "I&I side obligates funds (orders, travel claims, purchase orders).\n"
+            "- Training orders: reserve staff plans drills/AT; I&I processes MOL/DTS orders "
+            "and travel authorizations using RPMC funds. Both verify point credit and pay.\n"
+            "- Pay: I&I processes enlisted drill pay and officer stipends in MCTFS. "
+            "Budget officer ensures RPMC drill pay funds are sufficient via monthly pay roster review.\n"
+            "- Status-of-funds reports: I&I provides weekly to reserve leadership. "
+            "Budget officer monitors execution against plan.\n"
+            "- Escalation: fund errors/shortfalls go from I&I comptroller → I&I senior → "
+            "MAGTF MSC G-8 → COMMARFORRES G-8 → HQMC P&R.\n\n"
+            "KEY FINANCIAL CONTROLS:\n"
+            "- Anti-Deficiency Act: cannot obligate beyond authorization. Violation is a "
+            "criminal offense — report immediately.\n"
+            "- Bona fide need rule: funds used in the year appropriated for needs arising "
+            "in that year.\n"
+            "- Purpose statute: funds used only for the appropriation's stated purpose.\n"
+            "- Commanders are ultimately responsible for funds (MCO 7300.21).\n"
+            "- Maintain audit trails: source documents for all obligating transactions. "
+            "Retain contracts, travel vouchers, and supporting documentation.\n\n"
+            "GOVERNMENT PURCHASE CARD (GPC):\n"
+            "- Micro-purchase threshold: $3,500 for supplies, $2,500 for services.\n"
+            "- Requires appointed Agency Program Coordinator (APC) and cardholder training.\n"
+            "- Monthly reconciliation required in the bank's electronic access system.\n\n"
+            "RESERVE-SPECIFIC FUNDING FRICTION:\n"
+            "- Travel is the largest discretionary cost — Marines driving 100+ miles to drill.\n"
+            "- AT funding must be locked 90 days out or risk losing billets.\n"
+            "- ADOS-AC competes with active component requirements; ADOS-RC is reserve-controlled.\n"
+            "- Equipment shortfalls often require cross-leveling from sister units.\n"
+            "- Range/facility costs must be budgeted quarterly.\n"
+            "- PME travel for reserves (schools): use MROWS with appropriate Reserve program codes. "
+            "Marines on ADOS are unit-funded; commands sometimes cancel ADOS during school then resume.\n"
+            "- Navy personnel (corpsmen/chaplains): their orders and pay go through NOSC/NROWS, "
+            "not Marine systems. Budget officer must coordinate with NOSC for funding."
+        ),
+        references_extra=G8_REFERENCES,
     ),
     StaffRoleArchetype(
         role="g9",
