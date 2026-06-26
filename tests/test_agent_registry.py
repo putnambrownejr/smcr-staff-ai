@@ -72,6 +72,7 @@ def test_agent_registry_loads_expected_agents() -> None:
         "fires-advisor",
         "osint-research-assistant",
         "terrain-map-advisor",
+        "unit-checkin",
         # MAGTF element agents
         "ace",
         "gce",
@@ -550,3 +551,36 @@ def test_fires_advisor_covers_broad_fires_function() -> None:
     assert "NSFS" in response.answer
     assert "Mortars" in response.answer or "mortar" in response.answer.lower()
     assert "air-delivered" in response.answer.lower() or "Air-delivered" in response.answer
+
+
+def test_checkin_agent_returns_reporting_protocol() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("unit-checkin")
+    assert agent is not None
+
+    response = agent.run(
+        "I'm a Captain checking in to a new reserve unit. What do I need to do?",
+        context=AgentContext(),
+    )
+
+    assert "check-in" in response.answer.lower() or "Unit check-in" in response.answer
+    assert "reporting for duty" in response.answer
+    assert "Alphas" in response.answer or "alphas" in response.answer
+    assert "S-1" in response.answer
+    assert "Officer-specific" in response.answer
+    assert response.structured_citations
+    assert response.source_trust
+
+
+def test_checkin_agent_detects_lateral_move() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("unit-checkin")
+    assert agent is not None
+
+    response = agent.run(
+        "I'm doing a lateral transfer from 4th MarDiv to 4th MLG.",
+        context=AgentContext(),
+    )
+
+    assert "Lateral move" in response.answer or "transfer" in response.answer.lower()
+    assert "losing unit" in response.answer or "OMPF" in response.answer

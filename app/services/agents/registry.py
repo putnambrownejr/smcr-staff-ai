@@ -4,6 +4,7 @@ import yaml
 
 from app.schemas.agents import AgentMetadata
 from app.services.agents.ace_agent import build_ace_agent
+from app.services.agents.checkin_agent import build_checkin_agent
 from app.services.agents.artillery_08xx_agent import build_artillery_08xx_agent
 from app.services.agents.assessment_learning_agent import build_assessment_learning_agent
 from app.services.agents.base import Agent
@@ -70,6 +71,7 @@ def default_agents() -> list[Agent]:
         build_leadership_agent(),
         build_osint_agent(),
         build_map_agent(),
+        build_checkin_agent(),
         # MAGTF element agents (standalone)
         build_ace_agent(),
         build_gce_agent(),
