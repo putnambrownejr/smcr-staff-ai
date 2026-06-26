@@ -127,16 +127,13 @@ This repo is structured for AI assistants to reason about directly:
 
 ### Claude Code skills
 
-13 project-level skills in `.claude/skills/` provide operator shortcuts:
+10 project-level skills in `.claude/skills/` provide operator shortcuts:
 
 | Skill | Purpose |
 |---|---|
-| `capability-router` | Route user intent to the right agent |
-| `find-skills` | Discover available agents and capabilities |
 | `echelon-context` | Detect and apply echelon modifiers |
 | `doctrine-reference` | Look up USMC/joint publications by topic |
-| `murder-board` | Adversarial design review |
-| `murder-board-docs` | Murder board with document context |
+| `murder-board` | Adversarial design review (with doc anchoring) |
 | `scenario-runner` | Run and compare agent responses |
 | `agent-scaffolder` | Multi-file agent creation checklist |
 | `automated-skill-builder` | Find and build new skills |
