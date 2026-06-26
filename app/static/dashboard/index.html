@@ -41,10 +41,6 @@
         <span>Cannot reach local server — is the app running? Start it with: <code>uvicorn app.main:app --reload</code></span>
         <button type="button" class="secondary" id="retry-workspace-load">Retry</button>
       </div>
-      <div id="demo-unavailable-banner" class="status-banner critical-banner is-hidden" role="alert">
-        <span>Demo unavailable — try reloading.</span>
-        <button type="button" class="secondary" id="reload-demo-workspace">Reload</button>
-      </div>
       <div id="connection-lost-banner" class="status-banner critical-banner is-hidden" role="alert">
         <span>Connection lost — the local server may have stopped. Reload to reconnect.</span>
         <button type="button" class="secondary" id="dismiss-connection-lost">Dismiss</button>
@@ -769,7 +765,6 @@
                     <p><strong>Action tracker:</strong> Your tracked POAMs (owner, status, suspense). Use for items that need to survive multiple sessions — not one-off notes.</p>
                     <p><strong>Opportunity watch:</strong> ADOS/SMCR opportunities you're tracking from your local career stack.</p>
                     <p><strong>Source updates:</strong> Potential doctrine or admin-reference changes flagged by scans. Review before relying on older policy summaries.</p>
-                    <p><strong>Quick links:</strong> Common military portals (MOL, MyPay, DVIDS, MarineNet, VetTix, etc.) plus any unit-specific links you add. Click any chip to open it in a new tab.</p>
                   </div>
                 </details>
               </div>
@@ -778,10 +773,60 @@
           </article>
           <article class="panel full-span">
             <div class="panel-header">
-              <h2>Custom watch feeds</h2>
-              <p>Local-only RSS watches with trust labels, quick toggles, and a short preview of what each feed is surfacing.</p>
+              <div>
+                <h2>Custom watch feeds</h2>
+                <p>Local-only RSS watches with trust labels, quick toggles, and a short preview of what each feed is surfacing.</p>
+              </div>
             </div>
             <div id="custom-feed-watch" class="row-stack empty-state">Load workspace to see this</div>
+            <details class="panel-drawer" id="add-feed-drawer">
+              <summary>
+                <div class="panel-header compact">
+                  <span class="drawer-label">+ Add feed</span>
+                </div>
+              </summary>
+              <div class="panel-drawer-body">
+                <form id="add-feed-form" class="tool-form">
+                  <div class="form-row">
+                    <label>
+                      <span>Feed name</span>
+                      <input name="name" type="text" required placeholder="MARADMIN RSS" maxlength="80" />
+                    </label>
+                    <label>
+                      <span>RSS URL</span>
+                      <input name="url" type="url" required placeholder="https://..." maxlength="500" />
+                    </label>
+                  </div>
+                  <div class="form-row">
+                    <label>
+                      <span>Category</span>
+                      <select name="category">
+                        <option value="admin">Admin</option>
+                        <option value="doctrine">Doctrine</option>
+                        <option value="training">Training</option>
+                        <option value="news">News</option>
+                        <option value="unit">Unit</option>
+                        <option value="professional">Professional</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Trust level</span>
+                      <select name="trust_level">
+                        <option value="official">Official (.mil)</option>
+                        <option value="professional">Professional</option>
+                        <option value="unit_local">Unit / local</option>
+                        <option value="personal_watch">Personal watch</option>
+                        <option value="low_trust">Low trust</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="button-row">
+                    <button type="submit">Add feed</button>
+                    <button type="button" class="secondary" id="add-feed-cancel">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </details>
           </article>
 
           <article class="panel">
@@ -809,38 +854,6 @@
             <p id="source-watch-last-updated" class="last-updated is-hidden" aria-live="polite"></p>
           </article>
 
-          <article class="panel full-span" id="quick-links-panel">
-            <div class="panel-header">
-              <div>
-                <h2>Quick links</h2>
-                <p>Common military portals and resources. Add unit-specific links below.</p>
-              </div>
-              <button type="button" class="secondary" id="quick-links-add-btn">+ Add link</button>
-            </div>
-            <div id="quick-links-filter" class="row-stack" style="flex-wrap:wrap;gap:0.4rem;margin-bottom:0.75rem;display:none"></div>
-            <div id="quick-links-list" class="row-stack empty-state">Load workspace to see links</div>
-            <form id="quick-links-add-form" class="is-hidden" style="margin-top:0.75rem;display:flex;flex-direction:column;gap:0.5rem;">
-              <input type="text" id="ql-title" placeholder="Link title" required maxlength="80" />
-              <input type="url" id="ql-url" placeholder="https://..." required maxlength="500" />
-              <input type="text" id="ql-description" placeholder="Short description (optional)" maxlength="200" />
-              <select id="ql-category">
-                <option value="unit">Unit-specific</option>
-                <option value="usmc_official">USMC official</option>
-                <option value="admin_pay">Admin &amp; pay</option>
-                <option value="training_pme">Training &amp; PME</option>
-                <option value="news_info">News &amp; info</option>
-                <option value="benefits">Benefits</option>
-                <option value="comms">Communications</option>
-                <option value="reserve">Reserve affairs</option>
-                <option value="it_access">IT &amp; access</option>
-                <option value="reference">Reference</option>
-              </select>
-              <div style="display:flex;gap:0.5rem;">
-                <button type="submit" class="primary">Save link</button>
-                <button type="button" class="secondary" id="quick-links-cancel-btn">Cancel</button>
-              </div>
-            </form>
-          </article>
         </section>
 
         <section class="library-grid is-hidden" data-section-group="library">
@@ -1875,7 +1888,7 @@
             <div class="panel-header compact">
               <div>
                 <h2>A Few Good Links</h2>
-                <p>Quick-access bookmarks for the sites SMCR officers actually use. Add your own with the button below — they sync with the Quick Links panel in Watch.</p>
+                <p>Quick-access bookmarks for the sites SMCR officers actually use. Add your own with the button below.</p>
               </div>
             </div>
           </article>

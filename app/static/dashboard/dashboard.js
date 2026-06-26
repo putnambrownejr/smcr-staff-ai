@@ -236,12 +236,6 @@ document.getElementById("onboarding-recover-details")?.addEventListener("toggle"
   }
 });
 document.getElementById("retry-workspace-load")?.addEventListener("click", () => loadWorkspace());
-document.getElementById("reload-demo-workspace")?.addEventListener("click", () => {
-  state.mode = "demo";
-  state.userKey = "";
-  state.apiKey = "";
-  loadWorkspace();
-});
 document.getElementById("dismiss-connection-lost")?.addEventListener("click", () => {
   state.connectionLostDismissed = true;
   setConnectionLostVisible(false);
@@ -570,6 +564,12 @@ document.addEventListener("click", async (event) => {
     return;
   }
 
+  const feedDelete = event.target.closest("[data-feed-delete]");
+  if (feedDelete) {
+    await deleteCustomFeed(feedDelete.dataset.feedDelete);
+    return;
+  }
+
   const saveButton = event.target.closest("[data-reading-save]");
   if (saveButton) {
     await saveReadingProgress(saveButton.dataset.readingSave, saveButton);
@@ -586,7 +586,6 @@ async function loadWorkspace() {
   // UX5: show loading overlay so users know the fetch is in flight
   setLoading(true);
   setServerUnavailableVisible(false);
-  setDemoUnavailableVisible(false);
   try {
     if (state.mode === "demo") {
       state.workspace = await apiFetch("/demo/dashboard/data");
@@ -617,9 +616,6 @@ async function loadWorkspace() {
     if (error.isNetworkError) {
       setServerUnavailableVisible(true);
       setWorkspaceNote("Cannot reach local server — is the app running? Start it with: uvicorn app.main:app --reload", true);
-    } else if (state.mode === "demo") {
-      setDemoUnavailableVisible(true);
-      setWorkspaceNote("Demo unavailable — try reloading.", true);
     } else {
       setWorkspaceNote(error.message, true);
     }
@@ -637,10 +633,6 @@ function setLoading(active) {
 
 function setServerUnavailableVisible(visible) {
   document.getElementById("server-unavailable-banner")?.classList.toggle("is-hidden", !visible);
-}
-
-function setDemoUnavailableVisible(visible) {
-  document.getElementById("demo-unavailable-banner")?.classList.toggle("is-hidden", !visible);
 }
 
 function setConnectionLostVisible(visible) {
@@ -924,7 +916,6 @@ function renderWorkspace(payload) {
   renderTrackedActions(payload.tracked_actions || []);
   renderOpportunities(payload.tracked_opportunities || payload.career_watch?.tracked_opportunities || []);
   renderSourceUpdates(payload.documentation_updates || payload.chief_brief?.documentation_updates || []);
-  loadQuickLinks();
   loadGoodLinks();
   renderLastUpdatedStamps();
 }
@@ -2005,6 +1996,9 @@ function renderCustomWatchFeeds(items) {
             <button type="button" class="secondary" data-feed-refresh="${escapeHtml(item.feed_id)}">
               Refresh feed
             </button>
+            <button type="button" class="secondary critical" data-feed-delete="${escapeHtml(item.feed_id)}">
+              Remove
+            </button>
           </div>
           <div class="row-stack">
             ${
@@ -2283,26 +2277,11 @@ function renderSourceUpdates(items) {
     .join("");
 }
 
-// ── Quick Links ────────────────────────────────────────────────────────────
+// ── Resource Links (A Few Good Links) ──────────────────────────────────────
 const CATEGORY_ORDER = [
   "usmc_official", "admin_pay", "training_pme", "news_info", "benefits", "comms", "reserve", "it_access", "reference", "unit",
 ];
 
-async function loadQuickLinks() {
-  if (!state.userKey) return;
-  const listEl = document.getElementById("quick-links-list");
-  const filterEl = document.getElementById("quick-links-filter");
-  if (!listEl) return;
-  listEl.className = "row-stack";
-  listEl.textContent = "Loading…";
-  try {
-    const data = await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`);
-    renderQuickLinks(data.links || [], data.categories || {}, listEl, filterEl);
-  } catch (e) {
-    listEl.className = "row-stack empty-state";
-    listEl.textContent = "Could not load links.";
-  }
-}
 
 function renderQuickLinks(links, categoryLabels, listEl, filterEl, onDelete) {
   if (!links.length) {
@@ -2363,7 +2342,6 @@ function renderQuickLinks(links, categoryLabels, listEl, filterEl, onDelete) {
             method: "DELETE",
           });
         } catch (_) {}
-        await loadQuickLinks();
         if (onDelete) await onDelete();
       });
     });
@@ -2387,49 +2365,6 @@ function renderQuickLinks(links, categoryLabels, listEl, filterEl, onDelete) {
   renderLinks();
 }
 
-function initQuickLinksForm() {
-  const addBtn = document.getElementById("quick-links-add-btn");
-  const cancelBtn = document.getElementById("quick-links-cancel-btn");
-  const form = document.getElementById("quick-links-add-form");
-  if (!addBtn || !form) return;
-  addBtn.addEventListener("click", () => {
-    form.classList.toggle("is-hidden", false);
-    addBtn.disabled = true;
-    document.getElementById("ql-title")?.focus();
-  });
-  cancelBtn?.addEventListener("click", () => {
-    form.classList.add("is-hidden");
-    form.reset();
-    addBtn.disabled = false;
-  });
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!state.userKey) return;
-    const title = document.getElementById("ql-title")?.value.trim();
-    const url = document.getElementById("ql-url")?.value.trim();
-    const description = document.getElementById("ql-description")?.value.trim() || null;
-    const category = document.getElementById("ql-category")?.value || "unit";
-    if (!title || !url) return;
-    const submitBtn = form.querySelector("button[type=submit]");
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Saving…";
-    try {
-      await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`, {
-        method: "POST",
-        body: JSON.stringify({ title, url, description, category, tags: [] }),
-      });
-      form.classList.add("is-hidden");
-      form.reset();
-      addBtn.disabled = false;
-      await loadQuickLinks();
-    } catch (_) {
-      submitBtn.textContent = "Error — retry";
-    } finally {
-      submitBtn.disabled = false;
-      if (submitBtn.textContent === "Saving…") submitBtn.textContent = "Save link";
-    }
-  });
-}
 // ── A Few Good Links tab (reuses renderQuickLinks) ────────────────────────
 async function loadGoodLinks() {
   if (!state.userKey) return;
@@ -2480,7 +2415,6 @@ function initGoodLinksForm() {
       drawer.removeAttribute("open");
       form.reset();
       await loadGoodLinks();
-      await loadQuickLinks();
     } catch (_) {
       submitBtn.textContent = "Error — retry";
     } finally {
@@ -3076,6 +3010,85 @@ async function refreshCustomFeed(feedId) {
   await loadWorkspace();
 }
 
+async function deleteCustomFeed(feedId) {
+  const feed = (state.workspace?.custom_watch_feeds || []).find((item) => item.feed_id === feedId);
+  const name = feed?.name || feedId;
+  if (!confirm(`Remove feed "${name}"? This deletes all cached items.`)) return;
+  try {
+    await apiFetch(`/custom-watch-feeds/${encodeURIComponent(feedId)}`, {
+      method: "DELETE",
+      auth: true,
+    });
+    setWorkspaceNote(`Feed "${name}" removed.`);
+    await loadWorkspace();
+  } catch {
+    setWorkspaceNote(`Could not remove feed "${name}".`, true);
+  }
+}
+
+function initAddFeedForm() {
+  const form = document.getElementById("add-feed-form");
+  const drawer = document.getElementById("add-feed-drawer");
+  const cancelBtn = document.getElementById("add-feed-cancel");
+  if (!form) return;
+  cancelBtn?.addEventListener("click", () => {
+    drawer?.removeAttribute("open");
+    form.reset();
+  });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const name = fd.get("name")?.toString().trim();
+    const url = fd.get("url")?.toString().trim();
+    const category = fd.get("category")?.toString() || "admin";
+    const trust_level = fd.get("trust_level")?.toString() || "official";
+    if (!name || !url) return;
+    const submitBtn = form.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Adding…";
+    try {
+      await apiFetch("/custom-watch-feeds", {
+        method: "POST",
+        auth: true,
+        body: JSON.stringify({ name, url, category, trust_level, enabled: true, tags: [] }),
+      });
+      drawer?.removeAttribute("open");
+      form.reset();
+      setWorkspaceNote(`Feed "${name}" added.`);
+      await loadWorkspace();
+    } catch (err) {
+      submitBtn.textContent = "Error — retry";
+    } finally {
+      submitBtn.disabled = false;
+      if (submitBtn.textContent === "Adding…") submitBtn.textContent = "Add feed";
+    }
+  });
+}
+
+async function autoSeedMaradminFeed() {
+  try {
+    const feeds = await apiFetch("/custom-watch-feeds", { auth: true });
+    const hasMaradmin = feeds.some(
+      (f) => f.url?.includes("marines.mil") && f.url?.includes("category=14336"),
+    );
+    if (hasMaradmin) return;
+    await apiFetch("/custom-watch-feeds", {
+      method: "POST",
+      auth: true,
+      body: JSON.stringify({
+        name: "MARADMINs (Official RSS)",
+        url: "https://www.marines.mil/DesktopModules/ArticleCS/RSS.ashx?ContentType=6&Site=481&category=14336&max=10",
+        category: "admin",
+        trust_level: "official",
+        enabled: true,
+        tags: ["maradmin", "policy"],
+      }),
+    });
+  } catch {
+    // silent — seed is best-effort
+  }
+}
+
 async function savePlanningCellToBattleRhythm() {
   if (state.mode !== "personal" || !state.userKey) {
     setWorkspaceNote("Open your personal workspace first so the battle rhythm board can stay local to your profile.", true);
@@ -3247,6 +3260,7 @@ function isMessageFeedsEmpty(workspace) {
 async function autoPreloadMessageFeeds() {
   try {
     await Promise.all([
+      autoSeedMaradminFeed(),
       apiFetch("/maradmins/refresh", { method: "POST", auth: true }),
       apiFetch("/message-watch/navadmins/refresh", { method: "POST", auth: true }),
       apiFetch("/message-watch/alnavs/refresh", { method: "POST", auth: true }),
@@ -3338,6 +3352,10 @@ async function apiFetch(path, options = {}) {
     httpError.responseText = text;
     throw httpError;
   }
+  if (response.status === 204) {
+    recordFetchSuccess();
+    return null;
+  }
   if (options.text) {
     const text = await response.text();
     recordFetchSuccess();
@@ -3360,8 +3378,8 @@ async function apiFetch(path, options = {}) {
 
 function recordFetchSuccess() {
   state.consecutiveFetchFailures = 0;
-  state.connectionLostDismissed = false;
   setConnectionLostVisible(false);
+  setServerUnavailableVisible(false);
 }
 
 function recordFetchFailure() {
@@ -4199,7 +4217,7 @@ function seedSectionMemoryEntry(encodedSeed) {
 applyLaneVisibility();
 initializeLaneHistory();
 initOnboardingState();
-initQuickLinksForm();
+initAddFeedForm();
 loadWorkspace();
 startTimezoneClock();
 startLastUpdatedClock();
