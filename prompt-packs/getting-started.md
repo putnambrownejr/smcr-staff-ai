@@ -84,8 +84,8 @@ Walk them through getting the code onto their machine.
 > 1. Go to **github.com/putnambrownejr/smcr-staff-ai** in your browser
 > 2. Click the green **"Code"** button near the top
 > 3. Click **"Download ZIP"**
-> 4. When it downloads, unzip it somewhere you'll remember
->    (Desktop or Documents is fine)
+> 4. When it downloads, unzip it to your **Documents** folder
+>    (it's familiar, won't get accidentally deleted, and is usually backed up)
 >
 > **Option B — Git clone (if you have git installed):**
 > Open a terminal and type:
@@ -150,9 +150,9 @@ Once installed:
 > **Step 3 — Open the project:**
 > In your terminal, navigate to where you downloaded the project:
 >
-> **If you used the ZIP (and put it on your Desktop):**
-> - Windows: `cd Desktop\smcr-staff-ai-main`
-> - Mac/Linux: `cd ~/Desktop/smcr-staff-ai-main`
+> **If you used the ZIP (and put it in Documents):**
+> - Windows: `cd Documents\smcr-staff-ai-main`
+> - Mac/Linux: `cd ~/Documents/smcr-staff-ai-main`
 >
 > **If you used git clone:**
 > - `cd smcr-staff-ai`

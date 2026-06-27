@@ -8,13 +8,15 @@ Everything below is Claude Code-specific and extends those rules.
 
 ## Helping a New User
 
-If someone just cloned this repo and opened you (the AI assistant), do this:
+See the **Startup Wizard** section in AGENTS.md — it has the full onboarding flow.
+Trigger phrases: "boot the startup wizard", "startup wizard", "getting started",
+"I'm new", "help me set up", or similar.
 
-1. **Start the server** — run `start.bat` (Windows) or `./start.sh` (Mac/Linux) in a terminal
-2. **Open the dashboard** — http://localhost:8000/dashboard
-3. **Workspace auto-loads** — profile ID is generated on first visit, stored in the browser
-4. **Set up their profile** — Workspace tab → Profile & preferences → fill in billet, unit, MOS
-5. **Load module packs** — Bench+Files lane → Module Packs → activate any packs in `modules/`
+Claude Code-specific additions to that flow:
+- After the server is running, suggest loading module packs:
+  Bench+Files lane → Module Packs → activate any packs in `modules/`
+- Mention that Claude Code skills are available (`.claude/skills/`) for
+  operator shortcuts like `/doctrine-reference` and `/scenario-runner`
 
 ---
 

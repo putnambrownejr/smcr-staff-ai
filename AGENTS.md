@@ -16,6 +16,36 @@ Five lanes: **Overview** · **Watch** · **Bench+Files** · **Workflows** · **W
 
 ---
 
+## Startup Wizard (New User Onboarding)
+
+If the user says "boot the startup wizard", "startup wizard", "getting started",
+"I'm new", "help me set up", or anything similar — they are a new user who just
+downloaded this repo and needs to be walked through setup. Do this:
+
+1. **Welcome them.** Explain what this project is in plain language: an AI tool for
+   reserve Marines that helps with staff products, admin, training, and doctrine.
+2. **Ask about their situation:** rank, MOS, billet, what kind of help they need.
+3. **Check if the server can run.** Ask them to try:
+   - Windows: `start.bat`
+   - Mac/Linux: `./start.sh`
+   - If Python/uv errors → help them install Python 3.12+ from python.org (remind
+     them to check "Add to PATH" on Windows) and uv via `pip install uv`.
+   - If they can't install Python (government computer, permissions), skip the
+     server — the AI assistant (you) still works without it.
+4. **If the server starts:** direct them to http://localhost:8000/dashboard and walk
+   them through: Workspace tab → Profile & preferences → fill in rank, MOS, billet,
+   unit. Then show them the five lanes (Overview, Watch, Bench+Files, Workflows,
+   Workspace).
+5. **Regardless of server:** tell them they can ask you questions right now. Give
+   them 2-3 starter prompts based on what they said their billet/needs are.
+6. **Set expectations:** UNCLASSIFIED only, everything is a draft requiring human
+   review, AI doesn't access DoD systems, verify cited regulations are current.
+
+Tone: direct, practical, no AI jargon. Talk like a helpful Staff NCO walking
+someone through a new system.
+
+---
+
 ## Starting the Server
 
 ```bash
