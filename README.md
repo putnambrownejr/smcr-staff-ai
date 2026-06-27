@@ -20,6 +20,21 @@ See [docs/core_documents/project_purpose.md](docs/core_documents/project_purpose
 
 Do not submit classified information, CUI, COMSEC, real frequencies, call signs, operational movement details, or unnecessary PII. The application includes runtime guardrails for sensitive inputs, but those checks do not replace human judgment.
 
+## Prompt Packs — Use with Any AI (No Setup Required)
+
+Don't want to install anything? Grab a **prompt pack** — copy-paste it into ChatGPT,
+Claude, Gemini, or any AI chat and get Marine-specific guidance immediately.
+
+| Pack | Who it's for |
+|------|-------------|
+| **Start here →** [Getting Started](prompt-packs/getting-started.md) | New to AI? This walks you through setup in 5 minutes |
+| [General Marine](prompt-packs/general-marine.md) | Check-in, uniforms, drill prep, CAC/PKI, leadership |
+| [Staff Products & Writing](prompt-packs/staff-products.md) | OPORDs, FRAGOs, SITREPs, AARs, briefs, ORM |
+| [Training & Operations](prompt-packs/training-ops.md) | Planning (MCPP/R2P2), red-team, exercise design |
+| [Reserve Admin](prompt-packs/reserve-admin.md) | DTS, MROWS, pay, FitReps, AT orders |
+
+See the [prompt-packs/README.md](prompt-packs/README.md) for usage instructions.
+
 ## Quick start
 
 **Prerequisites:** Python 3.12+, [uv](https://github.com/astral-sh/uv)
@@ -43,9 +58,9 @@ See [QUICKSTART.md](QUICKSTART.md) for the full walkthrough.
 
 ## What's inside
 
-### 35 advisory agents
+### 37 advisory agents
 
-19 standalone advisors + 16 echelon-adaptive staff archetypes. Each responds with structured advice, citations, confidence levels, and follow-up questions.
+21 standalone advisors + 16 echelon-adaptive staff archetypes. Each responds with structured advice, citations, confidence levels, and follow-up questions.
 
 | Category | Examples |
 |---|---|
@@ -94,7 +109,7 @@ app/
   core/                Settings, logging, guardrails
   schemas/             Pydantic request/response models
   services/
-    agents/            Agent registry and 35 advisory agents
+    agents/            Agent registry and 37 advisory agents
     admin/             Admin readiness and S-1 support
     calendar/          Drill-prep planner and calendar stubs
     career/            Career watch, PME, opportunities
