@@ -19,6 +19,10 @@ data/local_context/*
 outputs/
 data/local_context/*/
 
+# User project workspaces — scenario files, exercise products, AI-generated documents.
+projects/*
+!projects/.gitkeep
+
 # Local-only user notes, generated outputs, and scratch work.
 docs/offline_notes.md
 docs/deep_research/*_pull.md

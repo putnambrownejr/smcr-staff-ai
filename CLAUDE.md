@@ -95,6 +95,41 @@ Activate in the dashboard → Bench+Files → Module Packs → Activate.
 
 ---
 
+## Saving User Work Products (for AI assistants helping a user)
+
+When a user asks you to generate, save, or organize documents, scenario files, exercise
+products, or any work output — **always save to the `projects/` directory** in the repo root.
+Never save user artifacts into the app source tree, `.claude/`, `docs/`, or temp directories.
+
+### Folder structure
+
+```
+projects/
+  {project-name}/              # kebab-case, descriptive (e.g., "cax-23-taiwan-strait")
+    README.md                  # Project purpose, dates, participants, status
+    scenario/                  # Scenario-specific content (MSEL, injects, background)
+    products/                  # Staff products (OPORDs, FRAGOs, AARs, briefs)
+    references/                # Maps, source docs, doctrine extracts
+    notes/                     # Working notes, session logs, AI-generated analysis
+```
+
+### Rules
+
+- **One folder per project.** Don't dump files loose in `projects/`.
+- **Create the project folder and README.md on first save.** Ask the user for a project name
+  if they haven't specified one.
+- **Use clear filenames.** `opord-phase-1-draft.md` not `output.md`. Include dates where
+  useful: `aar-20260626.md`.
+- **The `projects/` directory is gitignored.** User work products never get committed to the
+  public repo. This is intentional — scenario content may contain exercise-specific details.
+- **Storage path on disk:** The app also provisions a `projects/` folder under the user's
+  local data directory (`%LOCALAPPDATA%\smcr-staff-ai\projects\` on Windows). The repo-local
+  `projects/` folder is the preferred location when working from the repo; the app-data path
+  is used by the running server.
+- **UNCLASSIFIED only** — the security constraint applies to project files too.
+
+---
+
 ## Common Tasks for Developers
 
 | Task | Command / File |
