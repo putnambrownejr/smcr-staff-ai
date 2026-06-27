@@ -118,8 +118,13 @@ projects/
 - **One folder per project.** Don't dump files loose in `projects/`.
 - **Create the project folder and README.md on first save.** Ask the user for a project name
   if they haven't specified one.
-- **Use clear filenames.** `opord-phase-1-draft.md` not `output.md`. Include dates where
-  useful: `aar-20260626.md`.
+- **Use clear filenames** with dates: `ca-brief-20260626.md`, not `output.md`.
+- **Always produce dual-format outputs.** Every staff product gets both:
+  - `.md` (readable, diffable, versionable)
+  - `.docx` (distributable, printable, email-ready)
+  - For tabular data: `.csv` (Excel-importable) alongside any `.md` table
+- **Write a session log** (`session-log-YYYYMMDD.md`) for each working session summarizing
+  what was produced, inputs used, corrections applied, and outstanding gaps.
 - **The `projects/` directory is gitignored.** User work products never get committed to the
   public repo. This is intentional — scenario content may contain exercise-specific details.
 - **Storage path on disk:** The app also provisions a `projects/` folder under the user's
@@ -127,6 +132,19 @@ projects/
   `projects/` folder is the preferred location when working from the repo; the app-data path
   is used by the running server.
 - **UNCLASSIFIED only** — the security constraint applies to project files too.
+
+### Interagency Knowledge (current as of 2026)
+
+These standing facts apply to all FHADR, interagency, and humanitarian planning work:
+
+- **USAID no longer exists.** It was dissolved in 2025. Humanitarian coordination functions
+  transferred to the **Department of State Bureau of Humanitarian Assistance (DoS/BHR)**.
+- **JP 3-29** (Foreign Humanitarian Assistance) is in revision. Use the current edition but
+  **substitute DoS/BHR wherever USAID/BHA appears**.
+- The **DART** (Disaster Assistance Response Team) concept may continue under DoS/BHR as a
+  "forward coordination team" — confirm current terminology before using in products.
+- Do not reference USAID, USAID/OFDA, or USAID/BHA as active organizations in any product.
+  Historical references (e.g., "formerly USAID/BHA, now DoS/BHR") are acceptable for context.
 
 ---
 
