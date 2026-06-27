@@ -137,65 +137,46 @@ Once Python is confirmed:
 - If `pip` is not recognized, try `pip3 install uv` or `python -m pip install uv`
 - If there's a permission error on Mac/Linux, try `pip install --user uv`
 
-### Install Git (if needed)
-
-Check if they have git:
-> In your terminal, type:
-> ```
-> git --version
-> ```
-> Tell me what it says.
-
-**If git is installed** → move on.
-
-**If git is not installed:**
-
-> We need to install Git so you can download the app. Here's how:
->
-> **Windows:**
-> 1. Go to **git-scm.com**
-> 2. Click "Download for Windows"
-> 3. Run the installer — you can accept all the default options
-> 4. Close and reopen your terminal
-> 5. Type `git --version` to confirm
->
-> **Mac:**
-> Git usually comes with the developer tools. If it's not installed:
-> 1. Type `xcode-select --install` in Terminal
-> 2. Click "Install" when prompted
-> 3. Wait for it to finish (this can take a few minutes)
-> 4. Type `git --version` to confirm
->
-> **Linux:**
-> ```
-> sudo apt install git
-> ```
-> (or `sudo dnf install git` on Fedora/RHEL)
->
-> Tell me when it's working.
-
 ---
 
 ## Step 3 — Download and Run the App
 
-Once all prerequisites are confirmed, walk them through cloning and running:
+Once Python and uv are confirmed, walk them through downloading the app.
+**Offer two options — ZIP is easier, git clone is better for updates.**
 
-> You're almost there. Now let's download and start the app:
+> Now let's download the app. Pick whichever option is easier for you:
 >
-> **Step 1 — Download the code:**
-> In your terminal, type:
+> **Option A — Download ZIP (easiest, no extra tools):**
+> 1. Go to **github.com/putnambrownejr/smcr-staff-ai** in your browser
+> 2. Click the green **"Code"** button
+> 3. Click **"Download ZIP"**
+> 4. Unzip the file somewhere you'll remember (Desktop is fine)
+> 5. The folder will be called `smcr-staff-ai-main` — you can rename it
+>    to `smcr-staff-ai` if you want
+>
+> **Option B — Git clone (better if you want easy updates later):**
+> First check if you have git: type `git --version` in your terminal.
+> If it works, type:
 > ```
 > git clone https://github.com/putnambrownejr/smcr-staff-ai.git
 > ```
-> This downloads the whole app to a folder called `smcr-staff-ai`.
-> Wait for it to finish, then tell me.
+> If git isn't installed, just use Option A — it works the same way.
+>
+> Tell me which option you used and when it's done.
 
 Once confirmed:
 
-> **Step 2 — Go into the folder:**
-> ```
-> cd smcr-staff-ai
-> ```
+> **Next — Open a terminal in the app folder:**
+>
+> **If you used the ZIP:** Open your terminal and navigate to where you
+> unzipped it. For example, if it's on your Desktop:
+> - Windows: `cd Desktop\smcr-staff-ai-main`
+> - Mac/Linux: `cd ~/Desktop/smcr-staff-ai-main`
+>
+> **If you used git clone:** `cd smcr-staff-ai`
+>
+> (Tip: On Windows, you can also open File Explorer, go to the folder,
+> and type `powershell` in the address bar — it opens a terminal right there.)
 
 Then:
 
@@ -384,7 +365,8 @@ End with:
 >
 > - **Dashboard:** http://localhost:8000/dashboard (run start.bat/start.sh first)
 > - **GitHub repo:** github.com/putnambrownejr/smcr-staff-ai
-> - **To update the app:** open terminal, `cd smcr-staff-ai`, `git pull`, restart
+> - **To update the app:** if you used git clone, open terminal, `cd smcr-staff-ai`,
+>   `git pull`, restart. If you used the ZIP, download a fresh ZIP from GitHub.
 > - **Security rule:** UNCLASSIFIED only, always
 > - **Golden rule:** Everything is a draft — verify before acting
 >
