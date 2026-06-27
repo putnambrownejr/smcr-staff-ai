@@ -148,6 +148,28 @@ These standing facts apply to all FHADR, interagency, and humanitarian planning 
 
 ---
 
+## Source Citation and Accuracy (non-negotiable)
+
+This project stores doctrinal references, organizational structures, and interagency
+knowledge that can go stale. Treat every stored fact as **"true when last checked"**, not
+as current truth. Follow these rules:
+
+- **Cite sources explicitly.** Every claim about doctrine, policy, organizational structure,
+  or procedure must name the source (publication number, website, order). "Per JP 3-29" not
+  "doctrinally." If you can't name the source, say so.
+- **Date your knowledge.** When referencing stored facts (e.g., "DoS/BHR is the lead
+  humanitarian agency"), state when this was last verified: "as of [date]."
+- **Warn on every output.** Every product, brief, or advisory must include a footer:
+  `DRAFT — Verify all references against current official sources before acting.`
+- **Flag uncertainty.** If a fact could have changed since last verification (org structures,
+  personnel, policy, funding status), say "confirm current status" rather than stating it flat.
+- **Don't present AI memory as ground truth.** Stored project knowledge, CLAUDE.md facts,
+  and agent system prompts are starting points for research, not finished answers.
+- **Prefer live sources.** When the user has access to current references (MOL, official
+  orders, unit SOPs), defer to those over stored knowledge.
+
+---
+
 ## Common Tasks for Developers
 
 | Task | Command / File |

@@ -33,6 +33,10 @@ DEFAULT_WARNINGS = [
         "real frequencies, or sensitive operational details."
     ),
     "Outputs are advisory drafts for human review and are not official Marine Corps guidance.",
+    (
+        "Facts, organizations, and procedures cited here may be outdated. "
+        "Verify all references against current official sources before acting."
+    ),
 ]
 
 
