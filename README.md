@@ -119,11 +119,18 @@ See [docs/core_documents/CONTRIBUTING_QUICKSTART.md](docs/core_documents/CONTRIB
 
 ## AI assistant integration
 
-This repo is structured for AI assistants to reason about directly:
+This repo is structured for AI assistants to reason about directly. **All AI tools should
+read [AGENTS.md](AGENTS.md) first** — it contains the shared rules (security, source
+citation, accuracy warnings, project save paths, interagency knowledge) that apply
+regardless of which AI you're using.
 
-- [CLAUDE.md](CLAUDE.md) — Claude Code / Claude agent context
-- [docs/compatibility/ai_assistant_guide.md](docs/compatibility/ai_assistant_guide.md) — Multi-AI orientation
-- [docs/compatibility/external_ai_safe_use.md](docs/compatibility/external_ai_safe_use.md) — Safe usage patterns
+| File | Tool | Purpose |
+|---|---|---|
+| [AGENTS.md](AGENTS.md) | **All AI tools** | Shared rules — read this first |
+| [CLAUDE.md](CLAUDE.md) | Claude Code | Claude-specific extensions |
+| [CODEX.md](CODEX.md) | OpenAI Codex | Codex-specific extensions |
+| [docs/compatibility/ai_assistant_guide.md](docs/compatibility/ai_assistant_guide.md) | Any | Multi-AI orientation |
+| [docs/compatibility/external_ai_safe_use.md](docs/compatibility/external_ai_safe_use.md) | Any | Safe usage patterns |
 
 ### Claude Code skills
 
