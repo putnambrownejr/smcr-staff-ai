@@ -1,4 +1,4 @@
-# GitHub Copilot — SMCR Staff AI
+# Gemini Code Assist — SMCR Staff AI
 
 **Read [AGENTS.md](../AGENTS.md) first.** It contains the shared rules for all AI
 assistants working with this repo: security constraints, source citation requirements,

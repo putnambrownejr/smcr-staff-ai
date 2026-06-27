@@ -117,20 +117,65 @@ uv run ruff check .           # lint
 
 See [docs/core_documents/CONTRIBUTING_QUICKSTART.md](docs/core_documents/CONTRIBUTING_QUICKSTART.md) for contributor setup.
 
-## AI assistant integration
+## Connect your AI
 
-This repo is structured for AI assistants to reason about directly. **All AI tools should
-read [AGENTS.md](AGENTS.md) first** — it contains the shared rules (security, source
-citation, accuracy warnings, project save paths, interagency knowledge) that apply
-regardless of which AI you're using.
+[AGENTS.md](AGENTS.md) is the single instruction file for all AI assistants. It tells
+your AI how to cite sources, where to save files, what security rules to follow, and
+what interagency facts are current. Every tool-specific config file just points back to it.
 
-| File | Tool | Purpose |
+### Code AI tools (auto-detected)
+
+These tools read their instruction file automatically when you open the repo — no setup needed:
+
+| Tool | Instruction file | Notes |
 |---|---|---|
-| [AGENTS.md](AGENTS.md) | **All AI tools** | Shared rules — read this first |
-| [CLAUDE.md](CLAUDE.md) | Claude Code | Claude-specific extensions |
-| [CODEX.md](CODEX.md) | OpenAI Codex | Codex-specific extensions |
-| [docs/compatibility/ai_assistant_guide.md](docs/compatibility/ai_assistant_guide.md) | Any | Multi-AI orientation |
-| [docs/compatibility/external_ai_safe_use.md](docs/compatibility/external_ai_safe_use.md) | Any | Safe usage patterns |
+| Claude Code | [CLAUDE.md](CLAUDE.md) → AGENTS.md | Full agent/skill support |
+| OpenAI Codex CLI | [CODEX.md](CODEX.md) → AGENTS.md | Use `codex` in repo root |
+| GitHub Copilot | [.github/copilot-instructions.md](.github/copilot-instructions.md) → AGENTS.md | Works in VS Code / GitHub |
+| Gemini Code Assist | [.gemini/styleguide.md](.gemini/styleguide.md) → AGENTS.md | Works in IDEs with Gemini plugin |
+
+### Chat AIs (manual setup)
+
+ChatGPT, Claude.ai, Gemini, and other chat-based AIs don't read repo files automatically.
+You have two options:
+
+**Option A — Paste at session start (quick, temporary)**
+
+1. Open [AGENTS.md](AGENTS.md) and copy the full contents
+2. Start a new chat session with your AI
+3. Paste AGENTS.md as your first message, or upload it as a file
+4. Say what you need — the AI will follow the rules for that session
+
+This gives your AI the project's security rules, citation requirements, save paths, and
+current interagency knowledge for one session. You'll need to paste it again next time.
+
+**Option B — Save as a persistent project (recommended for regular use)**
+
+| Platform | How to set up |
+|---|---|
+| **Claude.ai** | Create a Project → paste AGENTS.md into Project Instructions |
+| **ChatGPT** | Create a Custom GPT → paste AGENTS.md into Instructions |
+| **Gemini** | Create a Gem → paste AGENTS.md into the system prompt |
+
+This makes the rules permanent — every conversation in that project/GPT/Gem follows them
+automatically.
+
+### What AGENTS.md gives your AI
+
+When loaded, your AI will automatically:
+
+- **Save files** to `projects/{project-name}/` with organized subfolders, not random locations
+- **Produce dual-format outputs** — `.md` + `.docx` for documents, `.csv` for tables
+- **Write session logs** tracking what was produced, inputs used, and outstanding gaps
+- **Cite sources** by publication number, date its knowledge, and flag uncertainty
+- **Use current interagency facts** (e.g., USAID dissolved 2025 → DoS/BHR is lead agency)
+- **Stay UNCLASSIFIED** and put a "DRAFT — verify before acting" footer on everything
+- **Understand the app architecture** enough to help with development or use
+
+### Additional references
+
+- [docs/compatibility/ai_assistant_guide.md](docs/compatibility/ai_assistant_guide.md) — Multi-AI orientation
+- [docs/compatibility/external_ai_safe_use.md](docs/compatibility/external_ai_safe_use.md) — Safe usage patterns
 
 ### Claude Code skills
 
