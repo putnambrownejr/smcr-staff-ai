@@ -861,6 +861,7 @@ class StaffAdvisorAgent(Agent):
         answer, scenario_output = _build_answer(
             arch, ectx, focus_lines, osint_note, mos_section,
             active_context_block, input_text, context,
+            self.metadata.system_prompt or "",
         )
 
         return self._response(
@@ -892,6 +893,7 @@ def _build_answer(
     active_context_block: str = "",
     input_text: str = "",
     context: AgentContext | None = None,
+    system_prompt: str = "",
 ) -> tuple[str, dict[str, object] | None]:
     role = arch.role
     title = f"{arch.title} ({ectx.scope_adjective})"
@@ -900,7 +902,7 @@ def _build_answer(
     if input_text and _detect_scenario(input_text):
         scenario_result = _build_scenario_answer(
             role, title, focus_lines, osint_note, mos_section,
-            active_context_block, input_text, context,
+            active_context_block, input_text, context, system_prompt,
         )
         if scenario_result is not None:
             return scenario_result
@@ -1256,6 +1258,14 @@ def _build_answer_text(
 # Scenario-mode answer builders
 # ---------------------------------------------------------------------------
 
+def _try_llm_populate(template: str, input_text: str, system_prompt: str) -> str:
+    """Try LLM inference to populate a scenario template; return template as-is on failure."""
+    from app.services.llm_client import generate_scenario_response
+
+    result = generate_scenario_response(system_prompt, template, input_text)
+    return result if result is not None else template
+
+
 def _prior_assessment_context(context: AgentContext | None) -> str:
     """Build a text block summarizing prior assessments for scenario prompts."""
     if context is None or not context.prior_assessments:
@@ -1283,6 +1293,7 @@ def _build_scenario_answer(
     active_context_block: str,
     input_text: str,
     context: AgentContext | None = None,
+    system_prompt: str = "",
 ) -> tuple[str, dict[str, object]] | None:
     """Return (text, structured_output) for scenario mode, or None to fall through."""
 
@@ -1328,7 +1339,7 @@ def _build_scenario_answer(
             f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
         structured = G9ScenarioOutput(role="g9").model_dump()
-        return text, structured
+        return _try_llm_populate(text, input_text, system_prompt), structured
 
     if role == "s2":
         text = (
@@ -1358,7 +1369,7 @@ def _build_scenario_answer(
             f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
         structured = S2ScenarioOutput(role="s2").model_dump()
-        return text, structured
+        return _try_llm_populate(text, input_text, system_prompt), structured
 
     if role == "s4":
         text = (
@@ -1384,7 +1395,7 @@ def _build_scenario_answer(
             f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
         structured = S4ScenarioOutput(role="s4").model_dump()
-        return text, structured
+        return _try_llm_populate(text, input_text, system_prompt), structured
 
     if role == "s6":
         text = (
@@ -1410,7 +1421,7 @@ def _build_scenario_answer(
             f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
         structured = S6ScenarioOutput(role="s6").model_dump()
-        return text, structured
+        return _try_llm_populate(text, input_text, system_prompt), structured
 
     # Roles without a specific scenario template fall through to framework mode
     return None

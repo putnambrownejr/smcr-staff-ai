@@ -162,12 +162,15 @@ class PlanningAdvisorAgent(Agent):
 
 
     def _scenario_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
-        from app.services.agents.staff_advisor_agent import _prior_assessment_context
+        from app.services.agents.staff_advisor_agent import (
+            _prior_assessment_context,
+            _try_llm_populate,
+        )
 
         tempo = _tempo_read(input_text)
         tempo_label = "R2P2 (compressed)" if tempo == "rapid" else "MCPP (deliberate)"
         prior_context = _prior_assessment_context(context)
-        answer = (
+        template = (
             f"Planning Advisor — SCENARIO ASSESSMENT\n\n"
             f"Tempo read: {tempo_label}\n\n"
             "A specific scenario was provided. Producing a mission analysis shell "
@@ -206,6 +209,9 @@ class PlanningAdvisorAgent(Agent):
             "- What staff section is not yet integrated?\n"
             "- What product is being drafted before the thinking is done?\n"
             f"{prior_context}"
+        )
+        answer = _try_llm_populate(
+            template, input_text, self.metadata.system_prompt or "",
         )
         structured = PlanningScenarioOutput(role="planning", tempo=tempo_label).model_dump()
         return self._response(

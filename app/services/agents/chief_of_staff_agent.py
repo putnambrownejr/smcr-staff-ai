@@ -121,10 +121,13 @@ class ChiefOfStaffAideAgent(Agent):
 
 
     def _scenario_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
-        from app.services.agents.staff_advisor_agent import _prior_assessment_context
+        from app.services.agents.staff_advisor_agent import (
+            _prior_assessment_context,
+            _try_llm_populate,
+        )
 
         prior_context = _prior_assessment_context(context)
-        answer = (
+        template = (
             "Chief of Staff — SCENARIO ASSESSMENT\n\n"
             "A specific scenario was provided. Producing a command-team watch list "
             "and action items rather than a drill-prep template.\n\n"
@@ -161,6 +164,9 @@ class ChiefOfStaffAideAgent(Agent):
             "   - Reporting windows to higher\n"
             "   - Decision brief schedule\n"
             f"{prior_context}"
+        )
+        answer = _try_llm_populate(
+            template, input_text, self.metadata.system_prompt or "",
         )
         structured = CoSScenarioOutput(role="cos").model_dump()
         return self._response(

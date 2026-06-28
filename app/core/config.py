@@ -169,6 +169,11 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 50_000_000
     public_source_only: bool = True
 
+    # LLM client for scenario-mode template population (optional)
+    llm_api_key: str | None = None
+    llm_base_url: str = "https://api.openai.com/v1"
+    llm_model: str = "gpt-4o-mini"
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
