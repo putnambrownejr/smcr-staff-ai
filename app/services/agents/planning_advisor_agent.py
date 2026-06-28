@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
+from app.schemas.scenario_handoff import PlanningScenarioOutput
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import (
     S3_REFERENCES,
@@ -161,8 +162,11 @@ class PlanningAdvisorAgent(Agent):
 
 
     def _scenario_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        from app.services.agents.staff_advisor_agent import _prior_assessment_context
+
         tempo = _tempo_read(input_text)
         tempo_label = "R2P2 (compressed)" if tempo == "rapid" else "MCPP (deliberate)"
+        prior_context = _prior_assessment_context(context)
         answer = (
             f"Planning Advisor — SCENARIO ASSESSMENT\n\n"
             f"Tempo read: {tempo_label}\n\n"
@@ -201,7 +205,9 @@ class PlanningAdvisorAgent(Agent):
             "- Where will the plan break first in execution?\n"
             "- What staff section is not yet integrated?\n"
             "- What product is being drafted before the thinking is done?\n"
+            f"{prior_context}"
         )
+        structured = PlanningScenarioOutput(role="planning", tempo=tempo_label).model_dump()
         return self._response(
             answer=answer,
             input_text=input_text,
@@ -219,6 +225,7 @@ class PlanningAdvisorAgent(Agent):
                 "What interagency or coalition coordination is required?",
                 "What assumption would force you to replan if it breaks?",
             ],
+            scenario_output=structured,
         )
 
 

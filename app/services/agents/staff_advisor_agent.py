@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
+from app.schemas.scenario_handoff import G9ScenarioOutput, S2ScenarioOutput, S4ScenarioOutput, S6ScenarioOutput
 from app.schemas.staff import MagtfLens, StaffEchelon, StaffRoleMetadata
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.osint_agent import build_osint_agent
@@ -857,7 +858,10 @@ class StaffAdvisorAgent(Agent):
                 + "\n"
             )
 
-        answer = _build_answer(arch, ectx, focus_lines, osint_note, mos_section, active_context_block, input_text)
+        answer, scenario_output = _build_answer(
+            arch, ectx, focus_lines, osint_note, mos_section,
+            active_context_block, input_text, context,
+        )
 
         return self._response(
             answer=answer,
@@ -871,6 +875,7 @@ class StaffAdvisorAgent(Agent):
                 "What is the timeline and next suspense?",
                 "What source or local context should this role review?",
             ],
+            scenario_output=scenario_output,
         )
 
 
@@ -886,19 +891,35 @@ def _build_answer(
     mos_section: str,
     active_context_block: str = "",
     input_text: str = "",
-) -> str:
+    context: AgentContext | None = None,
+) -> tuple[str, dict[str, object] | None]:
     role = arch.role
     title = f"{arch.title} ({ectx.scope_adjective})"
 
-    # --- Scenario-mode: produce an assessment template, not a framework dump ---
+    # --- Scenario-mode: produce an assessment template + structured output ---
     if input_text and _detect_scenario(input_text):
-        scenario_answer = _build_scenario_answer(
+        scenario_result = _build_scenario_answer(
             role, title, focus_lines, osint_note, mos_section,
-            active_context_block, input_text,
+            active_context_block, input_text, context,
         )
-        if scenario_answer:
-            return scenario_answer
+        if scenario_result is not None:
+            return scenario_result
 
+    # Non-scenario: return text only, no structured output
+    text = _build_answer_text(arch, role, title, ectx, focus_lines, osint_note, mos_section, active_context_block)
+    return text, None
+
+
+def _build_answer_text(
+    arch: StaffRoleArchetype,
+    role: str,
+    title: str,
+    ectx: EchelonContext,
+    focus_lines: str,
+    osint_note: str,
+    mos_section: str,
+    active_context_block: str = "",
+) -> str:
     if role == "xo":
         return (
             f"{title} staff-vetting perspective.\n\n"
@@ -1235,6 +1256,24 @@ def _build_answer(
 # Scenario-mode answer builders
 # ---------------------------------------------------------------------------
 
+def _prior_assessment_context(context: AgentContext | None) -> str:
+    """Build a text block summarizing prior assessments for scenario prompts."""
+    if context is None or not context.prior_assessments:
+        return ""
+    lines = ["\n\nPRIOR STAFF ASSESSMENTS (from upstream agents):"]
+    for role_key, assessment in context.prior_assessments.items():
+        lines.append(f"\n--- {role_key.upper()} ---")
+        if isinstance(assessment, dict):
+            for field, value in assessment.items():
+                if field == "role":
+                    continue
+                if value and value != [] and value != {}:
+                    lines.append(f"  {field}: {value}")
+        else:
+            lines.append(f"  {assessment}")
+    return "\n".join(lines)
+
+
 def _build_scenario_answer(
     role: str,
     title: str,
@@ -1243,8 +1282,11 @@ def _build_scenario_answer(
     mos_section: str,
     active_context_block: str,
     input_text: str,
-) -> str | None:
-    """Return a scenario-specific assessment template, or None to fall through."""
+    context: AgentContext | None = None,
+) -> tuple[str, dict[str, object]] | None:
+    """Return (text, structured_output) for scenario mode, or None to fall through."""
+
+    prior_context = _prior_assessment_context(context)
 
     scenario_header = (
         f"{title} — SCENARIO ASSESSMENT\n\n"
@@ -1253,7 +1295,7 @@ def _build_scenario_answer(
     )
 
     if role == "g9":
-        return (
+        text = (
             f"{scenario_header}"
             "CIVIL ESTIMATE (scenario-specific):\n\n"
             "1. CIVIL SITUATION:\n"
@@ -1283,11 +1325,13 @@ def _build_scenario_answer(
             "   - Liaison requirements (who needs an LNO where)\n"
             "   - Information requirements (CIR) to feed the civil estimate\n"
             "   - Risks: what civil assumption would most change the plan if wrong?\n"
-            f"{active_context_block}{mos_section}{osint_note}"
+            f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
+        structured = G9ScenarioOutput(role="g9").model_dump()
+        return text, structured
 
     if role == "s2":
-        return (
+        text = (
             f"{scenario_header}"
             "INTELLIGENCE ESTIMATE (scenario-specific):\n\n"
             "1. AREA OF OPERATIONS:\n"
@@ -1311,11 +1355,13 @@ def _build_scenario_answer(
             "   - Bottom line: what does the commander need to understand about this environment?\n"
             "   - Key assumptions and their confidence level\n"
             "   - What changes if the most dangerous threat COA materializes?\n"
-            f"{active_context_block}{mos_section}{osint_note}"
+            f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
+        structured = S2ScenarioOutput(role="s2").model_dump()
+        return text, structured
 
     if role == "s4":
-        return (
+        text = (
             f"{scenario_header}"
             "LOGISTICS ESTIMATE (scenario-specific):\n\n"
             "1. SITUATION:\n"
@@ -1335,11 +1381,13 @@ def _build_scenario_answer(
             "   - Priority support actions\n"
             "   - Support agreements needed (CSSA, ACSA, host nation)\n"
             "   - Risks: what logistics assumption breaks the plan if wrong?\n"
-            f"{active_context_block}{mos_section}{osint_note}"
+            f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
+        structured = S4ScenarioOutput(role="s4").model_dump()
+        return text, structured
 
     if role == "s6":
-        return (
+        text = (
             f"{scenario_header}"
             "COMMUNICATIONS ASSESSMENT (scenario-specific):\n\n"
             "1. COMMUNICATIONS ENVIRONMENT:\n"
@@ -1359,8 +1407,10 @@ def _build_scenario_answer(
             "   - Priority comms actions before deployment\n"
             "   - Liaison comms requirements\n"
             "   - Risk: what comms assumption fails first?\n"
-            f"{active_context_block}{mos_section}{osint_note}"
+            f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
+        structured = S6ScenarioOutput(role="s6").model_dump()
+        return text, structured
 
     # Roles without a specific scenario template fall through to framework mode
     return None

@@ -13,6 +13,7 @@ class AgentContext(BaseModel):
     user_role: str | None = None
     unit_id: str | None = None
     request_is_training_or_fictional: bool = False
+    prior_assessments: dict[str, object] = Field(default_factory=dict)
     extra: dict[str, object] = Field(default_factory=dict)
 
 
@@ -32,6 +33,7 @@ class Agent(ABC):
         structured_citations: list[StructuredCitation] | None = None,
         source_trust: list[SourceTrustMarker] | None = None,
         confidence: Confidence = Confidence.low,
+        scenario_output: dict[str, object] | None = None,
     ) -> AgentRunResponse:
         warnings = [*DEFAULT_WARNINGS, *detect_sensitive_input(input_text)]
         if should_limit_to_generic_response(input_text):
@@ -52,6 +54,7 @@ class Agent(ABC):
             human_review_required=self.metadata.required_human_review,
             confidence=confidence,
             follow_up_questions=follow_up_questions or [],
+            scenario_output=scenario_output,
         )
 
     def _active_context_lines(self, context: AgentContext) -> list[str]:
