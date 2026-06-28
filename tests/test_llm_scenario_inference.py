@@ -101,12 +101,13 @@ class TestTryLlmPopulate:
         mock_gen.assert_called_once_with("system prompt", "template text", "scenario input")
 
     @patch("app.services.llm_client.generate_scenario_response")
-    def test_falls_back_to_template_when_llm_returns_none(self, mock_gen):
+    def test_falls_back_to_template_with_notice_when_llm_returns_none(self, mock_gen):
         from app.services.agents.staff_advisor_agent import _try_llm_populate
 
         mock_gen.return_value = None
         result = _try_llm_populate("original template", "scenario input", "system prompt")
-        assert result == "original template"
+        assert result.startswith("original template")
+        assert "LLM_API_KEY" in result
 
 
 # ---------------------------------------------------------------------------
@@ -149,6 +150,7 @@ class TestStaffAdvisorScenarioLLM:
         resp = g9.run(SCENARIO_INPUT, ctx)
         assert "CIVIL ESTIMATE" in resp.answer
         assert "[Extract from scenario" in resp.answer
+        assert "LLM_API_KEY" in resp.answer
 
     @patch("app.services.llm_client.generate_scenario_response")
     def test_framework_mode_skips_llm(self, mock_gen):
@@ -188,6 +190,7 @@ class TestPlanningAdvisorScenarioLLM:
         ctx = AgentContext(extra={})
         resp = agent.run(SCENARIO_INPUT, ctx)
         assert "MISSION ANALYSIS" in resp.answer
+        assert "LLM_API_KEY" in resp.answer
 
 
 class TestChiefOfStaffScenarioLLM:
@@ -215,3 +218,4 @@ class TestChiefOfStaffScenarioLLM:
         ctx = AgentContext(extra={})
         resp = agent.run(SCENARIO_INPUT, ctx)
         assert "COMMANDER'S WATCH LIST" in resp.answer
+        assert "LLM_API_KEY" in resp.answer

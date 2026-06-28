@@ -6,7 +6,9 @@ An UNCLASSIFIED, open-source FastAPI application for AI-enabled Selected Marine 
 
 ## How it works
 
-The local app provides structured workflows, private storage, and advisory scaffolds — it does not call an LLM at runtime. The AI reasoning comes from your connected assistant (Claude, ChatGPT, Copilot, Gemini, etc.) reading the repo's patterns and responding with context-aware advice.
+The local app provides structured workflows, private storage, and advisory scaffolds. The AI reasoning comes from your connected assistant (Claude, ChatGPT, Copilot, Gemini, etc.) reading the repo's patterns and responding with context-aware advice.
+
+**Optional LLM integration:** When staff agents detect a specific scenario (country, event type, forces), they can call an OpenAI-compatible API to populate assessment templates with facts from your input. This requires an API key and is off by default — see [LLM scenario inference](#llm-scenario-inference-optional) below. Without it, agents return template shells with placeholder fields.
 
 ## Purpose
 
@@ -55,6 +57,21 @@ Then open:
 - API docs: http://localhost:8000/docs
 
 See [QUICKSTART.md](QUICKSTART.md) for the full walkthrough.
+
+## LLM scenario inference (optional)
+
+Staff agents can call an external LLM to populate scenario assessment templates with extracted facts. This is a **power-user feature** for staff officers running multiple scenarios per drill weekend where time savings justify the per-call cost.
+
+**Setup:** Add to `.env`:
+```
+LLM_API_KEY=sk-your-key-here
+LLM_BASE_URL=https://api.openai.com/v1    # optional, default
+LLM_MODEL=gpt-4o-mini                      # optional, default
+```
+
+**Cost:** ~$0.01-0.05 per scenario run at GPT-4o-mini pricing. Any OpenAI-compatible API works (OpenAI, Anthropic via proxy, local Ollama, etc.).
+
+**Without a key:** Agents still detect scenarios and return the correct assessment format (civil estimate, intel estimate, mission analysis shell, etc.) but fields contain placeholder text instead of populated analysis. A notice at the bottom of the output explains how to enable LLM inference.
 
 ## What's inside
 

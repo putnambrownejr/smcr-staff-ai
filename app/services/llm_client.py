@@ -20,6 +20,7 @@ import httpx
 logger = logging.getLogger(__name__)
 
 _TIMEOUT = 30.0
+_NO_KEY_WARNED = False
 
 
 @lru_cache
@@ -40,8 +41,16 @@ def generate_scenario_response(
     Returns the populated text, or ``None`` if no API key is configured
     or the call fails for any reason.
     """
+    global _NO_KEY_WARNED  # noqa: PLW0603
     api_key, base_url, model = _llm_settings()
     if not api_key:
+        if not _NO_KEY_WARNED:
+            logger.warning(
+                "LLM_API_KEY not set — scenario field population disabled. "
+                "Set LLM_API_KEY in .env to enable. Without it, scenario "
+                "assessments return template shells with placeholder fields."
+            )
+            _NO_KEY_WARNED = True
         return None
 
     messages = [

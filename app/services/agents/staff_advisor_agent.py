@@ -1258,12 +1258,22 @@ def _build_answer_text(
 # Scenario-mode answer builders
 # ---------------------------------------------------------------------------
 
+_LLM_FALLBACK_NOTICE = (
+    "\n\n---\n"
+    "NOTE: Bracketed fields above are template placeholders. To populate them "
+    "automatically from your scenario input, set LLM_API_KEY in .env (requires "
+    "an OpenAI-compatible API key, ~$0.01-0.05 per scenario at GPT-4o-mini pricing)."
+)
+
+
 def _try_llm_populate(template: str, input_text: str, system_prompt: str) -> str:
-    """Try LLM inference to populate a scenario template; return template as-is on failure."""
+    """Try LLM inference to populate a scenario template; return template with notice on failure."""
     from app.services.llm_client import generate_scenario_response
 
     result = generate_scenario_response(system_prompt, template, input_text)
-    return result if result is not None else template
+    if result is not None:
+        return result
+    return template + _LLM_FALLBACK_NOTICE
 
 
 def _prior_assessment_context(context: AgentContext | None) -> str:
