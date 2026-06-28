@@ -183,7 +183,7 @@ When loaded, your AI will automatically:
 - **Produce dual-format outputs** — `.md` + `.docx` for documents, `.csv` for tables
 - **Write session logs** tracking what was produced, inputs used, and outstanding gaps
 - **Cite sources** by publication number, date its knowledge, and flag uncertainty
-- **Use current interagency facts** (e.g., USAID dissolved 2025 → DoS/BHR is lead agency)
+- **Use current interagency facts** (e.g., USAID dissolved 2025 → DoS/DHR is lead agency)
 - **Stay UNCLASSIFIED** and put a "DRAFT — verify before acting" footer on everything
 - **Understand the app architecture** enough to help with development or use
 

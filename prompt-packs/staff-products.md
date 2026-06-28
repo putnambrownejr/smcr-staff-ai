@@ -373,8 +373,8 @@ All civilian humanitarian/development functions now fall under State:
   emergency medical, nutrition
 - **Bureau of Global Health Security & Diplomacy** (from USAID Global Health) —
   HIV/AIDS, malaria, maternal/child health, PEPFAR
-- **Bureau of Disaster & Humanitarian Response (BDHR)** — proposed 2026, will
-  consolidate emergency relief and rebuild DART-equivalent capability
+- **Bureau of Disaster and Humanitarian Response (DHR)** — consolidates
+  emergency relief; has rebuilt DART-equivalent capability
 - **PRM** (Population, Refugees, Migration) — unchanged, reports to "F"
 - **DRL** (Democracy, Human Rights & Religious Freedom) — absorbed USAID/DRG
 - **Food for Peace (Title II)** → transferred to **USDA**, not State

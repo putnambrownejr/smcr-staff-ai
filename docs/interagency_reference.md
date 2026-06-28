@@ -184,8 +184,8 @@ VFA, US-Japan SOFA, Canada-US Bilateral Army Training Strategy.
     shelter, emergency medical, nutrition
   - **Bureau of Global Health Security & Diplomacy** — from USAID Global Health;
     HIV/AIDS, malaria, maternal/child health, PEPFAR
-  - **Bureau of Disaster & Humanitarian Response (BDHR)** — proposed 2026; will
-    consolidate emergency relief and rebuild DART-equivalent capability
+  - **Bureau of Disaster and Humanitarian Response (DHR)** — consolidates
+    emergency relief; has rebuilt DART-equivalent capability
   - **PRM** (Population, Refugees, Migration) — unchanged, reports to "F"
   - **DRL** (Democracy, Human Rights & Religious Freedom) — absorbed USAID/DRG
   - **Food for Peace (Title II)** — transferred to **USDA**, not State
@@ -241,7 +241,7 @@ VFA, US-Japan SOFA, Canada-US Bilateral Army Training Strategy.
   foreign port city during a combined exercise or humanitarian mission. Activities
   clear through the **US Embassy Country Team**: the DAO coordinates
   military-to-military contacts with the host, the DCM oversees interagency
-  deconfliction. If State/BHA is also operating in-country, Marines embed a liaison
+  deconfliction. If State/DHR is also operating in-country, Marines embed a liaison
   with the State field office to sync logistics. Coordination with local NGOs goes
   through OCHA or the Embassy's Humanitarian Advisor. Marines coordinate *up*
   through DAO/ambassador and *across* via federal agency liaisons.
@@ -302,7 +302,7 @@ JP 2-0 (Joint Intelligence), DoD Instruction 3025.21 (DSCA).
   logistics unit reports to the CMOC where a civil affairs officer is the military
   representative. They attend the Logistics Cluster (usually led by WFP) and inform
   it of port or runway capabilities. Marines offer engineer or transport support
-  (via MOA with State/BHA) and update NGO colleagues in daily SITREPs. Marines
+  (via MOA with State/DHR) and update NGO colleagues in daily SITREPs. Marines
   integrate into coordination centers — providing liaison officers and data rather
   than direct command.
 

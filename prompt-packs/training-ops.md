@@ -228,15 +228,15 @@ as solid as the brief makes it sound:
 | Ser | Time | Event | Inject To | Expected Action | T.O. |
 |---|---|---|---|---|---|
 | 001 | D+0 0600 | Hurricane CAT 4 makes landfall; host nation requests assistance | CO/XO | Issue WARNORD, activate planning team | 1 |
-| 002 | D+0 0800 | DoS/BHR forward coordination team requests military logistics assessment | S-3/S-4 | Assign assessment team, request transportation | 1,2 |
-| 003 | D+0 1000 | Local media reports US troops "taking over" relief operations | PAO/CO | Draft public affairs guidance, coordinate with DoS/BHR | 3 |
+| 002 | D+0 0800 | DoS/DHR forward coordination team requests military logistics assessment | S-3/S-4 | Assign assessment team, request transportation | 1,2 |
+| 003 | D+0 1000 | Local media reports US troops "taking over" relief operations | PAO/CO | Draft public affairs guidance, coordinate with DoS/DHR | 3 |
 | 004 | D+0 1200 | Bridge on MSR ALPHA collapsed; primary distribution route blocked | S-3/S-4 | Identify alternate route, reassess timeline, report to higher | 2 |
 | 005 | D+0 1400 | Rumors of armed groups seizing relief supplies at Distribution Point 2 | S-2/S-3 | Verify report, assess force protection posture, coordinate with HN security | 2,4 |
-| 006 | D+1 0800 | DoS/BHR reports 3 NGOs refusing to coordinate through military channels | S-3/CMO | Establish civil-military liaison, adjust coordination procedures | 3 |
+| 006 | D+1 0800 | DoS/DHR reports 3 NGOs refusing to coordinate through military channels | S-3/CMO | Establish civil-military liaison, adjust coordination procedures | 3 |
 | 007 | D+1 1400 | CASEVAC request: 2 Marines injured in vehicle accident on Route BLUE | S-1/Medical | Execute CASEVAC plan, report to higher, assess impact on operations | 4 |
 
 *Notice:* Events cascade (bridge collapse affects distribution), include non-military
-actors (DoS/BHR, NGOs, media), and force decisions between competing priorities.
+actors (DoS/DHR, NGOs, media), and force decisions between competing priorities.
 
 **MSEL design rules:**
 - Events should cascade — one event's outcome should affect the next
@@ -356,8 +356,8 @@ For FHADR and interagency scenarios:
   oversees State's humanitarian bureaus — this is the interagency node for exercises.
 - State's **Bureau for Humanitarian Assistance** (formerly USAID/BHA) handles
   food, water, shelter, emergency medical.
-- State's proposed **Bureau of Disaster & Humanitarian Response (BDHR)** will
-  consolidate emergency relief — include this in forward-looking scenarios.
+- State's **Bureau of Disaster and Humanitarian Response (DHR)** consolidates
+  emergency relief and has rebuilt DART-equivalent capability.
 - **DART teams are effectively shelved** (BHA staff cut from ~1,300 to ~50).
   DoD Civil Affairs units and military transport fill the gap in the interim.
 - **JP 3-29** and **JP 3-57** still reference USAID/OFDA — pending doctrinal
