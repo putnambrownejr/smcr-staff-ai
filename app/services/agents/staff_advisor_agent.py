@@ -51,6 +51,43 @@ from app.services.agents.source_refs import (
 # Echelon modifier
 # ---------------------------------------------------------------------------
 
+_SCENARIO_SIGNALS = (
+    "earthquake", "hurricane", "typhoon", "tsunami", "flood", "wildfire",
+    "fhadr", "ha/dr", "disaster", "humanitarian",
+    "exercise", "scenario", "vignette", "situation",
+    "invasion", "insurgency", "conflict", "crisis", "coup",
+    "partner nation", "host nation", "embassy", "country team",
+    "meu", "jt", "jtf", "joint task force", "coalition",
+    "noncombatant evacuation", "neo",
+    "casualties", "displaced", "refugees",
+)
+
+_COUNTRY_SIGNALS = (
+    "afghanistan", "australia", "bahrain", "canada", "china", "colombia",
+    "djibouti", "egypt", "germany", "guam", "haiti", "honduras", "india",
+    "indonesia", "iraq", "israel", "japan", "jordan", "kenya", "korea",
+    "kuwait", "lebanon", "libya", "mexico", "morocco", "nato",
+    "nicaragua", "niger", "nigeria", "norway", "okinawa",
+    "pakistan", "panama", "peru", "philippines", "poland",
+    "qatar", "romania", "russia", "saudi", "singapore", "somalia",
+    "sudan", "syria", "taiwan", "thailand", "turkey", "ukraine",
+    "venezuela", "vietnam", "yemen",
+)
+
+
+def _detect_scenario(input_text: str) -> bool:
+    """Return True when the user input describes a specific scenario."""
+    lowered = input_text.lower()
+    has_scenario_signal = any(s in lowered for s in _SCENARIO_SIGNALS)
+    has_country = any(c in lowered for c in _COUNTRY_SIGNALS)
+    has_specifics = any(word in lowered for word in (
+        "magnitude", "category", "casualties", "displaced", "population",
+        "km", "miles", "destroyed", "damaged", "airport", "port", "road",
+    ))
+    # Scenario if: (scenario keyword + country) OR (scenario keyword + specific details)
+    return has_scenario_signal and (has_country or has_specifics)
+
+
 @dataclass(frozen=True)
 class EchelonContext:
     """Terminology and scope modifiers for a given echelon."""
@@ -762,7 +799,11 @@ class StaffAdvisorAgent(Agent):
             system_prompt=(
                 f"Respond as {archetype.title}. Focus on {archetype.scope}. "
                 "Adapt your terminology to the user's echelon context. "
-                "Vet ideas constructively with concerns, recommendations, and human-review cautions."
+                "Vet ideas constructively with concerns, recommendations, and human-review cautions.\n\n"
+                "SCENARIO MODE: If the user provides a specific scenario (country, event type, forces, "
+                "timeline, or situation details), apply your framework TO that scenario and produce a "
+                "structured assessment. Do not return the framework description — return your analysis "
+                "of the situation using the framework."
             ),
         )
 
@@ -816,7 +857,7 @@ class StaffAdvisorAgent(Agent):
                 + "\n"
             )
 
-        answer = _build_answer(arch, ectx, focus_lines, osint_note, mos_section, active_context_block)
+        answer = _build_answer(arch, ectx, focus_lines, osint_note, mos_section, active_context_block, input_text)
 
         return self._response(
             answer=answer,
@@ -844,9 +885,19 @@ def _build_answer(
     osint_note: str,
     mos_section: str,
     active_context_block: str = "",
+    input_text: str = "",
 ) -> str:
     role = arch.role
     title = f"{arch.title} ({ectx.scope_adjective})"
+
+    # --- Scenario-mode: produce an assessment template, not a framework dump ---
+    if input_text and _detect_scenario(input_text):
+        scenario_answer = _build_scenario_answer(
+            role, title, focus_lines, osint_note, mos_section,
+            active_context_block, input_text,
+        )
+        if scenario_answer:
+            return scenario_answer
 
     if role == "xo":
         return (
@@ -1178,6 +1229,141 @@ def _build_answer(
         "and a human reviewer."
         f"{active_context_block}{mos_section}{osint_note}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Scenario-mode answer builders
+# ---------------------------------------------------------------------------
+
+def _build_scenario_answer(
+    role: str,
+    title: str,
+    focus_lines: str,
+    osint_note: str,
+    mos_section: str,
+    active_context_block: str,
+    input_text: str,
+) -> str | None:
+    """Return a scenario-specific assessment template, or None to fall through."""
+
+    scenario_header = (
+        f"{title} — SCENARIO ASSESSMENT\n\n"
+        "A specific scenario was provided. Applying doctrinal framework to the situation "
+        "rather than describing the framework itself.\n\n"
+    )
+
+    if role == "g9":
+        return (
+            f"{scenario_header}"
+            "CIVIL ESTIMATE (scenario-specific):\n\n"
+            "1. CIVIL SITUATION:\n"
+            "   - Area: [Extract from scenario — what is the operating environment?]\n"
+            "   - Population: [What is the affected population and their status?]\n"
+            "   - Infrastructure: [What infrastructure is damaged, degraded, or contested?]\n"
+            "   - Governance: [What is the host nation governance status? Who is the counterpart?]\n\n"
+            "2. ASCOPE ANALYSIS (applied to this scenario):\n"
+            "   - Areas: key terrain from a civil perspective — population centers, displacement routes, "
+            "aid distribution points\n"
+            "   - Structures: hospitals, schools, government buildings, ports, airports — status\n"
+            "   - Capabilities: host nation capacity to respond, NGO presence, existing coordination mechanisms\n"
+            "   - Organizations: which NGOs, IOs, and government agencies are operating or expected\n"
+            "   - People: key leaders, vulnerable populations, cultural considerations\n"
+            "   - Events: upcoming events that affect operations (elections, religious observances, market days)\n\n"
+            "3. INTERAGENCY COORDINATION:\n"
+            "   - US Embassy / Country Team: who is the coordination node?\n"
+            "   - DoS/DHR: is a DART or equivalent deployed? What State bureau is lead?\n"
+            "   - UN/OCHA: are clusters activated? Which ones are relevant?\n"
+            "   - NGO landscape: who is operating, who is refusing military coordination, why?\n\n"
+            "4. IMPACT ON MILITARY OPERATIONS:\n"
+            "   - What civil factors constrain or enable the military mission?\n"
+            "   - What no-strike / protected site considerations exist?\n"
+            "   - What transition conditions should be set now?\n\n"
+            "5. CMO RECOMMENDATIONS:\n"
+            "   - Priority civil-military coordination actions\n"
+            "   - Liaison requirements (who needs an LNO where)\n"
+            "   - Information requirements (CIR) to feed the civil estimate\n"
+            "   - Risks: what civil assumption would most change the plan if wrong?\n"
+            f"{active_context_block}{mos_section}{osint_note}"
+        )
+
+    if role == "s2":
+        return (
+            f"{scenario_header}"
+            "INTELLIGENCE ESTIMATE (scenario-specific):\n\n"
+            "1. AREA OF OPERATIONS:\n"
+            "   - Define the AO and area of interest from the scenario\n"
+            "   - Key terrain and weather effects on operations\n"
+            "   - Infrastructure status (LOCs, ports, airfields, bridges)\n\n"
+            "2. THREAT / ADVERSARY ASSESSMENT:\n"
+            "   - Who are the threat actors in this scenario? (state, non-state, criminal, spoiler)\n"
+            "   - Threat disposition, capabilities, and likely intentions\n"
+            "   - Threat COAs: most likely and most dangerous\n"
+            "   - Historical pattern of activity in this area\n\n"
+            "3. CIVIL CONSIDERATIONS (IPB Step 2):\n"
+            "   - Population demographics, displacement patterns, attitudes toward US forces\n"
+            "   - Media environment and information threats\n"
+            "   - Political dynamics that affect the mission\n\n"
+            "4. INTELLIGENCE GAPS:\n"
+            "   - What do we NOT know that the commander needs to decide?\n"
+            "   - Priority Intelligence Requirements (PIR) for this scenario\n"
+            "   - Recommended collection means (OSINT, liaison, organic sensors)\n\n"
+            "5. ASSESSMENT:\n"
+            "   - Bottom line: what does the commander need to understand about this environment?\n"
+            "   - Key assumptions and their confidence level\n"
+            "   - What changes if the most dangerous threat COA materializes?\n"
+            f"{active_context_block}{mos_section}{osint_note}"
+        )
+
+    if role == "s4":
+        return (
+            f"{scenario_header}"
+            "LOGISTICS ESTIMATE (scenario-specific):\n\n"
+            "1. SITUATION:\n"
+            "   - What is the logistics environment? (distances, infrastructure, climate)\n"
+            "   - What sustainment is available in theater vs. requires deployment?\n\n"
+            "2. SUPPORT REQUIREMENTS:\n"
+            "   - Class I (rations): feeding plan for the force and duration\n"
+            "   - Class III (fuel): consumption rates, resupply sources\n"
+            "   - Class V (ammo): applicable if security/force protection role\n"
+            "   - Class VIII (medical): CASEVAC plan, nearest MTF, medical logistics\n"
+            "   - Transportation: lift requirements, movement plan\n\n"
+            "3. SUPPORTABILITY ASSESSMENT:\n"
+            "   - What is supportable with current resources?\n"
+            "   - What requires host nation support, cross-service support, or contract?\n"
+            "   - What is the longest lead-time item and its decision point?\n\n"
+            "4. LOGISTICS RECOMMENDATIONS:\n"
+            "   - Priority support actions\n"
+            "   - Support agreements needed (CSSA, ACSA, host nation)\n"
+            "   - Risks: what logistics assumption breaks the plan if wrong?\n"
+            f"{active_context_block}{mos_section}{osint_note}"
+        )
+
+    if role == "s6":
+        return (
+            f"{scenario_header}"
+            "COMMUNICATIONS ASSESSMENT (scenario-specific):\n\n"
+            "1. COMMUNICATIONS ENVIRONMENT:\n"
+            "   - What comms infrastructure exists in the AO?\n"
+            "   - Joint/coalition/interagency comms requirements\n"
+            "   - Spectrum management and host nation restrictions\n\n"
+            "2. PACE PLAN (for this scenario):\n"
+            "   - Primary: [recommended based on scenario]\n"
+            "   - Alternate: [recommended based on scenario]\n"
+            "   - Contingency: [recommended based on scenario]\n"
+            "   - Emergency: [recommended based on scenario]\n\n"
+            "3. INTEROPERABILITY ISSUES:\n"
+            "   - What comms gaps exist with joint/coalition/interagency partners?\n"
+            "   - COMSEC sharing limitations\n"
+            "   - Data link and network integration requirements\n\n"
+            "4. RECOMMENDATIONS:\n"
+            "   - Priority comms actions before deployment\n"
+            "   - Liaison comms requirements\n"
+            "   - Risk: what comms assumption fails first?\n"
+            f"{active_context_block}{mos_section}{osint_note}"
+        )
+
+    # Roles without a specific scenario template fall through to framework mode
+    return None
 
 
 # ---------------------------------------------------------------------------

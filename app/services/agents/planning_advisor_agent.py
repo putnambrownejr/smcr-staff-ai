@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import (
@@ -69,11 +71,19 @@ class PlanningAdvisorAgent(Agent):
                 "the problem and has SOPs to support real compression; otherwise drive deliberate MCPP. "
                 "Make the method explicit, force commander decisions into the open, keep the assumption and "
                 "decision logs visible, and be blunt about drift, fake COAs, and product drafting that "
-                "outruns thinking."
+                "outruns thinking.\n\n"
+                "SCENARIO MODE: If the user provides a specific scenario (country, event type, forces, "
+                "timeline, or situation details), produce a mission analysis shell for that scenario — "
+                "not a description of how MCPP works. Apply the planning process to their situation."
             ),
         )
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        from app.services.agents.staff_advisor_agent import _detect_scenario
+
+        if _detect_scenario(input_text):
+            return self._scenario_response(input_text, context)
+
         tempo = _tempo_read(input_text)
         tempo_line = (
             "Tempo read: this looks compressed (R2P2-style). Compression is only legitimate when the staff "
@@ -146,6 +156,68 @@ class PlanningAdvisorAgent(Agent):
                 "Is time or understanding the real constraint — and does that justify the tempo you picked?",
                 "Who is keeping the assumption and decision logs?",
                 "What assumption would force you back to deliberate MCPP?",
+            ],
+        )
+
+
+    def _scenario_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        tempo = _tempo_read(input_text)
+        tempo_label = "R2P2 (compressed)" if tempo == "rapid" else "MCPP (deliberate)"
+        answer = (
+            f"Planning Advisor — SCENARIO ASSESSMENT\n\n"
+            f"Tempo read: {tempo_label}\n\n"
+            "A specific scenario was provided. Producing a mission analysis shell "
+            "rather than describing the planning process.\n\n"
+            "MISSION ANALYSIS (scenario-specific):\n\n"
+            "1. MISSION RESTATEMENT:\n"
+            "   - Higher commander's intent (as understood from the scenario)\n"
+            "   - Restated mission: who, what, when, where, why — ONE SENTENCE\n\n"
+            "2. SPECIFIED / IMPLIED / ESSENTIAL TASKS:\n"
+            "   - Specified tasks (explicitly stated in the scenario or tasking)\n"
+            "   - Implied tasks (required but not stated — logistics, coordination, comms)\n"
+            "   - Essential tasks (must be accomplished for mission success)\n\n"
+            "3. CONSTRAINTS AND LIMITATIONS:\n"
+            "   - Constraints (must do): legal, policy, ROE, host nation requirements\n"
+            "   - Limitations (must not do): Posse Comitatus, SOFA restrictions, "
+            "political sensitivities\n\n"
+            "4. ASSUMPTIONS:\n"
+            "   - What are we assuming that, if wrong, changes the plan?\n"
+            "   - Which assumptions need validation before execution?\n"
+            "   - What is the trigger to revalidate each assumption?\n\n"
+            "5. RISK ASSESSMENT:\n"
+            "   - What is the most likely risk to mission success?\n"
+            "   - What is the most dangerous risk?\n"
+            "   - What mitigation is available?\n\n"
+            "6. INITIAL PLANNING TIMELINE:\n"
+            "   - Key decision points and their suspenses\n"
+            "   - Staff estimates due from: S-2, S-3, S-4, S-6, G-9\n"
+            "   - Commander's decision brief: when and what format?\n\n"
+            "7. INFORMATION REQUIREMENTS:\n"
+            "   - PIR (intelligence gaps that affect the decision)\n"
+            "   - FFIR (own-force status needed for planning)\n"
+            "   - CIR (civil information requirements)\n\n"
+            "PLANNING WATCHPOINTS:\n"
+            "- What assumption is doing too much work?\n"
+            "- Where will the plan break first in execution?\n"
+            "- What staff section is not yet integrated?\n"
+            "- What product is being drafted before the thinking is done?\n"
+        )
+        return self._response(
+            answer=answer,
+            input_text=input_text,
+            citations=citation_titles(_PLANNING_REFERENCES),
+            structured_citations=structured_citations(_PLANNING_REFERENCES),
+            source_trust=source_trust_markers(
+                _PLANNING_REFERENCES,
+                notes_prefix="Verify current doctrine and local SOPs before formal use.",
+            ),
+            confidence=Confidence.medium,
+            follow_up_questions=[
+                "What is the commander's stated intent or desired end state?",
+                "What forces are available and what is their readiness?",
+                "What is the timeline from tasking to execution?",
+                "What interagency or coalition coordination is required?",
+                "What assumption would force you to replan if it breaks?",
             ],
         )
 

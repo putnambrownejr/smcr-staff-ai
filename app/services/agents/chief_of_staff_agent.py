@@ -3,6 +3,17 @@ from __future__ import annotations
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
 
+_COS_SCENARIO_SIGNALS = (
+    "earthquake", "hurricane", "typhoon", "tsunami", "flood", "wildfire",
+    "fhadr", "ha/dr", "disaster", "humanitarian",
+    "exercise", "scenario", "vignette", "situation",
+    "invasion", "insurgency", "conflict", "crisis", "coup",
+    "partner nation", "host nation", "embassy", "country team",
+    "meu", "jt", "jtf", "joint task force", "coalition",
+    "noncombatant evacuation", "neo",
+    "casualties", "displaced", "refugees",
+)
+
 
 class ChiefOfStaffAideAgent(Agent):
     metadata = AgentMetadata(
@@ -42,11 +53,21 @@ class ChiefOfStaffAideAgent(Agent):
             "AT planning triggers: T-45 (MROWS submission), T-30 (DTS authorization), "
             "T-15 (final coordination, billeting, ranges).\n\n"
             "Reserve continuity friction: 28-day gaps between drills break admin chains; "
-            "handoff notes and due-out trackers are the only bridge."
+            "handoff notes and due-out trackers are the only bridge.\n\n"
+            "SCENARIO MODE: If the user provides a specific scenario (country, event type, forces, "
+            "timeline, or situation details), produce a prioritized watch list and action items "
+            "for the command team — not a drill-prep template."
         ),
     )
 
+    def _is_scenario(self, input_text: str) -> bool:
+        lowered = input_text.lower()
+        return any(s in lowered for s in _COS_SCENARIO_SIGNALS)
+
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        if self._is_scenario(input_text):
+            return self._scenario_response(input_text, context)
+
         handoff = context.extra.get("handoff", {})
         if not isinstance(handoff, dict):
             handoff = {}
@@ -95,6 +116,57 @@ class ChiefOfStaffAideAgent(Agent):
             input_text=input_text,
             follow_up_questions=_follow_up_questions(handoff),
             confidence=_confidence(handoff),
+        )
+
+
+    def _scenario_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        answer = (
+            "Chief of Staff — SCENARIO ASSESSMENT\n\n"
+            "A specific scenario was provided. Producing a command-team watch list "
+            "and action items rather than a drill-prep template.\n\n"
+            "COMMANDER'S WATCH LIST:\n\n"
+            "1. IMMEDIATE ACTIONS (first 24 hours):\n"
+            "   - What decisions does the commander need to make NOW?\n"
+            "   - What staff estimates are needed and from whom?\n"
+            "   - What higher HQ reporting is required?\n"
+            "   - What liaison must be established immediately?\n\n"
+            "2. STAFF TASKING:\n"
+            "   - S-2: [intelligence requirements for this scenario]\n"
+            "   - S-3: [operations planning requirements]\n"
+            "   - S-4: [logistics assessment requirements]\n"
+            "   - S-6: [communications planning requirements]\n"
+            "   - G-9/CMO: [civil-military coordination requirements]\n"
+            "   - PAO: [public affairs posture for this scenario]\n\n"
+            "3. DECISION POINTS:\n"
+            "   - What decisions are time-sensitive?\n"
+            "   - What information does the commander need before each decision?\n"
+            "   - What is the recommended battle rhythm for this scenario?\n\n"
+            "4. COORDINATION REQUIREMENTS:\n"
+            "   - Higher HQ: what reporting and requests are needed?\n"
+            "   - Adjacent units: who needs to know and what?\n"
+            "   - Interagency: Embassy/Country Team, DoS/DHR, NGOs?\n"
+            "   - Coalition/partner nation: what coordination is required?\n\n"
+            "5. RISK WATCH:\n"
+            "   - What assumption breaks the plan if wrong?\n"
+            "   - What staff section is single-threaded or undermanned for this?\n"
+            "   - What continuity risk exists if this extends past the drill weekend?\n"
+            "   - What is the commander's decision point for escalation?\n\n"
+            "6. RECOMMENDED BATTLE RHYTHM:\n"
+            "   - CUB timing and attendees\n"
+            "   - Staff sync timing\n"
+            "   - Reporting windows to higher\n"
+            "   - Decision brief schedule\n"
+        )
+        return self._response(
+            answer=answer,
+            input_text=input_text,
+            confidence=Confidence.medium,
+            follow_up_questions=[
+                "What forces are available and what is their current readiness?",
+                "What is the commander's initial guidance or intent?",
+                "What higher HQ tasking or timeline are we working to?",
+                "What interagency or coalition coordination is already in place?",
+            ],
         )
 
 
