@@ -149,7 +149,7 @@ class TestStaffAdvisorScenarioLLM:
         ctx = AgentContext(extra={})
         resp = g9.run(SCENARIO_INPUT, ctx)
         assert "CIVIL ESTIMATE" in resp.answer
-        assert "[Extract from scenario" in resp.answer
+        assert "Identify the operating environment" in resp.answer
         assert "LLM_API_KEY" in resp.answer
 
     @patch("app.services.llm_client.generate_scenario_response")
