@@ -81,8 +81,8 @@ as current truth.
 - **Cite sources explicitly.** Every claim about doctrine, policy, organizational structure,
   or procedure must name the source (publication number, website, order). "Per JP 3-29" not
   "doctrinally." If you can't name the source, say so.
-- **Date your knowledge.** When referencing stored facts (e.g., "DoS/BHR is the lead
-  humanitarian agency"), state when this was last verified: "as of [date]."
+- **Date your knowledge.** When referencing stored facts about organizations, policies,
+  or structure, state when this was last verified: "as of [date]."
 - **Warn on every output.** Every product, brief, or advisory must include a footer:
   `DRAFT — Verify all references against current official sources before acting.`
 - **Flag uncertainty.** If a fact could have changed since last verification (org structures,
@@ -131,24 +131,6 @@ projects/
   `projects/` folder is the preferred location when working from the repo; the app-data path
   is used by the running server.
 - **UNCLASSIFIED only** — the security constraint applies to project files too.
-
----
-
-## Interagency Knowledge (current as of mid-2026)
-
-These standing facts apply to all FHADR, interagency, and humanitarian planning work.
-**Verify currency before using in products** — these can change.
-
-- **USAID no longer exists as an independent agency** (dissolved 2025). USAID functions
-  were absorbed into the **Department of State** by July 1, 2025.
-- The lead U.S. humanitarian agency is now **State's Bureau for Humanitarian Assistance**,
-  under a new **Under Secretary for Foreign Assistance & Humanitarian Affairs ("F")**.
-- **JP 3-29** and **JP 3-57** still reference USAID/OFDA — pending doctrinal update.
-  Substitute State's humanitarian bureau wherever USAID/BHA or USAID/OFDA appears.
-- Do not reference USAID, USAID/OFDA, or USAID/BHA as active organizations in any product.
-  Historical references (e.g., "formerly USAID/BHA") are acceptable for context.
-- For detailed State Dept reorg structure, DART status, and civ-mil coordination
-  changes, see the G-9 / Civil-Military agent — it has the full breakdown.
 
 ---
 
