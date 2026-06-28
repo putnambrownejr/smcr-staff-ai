@@ -134,6 +134,15 @@ projects/
 
 ---
 
+## Key Reference Files
+
+- **`docs/interagency_reference.md`** — Joint, multinational, interagency, and NGO coordination
+  reference. Covers command relationships, liaison, comms interop, agreements, and coordination
+  mechanisms across US military branches, allied nations, US government agencies, and NGOs.
+  Distinct from G-9/Civil Affairs (which handles civil estimate, ASCOPE/PMESII, Annex G).
+
+---
+
 ## Key Architecture Facts
 
 - **Stack:** FastAPI + vanilla JS SPA. No framework on the frontend. Python 3.12, `uv` for deps.

@@ -725,7 +725,10 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "factor degraded civilian capacity into FHADR planning.\n"
             "- Regional development now managed by State geographic bureaus (AFR, EAP, EUR, NEA, WHA) "
             "not dedicated USAID regional offices.\n"
-            "- Food for Peace (Title II) transferred to USDA, not State."
+            "- Food for Peace (Title II) transferred to USDA, not State.\n"
+            "\n"
+            "For joint operations, multinational coordination, and broader interagency mechanics "
+            "(command relationships, liaison, comms interop, agreements), see docs/interagency_reference.md."
         ),
     ),
 )
