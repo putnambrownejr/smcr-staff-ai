@@ -63,3 +63,4 @@ class AgentRunResponse(BaseModel):
     human_review_required: bool = True
     confidence: Confidence = Confidence.low
     follow_up_questions: list[str] = Field(default_factory=list)
+    scenario_output: dict[str, Any] | None = None

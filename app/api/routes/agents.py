@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.agents import AgentMetadata, AgentRunRequest, AgentRunResponse
+from app.schemas.scenario_handoff import ChainRequest, ChainResponse, ChainStepResult
 from app.services.agents.base import AgentContext
 from app.services.agents.registry import agent_registry
 from app.services.session.active_context_store import ActiveUserContextStore
@@ -39,7 +40,7 @@ def run_agent(
             extra = dict(context_payload.get("extra") or {})
             extra["active_user_context"] = stored_context.model_dump(mode="json")
             context_payload["extra"] = extra
-    known_keys = {"user_key", "user_role", "unit_id", "request_is_training_or_fictional", "extra"}
+    known_keys = {"user_key", "user_role", "unit_id", "request_is_training_or_fictional", "extra", "prior_assessments"}
     unknown_context = {key: value for key, value in context_payload.items() if key not in known_keys}
     if unknown_context:
         extra = dict(context_payload.get("extra") or {})
@@ -47,3 +48,61 @@ def run_agent(
         context_payload["extra"] = extra
     context = AgentContext.model_validate(context_payload)
     return agent.run(request.input, context)
+
+
+@router.post("/chain", response_model=ChainResponse)
+def run_agent_chain(
+    request: ChainRequest,
+    active_context_store: Annotated[ActiveUserContextStore, Depends(get_active_context_store)],
+) -> ChainResponse:
+    """Run agents in sequence, passing structured scenario output forward."""
+    prior_assessments: dict[str, object] = {}
+    results: list[ChainStepResult] = []
+    warnings: list[str] = []
+
+    for step in request.steps:
+        agent = agent_registry.get(step.agent_id)
+        if agent is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Unknown agent in chain: {step.agent_id}",
+            )
+
+        context_payload = dict(request.context)
+        context_payload["prior_assessments"] = prior_assessments
+
+        if user_key := context_payload.get("user_key"):
+            stored_context = active_context_store.get(str(user_key))
+            if stored_context is not None:
+                extra = dict(context_payload.get("extra") or {})
+                extra["active_user_context"] = stored_context.model_dump(mode="json")
+                context_payload["extra"] = extra
+
+        known_keys = {"user_key", "user_role", "unit_id", "request_is_training_or_fictional", "extra", "prior_assessments"}
+        unknown_context = {key: value for key, value in context_payload.items() if key not in known_keys}
+        if unknown_context:
+            extra = dict(context_payload.get("extra") or {})
+            extra.update(unknown_context)
+            context_payload["extra"] = extra
+
+        context = AgentContext.model_validate(context_payload)
+        agent_input = step.input or request.scenario
+        response = agent.run(agent_input, context)
+
+        scenario_output = response.scenario_output
+        if scenario_output is not None:
+            role_key = scenario_output.get("role", step.agent_id)
+            prior_assessments[role_key] = scenario_output
+
+        results.append(ChainStepResult(
+            agent_id=step.agent_id,
+            response=response.model_dump(),
+            scenario_output=scenario_output,
+        ))
+        warnings.extend(response.warnings)
+
+    return ChainResponse(
+        scenario=request.scenario,
+        results=results,
+        warnings=warnings,
+    )

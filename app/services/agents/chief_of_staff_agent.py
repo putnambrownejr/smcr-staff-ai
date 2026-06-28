@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
+from app.schemas.scenario_handoff import CoSScenarioOutput
 from app.services.agents.base import Agent, AgentContext
 
 _COS_SCENARIO_SIGNALS = (
@@ -120,6 +121,9 @@ class ChiefOfStaffAideAgent(Agent):
 
 
     def _scenario_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        from app.services.agents.staff_advisor_agent import _prior_assessment_context
+
+        prior_context = _prior_assessment_context(context)
         answer = (
             "Chief of Staff — SCENARIO ASSESSMENT\n\n"
             "A specific scenario was provided. Producing a command-team watch list "
@@ -156,7 +160,9 @@ class ChiefOfStaffAideAgent(Agent):
             "   - Staff sync timing\n"
             "   - Reporting windows to higher\n"
             "   - Decision brief schedule\n"
+            f"{prior_context}"
         )
+        structured = CoSScenarioOutput(role="cos").model_dump()
         return self._response(
             answer=answer,
             input_text=input_text,
@@ -167,6 +173,7 @@ class ChiefOfStaffAideAgent(Agent):
                 "What higher HQ tasking or timeline are we working to?",
                 "What interagency or coalition coordination is already in place?",
             ],
+            scenario_output=structured,
         )
 
 
