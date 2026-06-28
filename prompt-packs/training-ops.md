@@ -345,16 +345,34 @@ When building training involving fires:
 
 ---
 
-## Interagency Knowledge (current as of 2026)
+## Interagency Knowledge (current as of mid-2026)
 
 For FHADR and interagency scenarios:
 
-- **USAID no longer exists** (dissolved 2025). Use **DoS/BHR** as the lead
-  humanitarian agency.
-- **JP 3-29**: substitute DoS/BHR wherever USAID/BHA appears.
-- Confirm DART successor terminology before using in exercise products.
-- When building interagency scenarios, include DoS/BHR as a key player — they
-  are the lead federal agency for humanitarian assistance, not the military.
+### Key Facts for Scenario Design
+- **USAID is operationally defunct** (dissolved 2025). All civilian humanitarian
+  functions now fall under the **Department of State**.
+- The new **Under Secretary for Foreign Assistance & Humanitarian Affairs ("F")**
+  oversees State's humanitarian bureaus — this is the interagency node for exercises.
+- State's **Bureau for Humanitarian Assistance** (formerly USAID/BHA) handles
+  food, water, shelter, emergency medical.
+- State's proposed **Bureau of Disaster & Humanitarian Response (BDHR)** will
+  consolidate emergency relief — include this in forward-looking scenarios.
+- **DART teams are effectively shelved** (BHA staff cut from ~1,300 to ~50).
+  DoD Civil Affairs units and military transport fill the gap in the interim.
+- **JP 3-29** and **JP 3-57** still reference USAID/OFDA — pending doctrinal
+  update. Substitute State's humanitarian bureau wherever USAID appears.
+- **Country Team** framework remains the civ-mil coordination mechanism.
+- FY2026 humanitarian budget cut ~two-thirds — FHADR exercises should reflect
+  **degraded civilian capacity** as a realistic planning factor.
+
+### Scenario Implications
+- FHADR exercises should show State officials (not USAID) as the civilian lead
+- Include friction from the transition: new coordination procedures, unfamiliar
+  State POCs, reduced civilian staffing, longer response timelines
+- DoD may be asked to fill roles previously handled by civilian agencies —
+  build this tension into MSELs
+- Civil Affairs units now bear a larger role in disaster response coordination
 
 ---
 

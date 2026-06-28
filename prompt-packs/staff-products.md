@@ -353,18 +353,46 @@ Safety-specific items for inclusion in rehearsals and pre-execution briefs:
 
 ---
 
-## Interagency Knowledge (current as of 2026)
+## Interagency Knowledge (current as of mid-2026)
 
 For FHADR, humanitarian, and interagency products:
 
-- **USAID no longer exists** (dissolved 2025). Use **DoS/BHR** (Department of State,
-  Bureau of Humanitarian Assistance) as the lead humanitarian agency.
-- **JP 3-29** (Foreign Humanitarian Assistance): substitute DoS/BHR wherever
-  USAID/BHA appears.
-- The **DART** concept may continue under DoS/BHR as a "forward coordination team" —
-  confirm current terminology before using in products.
+### USAID Dissolution
+- **USAID is operationally defunct** (dissolved 2025 via EO 14150/14169 and State
+  Department absorption). Legislative abolition pending but the agency has no staff
+  or independent operations.
 - Do not reference USAID as an active organization. Historical references are fine
-  for context (e.g., "formerly USAID/BHA, now DoS/BHR").
+  for context (e.g., "formerly USAID/BHA").
+
+### New State Department Structure
+All civilian humanitarian/development functions now fall under State:
+
+- **Under Secretary for Foreign Assistance & Humanitarian Affairs ("F")** — new
+  position overseeing all aid bureaus
+- **Bureau for Humanitarian Assistance** (from USAID/BHA) — food, water, shelter,
+  emergency medical, nutrition
+- **Bureau of Global Health Security & Diplomacy** (from USAID Global Health) —
+  HIV/AIDS, malaria, maternal/child health, PEPFAR
+- **Bureau of Disaster & Humanitarian Response (BDHR)** — proposed 2026, will
+  consolidate emergency relief and rebuild DART-equivalent capability
+- **PRM** (Population, Refugees, Migration) — unchanged, reports to "F"
+- **DRL** (Democracy, Human Rights & Religious Freedom) — absorbed USAID/DRG
+- **Food for Peace (Title II)** → transferred to **USDA**, not State
+- **Regional development** → State's geographic bureaus (AFR, EAP, EUR, NEA, WHA)
+
+### DART Status
+- All four active DARTs ceased operations Feb 2025. BHA staff cut from ~1,300
+  to ~50 embedded in PRM. DART capability effectively shelved.
+- **DoD fills the gap**: military transport and Civil Affairs units provide
+  interim disaster response capacity.
+
+### Doctrinal Impact
+- **JP 3-29** and **JP 3-57** still reference USAID/OFDA as the U.S. lead for
+  foreign disaster relief — pending doctrinal update. Substitute State's
+  humanitarian bureau wherever USAID appears.
+- Country Team framework remains the primary civ-mil coordination mechanism.
+- FY2026 humanitarian budget cut ~two-thirds (~$9.9B → ~$2.5B) — factor
+  degraded civilian capacity into planning.
 
 ---
 

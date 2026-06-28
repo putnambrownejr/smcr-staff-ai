@@ -134,19 +134,75 @@ projects/
 
 ---
 
-## Interagency Knowledge (current as of 2026)
+## Interagency Knowledge (current as of mid-2026)
 
 These standing facts apply to all FHADR, interagency, and humanitarian planning work.
 **Verify currency before using in products** — these can change.
 
-- **USAID no longer exists** (dissolved 2025). Humanitarian coordination functions
-  transferred to the **Department of State Bureau of Humanitarian Assistance (DoS/BHR)**.
-- **JP 3-29** (Foreign Humanitarian Assistance) is in revision. Use the current edition but
-  **substitute DoS/BHR wherever USAID/BHA appears**.
-- The **DART** (Disaster Assistance Response Team) concept may continue under DoS/BHR as a
-  "forward coordination team" — confirm current terminology before using in products.
+### USAID Dissolution and State Department Reorganization
+
+- **USAID no longer exists as an independent agency** (dissolved 2025). Executive Orders
+  14150 and 14169 (Jan 20, 2025) froze most foreign assistance. Secretary Rubio absorbed
+  USAID functions into State by July 1, 2025. Legislative abolition is pending but USAID
+  is operationally defunct.
 - Do not reference USAID, USAID/OFDA, or USAID/BHA as active organizations in any product.
-  Historical references (e.g., "formerly USAID/BHA, now DoS/BHR") are acceptable for context.
+  Historical references (e.g., "formerly USAID/BHA") are acceptable for context.
+
+### New State Department Structure (Apr 2025 Reorg)
+
+The chain of command for overseas aid is now:
+**President → Secretary of State → Under Secretary for Foreign Assistance & Humanitarian
+Affairs ("F") → State's humanitarian and regional bureaus.**
+
+Key bureaus under the new Under Secretary "F":
+
+| Bureau | Former Home | Function |
+|---|---|---|
+| Bureau for Humanitarian Assistance | USAID/BHA | Food, water, shelter, emergency medical, nutrition |
+| Bureau of Global Health Security & Diplomacy | USAID/Bureau for Global Health | HIV/AIDS, malaria, maternal/child health, PEPFAR |
+| Bureau of Disaster & Humanitarian Response (BDHR) | USAID/OFDA (new, proposed 2026) | Consolidates emergency relief; will house DART-equivalent |
+| Bureau of Population, Refugees & Migration (PRM) | State/PRM (unchanged) | Refugee resettlement, migration |
+| Bureau of Democracy, Human Rights & Religious Freedom (DRL) | State/DRL + USAID/DRG | Democracy, human rights (renamed to include "Religious Freedom") |
+
+Other transfers:
+- **Food for Peace (Title II)** → USDA (not State)
+- **Regional development** → State's geographic bureaus (AFR, EAP, EUR, NEA, WHA)
+- **Education/cultural exchange** → State's Bureau of Educational & Cultural Affairs (ECA)
+- **Development finance** → U.S. International Development Finance Corporation (DFC)
+
+### DART Status
+
+- All four active DARTs (Afghanistan, Gaza, Sudan, Ukraine) ceased normal operations
+  in Feb 2025 when USAID staff were placed on leave.
+- BHA staff was cut from ~1,300 to ~50 people embedded in PRM by July 2025.
+- DART capability is effectively shelved. State's proposed BDHR (2026) would rebuild
+  DART-equivalent functions under a Senate-confirmed Assistant Secretary.
+- In the interim, **DoD assets fill the gap**: military transport (C-17s, helicopters,
+  ships) and Civil Affairs units (Army/Marines) provide disaster response capacity.
+- **JP 3-29** and **JP 3-57** still identify USAID/OFDA as the U.S. lead for foreign
+  disaster relief — these are pending doctrinal update. Substitute State's humanitarian
+  bureau (or future BDHR) wherever USAID/BHA or USAID/OFDA appears.
+
+### Civil-Military Coordination (Post-Reorg)
+
+- The **Country Team** framework at each embassy remains the primary coordination
+  mechanism. State officials now wear the "aid hat" that USAID personnel held.
+- DoD Combatant Commands still coordinate via embassy liaison, but the civilian
+  counterpart is now State's humanitarian bureau, not USAID.
+- USAID's Office of Civilian-Military Coordination (CMC) — which embedded officers
+  in each combatant command — will transition to State's responsibility.
+- Civil Affairs units (Army/Marine Corps) continue to embed with civilian agencies.
+- Coordination mechanisms remain: Country Team Disaster Relief Coordination Committees,
+  Defense Attachés, OCHA liaison, joint planning boards.
+- Experts warn U.S. disaster response capability has been "fundamentally truncated"
+  by staff cuts — military planners should factor in degraded civilian capacity.
+
+### Budget Impact
+
+- U.S. historically provided ~43% of global humanitarian funding.
+- FY2026 budget request cuts humanitarian funding by roughly two-thirds
+  (~$2.5B combined IDA+MRA, down from ~$9.9B in FY2023).
+- This affects planning assumptions for FHADR exercises and real-world operations.
 
 ---
 
