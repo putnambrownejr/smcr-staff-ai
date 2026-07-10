@@ -36,6 +36,12 @@ These are implemented, tested, and in active use.
   the source categories for official public ingestion metadata.
 - **CI and dependency hygiene** — ruff zero-error enforcement runs in CI, with
   `uv.lock` and Dependabot configured for dependency update flow.
+- **User-controlled scenario inference** — optional external calls show exact original
+  and sanitized previews, treat detectors as warnings, require acknowledgement, and
+  retain metadata-only audit entries.
+- **Validated scenario handoffs** — role-specific envelopes carry populated values
+  between chain steps; invalid structured output stops later external calls.
+- **Action completion** — Watch-lane actions support Mark done and a ten-second Undo.
 
 ## Stub / Interface-Only
 
@@ -72,8 +78,9 @@ The active focus, in order:
 - More specialist agents — the roster is already broad; marginal value is low
   against orchestration and packaging.
 - Incremental RAG embedder improvement — it will be replaced wholesale.
-- An LLM inside the local app — the local app stays deterministic and private;
-  generative reasoning comes from the user's connected AI assistant.
+- Expanding external inference beyond the bounded scenario-agent path — the default
+  app remains deterministic and local, and every supported external operation stays
+  preview-bound and opt-in.
 - Docker / hosted MCP surfaces — maintained as secondary, not leading items.
 
 ## Governance (future)

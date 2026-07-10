@@ -3,6 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.external_processing import ExternalProcessingApproval
 from app.schemas.source_state import SourceTrustMarker
 
 
@@ -10,6 +11,13 @@ class Confidence(StrEnum):
     low = "low"
     medium = "medium"
     high = "high"
+
+
+class ScenarioOutputStatus(StrEnum):
+    not_applicable = "not_applicable"
+    template_only = "template_only"
+    validated = "validated"
+    invalid = "invalid"
 
 
 class AgentMetadata(BaseModel):
@@ -51,6 +59,7 @@ class AgentRunRequest(BaseModel):
     )
     input: str = Field(min_length=1)
     context: dict[str, Any] = Field(default_factory=dict)
+    external_processing_approval: ExternalProcessingApproval | None = None
 
 
 class AgentRunResponse(BaseModel):
@@ -64,3 +73,4 @@ class AgentRunResponse(BaseModel):
     confidence: Confidence = Confidence.low
     follow_up_questions: list[str] = Field(default_factory=list)
     scenario_output: dict[str, Any] | None = None
+    scenario_output_status: ScenarioOutputStatus = ScenarioOutputStatus.not_applicable

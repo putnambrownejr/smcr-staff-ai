@@ -8,7 +8,7 @@ This guide is for Marine reserve staff officers and SNCOs who want to understand
 
 Reserve staff work happens in two-hour chunks on a drill weekend, then completely stops for four to six weeks. When you come back, you spend the first hour reconstructing context: what was left undone, who owns what, what's changed in MARADMIN space, where the CO's priorities stand.
 
-SMCR Staff AI is a local command-post dashboard that holds context between duty days so you don't lose it. It is not an AI chat tool. There is no cloud service. Nothing leaves your machine.
+SMCR Staff AI is a local command-post dashboard that holds context between duty days so you don't lose it. Most workflows remain entirely local. If an API key is configured, scenario-capable agents can use an external provider only after showing an outbound preview and receiving your explicit acknowledgement.
 
 ---
 
@@ -57,7 +57,8 @@ Where you load your personal workspace (or stay in demo mode). This is also wher
 - No classified information. All content is UNCLASSIFIED. Do not enter classified, CUI, COMSEC, sensitive personnel information, real unit call signs, precise movement details, or operational security-sensitive content.
 - All outputs are advisory drafts. Nothing this tool produces is authoritative. Products require human review and commander approval before any operational use.
 - No real-time data without manual ingestion setup. Feed summaries only populate if you configure ingestion (optional). Out of the box, demo mode shows safe sample data.
-- No LLM at runtime. The tool does not send queries to an AI model during normal use. Outputs from planning tools come from templates and stored context, not inference.
+- No silent external processing. Normal workflows use templates and stored context. Optional scenario inference shows original and sanitized messages first; choosing either external option requires acknowledgement. Detector findings are warnings, not classification decisions.
+- You control disclosure. Choose local template, send sanitized, or send as written. Approval applies only to the displayed operation; changed content requires another review.
 - No multi-user sync. This is a single-machine local tool. If you want shared state across a section, you need to export and share files manually.
 - No replacement for command judgment. The chief brief, readiness posture, and action priorities are starting points, not finished products.
 

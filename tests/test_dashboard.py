@@ -102,6 +102,9 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Act Now" in response.text
     assert "Skip to dashboard content" in response.text
     assert "dashboard.js" in response.text
+    assert 'id="external-processing-dialog"' in response.text
+    assert 'id="action-undo-region"' in response.text
+    assert 'script.type = "module"' in response.text
 
 
 def test_dashboard_assets_are_served() -> None:
@@ -111,6 +114,11 @@ def test_dashboard_assets_are_served() -> None:
 
     assert response.status_code == 200
     assert "text/css" in response.headers["content-type"]
+
+    actions_response = client.get("/static/dashboard/actions.js")
+    assert actions_response.status_code == 200
+    assert "javascript" in actions_response.headers["content-type"]
+    assert "TrackedActionsController" in actions_response.text
 
 
 def test_dashboard_button_inventory_has_wiring() -> None:

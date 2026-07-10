@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Date
 
@@ -27,10 +27,10 @@ The application will:
 - Treat all detector findings as advisory warnings rather than classification decisions.
 - Offer local-only, sanitized, and original disclosure modes.
 - Require explicit acknowledgement before either external mode.
-- Bind single-agent approval to a SHA-256 digest of the exact outbound request.
+- Bind single-agent approval to a SHA-256 digest of both exact displayed outbound candidates and immutable request metadata; record the selected mode separately.
 - Bind chain approval to the immutable workflow contract because later generated handoffs do not exist at preview time.
 - Recompute and compare the applicable approval digest immediately before sending.
-- Rescan each later chain payload, apply the selected disclosure mode, and record a step-specific payload digest.
+- Rescan each later chain payload, apply the selected disclosure mode, and record a step-specific payload digest separately from the chain approval digest.
 - Store only metadata about the decision and outcome.
 
 The acknowledgement confirms that the user is authorized to disclose the material, that it is appropriate for the selected provider, and that it complies with the project's UNCLASSIFIED-only handling rule.

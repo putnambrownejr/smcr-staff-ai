@@ -1,3 +1,5 @@
+import { TrackedActionsController } from "./actions.js?v=20260710a";
+
 // Module split readiness: when this file exceeds ~4000 lines or a second contributor joins,
 // split along these seams: state.js, ui.js, lanes/overview.js, lanes/watch.js,
 // lanes/bench.js, lanes/workflows.js, lanes/workspace.js.
@@ -38,6 +40,16 @@ const PRELOAD_EMPTY_TEXT = "Load workspace to see this";
 function emptyStateHtml(headline, detail) {
   return `<div class="empty-state"><p class="empty-state-headline">${headline}</p><p class="empty-state-detail">${detail}</p></div>`;
 }
+const trackedActionsController = new TrackedActionsController({
+  target: document.getElementById("action-watch"),
+  undoRegion: document.getElementById("action-undo-region"),
+  request: apiFetch,
+  refresh: loadWorkspace,
+  notify: setWorkspaceNote,
+  escapeHtml,
+  emptyStateHtml,
+  canWrite: () => state.mode === "personal" && Boolean(state.userKey),
+});
 const DEFAULT_BENCH_SECTIONS = ["S-1/Admin", "S-2/Intel", "S-3", "S-4", "S-6"];
 const REFRESH_BUTTON_GROUPS = {
   sourceWatch: [
@@ -118,6 +130,13 @@ document.querySelector("[role='tablist']")?.addEventListener("keydown", (event) 
   const nextTab = tabs[nextIndex];
   nextTab.focus();
   openLane(nextTab.dataset.lane || "overview");
+});
+
+document.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target : null;
+  if (target?.closest("[data-cycle-history]")) {
+    cycleHistoryFact();
+  }
 });
 
 document.getElementById("load-demo").addEventListener("click", () => {
@@ -334,17 +353,15 @@ document.getElementById("brief-clinic-form").addEventListener("submit", async (e
     "Current brief:",
     String(currentBrief || "").trim(),
   ].join("\n");
-  const data = await apiFetch("/agents/writing-briefing-coach/run", {
-    method: "POST",
-    body: JSON.stringify({
-      input,
-      context: {
-        user_key: state.userKey || undefined,
-        request_is_training_or_fictional: true,
-        user_role: "SMCR officer",
-      },
-    }),
+  const data = await runAgentWithExternalApproval("writing-briefing-coach", {
+    input,
+    context: {
+      user_key: state.userKey || undefined,
+      request_is_training_or_fictional: true,
+      user_role: "SMCR officer",
+    },
   });
+  if (!data) return;
   renderBriefClinicOutput("brief-clinic-output", data);
 });
 
@@ -913,7 +930,7 @@ function renderWorkspace(payload) {
   renderHistory(payload.today_in_history || []);
   renderReferenceLibrary(payload.reference_library || []);
   renderReadingBooks(payload.reading_books || []);
-  renderTrackedActions(payload.tracked_actions || []);
+  trackedActionsController.render(payload.tracked_actions || []);
   renderOpportunities(payload.tracked_opportunities || payload.career_watch?.tracked_opportunities || []);
   renderSourceUpdates(payload.documentation_updates || payload.chief_brief?.documentation_updates || []);
   loadGoodLinks();
@@ -1234,14 +1251,6 @@ async function runWorkflowInDialog(title, runFn) {
       outputEl.textContent = `Error: ${error.message}`;
       outputEl.className = "tool-output critical";
     }
-  }
-}
-
-// Render lone-planner output into a target element (dialog or lane)
-function renderLonePlannerOutput(targetId, data) {
-  const target = document.getElementById(targetId);
-  if (target) {
-    renderToolOutput(targetId, data, ["walk_in_brief", "blind_spots", "missing_section_questions", "recommended_products", "immediate_actions"]);
   }
 }
 
@@ -2063,7 +2072,7 @@ function renderHistoryFactCard(item, index = 0, total = 1) {
     ? `<p class="meta-inline"><a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">Source →</a></p>`
     : "";
   const nextBtn = total > 1
-    ? `<button type="button" class="secondary small" onclick="cycleHistoryFact()">Next fact (${index + 1}/${total})</button>`
+    ? `<button type="button" class="secondary small" data-cycle-history>Next fact (${index + 1}/${total})</button>`
     : "";
   const shortMonths = ["","JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
   const dateLabel = `${item.day} ${shortMonths[item.month] || ""} ${item.year_label}`.trim();
@@ -2196,31 +2205,6 @@ function renderOpportunities(items) {
           </div>
           <p>${escapeHtml([item.unit, item.location, item.rank, item.mos].filter(Boolean).join(" | ") || "Local tracked opportunity")}</p>
           <p>${escapeHtml(item.description || item.notes || "Review fit, eligibility, and suspense.")}</p>
-        </article>
-      `,
-    )
-    .join("");
-}
-
-function renderTrackedActions(items) {
-  const target = document.getElementById("action-watch");
-  if (!items.length) {
-    target.className = "row-stack";
-    target.innerHTML = emptyStateHtml("No tracked POAM items.", "Open action items and suspenses appear here once added.");
-    return;
-  }
-  target.className = "row-stack";
-  target.innerHTML = items
-    .map(
-      (item) => `
-        <article class="data-row">
-          <div class="data-row-head">
-            <span class="strip-label">${escapeHtml(item.status || "open")}</span>
-            <strong>${escapeHtml(item.title)}</strong>
-          </div>
-          <p>${escapeHtml(item.owner ? `Owner: ${item.owner}` : "Owner not assigned")}</p>
-          <p class="meta-inline">${escapeHtml([item.category, item.priority, item.suspense_date ? `Due ${item.suspense_date}` : ""].filter(Boolean).join(" | "))}</p>
-          <p>${escapeHtml(item.description || item.notes || "No additional notes yet.")}</p>
         </article>
       `,
     )
@@ -3214,17 +3198,15 @@ async function runMosAdvisorFromForm() {
     setWorkspaceNote("Add a prompt before running the MOS advisor.", true);
     return;
   }
-  const data = await apiFetch(`/agents/${encodeURIComponent(toolId)}/run`, {
-    method: "POST",
-    body: JSON.stringify({
-      input: prompt,
-      context: {
-        user_key: state.userKey || undefined,
-        request_is_training_or_fictional: true,
-        user_role: audience,
-      },
-    }),
+  const data = await runAgentWithExternalApproval(toolId, {
+    input: prompt,
+    context: {
+      user_key: state.userKey || undefined,
+      request_is_training_or_fictional: true,
+      user_role: audience,
+    },
   });
+  if (!data) return;
   renderAgentAdvisoryOutput("mos-advisor-output", data);
 }
 
@@ -3374,6 +3356,129 @@ async function apiFetch(path, options = {}) {
     recordFetchFailure();
     throw error;
   }
+}
+
+async function runAgentWithExternalApproval(agentId, requestPayload) {
+  const encodedAgentId = encodeURIComponent(agentId);
+  let preview = await apiFetch(
+    "/agents/" + encodedAgentId + "/external-processing-preview",
+    {
+      method: "POST",
+      auth: true,
+      body: JSON.stringify(requestPayload),
+    },
+  );
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    let approval = null;
+    if (preview.required) {
+      approval = await requestExternalProcessingDecision(preview);
+      if (!approval) return null;
+    }
+    try {
+      return await apiFetch("/agents/" + encodedAgentId + "/run", {
+        method: "POST",
+        auth: true,
+        body: JSON.stringify({
+          ...requestPayload,
+          external_processing_approval: approval,
+        }),
+      });
+    } catch (error) {
+      const freshPreview = error.status === 409
+        ? externalPreviewFromError(error.responseText)
+        : null;
+      if (!freshPreview || attempt > 0) throw error;
+      preview = freshPreview;
+      setWorkspaceNote("The outbound preview changed. Review the current version before sending.", true);
+    }
+  }
+  return null;
+}
+
+function externalPreviewFromError(responseText) {
+  try {
+    return JSON.parse(responseText)?.detail?.preview || null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function requestExternalProcessingDecision(preview) {
+  const dialog = document.getElementById("external-processing-dialog");
+  const summary = document.getElementById("external-processing-summary");
+  const warnings = document.getElementById("external-processing-warnings");
+  const findings = document.getElementById("external-processing-findings");
+  const sanitized = document.getElementById("external-processing-sanitized");
+  const original = document.getElementById("external-processing-original");
+  const acknowledge = document.getElementById("external-processing-acknowledge");
+  const localButton = document.getElementById("external-processing-local");
+  const sanitizedButton = document.getElementById("external-processing-sanitized-send");
+  const originalButton = document.getElementById("external-processing-original-send");
+  summary.textContent = [
+    "Provider: " + (preview.provider || "configured provider"),
+    "Model: " + (preview.model || "configured model"),
+    "Expected calls: " + (preview.expected_call_count || 1),
+  ].join(" | ");
+  renderList("external-processing-warnings", preview.warnings || []);
+  findings.innerHTML = (preview.findings || []).length
+    ? preview.findings.map((finding) => [
+        '<article class="data-row"><div class="data-row-head">',
+        '<span class="strip-label">',
+        escapeHtml(finding.severity || "warning"),
+        "</span><strong>",
+        escapeHtml(finding.category || "review"),
+        "</strong></div><p>",
+        escapeHtml(finding.message || "Review this content before sending."),
+        "</p></article>",
+      ].join("")).join("")
+    : emptyStateHtml("No detector findings.", "You still own the external disclosure decision.");
+  warnings.classList.toggle("is-hidden", !(preview.warnings || []).length);
+  sanitized.textContent = externalMessagesText(preview.sanitized_preview || []);
+  original.textContent = externalMessagesText(preview.original_preview || []);
+  acknowledge.checked = false;
+  sanitizedButton.disabled = true;
+  originalButton.disabled = true;
+  acknowledge.onchange = () => {
+    sanitizedButton.disabled = !acknowledge.checked;
+    originalButton.disabled = !acknowledge.checked;
+  };
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (decision) => {
+      if (settled) return;
+      settled = true;
+      dialog.close();
+      resolve(decision);
+    };
+    localButton.onclick = () => finish({
+      disclosure_mode: "local_only",
+      acknowledged_finding_categories: [],
+      acknowledged: false,
+    });
+    sanitizedButton.onclick = () => finish(externalApproval(preview, "sanitized"));
+    originalButton.onclick = () => finish(externalApproval(preview, "original"));
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      finish(null);
+    }, { once: true });
+    dialog.showModal();
+  });
+}
+
+function externalApproval(preview, disclosureMode) {
+  return {
+    disclosure_mode: disclosureMode,
+    approval_digest: preview.approval_digest,
+    acknowledged_finding_categories: preview.finding_categories || [],
+    acknowledged: true,
+  };
+}
+
+function externalMessagesText(messages) {
+  return messages
+    .map((message) => String(message.role || "message").toUpperCase() + ":\n" + String(message.content || ""))
+    .join("\n\n");
 }
 
 function recordFetchSuccess() {

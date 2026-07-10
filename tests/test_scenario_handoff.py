@@ -1,253 +1,188 @@
-"""Tests for structured JSON handoffs between staff agents."""
+"""Tests for validated structured scenario handoffs."""
 
+from __future__ import annotations
+
+import json
+from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
+from app.core.config import get_settings
 from app.main import app
+from app.schemas.agents import ScenarioOutputStatus
+from app.schemas.external_processing import DisclosureMode, ExternalProcessingApproval, ExternalProcessingPreview
 from app.schemas.scenario_handoff import (
-    ChainRequest,
-    ChainStep,
     CoSScenarioOutput,
     G9ScenarioOutput,
     PlanningScenarioOutput,
     S2ScenarioOutput,
-    S4ScenarioOutput,
-    S6ScenarioOutput,
 )
-from app.services.agents.base import AgentContext
-
+from app.services.agents.scenario_envelope import (
+    ScenarioEnvelopeParser,
+    ScenarioEnvelopeValidationError,
+)
+from app.services.llm_client import ScenarioGenerationResult, ScenarioGenerationStatus
 
 SCENARIO_INPUT = (
-    "A magnitude 7.2 earthquake has struck the Philippines, affecting Manila and surrounding "
-    "provinces. Estimated 500 casualties, 50,000 displaced. The airport is partially operational. "
-    "A MEU is positioned nearby for potential FHADR response."
+    "A magnitude 7.1 earthquake struck La Guaira, Venezuela. "
+    "There are 500 casualties and 10,000 displaced people. "
+    "The port is damaged and a MEU supports FHADR operations."
 )
 
-NON_SCENARIO_INPUT = "What is the process for building a training schedule?"
+
+def _generated(answer: str, scenario_output: dict[str, object]) -> ScenarioGenerationResult:
+    return ScenarioGenerationResult(
+        content=json.dumps({"answer": answer, "scenario_output": scenario_output}),
+        status=ScenarioGenerationStatus.generated,
+        preview=ExternalProcessingPreview(
+            required=True,
+            external_available=True,
+            scope_label="chain:test",
+        ),
+        disclosure_mode=DisclosureMode.sanitized,
+    )
 
 
-# ---------------------------------------------------------------------------
-# Schema validation
-# ---------------------------------------------------------------------------
-
-def test_g9_scenario_output_schema():
-    output = G9ScenarioOutput(role="g9")
-    dumped = output.model_dump()
-    assert dumped["role"] == "g9"
-    assert "civil_situation" in dumped
-    assert "ascope" in dumped
-    assert "interagency" in dumped
+def test_scenario_models_forbid_unexpected_fields() -> None:
+    with pytest.raises(ValidationError):
+        G9ScenarioOutput.model_validate({"role": "g9", "unexpected": "value"})
 
 
-def test_s2_scenario_output_schema():
-    output = S2ScenarioOutput(role="s2")
-    dumped = output.model_dump()
-    assert dumped["role"] == "s2"
-    assert "threat" in dumped
-    assert "intel_gaps" in dumped
+def test_envelope_parser_accepts_one_surrounding_code_fence() -> None:
+    fence = chr(96) * 3
+    content = (
+        f"{fence}json\n"
+        + json.dumps(
+            {
+                "answer": "Civil assessment",
+                "scenario_output": {
+                    "role": "g9",
+                    "civil_situation": {"area": "La Guaira"},
+                },
+            }
+        )
+        + f"\n{fence}"
+    )
+
+    parsed = ScenarioEnvelopeParser().parse(
+        content,
+        output_model=G9ScenarioOutput,
+        expected_role="g9",
+    )
+
+    civil_situation = parsed.scenario_output["civil_situation"]
+    assert isinstance(civil_situation, dict)
+    assert civil_situation["area"] == "La Guaira"
 
 
-def test_planning_scenario_output_schema():
-    output = PlanningScenarioOutput(role="planning", tempo="MCPP (deliberate)")
-    dumped = output.model_dump()
-    assert dumped["tempo"] == "MCPP (deliberate)"
-    assert "mission_analysis" in dumped
-    assert "tasks" in dumped
+def test_envelope_parser_rejects_empty_structured_output() -> None:
+    content = json.dumps(
+        {
+            "answer": "Looks populated",
+            "scenario_output": {"role": "g9"},
+        }
+    )
+
+    with pytest.raises(ScenarioEnvelopeValidationError, match="no assessment data"):
+        ScenarioEnvelopeParser().parse(
+            content,
+            output_model=G9ScenarioOutput,
+            expected_role="g9",
+        )
 
 
-def test_cos_scenario_output_schema():
-    output = CoSScenarioOutput(role="cos")
-    dumped = output.model_dump()
-    assert dumped["role"] == "cos"
-    assert "staff_tasking" in dumped
-    assert "decision_points" in dumped
-
-
-# ---------------------------------------------------------------------------
-# Agent scenario_output field
-# ---------------------------------------------------------------------------
-
-def test_g9_agent_returns_scenario_output():
-    client = TestClient(app)
-    response = client.post(
-        "/agents/staff-g9/run",
+@pytest.mark.parametrize(
+    "agent_id",
+    [
+        "staff-g9",
+        "staff-s2",
+        "staff-s4",
+        "staff-s6",
+        "planning-advisor",
+        "chief-of-staff",
+    ],
+)
+def test_no_key_scenario_returns_template_without_fake_handoff(agent_id: str) -> None:
+    response = TestClient(app).post(
+        f"/agents/{agent_id}/run",
         json={"input": SCENARIO_INPUT, "context": {"request_is_training_or_fictional": True}},
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["scenario_output"] is not None
-    assert data["scenario_output"]["role"] == "g9"
-    assert "civil_situation" in data["scenario_output"]
 
-
-def test_s2_agent_returns_scenario_output():
-    client = TestClient(app)
-    response = client.post(
-        "/agents/staff-s2/run",
-        json={"input": SCENARIO_INPUT, "context": {"request_is_training_or_fictional": True}},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["scenario_output"] is not None
-    assert data["scenario_output"]["role"] == "s2"
-
-
-def test_s4_agent_returns_scenario_output():
-    client = TestClient(app)
-    response = client.post(
-        "/agents/staff-s4/run",
-        json={"input": SCENARIO_INPUT, "context": {"request_is_training_or_fictional": True}},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["scenario_output"] is not None
-    assert data["scenario_output"]["role"] == "s4"
-
-
-def test_s6_agent_returns_scenario_output():
-    client = TestClient(app)
-    response = client.post(
-        "/agents/staff-s6/run",
-        json={"input": SCENARIO_INPUT, "context": {"request_is_training_or_fictional": True}},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["scenario_output"] is not None
-    assert data["scenario_output"]["role"] == "s6"
-
-
-def test_planning_advisor_returns_scenario_output():
-    client = TestClient(app)
-    response = client.post(
-        "/agents/planning-advisor/run",
-        json={"input": SCENARIO_INPUT, "context": {"request_is_training_or_fictional": True}},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["scenario_output"] is not None
-    assert data["scenario_output"]["role"] == "planning"
-    assert "tempo" in data["scenario_output"]
-
-
-def test_cos_agent_returns_scenario_output():
-    client = TestClient(app)
-    response = client.post(
-        "/agents/chief-of-staff/run",
-        json={"input": SCENARIO_INPUT, "context": {"request_is_training_or_fictional": True}},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["scenario_output"] is not None
-    assert data["scenario_output"]["role"] == "cos"
-
-
-def test_non_scenario_returns_null_scenario_output():
-    client = TestClient(app)
-    response = client.post(
-        "/agents/staff-g9/run",
-        json={"input": NON_SCENARIO_INPUT, "context": {"request_is_training_or_fictional": True}},
-    )
     assert response.status_code == 200
     data = response.json()
     assert data["scenario_output"] is None
+    assert data["scenario_output_status"] == ScenarioOutputStatus.template_only
 
 
-def test_xo_non_scenario_returns_null_scenario_output():
-    """XO has no scenario template, so even scenario input produces null."""
-    client = TestClient(app)
-    response = client.post(
-        "/agents/staff-xo/run",
-        json={"input": SCENARIO_INPUT, "context": {"request_is_training_or_fictional": True}},
+def test_non_scenario_returns_not_applicable() -> None:
+    response = TestClient(app).post(
+        "/agents/staff-g9/run",
+        json={"input": "What does a G-9 do?", "context": {}},
     )
+
     assert response.status_code == 200
-    data = response.json()
-    assert data["scenario_output"] is None
+    assert response.json()["scenario_output_status"] == ScenarioOutputStatus.not_applicable
 
 
-# ---------------------------------------------------------------------------
-# Prior assessments in context
-# ---------------------------------------------------------------------------
-
-def test_prior_assessments_in_context():
-    ctx = AgentContext(
-        prior_assessments={
-            "g9": G9ScenarioOutput(role="g9").model_dump(),
-        },
-    )
-    assert "g9" in ctx.prior_assessments
-    assert ctx.prior_assessments["g9"]["role"] == "g9"
-
-
-def test_agent_with_prior_assessments():
-    client = TestClient(app)
-    g9_output = G9ScenarioOutput(role="g9").model_dump()
-    response = client.post(
-        "/agents/staff-s2/run",
-        json={
-            "input": SCENARIO_INPUT,
-            "context": {
-                "request_is_training_or_fictional": True,
-                "prior_assessments": {"g9": g9_output},
-            },
-        },
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "PRIOR STAFF ASSESSMENTS" in data["answer"]
-
-
-# ---------------------------------------------------------------------------
-# Chain endpoint
-# ---------------------------------------------------------------------------
-
-def test_chain_endpoint_basic():
-    client = TestClient(app)
-    response = client.post(
+def test_local_chain_runs_templates_without_fake_prior_assessments() -> None:
+    response = TestClient(app).post(
         "/agents/chain",
         json={
             "scenario": SCENARIO_INPUT,
-            "steps": [
-                {"agent_id": "staff-g9"},
-                {"agent_id": "staff-s2"},
-            ],
+            "steps": [{"agent_id": "staff-g9"}, {"agent_id": "staff-s2"}],
             "context": {"request_is_training_or_fictional": True},
         },
     )
+
     assert response.status_code == 200
     data = response.json()
-    assert data["scenario"] == SCENARIO_INPUT
+    assert data["completed"] is True
     assert len(data["results"]) == 2
-    assert data["results"][0]["agent_id"] == "staff-g9"
-    assert data["results"][0]["scenario_output"] is not None
-    assert data["results"][0]["scenario_output"]["role"] == "g9"
-    assert data["results"][1]["agent_id"] == "staff-s2"
-    assert data["results"][1]["scenario_output"] is not None
-    assert data["results"][1]["scenario_output"]["role"] == "s2"
-
-
-def test_chain_endpoint_passes_prior_assessments():
-    client = TestClient(app)
-    response = client.post(
-        "/agents/chain",
-        json={
-            "scenario": SCENARIO_INPUT,
-            "steps": [
-                {"agent_id": "staff-g9"},
-                {"agent_id": "staff-s2"},
-                {"agent_id": "planning-advisor"},
-            ],
-            "context": {"request_is_training_or_fictional": True},
-        },
+    assert all(result["scenario_output"] is None for result in data["results"])
+    assert all(
+        result["response"]["scenario_output_status"] == ScenarioOutputStatus.template_only
+        for result in data["results"]
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data["results"]) == 3
-    planning_answer = data["results"][2]["response"]["answer"]
-    assert "PRIOR STAFF ASSESSMENTS" in planning_answer
+    assert "PRIOR STAFF ASSESSMENTS" not in data["results"][1]["response"]["answer"]
 
 
-def test_chain_endpoint_full_sequence():
-    client = TestClient(app)
-    response = client.post(
+@patch("app.services.llm_client.generate_scenario_response")
+def test_validated_chain_passes_concrete_values_forward(mock_generate: MagicMock) -> None:
+    mock_generate.side_effect = [
+        _generated(
+            "G-9 assessment",
+            {
+                "role": "g9",
+                "civil_situation": {"area": "La Guaira", "population": "10,000 displaced"},
+            },
+        ),
+        _generated(
+            "S-2 assessment",
+            {
+                "role": "s2",
+                "area_of_operations": "La Guaira",
+                "bottom_line": "Port access is the main uncertainty.",
+            },
+        ),
+        _generated(
+            "Planning assessment",
+            {
+                "role": "planning",
+                "tempo": "MCPP (deliberate)",
+                "mission_analysis": {"restated_mission": "Support relief operations."},
+            },
+        ),
+        _generated(
+            "Command watch list",
+            {
+                "role": "cos",
+                "immediate_actions": ["Confirm port access."],
+            },
+        ),
+    ]
+    response = TestClient(app).post(
         "/agents/chain",
         json={
             "scenario": SCENARIO_INPUT,
@@ -260,16 +195,54 @@ def test_chain_endpoint_full_sequence():
             "context": {"request_is_training_or_fictional": True},
         },
     )
+
     assert response.status_code == 200
     data = response.json()
-    assert len(data["results"]) == 4
-    for result in data["results"]:
-        assert result["scenario_output"] is not None
+    assert data["completed"] is True
+    assert data["results"][0]["scenario_output"]["civil_situation"]["area"] == "La Guaira"
+    assert data["results"][3]["scenario_output"]["immediate_actions"] == ["Confirm port access."]
+    second_template = mock_generate.call_args_list[1].args[1]
+    planning_template = mock_generate.call_args_list[2].args[1]
+    assert "La Guaira" in second_template
+    assert "Port access is the main uncertainty." in planning_template
 
 
-def test_chain_endpoint_unknown_agent():
-    client = TestClient(app)
-    response = client.post(
+@patch("app.services.llm_client.generate_scenario_response")
+def test_invalid_external_handoff_stops_before_next_call(
+    mock_generate: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LLM_API_KEY", "sk-test")
+    get_settings.cache_clear()
+    mock_generate.return_value = _generated("Readable answer", {"role": "g9"})
+    approval = ExternalProcessingApproval(
+        disclosure_mode=DisclosureMode.original,
+        approval_digest="a" * 64,
+        acknowledged=True,
+    )
+    try:
+        response = TestClient(app).post(
+            "/agents/chain",
+            json={
+                "scenario": SCENARIO_INPUT,
+                "steps": [{"agent_id": "staff-g9"}, {"agent_id": "staff-s2"}],
+                "context": {"request_is_training_or_fictional": True},
+                "external_processing_approval": approval.model_dump(mode="json"),
+            },
+        )
+    finally:
+        get_settings.cache_clear()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["completed"] is False
+    assert data["stopped_at_agent_id"] == "staff-g9"
+    assert len(data["results"]) == 1
+    assert mock_generate.call_count == 1
+
+
+def test_chain_endpoint_rejects_unknown_agent() -> None:
+    response = TestClient(app).post(
         "/agents/chain",
         json={
             "scenario": SCENARIO_INPUT,
@@ -277,42 +250,11 @@ def test_chain_endpoint_unknown_agent():
             "context": {},
         },
     )
+
     assert response.status_code == 404
 
 
-def test_chain_endpoint_custom_step_input():
-    client = TestClient(app)
-    response = client.post(
-        "/agents/chain",
-        json={
-            "scenario": SCENARIO_INPUT,
-            "steps": [
-                {"agent_id": "staff-g9"},
-                {"agent_id": "staff-s4", "input": SCENARIO_INPUT + " Focus on port logistics."},
-            ],
-            "context": {"request_is_training_or_fictional": True},
-        },
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data["results"]) == 2
-
-
-def test_chain_with_non_scenario_agent_produces_null_output():
-    """Agents without scenario templates still work in chain but produce null output."""
-    client = TestClient(app)
-    response = client.post(
-        "/agents/chain",
-        json={
-            "scenario": SCENARIO_INPUT,
-            "steps": [
-                {"agent_id": "staff-g9"},
-                {"agent_id": "staff-xo"},
-            ],
-            "context": {"request_is_training_or_fictional": True},
-        },
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["results"][0]["scenario_output"] is not None
-    assert data["results"][1]["scenario_output"] is None
+def test_schema_examples_remain_constructible() -> None:
+    assert S2ScenarioOutput(role="s2").role == "s2"
+    assert PlanningScenarioOutput(role="planning", tempo="MCPP").tempo == "MCPP"
+    assert CoSScenarioOutput(role="cos").role == "cos"

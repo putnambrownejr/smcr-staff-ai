@@ -148,8 +148,10 @@ projects/
 - **Stack:** FastAPI + vanilla JS SPA. No framework on the frontend. Python 3.12, `uv` for deps.
 - **Storage:** All user state is flat JSON files under `%LOCALAPPDATA%\smcr-staff-ai\` (or
   `$SMCR_STAFF_AI_HOME`). Pattern: `SHA256(user_key)[:24].json` per domain.
-- **No LLM at runtime.** Advisory text comes from static lookups and templates. Connect your
-  AI to the *repo* for reasoning, not to the running server.
+- **External inference is optional and preview-bound.** Most advisory text comes from static
+  lookups and templates. Scenario-capable agents may call the configured OpenAI-compatible
+  endpoint only after showing original and sanitized payloads and receiving explicit,
+  operation-specific acknowledgement. With no `LLM_API_KEY`, runtime remains local-only.
 - **Auth:** Optional passkey via `X-Local-API-Key` header. Unset = no gate (fine for
   single-user local use).
 - **Routes:** `app/api/routes/` — each file is one domain. `app/main.py` registers all of them.

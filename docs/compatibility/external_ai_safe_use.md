@@ -10,6 +10,13 @@ should normally leave the machine.
 
 Share the **minimum useful context**, not the raw local record.
 
+For the app's optional scenario inference, use the built-in preview dialog. It shows
+the exact original and sanitized messages before any network call. Detector matches are
+advisory warnings: they can help you notice PII or operational-looking text, but they
+cannot determine classification, authorization, or whether a training example is safe.
+You may proceed after explicit acknowledgement when you have made that determination.
+See [ADR-001](../decisions/ADR-001-user-controlled-external-processing.md).
+
 **Safe to share:**
 - Generalized billet/MOS context
 - Training objective and event type
@@ -149,3 +156,6 @@ Do not pass the packet to a hosted AI until you clean it up further if it still 
 - Real-time operational detail
 - Document contents with PII
 - Credentials, access details, or local secrets
+
+The app will not silently send any of these items. It also cannot validate your authority
+to disclose them; the preview and acknowledgement preserve that decision for the user.

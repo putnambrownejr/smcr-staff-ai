@@ -8,7 +8,7 @@ An UNCLASSIFIED, open-source FastAPI application for AI-enabled Selected Marine 
 
 The local app provides structured workflows, private storage, and advisory scaffolds. The AI reasoning comes from your connected assistant (Claude, ChatGPT, Copilot, Gemini, etc.) reading the repo's patterns and responding with context-aware advice.
 
-**Optional LLM integration:** When staff agents detect a specific scenario (country, event type, forces), they can call an OpenAI-compatible API to populate assessment templates with facts from your input. This requires an API key and is off by default — see [LLM scenario inference](#llm-scenario-inference-optional) below. Without it, agents return template shells with placeholder fields.
+**Optional external scenario inference:** Scenario-capable staff agents can call a configured OpenAI-compatible endpoint, but only after showing the prospective outbound messages and receiving explicit approval. This requires an API key and is off by default — see [LLM scenario inference](#llm-scenario-inference-optional) below. Without it, agents remain local and return deterministic templates.
 
 ## Purpose
 
@@ -20,7 +20,7 @@ See [docs/core_documents/project_purpose.md](docs/core_documents/project_purpose
 
 ## Safety
 
-Do not submit classified information, CUI, COMSEC, real frequencies, call signs, operational movement details, or unnecessary PII. The application includes runtime guardrails for sensitive inputs, but those checks do not replace human judgment.
+Do not submit classified information, CUI, COMSEC, real frequencies, call signs, operational movement details, or unnecessary PII. Runtime detectors produce warnings and a sanitized preview; they do not determine classification, authorization, or handling requirements. The user must inspect the exact outbound preview and explicitly acknowledge responsibility before anything is sent. See [ADR-001](docs/decisions/ADR-001-user-controlled-external-processing.md).
 
 ## Prompt Packs — Use with Any AI (No Setup Required)
 
@@ -60,7 +60,7 @@ See [QUICKSTART.md](QUICKSTART.md) for the full walkthrough.
 
 ## LLM scenario inference (optional)
 
-Staff agents can call an external LLM to populate scenario assessment templates with extracted facts. This is a **power-user feature** for staff officers running multiple scenarios per drill weekend where time savings justify the per-call cost.
+Scenario-capable staff agents can call a configured external endpoint to populate assessment templates with facts from user input. Before the first network call, the dashboard shows the provider, model, expected call count, detector findings, and both the original and sanitized messages.
 
 **Setup:** Add to `.env`:
 ```
@@ -69,9 +69,11 @@ LLM_BASE_URL=https://api.openai.com/v1    # optional, default
 LLM_MODEL=gpt-4o-mini                      # optional, default
 ```
 
-**Cost:** ~$0.01-0.05 per scenario run at GPT-4o-mini pricing. Any OpenAI-compatible API works (OpenAI, Anthropic via proxy, local Ollama, etc.).
+The configured endpoint must implement the chat-completions request/response shape used by `app/services/llm_client.py`. Pricing, retention, and authorization depend on the selected provider; verify them before approval.
 
-**Without a key:** Agents still detect scenarios and return the correct assessment format (civil estimate, intel estimate, mission analysis shell, etc.) but fields contain placeholder text instead of populated analysis. A notice at the bottom of the output explains how to enable LLM inference.
+**Approval choices:** Keep the operation local, send the sanitized preview, or send the original preview. Both external choices require acknowledgement. Findings are warning-only and remain overridable; approval is bound to a digest so changed input must be reviewed again.
+
+**Without a key:** Agents still detect scenarios and return the relevant deterministic assessment template. They do not represent empty placeholder objects as validated structured handoffs.
 
 ## What's inside
 
@@ -108,6 +110,7 @@ Browser-based local operations board with five lanes:
 - **Admin workflows** — DTS, GTCC, awards, orders review checklists
 - **Drill prep** — Date-to-tasks planner with .ics export
 - **Session handoffs** — Persist context between drill weekends
+- **Tracked actions** — Mark an action done from the Watch lane and Undo for ten seconds
 - **Source watch** — MARADMIN RSS, NAVADMIN, DoD releases, custom feeds
 - **Privacy sweep** — Pre-push review for PII/OPSEC leakage
 - **PKI/CAC troubleshooting** — Advisory playbooks for common certificate issues
@@ -117,7 +120,7 @@ Browser-based local operations board with five lanes:
 
 - **Stack:** FastAPI + vanilla JS SPA. No frontend framework, no bundler.
 - **Storage:** Flat JSON files under `%LOCALAPPDATA%\smcr-staff-ai\` (configurable via `$SMCR_STAFF_AI_HOME`)
-- **No LLM at runtime.** Advisory text comes from static lookups and templates.
+- **External processing:** Off by default. Most advisory text is local and deterministic; configured scenario inference requires a preview-bound approval for each operation.
 - **Auth:** Optional `X-Local-API-Key` header. Unset = no gate (fine for single-user local use).
 
 ```text
@@ -241,7 +244,7 @@ curl http://127.0.0.1:8000/health
 
 ## What it does not do
 
-- Does not call an LLM at runtime
+- Does not call an external LLM silently or without operation-specific approval
 - Does not ingest classified or CUI material
 - Does not connect to email/calendar without explicit connector setup
 - Does not make personnel, legal, medical, or command decisions

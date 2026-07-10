@@ -70,3 +70,23 @@ def redact_pii(text: str) -> str:
     for pattern, replacement in PII_REDACTION_PATTERNS:
         redacted = pattern.sub(replacement, redacted)
     return redacted
+
+
+def redact_sensitive(text: str) -> str:
+    redacted = text
+    for pattern in SENSITIVE_PATTERNS:
+        redacted = pattern.sub("[REDACTED-SENSITIVE]", redacted)
+    return redacted
+
+
+def redact_for_external_processing(text: str) -> str:
+    return redact_sensitive(redact_pii(text))
+
+
+def external_processing_categories(text: str) -> list[str]:
+    categories: list[str] = []
+    if any(pattern.search(text) for pattern in SENSITIVE_PATTERNS):
+        categories.append("sensitive_content")
+    if detect_pii_input(text):
+        categories.append("pii")
+    return categories

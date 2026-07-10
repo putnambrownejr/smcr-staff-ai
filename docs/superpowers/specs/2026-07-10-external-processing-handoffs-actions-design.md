@@ -1,6 +1,6 @@
 # External Processing, Structured Handoffs, and Action Completion Design
 
-Status: Draft for written-spec review; the conversational design was approved on 2026-07-10.
+Status: Approved on 2026-07-10.
 
 Date: 2026-07-10
 
@@ -84,7 +84,7 @@ Add the following models in a dedicated external-processing schema module:
 
 AgentRunRequest gains an optional external_processing_approval field.
 
-ChainRequest gains the same optional field. A chain approval digest covers the scenario, selected context, ordered step definitions, provider, model, disclosure mode, and the explicit workflow rule that validated generated assessments will be provided to later agents. Later generated text cannot be previewed before the chain starts, so it is not represented as though it were part of the initial exact-text preview.
+ChainRequest gains the same optional field. A chain approval digest covers the scenario, selected context, ordered step definitions, provider, model, and the explicit workflow rule that validated generated assessments will be provided to later agents. The selected disclosure mode is stored alongside that digest in the approval and audit record. Later generated text cannot be previewed before the chain starts, so it is not represented as though it were part of the initial exact-text preview.
 
 ### Preview endpoints
 
@@ -115,7 +115,7 @@ Scanning covers:
 
 The visible preview focuses on disclosed user and local-context content. It does not expose API keys or internal credentials.
 
-For a single-agent request, the approval digest is SHA-256 over a canonical JSON representation of the complete prospective request: provider base URL, model, system message, user message, selected disclosure mode, agent, and call-count metadata.
+For a single-agent request, the approval digest is SHA-256 over a canonical JSON representation of both displayed candidates and their immutable request metadata: provider base URL, model, original messages, sanitized messages, agent scope, and call count. The user may therefore choose either displayed candidate using the same preview digest; the selected disclosure mode is an explicit, separately recorded approval field.
 
 For a chain, the approval digest binds the immutable workflow contract rather than unknowable future generated text. Before every chain step, the server rescans the current payload, applies the approved disclosure mode to scenario, local-context, and generated-prior-assessment content, and records a separate step payload digest. Sanitized mode redacts newly detected spans in generated handoffs. Original mode passes generated handoffs as produced. The preview states this distinction explicitly.
 
