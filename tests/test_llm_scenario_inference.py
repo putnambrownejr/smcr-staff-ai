@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -122,6 +123,7 @@ class TestGenerateScenarioResponse:
 
         assert result.content == "Populated assessment"
         assert result.status is ScenarioGenerationStatus.generated
+        assert result.warning_override_authorized is True
         body = client.post.call_args.kwargs["json"]
         assert body["model"] == "gpt-4o-mini"
         assert len(body["messages"]) == 2
@@ -135,6 +137,7 @@ class TestGenerateScenarioResponse:
         mock_settings: MagicMock,
         mock_client_cls: MagicMock,
         mock_audit: MagicMock,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         mock_settings.return_value = ("sk-test", "https://api.openai.com/v1", "gpt-4o-mini")
         client = MagicMock()
@@ -144,17 +147,35 @@ class TestGenerateScenarioResponse:
         mock_client_cls.return_value = client
         approval = _approval_for("system", "template", "input")
 
-        result = generate_scenario_response(
-            "system",
-            "template",
-            "input",
-            approval=approval,
-            scope_label="agent:test",
-        )
+        with caplog.at_level(logging.WARNING, logger="app.services.llm_client"):
+            result = generate_scenario_response(
+                "system",
+                "template",
+                "input",
+                approval=approval,
+                scope_label="agent:test",
+            )
 
         assert result.content is None
         assert result.status is ScenarioGenerationStatus.failed
+        assert result.warning_override_authorized is True
+        assert "Approved LLM scenario call failed" in caplog.text
+        assert "synthetic prompt marker" not in caplog.text
         mock_audit.assert_called_once()
+
+    def test_local_only_result_does_not_authorize_warning_override(self) -> None:
+        result = ScenarioGenerationResult(
+            content=None,
+            status=ScenarioGenerationStatus.local_only,
+            preview=ExternalProcessingPreview(
+                required=True,
+                external_available=True,
+                scope_label="agent:test",
+            ),
+            disclosure_mode=DisclosureMode.local_only,
+        )
+
+        assert result.warning_override_authorized is False
 
 
 class TestTryLlmPopulate:
@@ -238,6 +259,67 @@ class TestScenarioAgents:
         assert response.answer == "LLM-populated G-9 civil estimate"
         assert response.scenario_output_status is ScenarioOutputStatus.validated
         assert response.scenario_output is not None
+
+    @patch("app.services.llm_client.generate_scenario_response")
+    def test_raw_local_acknowledgement_does_not_override_sensitive_warning(
+        self,
+        mock_generate: MagicMock,
+    ) -> None:
+        from app.services.agents.staff_advisor_agent import build_staff_advisor_agents
+
+        mock_generate.return_value = ScenarioGenerationResult(
+            content=None,
+            status=ScenarioGenerationStatus.local_only,
+            preview=ExternalProcessingPreview(
+                required=True,
+                external_available=True,
+                scope_label="agent:test",
+            ),
+            disclosure_mode=DisclosureMode.local_only,
+        )
+        context = AgentContext(
+            external_processing_approval=ExternalProcessingApproval(
+                disclosure_mode=DisclosureMode.local_only,
+                acknowledged=True,
+            )
+        )
+        agents = {agent.metadata.id: agent for agent in build_staff_advisor_agents()}
+
+        response = agents["staff-g9"].run(f"{SCENARIO_INPUT} COMSEC training reference.", context)
+
+        assert response.answer.startswith("I cannot process classified")
+
+    @patch("app.services.llm_client.generate_scenario_response")
+    def test_validated_external_approval_overrides_sensitive_warning(
+        self,
+        mock_generate: MagicMock,
+    ) -> None:
+        from app.services.agents.staff_advisor_agent import build_staff_advisor_agents
+
+        mock_generate.return_value = ScenarioGenerationResult(
+            content=json.dumps(
+                {
+                    "answer": "Acknowledged training assessment",
+                    "scenario_output": {
+                        "role": "g9",
+                        "civil_situation": {"area": "La Guaira"},
+                    },
+                }
+            ),
+            status=ScenarioGenerationStatus.generated,
+            preview=ExternalProcessingPreview(
+                required=True,
+                external_available=True,
+                scope_label="agent:test",
+            ),
+            disclosure_mode=DisclosureMode.original,
+            warning_override_authorized=True,
+        )
+        agents = {agent.metadata.id: agent for agent in build_staff_advisor_agents()}
+
+        response = agents["staff-g9"].run(f"{SCENARIO_INPUT} COMSEC training reference.", AgentContext())
+
+        assert response.answer == "Acknowledged training assessment"
 
     @patch("app.services.llm_client.generate_scenario_response")
     def test_no_llm_returns_template_without_fake_handoff(self, mock_generate: MagicMock) -> None:

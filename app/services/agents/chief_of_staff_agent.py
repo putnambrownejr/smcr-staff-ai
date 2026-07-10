@@ -186,10 +186,7 @@ class ChiefOfStaffAideAgent(Agent):
             scenario_output=population.scenario_output,
             scenario_output_status=population.status,
             additional_warnings=population.warnings,
-            allow_warning_override=bool(
-                context.external_processing_approval
-                and context.external_processing_approval.acknowledged
-            ),
+            allow_warning_override=population.allow_warning_override,
         )
 
 

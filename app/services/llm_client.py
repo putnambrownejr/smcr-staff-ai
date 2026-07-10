@@ -42,6 +42,7 @@ class ScenarioGenerationResult:
     status: ScenarioGenerationStatus
     preview: ExternalProcessingPreview
     disclosure_mode: DisclosureMode | None = None
+    warning_override_authorized: bool = False
 
 
 @lru_cache
@@ -149,9 +150,10 @@ def generate_scenario_response(
                     status=ScenarioGenerationStatus.generated,
                     preview=preview,
                     disclosure_mode=payload.disclosure_mode,
+                    warning_override_authorized=True,
                 )
     except Exception:
-        logger.debug("Approved LLM scenario call failed; falling back to template", exc_info=True)
+        logger.warning("Approved LLM scenario call failed; falling back to template", exc_info=True)
 
     _record_audit(
         user_key=user_key,
@@ -165,6 +167,7 @@ def generate_scenario_response(
         status=ScenarioGenerationStatus.failed,
         preview=preview,
         disclosure_mode=payload.disclosure_mode,
+        warning_override_authorized=True,
     )
 
 

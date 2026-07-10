@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import UTC, datetime
 from pathlib import Path
+
+from pydantic import ValidationError
 
 from app.schemas.external_processing import (
     ExternalProcessingAuditEntry,
@@ -30,7 +33,13 @@ class ExternalProcessingAuditStore:
         path = self._path(key)
         if not path.exists():
             return ExternalProcessingAuditLog()
-        return ExternalProcessingAuditLog.model_validate_json(path.read_text(encoding="utf-8"))
+        try:
+            return ExternalProcessingAuditLog.model_validate_json(path.read_text(encoding="utf-8"))
+        except ValidationError:
+            timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+            backup = path.with_name(f"{path.stem}.corrupt-{timestamp}{path.suffix}")
+            path.replace(backup)
+            return ExternalProcessingAuditLog()
 
     @staticmethod
     def user_key_digest(user_key: str) -> str:

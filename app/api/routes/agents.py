@@ -46,6 +46,12 @@ def preview_chain_external_processing(
     request: ChainRequest,
     active_context_store: Annotated[ActiveUserContextStore, Depends(get_active_context_store)],
 ) -> ExternalProcessingPreview:
+    scope_label = "chain:" + "->".join(step.agent_id for step in request.steps)
+    for step in request.steps:
+        if agent_registry.get(step.agent_id) is None:
+            raise HTTPException(status_code=404, detail=f"Unknown agent in chain: {step.agent_id}")
+    if not get_settings().llm_api_key:
+        return _no_external_preview(scope_label, "No external LLM is configured; execution remains local-only.")
     try:
         _run_agent_chain(request, active_context_store, preview_only=True)
     except ExternalProcessingPreviewReadyError as exc:
@@ -62,6 +68,11 @@ def preview_agent_external_processing(
     agent = agent_registry.get(agent_id)
     if agent is None:
         raise HTTPException(status_code=404, detail=f"Unknown agent: {agent_id}")
+    if not get_settings().llm_api_key:
+        return _no_external_preview(
+            f"agent:{agent_id}",
+            "No external LLM is configured; execution remains local-only.",
+        )
     context = _build_agent_context(
         request.context,
         active_context_store,
@@ -170,13 +181,17 @@ def _run_agent_chain(
             return ChainResponse(
                 scenario=request.scenario,
                 results=results,
-                warnings=warnings,
+                warnings=_unique_warnings(warnings),
                 completed=False,
                 stopped_at_agent_id=step.agent_id,
                 stopped_reason=reason,
             )
 
-    return ChainResponse(scenario=request.scenario, results=results, warnings=warnings)
+    return ChainResponse(scenario=request.scenario, results=results, warnings=_unique_warnings(warnings))
+
+
+def _unique_warnings(warnings: list[str]) -> list[str]:
+    return list(dict.fromkeys(warnings))
 
 
 def _build_agent_context(

@@ -4,10 +4,10 @@ import yaml
 
 from app.schemas.agents import AgentMetadata
 from app.services.agents.ace_agent import build_ace_agent
-from app.services.agents.checkin_agent import build_checkin_agent
 from app.services.agents.artillery_08xx_agent import build_artillery_08xx_agent
 from app.services.agents.assessment_learning_agent import build_assessment_learning_agent
 from app.services.agents.base import Agent
+from app.services.agents.checkin_agent import build_checkin_agent
 from app.services.agents.chief_of_staff_agent import build_chief_of_staff_agent
 from app.services.agents.drill_prep_agent import build_drill_prep_agent
 from app.services.agents.gce_agent import build_gce_agent

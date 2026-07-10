@@ -146,6 +146,7 @@ def test_local_chain_runs_templates_without_fake_prior_assessments() -> None:
         for result in data["results"]
     )
     assert "PRIOR STAFF ASSESSMENTS" not in data["results"][1]["response"]["answer"]
+    assert data["warnings"] == list(dict.fromkeys(data["warnings"]))
 
 
 @patch("app.services.llm_client.generate_scenario_response")

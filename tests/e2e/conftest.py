@@ -1,8 +1,11 @@
+from collections.abc import Generator
+from typing import Any
+
 import pytest
 
 
 @pytest.fixture
-def browser_page():
+def browser_page() -> Generator[Any, None, None]:
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as playwright:

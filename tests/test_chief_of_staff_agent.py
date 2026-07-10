@@ -1,6 +1,8 @@
 """Tests for ChiefOfStaffAideAgent — context-sensitive questions and confidence scaling."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from app.schemas.agents import Confidence
@@ -17,7 +19,7 @@ def agent() -> ChiefOfStaffAideAgent:
     return ChiefOfStaffAideAgent()
 
 
-def _ctx(handoff: dict | None = None) -> AgentContext:
+def _ctx(handoff: Mapping[str, object] | None = None) -> AgentContext:
     return AgentContext(extra={"handoff": handoff} if handoff is not None else {})
 
 

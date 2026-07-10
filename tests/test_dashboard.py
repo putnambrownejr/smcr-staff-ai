@@ -121,6 +121,19 @@ def test_dashboard_assets_are_served() -> None:
     assert "TrackedActionsController" in actions_response.text
 
 
+def test_external_processing_call_count_is_labeled_as_an_upper_bound() -> None:
+    script = Path("app/static/dashboard/dashboard.js").read_text(encoding="utf-8")
+
+    assert '"Up to " + (preview.expected_call_count || 1) + " external calls"' in script
+
+
+def test_external_processing_dialog_removes_cancel_listener_on_every_finish() -> None:
+    script = Path("app/static/dashboard/dashboard.js").read_text(encoding="utf-8")
+
+    assert 'dialog.addEventListener("cancel", onCancel)' in script
+    assert 'dialog.removeEventListener("cancel", onCancel)' in script
+
+
 def test_dashboard_button_inventory_has_wiring() -> None:
     html = Path("app/static/dashboard/index.html").read_text(encoding="utf-8")
     js = Path("app/static/dashboard/dashboard.js").read_text(encoding="utf-8")

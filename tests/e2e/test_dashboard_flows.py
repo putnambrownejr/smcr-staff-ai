@@ -1,17 +1,18 @@
 import re
 import uuid
+from typing import Any
 
 import pytest
 
 
-def _expect(locator):
+def _expect(locator: Any) -> Any:
     from playwright.sync_api import expect
 
     return expect(locator)
 
 
 @pytest.mark.e2e
-def test_demo_workspace_loads(browser_page):
+def test_demo_workspace_loads(browser_page: Any) -> None:
     page = browser_page
 
     page.locator("#tab-configure").click()
@@ -23,7 +24,7 @@ def test_demo_workspace_loads(browser_page):
 
 
 @pytest.mark.e2e
-def test_lane_tab_navigation(browser_page):
+def test_lane_tab_navigation(browser_page: Any) -> None:
     page = browser_page
     lanes = [
         ("overview", "overview"),
@@ -44,7 +45,7 @@ def test_lane_tab_navigation(browser_page):
 
 
 @pytest.mark.e2e
-def test_bench_section_manage(browser_page):
+def test_bench_section_manage(browser_page: Any) -> None:
     page = browser_page
 
     page.locator("#tab-library").click()
@@ -60,7 +61,7 @@ def test_bench_section_manage(browser_page):
 
 
 @pytest.mark.e2e
-def test_refresh_button_feedback(browser_page):
+def test_refresh_button_feedback(browser_page: Any) -> None:
     page = browser_page
 
     # first-run profile nudge redirects to configure; navigate to overview where refresh buttons live
@@ -74,7 +75,7 @@ def test_refresh_button_feedback(browser_page):
 
 
 @pytest.mark.e2e
-def test_tracked_action_mark_done_and_undo(browser_page):
+def test_tracked_action_mark_done_and_undo(browser_page: Any) -> None:
     page = browser_page
     run_id = uuid.uuid4().hex[:8]
     user_key = f"e2e-action-{run_id}"
@@ -127,7 +128,7 @@ def test_tracked_action_mark_done_and_undo(browser_page):
 
 
 @pytest.mark.e2e
-def test_tracked_action_restores_row_when_patch_fails(browser_page):
+def test_tracked_action_restores_row_when_patch_fails(browser_page: Any) -> None:
     page = browser_page
     run_id = uuid.uuid4().hex[:8]
     user_key = f"e2e-action-failure-{run_id}"
@@ -163,9 +164,9 @@ def test_tracked_action_restores_row_when_patch_fails(browser_page):
 
 
 @pytest.mark.e2e
-def test_external_preview_local_choice_submits_local_only(browser_page):
+def test_external_preview_local_choice_submits_local_only(browser_page: Any) -> None:
     page = browser_page
-    submitted_requests = []
+    submitted_requests: list[dict[str, Any]] = []
 
     page.route(
         "**/agents/writing-briefing-coach/external-processing-preview",
@@ -191,7 +192,7 @@ def test_external_preview_local_choice_submits_local_only(browser_page):
         ),
     )
 
-    def capture_run(route):
+    def capture_run(route: Any) -> None:
         submitted_requests.append(route.request.post_data_json)
         route.fulfill(
             status=200,
@@ -234,7 +235,7 @@ def test_external_preview_local_choice_submits_local_only(browser_page):
 
 @pytest.mark.e2e
 @pytest.mark.skip(reason="manual test: stop server then reload")
-def test_server_down_banner(browser_page):
+def test_server_down_banner(browser_page: Any) -> None:
     page = browser_page
 
     page.reload(wait_until="networkidle")

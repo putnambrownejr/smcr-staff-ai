@@ -20,6 +20,7 @@ from app.schemas.external_processing import (
     ExternalProcessingOutcome,
     ExternalProcessingPreview,
 )
+from app.services.agents.registry import agent_registry
 from app.services.external_processing.audit_store import ExternalProcessingAuditStore
 from app.services.external_processing.preflight import (
     ExternalProcessingApprovalRequiredError,
@@ -208,6 +209,30 @@ def test_audit_store_caps_entries_and_never_receives_prompt_content(
     assert '"response"' not in serialized
 
 
+def test_corrupted_audit_file_is_quarantined_and_replaced(tmp_path: Path) -> None:
+    store = ExternalProcessingAuditStore(tmp_path)
+    path = store._path("capt-example")
+    path.write_text("{broken", encoding="utf-8")
+
+    assert store.get("capt-example").entries == []
+    backups = list(tmp_path.glob(f"{path.stem}.corrupt-*.json"))
+    assert len(backups) == 1
+
+    store.append(
+        "capt-example",
+        ExternalProcessingAuditEntry(
+            scope_label="agent:test",
+            user_key_digest="replaced-by-store",
+            provider="api.example.test",
+            model="example-model",
+            disclosure_mode=DisclosureMode.sanitized,
+            outcome=ExternalProcessingOutcome.completed,
+        ),
+    )
+
+    assert len(store.get("capt-example").entries) == 1
+
+
 @pytest.fixture
 def configured_llm(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Generator[None, None, None]:
     monkeypatch.setenv("LLM_API_KEY", "sk-test")
@@ -241,6 +266,55 @@ def test_agent_route_requires_preview_bound_approval(configured_llm: None) -> No
     assert preview["finding_categories"] == ["pii"]
     assert run_response.status_code == 409
     assert run_response.json()["detail"]["preview"]["approval_digest"] == preview["approval_digest"]
+
+
+def test_no_key_agent_preview_does_not_run_agent(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    get_settings.cache_clear()
+    _llm_settings.cache_clear()
+    agent = agent_registry.get("planning-advisor")
+    assert agent is not None
+    try:
+        with patch.object(agent, "run") as run:
+            response = TestClient(app).post(
+                "/agents/planning-advisor/external-processing-preview",
+                json={"input": "Exercise in Japan.", "context": {}},
+            )
+    finally:
+        get_settings.cache_clear()
+        _llm_settings.cache_clear()
+
+    assert response.status_code == 200
+    assert response.json()["required"] is False
+    run.assert_not_called()
+
+
+def test_no_key_chain_preview_does_not_run_agents(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    get_settings.cache_clear()
+    _llm_settings.cache_clear()
+    g9 = agent_registry.get("staff-g9")
+    s2 = agent_registry.get("staff-s2")
+    assert g9 is not None
+    assert s2 is not None
+    try:
+        with patch.object(g9, "run") as g9_run, patch.object(s2, "run") as s2_run:
+            response = TestClient(app).post(
+                "/agents/chain/external-processing-preview",
+                json={
+                    "scenario": "Exercise in Japan.",
+                    "steps": [{"agent_id": "staff-g9"}, {"agent_id": "staff-s2"}],
+                    "context": {},
+                },
+            )
+    finally:
+        get_settings.cache_clear()
+        _llm_settings.cache_clear()
+
+    assert response.status_code == 200
+    assert response.json()["required"] is False
+    g9_run.assert_not_called()
+    s2_run.assert_not_called()
 
 
 @patch("app.services.llm_client.httpx.Client")

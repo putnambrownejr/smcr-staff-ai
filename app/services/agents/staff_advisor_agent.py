@@ -11,6 +11,7 @@ The echelon modifier lives in ``ECHELON_CONTEXT`` and ``_echelon_adapt()``.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from pydantic import BaseModel
@@ -78,15 +79,32 @@ _COUNTRY_SIGNALS = (
 )
 
 
+def _contains_signal(text: str, signals: tuple[str, ...]) -> bool:
+    return any(re.search(rf"(?<!\w){re.escape(signal)}(?!\w)", text) for signal in signals)
+
+
 def _detect_scenario(input_text: str) -> bool:
     """Return True when the user input describes a specific scenario."""
     lowered = input_text.lower()
-    has_scenario_signal = any(s in lowered for s in _SCENARIO_SIGNALS)
-    has_country = any(c in lowered for c in _COUNTRY_SIGNALS)
-    has_specifics = any(word in lowered for word in (
-        "magnitude", "category", "casualties", "displaced", "population",
-        "km", "miles", "destroyed", "damaged", "airport", "port", "road",
-    ))
+    has_scenario_signal = _contains_signal(lowered, _SCENARIO_SIGNALS)
+    has_country = _contains_signal(lowered, _COUNTRY_SIGNALS)
+    has_specifics = _contains_signal(
+        lowered,
+        (
+            "magnitude",
+            "category",
+            "casualties",
+            "displaced",
+            "population",
+            "km",
+            "miles",
+            "destroyed",
+            "damaged",
+            "airport",
+            "port",
+            "road",
+        ),
+    )
     # Scenario if: (scenario keyword + country) OR (scenario keyword + specific details)
     return has_scenario_signal and (has_country or has_specifics)
 
@@ -881,10 +899,7 @@ class StaffAdvisorAgent(Agent):
             scenario_output=population.scenario_output,
             scenario_output_status=population.status,
             additional_warnings=population.warnings,
-            allow_warning_override=bool(
-                context.external_processing_approval
-                and context.external_processing_approval.acknowledged
-            ),
+            allow_warning_override=population.allow_warning_override,
         )
 
 
@@ -1290,6 +1305,7 @@ class ScenarioPopulation:
     scenario_output: dict[str, object] | None = None
     status: ScenarioOutputStatus = ScenarioOutputStatus.not_applicable
     warnings: list[str] | None = None
+    allow_warning_override: bool = False
 
 
 def _try_llm_populate(
@@ -1334,26 +1350,31 @@ def _try_llm_populate(
                 answer=fallback_answer,
                 status=ScenarioOutputStatus.invalid,
                 warnings=[f"Structured scenario handoff unavailable: {exc.reason}"],
+                allow_warning_override=result.warning_override_authorized,
             )
         return ScenarioPopulation(
             answer=parsed.answer,
             scenario_output=parsed.scenario_output,
             status=ScenarioOutputStatus.validated,
+            allow_warning_override=result.warning_override_authorized,
         )
     if result.status is ScenarioGenerationStatus.local_only:
         return ScenarioPopulation(
             answer=template + _LLM_LOCAL_ONLY_NOTICE,
             status=ScenarioOutputStatus.template_only,
+            allow_warning_override=result.warning_override_authorized,
         )
     if result.status is ScenarioGenerationStatus.failed:
         return ScenarioPopulation(
             answer=template + _LLM_FAILURE_NOTICE,
             status=ScenarioOutputStatus.invalid,
             warnings=["Approved external processing failed; no structured handoff was produced."],
+            allow_warning_override=result.warning_override_authorized,
         )
     return ScenarioPopulation(
         answer=template + _LLM_UNAVAILABLE_NOTICE,
         status=ScenarioOutputStatus.template_only,
+        allow_warning_override=result.warning_override_authorized,
     )
 
 

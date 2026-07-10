@@ -3417,7 +3417,7 @@ function requestExternalProcessingDecision(preview) {
   summary.textContent = [
     "Provider: " + (preview.provider || "configured provider"),
     "Model: " + (preview.model || "configured model"),
-    "Expected calls: " + (preview.expected_call_count || 1),
+    "Up to " + (preview.expected_call_count || 1) + " external calls",
   ].join(" | ");
   renderList("external-processing-warnings", preview.warnings || []);
   findings.innerHTML = (preview.findings || []).length
@@ -3448,8 +3448,13 @@ function requestExternalProcessingDecision(preview) {
     const finish = (decision) => {
       if (settled) return;
       settled = true;
+      dialog.removeEventListener("cancel", onCancel);
       dialog.close();
       resolve(decision);
+    };
+    const onCancel = (event) => {
+      event.preventDefault();
+      finish(null);
     };
     localButton.onclick = () => finish({
       disclosure_mode: "local_only",
@@ -3458,10 +3463,7 @@ function requestExternalProcessingDecision(preview) {
     });
     sanitizedButton.onclick = () => finish(externalApproval(preview, "sanitized"));
     originalButton.onclick = () => finish(externalApproval(preview, "original"));
-    dialog.addEventListener("cancel", (event) => {
-      event.preventDefault();
-      finish(null);
-    }, { once: true });
+    dialog.addEventListener("cancel", onCancel);
     dialog.showModal();
   });
 }

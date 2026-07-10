@@ -94,8 +94,8 @@ class ExternalProcessingPreflightService:
         ]
         if expected_call_count > 1:
             warnings.append(
-                "This approval covers the named chain. Generated assessments will be rescanned "
-                "and passed to later steps using the selected disclosure mode."
+                f"This approval covers up to {expected_call_count} external calls in the named chain. "
+                "Generated assessments will be rescanned and passed to later steps using the selected disclosure mode."
             )
         return ExternalProcessingPreview(
             required=True,
