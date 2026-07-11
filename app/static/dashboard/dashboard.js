@@ -1,4 +1,4 @@
-import { TrackedActionsController } from "./actions.js?v=20260710a";
+import { TrackedActionsController } from "./actions.js?v=20260711b";
 
 // Module split readiness: when this file exceeds ~4000 lines or a second contributor joins,
 // split along these seams: state.js, ui.js, lanes/overview.js, lanes/watch.js,
@@ -28,11 +28,17 @@ const state = {
     sourceWatch: null,
   },
   lastUpdatedTimer: null,
-  consecutiveFetchFailures: 0,
+  consecutiveTransportFailures: 0,
   connectionLostDismissed: false,
   firstEmptyOrientationDismissed: false,
   todayInHistory: [],
   historyIndex: 0,
+  goodLinks: {
+    items: [],
+    categories: {},
+    query: "",
+    category: "",
+  },
 };
 
 const PRELOAD_EMPTY_TEXT = "Load workspace to see this";
@@ -2266,147 +2272,329 @@ const CATEGORY_ORDER = [
   "usmc_official", "admin_pay", "training_pme", "news_info", "benefits", "comms", "reserve", "it_access", "reference", "unit",
 ];
 
-
-function renderQuickLinks(links, categoryLabels, listEl, filterEl, onDelete) {
-  if (!links.length) {
-    listEl.className = "row-stack empty-state";
-    listEl.textContent = "No links yet. Add one above.";
-    filterEl.style.display = "none";
-    return;
-  }
-  // Collect categories present in this link set
-  const usedCats = [...new Set(links.map((l) => l.category))].sort(
-    (a, b) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b),
-  );
-  // Filter bar
-  filterEl.style.display = "flex";
-  let activeCat = null;
-  const renderLinks = () => {
-    const visible = activeCat ? links.filter((l) => l.category === activeCat) : links;
-    if (!visible.length) {
-      listEl.className = "row-stack empty-state";
-      listEl.textContent = "No links in this category.";
-      return;
-    }
-    // Group by category
-    const groups = {};
-    for (const link of visible) {
-      (groups[link.category] = groups[link.category] || []).push(link);
-    }
-    listEl.className = "row-stack";
-    listEl.innerHTML = Object.entries(groups)
-      .sort(([a], [b]) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b))
-      .map(
-        ([cat, catLinks]) => `
-        <div class="ql-category-group">
-          <p class="meta-inline" style="margin-bottom:0.3rem;font-weight:600">${escapeHtml(categoryLabels[cat] || cat)}</p>
-          <div class="ql-link-grid" style="display:flex;flex-wrap:wrap;gap:0.4rem;">
-            ${catLinks
-              .map(
-                (l) => `
-              <div class="ql-link-chip" style="display:flex;align-items:center;gap:0.25rem;">
-                <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer"
-                   class="strip-label" title="${escapeHtml(l.description || l.title)}"
-                   style="text-decoration:none">${escapeHtml(l.title)}</a>
-                ${!l.is_seed ? `<button type="button" class="ql-delete-btn" data-link-id="${escapeHtml(l.id)}"
-                   aria-label="Remove ${escapeHtml(l.title)}" style="background:none;border:none;cursor:pointer;padding:0;line-height:1">✕</button>` : ""}
-              </div>`,
-              )
-              .join("")}
-          </div>
-        </div>`,
-      )
-      .join("");
-    listEl.querySelectorAll(".ql-delete-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const id = btn.dataset.linkId;
-        if (!state.userKey || !id) return;
-        try {
-          await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}/${encodeURIComponent(id)}`, {
-            method: "DELETE",
-          });
-        } catch (_) {}
-        if (onDelete) await onDelete();
-      });
-    });
-  };
-  // Build filter chips
-  filterEl.innerHTML = `
-    <button type="button" class="strip-label ql-filter-chip ${!activeCat ? "active" : ""}" data-cat="">All</button>
-    ${usedCats
-      .map(
-        (c) =>
-          `<button type="button" class="strip-label ql-filter-chip" data-cat="${escapeHtml(c)}">${escapeHtml(categoryLabels[c] || c)}</button>`,
-      )
-      .join("")}`;
-  filterEl.querySelectorAll(".ql-filter-chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      activeCat = chip.dataset.cat || null;
-      filterEl.querySelectorAll(".ql-filter-chip").forEach((c) => c.classList.toggle("active", c === chip));
-      renderLinks();
-    });
-  });
-  renderLinks();
+function goodLinkCategoryRank(category) {
+  const index = CATEGORY_ORDER.indexOf(category);
+  return index === -1 ? CATEGORY_ORDER.length : index;
 }
 
-// ── A Few Good Links tab (reuses renderQuickLinks) ────────────────────────
-async function loadGoodLinks() {
-  if (!state.userKey) return;
-  const listEl = document.getElementById("good-links-grid");
-  const filterEl = document.getElementById("good-links-filters");
-  if (!listEl) return;
-  listEl.className = "row-stack";
-  listEl.textContent = "Loading…";
+function goodLinkSafeUrl(rawUrl) {
   try {
-    const data = await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`);
-    renderQuickLinks(data.links || [], data.categories || {}, listEl, filterEl, loadGoodLinks);
-  } catch (_) {
-    listEl.className = "row-stack empty-state";
-    listEl.textContent = "Could not load links.";
+    const parsed = new URL(String(rawUrl || ""));
+    return ["http:", "https:"].includes(parsed.protocol) ? parsed.href : "";
+  } catch (_error) {
+    return "";
   }
+}
+
+function goodLinkHostname(rawUrl) {
+  const safeUrl = goodLinkSafeUrl(rawUrl);
+  if (!safeUrl) return "Invalid link address";
+  return new URL(safeUrl).hostname.replace(/^www\./i, "") || "External site";
+}
+
+function goodLinkCategoryLabel(category) {
+  return state.goodLinks.categories[category] || String(category || "Other").replace(/_/g, " ");
+}
+
+function filterGoodLinks(items, query, category) {
+  const needle = query.trim().toLowerCase();
+  return items.filter((link) => {
+    if (category && link.category !== category) return false;
+    if (!needle) return true;
+    const searchable = [
+      link.title,
+      link.url,
+      link.description,
+      goodLinkHostname(link.url),
+      ...(Array.isArray(link.tags) ? link.tags : []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return searchable.includes(needle);
+  });
+}
+
+function renderGoodLinkItem(link) {
+  const title = escapeHtml(link.title || "Untitled link");
+  const safeUrl = goodLinkSafeUrl(link.url);
+  const linkedTitle = safeUrl
+    ? `<a class="good-link-title" href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">${title}<span class="sr-only"> (opens in a new tab)</span></a>`
+    : `<span class="good-link-title">${title}</span>`;
+  const description = link.description
+    ? `<p class="good-link-description">${escapeHtml(link.description)}</p>`
+    : "";
+  const removeAction = link.is_seed
+    ? ""
+    : `<button type="button" class="good-link-remove" data-link-id="${escapeHtml(link.id)}" aria-label="Remove ${title}">Remove</button>`;
+  return `
+    <li class="good-link-item">
+      ${linkedTitle}
+      <span class="good-link-hostname">${escapeHtml(goodLinkHostname(link.url))}</span>
+      ${description}
+      ${removeAction}
+    </li>`;
+}
+
+function renderGoodLinkCategories(links) {
+  const groups = {};
+  links.forEach((link) => {
+    const category = link.category || "other";
+    (groups[category] ||= []).push(link);
+  });
+  return Object.entries(groups)
+    .sort(([a], [b]) => {
+      const rankDifference = goodLinkCategoryRank(a) - goodLinkCategoryRank(b);
+      return rankDifference || goodLinkCategoryLabel(a).localeCompare(goodLinkCategoryLabel(b));
+    })
+    .map(([category, categoryLinks]) => {
+      const headingId = `good-links-category-${String(category).replace(/[^a-z0-9_-]/gi, "-")}`;
+      const sortedLinks = [...categoryLinks].sort((a, b) => String(a.title).localeCompare(String(b.title)));
+      return `
+        <section class="good-links-category" aria-labelledby="${escapeHtml(headingId)}">
+          <h4 id="${escapeHtml(headingId)}">${escapeHtml(goodLinkCategoryLabel(category))}</h4>
+          <ul class="good-links-link-list">
+            ${sortedLinks.map(renderGoodLinkItem).join("")}
+          </ul>
+        </section>`;
+    })
+    .join("");
+}
+
+function setGoodLinksFeedback(targetId, message = "", isError = false) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  target.textContent = message;
+  if (isError) {
+    target.dataset.tone = "error";
+  } else {
+    delete target.dataset.tone;
+  }
+}
+
+function bindGoodLinkDeleteButtons() {
+  document.querySelectorAll(".good-link-remove").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const linkId = button.dataset.linkId;
+      const link = state.goodLinks.items.find((item) => item.id === linkId);
+      if (!state.userKey || !linkId || !link) return;
+      button.disabled = true;
+      setGoodLinksFeedback("good-links-action-status", `Removing ${link.title}…`);
+      try {
+        await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}/${encodeURIComponent(linkId)}`, {
+          method: "DELETE",
+          auth: true,
+        });
+        state.goodLinks.items = state.goodLinks.items.filter((item) => item.id !== linkId);
+        renderGoodLinks();
+        setGoodLinksFeedback("good-links-action-status", `${link.title} removed.`);
+        document.getElementById("good-links-my-heading")?.focus();
+      } catch (error) {
+        console.error("Failed to remove resource link", error);
+        button.disabled = false;
+        const message = error?.status === 401
+          ? `Could not remove ${link.title}. Update the passkey in Workspace and try again.`
+          : `Could not remove ${link.title}. Try again.`;
+        setGoodLinksFeedback("good-links-action-status", message, true);
+      }
+    });
+  });
+}
+
+function renderGoodLinks() {
+  const personalGrid = document.getElementById("good-links-my-grid");
+  const resourceGrid = document.getElementById("good-links-resource-grid");
+  if (!personalGrid || !resourceGrid) return;
+
+  const items = Array.isArray(state.goodLinks.items) ? state.goodLinks.items : [];
+  const visible = filterGoodLinks(items, state.goodLinks.query, state.goodLinks.category);
+  const personal = visible.filter((link) => !link.is_seed);
+  const resources = visible.filter((link) => link.is_seed);
+  const personalEmpty = document.getElementById("good-links-my-empty");
+  const resourceEmpty = document.getElementById("good-links-resource-empty");
+  const mySummary = document.getElementById("good-links-my-summary");
+  const resultsSummary = document.getElementById("good-links-results-summary");
+  const filtersActive = Boolean(state.goodLinks.query.trim() || state.goodLinks.category);
+
+  personalGrid.innerHTML = [...personal]
+    .sort((a, b) => String(a.title).localeCompare(String(b.title)))
+    .map(renderGoodLinkItem)
+    .join("");
+  personalEmpty.hidden = personal.length > 0;
+  personalEmpty.textContent = filtersActive ? "No personal links match your filters." : "No personal links yet.";
+  mySummary.textContent = personal.length ? `${personal.length} shown` : "";
+
+  resourceGrid.innerHTML = renderGoodLinkCategories(resources);
+  resourceEmpty.hidden = resources.length > 0;
+  resourceEmpty.textContent = items.length && filtersActive
+    ? "No links match your search and category."
+    : "No resource links are available.";
+  resultsSummary.textContent = `${resources.length} ${resources.length === 1 ? "link" : "links"} shown`;
+
+  const clearFilters = document.getElementById("good-links-clear-filters");
+  if (clearFilters) clearFilters.disabled = !filtersActive;
+  bindGoodLinkDeleteButtons();
+}
+
+function populateGoodLinksCategorySelects(categories) {
+  const filterSelect = document.getElementById("good-links-filter-category");
+  const addSelect = document.getElementById("good-links-category-select");
+  if (!filterSelect || !addSelect) return;
+  const previousAddCategory = addSelect.value || "unit";
+  const orderedCategories = Object.entries(categories).sort(([a, aLabel], [b, bLabel]) => {
+    const rankDifference = goodLinkCategoryRank(a) - goodLinkCategoryRank(b);
+    return rankDifference || String(aLabel).localeCompare(String(bLabel));
+  });
+  const options = orderedCategories
+    .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
+    .join("");
+  filterSelect.innerHTML = `<option value="">All categories</option>${options}`;
+  const filterExists = orderedCategories.some(([value]) => value === state.goodLinks.category);
+  if (!filterExists) state.goodLinks.category = "";
+  filterSelect.value = state.goodLinks.category;
+
+  addSelect.innerHTML = options;
+  const availableValues = orderedCategories.map(([value]) => value);
+  addSelect.value = availableValues.includes(previousAddCategory)
+    ? previousAddCategory
+    : availableValues.includes("unit") ? "unit" : availableValues[0] || "";
+}
+
+function setGoodLinksLoadState(kind, message = "") {
+  const stateRegion = document.getElementById("good-links-state");
+  const results = document.getElementById("good-links-results");
+  const retry = document.getElementById("good-links-retry");
+  const openWorkspace = document.getElementById("good-links-open-workspace");
+  const addDrawer = document.getElementById("good-links-add-drawer");
+  if (!stateRegion || !results) return;
+  stateRegion.dataset.state = kind;
+  stateRegion.setAttribute("aria-busy", kind === "loading" ? "true" : "false");
+  stateRegion.querySelector("p").textContent = message;
+  stateRegion.hidden = kind === "ready";
+  results.hidden = kind !== "ready";
+  if (retry) retry.hidden = !["error", "auth"].includes(kind);
+  if (openWorkspace) openWorkspace.hidden = !["workspace", "auth"].includes(kind);
+  if (addDrawer) addDrawer.hidden = kind !== "ready";
+}
+
+async function loadGoodLinks() {
+  if (!state.userKey) {
+    setGoodLinksLoadState("workspace", "Open a personal workspace to load links.");
+    return;
+  }
+  setGoodLinksLoadState("loading", "Loading links…");
+  setGoodLinksFeedback("good-links-action-status");
+  try {
+    const data = await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`, { auth: true });
+    state.goodLinks.items = Array.isArray(data.links) ? data.links : [];
+    state.goodLinks.categories = data.categories || {};
+    populateGoodLinksCategorySelects(state.goodLinks.categories);
+    renderGoodLinks();
+    setGoodLinksLoadState("ready");
+  } catch (error) {
+    console.error("Failed to load resource links", error);
+    if (error?.status === 401) {
+      setGoodLinksLoadState("auth", "The passkey is missing or incorrect. Open Workspace settings to update it.");
+    } else {
+      setGoodLinksLoadState("error", "Could not load links. Check the local server and try again.");
+    }
+  }
+}
+
+function resetGoodLinksForm(form, categorySelect) {
+  form.reset();
+  if (categorySelect.querySelector('option[value="unit"]')) categorySelect.value = "unit";
+  setGoodLinksFeedback("good-links-form-status");
+}
+
+function initGoodLinksControls() {
+  const search = document.getElementById("good-links-search");
+  const category = document.getElementById("good-links-filter-category");
+  const clear = document.getElementById("good-links-clear-filters");
+  const retry = document.getElementById("good-links-retry");
+  retry?.addEventListener("click", async () => {
+    await loadGoodLinks();
+    if (retry.hidden) {
+      search?.focus();
+    } else {
+      retry.focus();
+    }
+  });
+  document.getElementById("good-links-open-workspace")?.addEventListener("click", () => {
+    openLane("configure", "Open or create a personal workspace to use saved links.");
+    document.getElementById("tab-configure")?.focus();
+  });
+  search?.addEventListener("input", () => {
+    state.goodLinks.query = search.value;
+    renderGoodLinks();
+  });
+  category?.addEventListener("change", () => {
+    state.goodLinks.category = category.value;
+    renderGoodLinks();
+  });
+  clear?.addEventListener("click", () => {
+    state.goodLinks.query = "";
+    state.goodLinks.category = "";
+    search.value = "";
+    category.value = "";
+    renderGoodLinks();
+    search.focus();
+  });
 }
 
 function initGoodLinksForm() {
   const form = document.getElementById("good-links-add-form");
-  const cancelBtn = document.getElementById("good-links-cancel");
+  const cancelButton = document.getElementById("good-links-cancel");
   const drawer = document.getElementById("good-links-add-drawer");
-  const catSelect = document.getElementById("good-links-category-select");
-  if (!form || !catSelect) return;
-  catSelect.innerHTML = CATEGORY_ORDER.map(
-    (c) => `<option value="${c}">${escapeHtml(c.replace(/_/g, " "))}</option>`,
-  ).join("");
-  cancelBtn?.addEventListener("click", () => {
+  const categorySelect = document.getElementById("good-links-category-select");
+  if (!form || !drawer || !categorySelect) return;
+  cancelButton?.addEventListener("click", () => {
+    resetGoodLinksForm(form, categorySelect);
     drawer.removeAttribute("open");
-    form.reset();
+    drawer.querySelector("summary")?.focus();
   });
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!state.userKey) return;
-    const fd = new FormData(form);
-    const title = fd.get("title")?.toString().trim();
-    const url = fd.get("url")?.toString().trim();
-    const description = fd.get("description")?.toString().trim() || null;
-    const category = fd.get("category")?.toString() || "unit";
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!state.userKey) {
+      setGoodLinksFeedback("good-links-form-status", "Open a personal workspace before saving a link.", true);
+      return;
+    }
+    const formData = new FormData(form);
+    const title = formData.get("title")?.toString().trim();
+    const url = formData.get("url")?.toString().trim();
+    const description = formData.get("description")?.toString().trim() || null;
+    const category = formData.get("category")?.toString() || "unit";
     if (!title || !url) return;
-    const submitBtn = form.querySelector("button[type=submit]");
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Saving…";
+    const submitButton = form.querySelector("button[type=submit]");
+    submitButton.disabled = true;
+    submitButton.textContent = "Saving…";
+    setGoodLinksFeedback("good-links-form-status");
     try {
-      await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`, {
+      const created = await apiFetch(`/resource-links/${encodeURIComponent(state.userKey)}`, {
         method: "POST",
+        auth: true,
         body: JSON.stringify({ title, url, description, category, tags: [] }),
       });
+      state.goodLinks.items = [...state.goodLinks.items, created];
+      renderGoodLinks();
+      resetGoodLinksForm(form, categorySelect);
       drawer.removeAttribute("open");
-      form.reset();
-      await loadGoodLinks();
-    } catch (_) {
-      submitBtn.textContent = "Error — retry";
+      setGoodLinksFeedback("good-links-action-status", `${title} saved.`);
+      drawer.querySelector("summary")?.focus();
+    } catch (error) {
+      console.error("Failed to save resource link", error);
+      const message = error?.status === 401
+        ? "Could not save this link. Update the passkey in Workspace and try again."
+        : "Could not save this link. Check the URL and try again.";
+      setGoodLinksFeedback("good-links-form-status", message, true);
     } finally {
-      submitBtn.disabled = false;
-      if (submitBtn.textContent === "Saving…") submitBtn.textContent = "Save link";
+      submitButton.disabled = false;
+      submitButton.textContent = "Save link";
     }
   });
 }
+
+initGoodLinksControls();
 initGoodLinksForm();
 // ── End Good Links ────────────────────────────────────────────────────────
 
@@ -3320,42 +3508,30 @@ async function apiFetch(path, options = {}) {
       body: options.body,
     });
   } catch (error) {
-    recordFetchFailure();
+    recordTransportFailure();
     const networkError = new Error("Cannot reach local server.");
     networkError.isNetworkError = true;
     networkError.cause = error;
     throw networkError;
   }
+  recordTransportSuccess();
   if (!response.ok) {
     const text = await response.text();
-    recordFetchFailure();
     const httpError = new Error(`Request failed (${response.status}): ${text}`);
     httpError.status = response.status;
     httpError.responseText = text;
     throw httpError;
   }
   if (response.status === 204) {
-    recordFetchSuccess();
     return null;
   }
   if (options.text) {
-    const text = await response.text();
-    recordFetchSuccess();
-    return text;
+    return response.text();
   }
   if (options.blob) {
-    const blob = await response.blob();
-    recordFetchSuccess();
-    return blob;
+    return response.blob();
   }
-  try {
-    const data = await response.json();
-    recordFetchSuccess();
-    return data;
-  } catch (error) {
-    recordFetchFailure();
-    throw error;
-  }
+  return response.json();
 }
 
 async function runAgentWithExternalApproval(agentId, requestPayload) {
@@ -3483,15 +3659,15 @@ function externalMessagesText(messages) {
     .join("\n\n");
 }
 
-function recordFetchSuccess() {
-  state.consecutiveFetchFailures = 0;
+function recordTransportSuccess() {
+  state.consecutiveTransportFailures = 0;
   setConnectionLostVisible(false);
   setServerUnavailableVisible(false);
 }
 
-function recordFetchFailure() {
-  state.consecutiveFetchFailures += 1;
-  if (state.consecutiveFetchFailures >= 3 && !state.connectionLostDismissed) {
+function recordTransportFailure() {
+  state.consecutiveTransportFailures += 1;
+  if (state.consecutiveTransportFailures >= 3 && !state.connectionLostDismissed) {
     setConnectionLostVisible(true);
   }
 }
@@ -3722,6 +3898,7 @@ function applyLaneVisibility(moveFocus = false) {
   const main = document.getElementById("dashboard-main");
   if (main) {
     main.setAttribute("aria-labelledby", `tab-${active}`);
+    main.dataset.activeLane = active;
   }
 
   for (const section of document.querySelectorAll("[data-section-group]")) {

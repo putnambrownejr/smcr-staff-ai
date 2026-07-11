@@ -11,6 +11,15 @@ def _expect(locator: Any) -> Any:
     return expect(locator)
 
 
+def _attempt_personal_workspace_load(page: Any) -> None:
+    note = page.locator("#workspace-note")
+    marker = f"e2e-waiting-{uuid.uuid4().hex}"
+    note.evaluate("(element, value) => { element.textContent = value; }", marker)
+    with page.expect_request("**/dashboard/data/**"):
+        page.locator("#load-personal").click()
+    _expect(note).not_to_have_text(marker)
+
+
 @pytest.mark.e2e
 def test_demo_workspace_loads(browser_page: Any) -> None:
     page = browser_page
@@ -32,6 +41,7 @@ def test_lane_tab_navigation(browser_page: Any) -> None:
         ("bench-files", "library"),
         ("workflows", "draft"),
         ("workspace", "configure"),
+        ("links", "links"),
     ]
 
     for _label, lane in lanes:
@@ -75,13 +85,13 @@ def test_refresh_button_feedback(browser_page: Any) -> None:
 
 
 @pytest.mark.e2e
-def test_tracked_action_mark_done_and_undo(browser_page: Any) -> None:
+def test_tracked_action_mark_done_and_undo(browser_page: Any, e2e_base_url: str) -> None:
     page = browser_page
     run_id = uuid.uuid4().hex[:8]
     user_key = f"e2e-action-{run_id}"
     title = f"Finalize drill support request {run_id}"
     create_response = page.request.post(
-        "http://localhost:8000/actions/track",
+        f"{e2e_base_url}/actions/track",
         data={
             "actions": [
                 {
@@ -112,7 +122,7 @@ def test_tracked_action_mark_done_and_undo(browser_page: Any) -> None:
         undo = page.get_by_role("button", name=f"Undo completion of {title}")
         _expect(undo).to_be_visible()
         closed_response = page.request.get(
-            f"http://localhost:8000/actions?user_key={user_key}&include_closed=true"
+            f"{e2e_base_url}/actions?user_key={user_key}&include_closed=true"
         )
         assert any(item["status"] == "closed" for item in closed_response.json())
 
@@ -120,21 +130,21 @@ def test_tracked_action_mark_done_and_undo(browser_page: Any) -> None:
 
         _expect(action_title).to_be_visible()
         restored_response = page.request.get(
-            f"http://localhost:8000/actions?user_key={user_key}&include_closed=true"
+            f"{e2e_base_url}/actions?user_key={user_key}&include_closed=true"
         )
         assert any(item["status"] == "in_progress" for item in restored_response.json())
     finally:
-        page.request.delete(f"http://localhost:8000/actions/{action_id}")
+        page.request.delete(f"{e2e_base_url}/actions/{action_id}")
 
 
 @pytest.mark.e2e
-def test_tracked_action_restores_row_when_patch_fails(browser_page: Any) -> None:
+def test_tracked_action_restores_row_when_patch_fails(browser_page: Any, e2e_base_url: str) -> None:
     page = browser_page
     run_id = uuid.uuid4().hex[:8]
     user_key = f"e2e-action-failure-{run_id}"
     title = f"Action failure recovery {run_id}"
     create_response = page.request.post(
-        "http://localhost:8000/actions/track",
+        f"{e2e_base_url}/actions/track",
         data={"actions": [{"user_key": user_key, "title": title, "status": "open"}]},
     )
     assert create_response.ok
@@ -160,7 +170,7 @@ def test_tracked_action_restores_row_when_patch_fails(browser_page: Any) -> None
         _expect(page.get_by_role("button", name=f"Undo completion of {title}")).to_be_hidden()
         _expect(page.locator("#workspace-note")).to_have_text(re.compile(r"request failed", re.I))
     finally:
-        page.request.delete(f"http://localhost:8000/actions/{action_id}")
+        page.request.delete(f"{e2e_base_url}/actions/{action_id}")
 
 
 @pytest.mark.e2e
@@ -234,10 +244,88 @@ def test_external_preview_local_choice_submits_local_only(browser_page: Any) -> 
 
 
 @pytest.mark.e2e
-@pytest.mark.skip(reason="manual test: stop server then reload")
-def test_server_down_banner(browser_page: Any) -> None:
+def test_three_transport_failures_show_connection_lost_banner(browser_page: Any) -> None:
     page = browser_page
+    page.locator("#tab-configure").click()
+    page.route(
+        "**/dashboard/data/**",
+        lambda route: route.abort(error_code="connectionfailed"),
+    )
 
-    page.reload(wait_until="networkidle")
+    for _ in range(3):
+        _attempt_personal_workspace_load(page)
 
+    _expect(page.locator("#server-unavailable-banner")).to_be_visible()
     _expect(page.locator("#connection-lost-banner")).to_be_visible()
+
+
+@pytest.mark.e2e
+def test_http_error_response_clears_prior_transport_failures(browser_page: Any) -> None:
+    page = browser_page
+    page.locator("#tab-configure").click()
+    outcomes = ["transport", "transport", "http"]
+
+    def handle_workspace_request(route: Any) -> None:
+        outcome = outcomes.pop(0)
+        if outcome == "transport":
+            route.abort(error_code="connectionfailed")
+            return
+        route.fulfill(
+            status=500,
+            content_type="application/json",
+            body='{"detail":"expected application error"}',
+        )
+
+    page.route("**/dashboard/data/**", handle_workspace_request)
+    for _ in range(3):
+        _attempt_personal_workspace_load(page)
+
+    _expect(page.locator("#workspace-note")).to_contain_text("Request failed (500)")
+    _expect(page.locator("#server-unavailable-banner")).to_be_hidden()
+    _expect(page.locator("#connection-lost-banner")).to_be_hidden()
+
+
+@pytest.mark.e2e
+def test_invalid_json_does_not_count_as_transport_failure(browser_page: Any) -> None:
+    page = browser_page
+    page.locator("#tab-configure").click()
+    outcomes = ["invalid-json", "transport", "transport"]
+
+    def handle_workspace_request(route: Any) -> None:
+        outcome = outcomes.pop(0)
+        if outcome == "invalid-json":
+            route.fulfill(status=200, content_type="application/json", body="{")
+            return
+        route.abort(error_code="connectionfailed")
+
+    page.route("**/dashboard/data/**", handle_workspace_request)
+    for _ in range(3):
+        _attempt_personal_workspace_load(page)
+
+    _expect(page.locator("#server-unavailable-banner")).to_be_visible()
+    _expect(page.locator("#connection-lost-banner")).to_be_hidden()
+
+
+@pytest.mark.e2e
+@pytest.mark.parametrize("status", [401, 404, 422, 500])
+def test_repeated_http_errors_never_show_connection_banners(
+    browser_page: Any,
+    status: int,
+) -> None:
+    page = browser_page
+    page.locator("#tab-configure").click()
+    page.route(
+        "**/dashboard/data/**",
+        lambda route: route.fulfill(
+            status=status,
+            content_type="application/json",
+            body='{"detail":"expected application error"}',
+        ),
+    )
+
+    for _ in range(3):
+        _attempt_personal_workspace_load(page)
+
+    _expect(page.locator("#workspace-note")).to_contain_text(f"Request failed ({status})")
+    _expect(page.locator("#server-unavailable-banner")).to_be_hidden()
+    _expect(page.locator("#connection-lost-banner")).to_be_hidden()

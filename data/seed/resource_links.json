@@ -119,13 +119,6 @@
     "description": "Marine administrative messages"
   },
   {
-    "id": "almar-portal",
-    "title": "ALMAR / message search",
-    "url": "https://www.marines.mil/News/Messages/",
-    "category": "news_info",
-    "description": "Search all Marine administrative and general messages"
-  },
-  {
     "id": "military-onesource",
     "title": "Military One Source",
     "url": "https://www.militaryonesource.mil",
@@ -187,13 +180,6 @@
     "url": "https://www.marines.mil/About/Reserve-Affairs/",
     "category": "reserve",
     "description": "MARFORRES, SMCR, and reserve policy"
-  },
-  {
-    "id": "dod-webmail",
-    "title": "DoD Webmail",
-    "url": "https://webmail.apps.mil",
-    "category": "it_access",
-    "description": "OWA / apps.mil webmail (requires CAC)"
   },
   {
     "id": "dod-pki",
