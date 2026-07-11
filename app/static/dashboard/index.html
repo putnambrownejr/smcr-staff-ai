@@ -1885,26 +1885,35 @@
           </article>
         </section>
         <section class="three-column is-hidden" data-section-group="links">
-          <article class="panel full-span lane-intro-panel">
-            <div class="panel-header compact">
+          <article class="panel full-span good-links-panel">
+            <div class="panel-header good-links-header">
               <div>
                 <h2>A Few Good Links</h2>
-                <p>Quick-access bookmarks for the sites SMCR officers actually use. Add your own with the button below.</p>
+                <p>Official resources and the bookmarks you use between drills.</p>
               </div>
             </div>
-          </article>
 
-          <article class="panel full-span">
-            <div id="good-links-filters" class="chip-bar"></div>
-            <div id="good-links-grid" class="row-stack empty-state">Loading links&hellip;</div>
-            <details class="panel-drawer" id="good-links-add-drawer">
+            <div class="good-links-controls" role="search" aria-label="Filter links">
+              <label class="good-links-control good-links-search-control">
+                <span>Search links</span>
+                <input id="good-links-search" type="search" autocomplete="off" placeholder="Name, site, or topic" />
+              </label>
+              <label class="good-links-control">
+                <span>Category</span>
+                <select id="good-links-filter-category">
+                  <option value="">All categories</option>
+                </select>
+              </label>
+              <button type="button" class="secondary good-links-clear" id="good-links-clear-filters">Clear filters</button>
+            </div>
+
+            <details class="panel-drawer good-links-add" id="good-links-add-drawer" hidden>
               <summary>
-                <div class="panel-header compact">
-                  <span class="drawer-label">+ Add link</span>
-                </div>
+                <strong class="good-links-add-label">Add link</strong>
+                <span class="good-links-add-hint">Save a unit or personal resource</span>
               </summary>
               <div class="panel-drawer-body">
-                <form id="good-links-add-form" class="tool-form">
+                <form id="good-links-add-form" class="tool-form" aria-describedby="good-links-form-status">
                   <div class="form-row">
                     <label>
                       <span>Link title</span>
@@ -1929,9 +1938,40 @@
                     <button type="submit">Save link</button>
                     <button type="button" class="secondary" id="good-links-cancel">Cancel</button>
                   </div>
+                  <p id="good-links-form-status" class="good-links-feedback" role="status" aria-live="polite"></p>
                 </form>
               </div>
             </details>
+
+            <div id="good-links-state" class="good-links-state" role="status" aria-live="polite" aria-busy="true">
+              <p>Loading links&hellip;</p>
+              <div class="good-links-state-actions">
+                <button type="button" class="secondary" id="good-links-retry" hidden>Retry</button>
+                <button type="button" class="secondary" id="good-links-open-workspace" hidden>Open Workspace</button>
+              </div>
+            </div>
+
+            <div id="good-links-results" class="good-links-results" hidden>
+              <section class="good-links-directory-section" aria-labelledby="good-links-my-heading">
+                <div class="good-links-section-header">
+                  <h3 id="good-links-my-heading" tabindex="-1">My links</h3>
+                  <p id="good-links-my-summary" class="meta-inline"></p>
+                </div>
+                <p id="good-links-my-empty" class="good-links-empty">No personal links yet.</p>
+                <ul id="good-links-my-grid" class="good-links-personal-grid" aria-label="My links"></ul>
+              </section>
+
+              <section class="good-links-directory-section" aria-labelledby="good-links-resource-heading">
+                <div class="good-links-section-header">
+                  <h3 id="good-links-resource-heading">All resources</h3>
+                  <p id="good-links-results-summary" class="meta-inline" aria-live="polite"></p>
+                </div>
+                <p id="good-links-resource-empty" class="good-links-empty" hidden></p>
+                <div id="good-links-resource-grid" class="good-links-category-grid"></div>
+              </section>
+            </div>
+
+            <p id="good-links-action-status" class="good-links-feedback" role="status" aria-live="polite"></p>
           </article>
         </section>
 
@@ -1989,7 +2029,7 @@
     <script>
       (function loadDashboardAssets() {
         const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
-        const assetVersion = "20260710a";
+        const assetVersion = "20260711b";
         const stylesheet = document.getElementById("dashboard-style");
         stylesheet.href = `${staticBase}/dashboard.css?v=${assetVersion}`;
 

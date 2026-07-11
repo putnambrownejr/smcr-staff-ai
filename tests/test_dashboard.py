@@ -104,6 +104,17 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "dashboard.js" in response.text
     assert 'id="external-processing-dialog"' in response.text
     assert 'id="action-undo-region"' in response.text
+    assert 'id="good-links-search"' in response.text
+    assert 'id="good-links-filter-category"' in response.text
+    assert 'id="good-links-clear-filters"' in response.text
+    assert 'id="good-links-state"' in response.text
+    assert 'id="good-links-results"' in response.text
+    assert 'id="good-links-my-grid"' in response.text
+    assert 'id="good-links-resource-grid"' in response.text
+    assert 'id="good-links-action-status"' in response.text
+    assert 'id="good-links-form-status"' in response.text
+    assert 'id="good-links-retry"' in response.text
+    assert 'id="good-links-open-workspace"' in response.text
     assert 'script.type = "module"' in response.text
 
 
@@ -119,6 +130,25 @@ def test_dashboard_assets_are_served() -> None:
     assert actions_response.status_code == 200
     assert "javascript" in actions_response.headers["content-type"]
     assert "TrackedActionsController" in actions_response.text
+
+
+def test_links_directory_css_has_responsive_columns() -> None:
+    stylesheet = Path("app/static/dashboard/dashboard.css").read_text(encoding="utf-8")
+
+    assert ".good-links-category-grid" in stylesheet
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr));" in stylesheet
+    assert "@media (max-width: 1099px)" in stylesheet
+    assert "@media (max-width: 699px)" in stylesheet
+
+
+def test_links_directory_replaces_legacy_chips_and_bumps_asset_version() -> None:
+    html = Path("app/static/dashboard/index.html").read_text(encoding="utf-8")
+    script = Path("app/static/dashboard/dashboard.js").read_text(encoding="utf-8")
+
+    assert "renderQuickLinks" not in script
+    assert "ql-" not in script
+    assert 'const assetVersion = "20260711b"' in html
+    assert 'from "./actions.js?v=20260711b"' in script
 
 
 def test_external_processing_call_count_is_labeled_as_an_upper_bound() -> None:
