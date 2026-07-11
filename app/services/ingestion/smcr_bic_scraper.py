@@ -93,7 +93,7 @@ def parse_billet_tables(soup: BeautifulSoup, source_url: str) -> list[SmcrBillet
 
 def parse_billet_cards(soup: BeautifulSoup, source_url: str) -> list[SmcrBillet]:
     billets: list[SmcrBillet] = []
-    for element in soup.find_all(attrs={"data-bic": True}):
+    for element in soup.select("[data-bic]"):
         if not isinstance(element, Tag):
             continue
         billet = SmcrBillet(

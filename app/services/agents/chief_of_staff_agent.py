@@ -3,17 +3,7 @@ from __future__ import annotations
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.schemas.scenario_handoff import CoSScenarioOutput
 from app.services.agents.base import Agent, AgentContext
-
-_COS_SCENARIO_SIGNALS = (
-    "earthquake", "hurricane", "typhoon", "tsunami", "flood", "wildfire",
-    "fhadr", "ha/dr", "disaster", "humanitarian",
-    "exercise", "scenario", "vignette", "situation",
-    "invasion", "insurgency", "conflict", "crisis", "coup",
-    "partner nation", "host nation", "embassy", "country team",
-    "meu", "jt", "jtf", "joint task force", "coalition",
-    "noncombatant evacuation", "neo",
-    "casualties", "displaced", "refugees",
-)
+from app.services.agents.staff_advisor_agent import _detect_scenario
 
 
 class ChiefOfStaffAideAgent(Agent):
@@ -62,8 +52,7 @@ class ChiefOfStaffAideAgent(Agent):
     )
 
     def _is_scenario(self, input_text: str) -> bool:
-        lowered = input_text.lower()
-        return any(s in lowered for s in _COS_SCENARIO_SIGNALS)
+        return _detect_scenario(input_text)
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
         if self._is_scenario(input_text):

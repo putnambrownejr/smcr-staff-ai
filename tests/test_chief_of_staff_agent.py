@@ -108,6 +108,18 @@ def test_agent_run_no_handoff_returns_low_confidence(agent: ChiefOfStaffAideAgen
     assert resp.confidence is Confidence.low
 
 
+def test_plain_situation_question_does_not_activate_scenario_mode(agent: ChiefOfStaffAideAgent) -> None:
+    resp = agent.run("What's the current situation with our drill schedule?", _ctx())
+
+    assert "SCENARIO ASSESSMENT" not in resp.answer
+
+
+def test_specific_situation_activates_scenario_mode(agent: ChiefOfStaffAideAgent) -> None:
+    resp = agent.run("Exercise in Japan after the port was damaged.", _ctx())
+
+    assert "SCENARIO ASSESSMENT" in resp.answer
+
+
 def test_agent_run_full_handoff_returns_medium_confidence(agent: ChiefOfStaffAideAgent) -> None:
     handoff = {
         "pme": ["EWS"],

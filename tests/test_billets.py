@@ -1,10 +1,11 @@
 from pathlib import Path
 
+from bs4 import BeautifulSoup
 from pydantic import ValidationError
 
 from app.schemas.billets import BilletSearchRequest, BilletUserProfile
 from app.services.billets.recommender import recommend_billets
-from app.services.ingestion.smcr_bic_scraper import SmcrBicScraper
+from app.services.ingestion.smcr_bic_scraper import SmcrBicScraper, parse_billet_cards
 
 
 def test_smcr_bic_scraper_parses_fixture() -> None:
@@ -15,6 +16,19 @@ def test_smcr_bic_scraper_parses_fixture() -> None:
     assert len(billets) == 2
     assert billets[0].bic == "M1234567890"
     assert billets[0].mos == "0602"
+
+
+def test_billet_card_parser_selects_data_bic_attributes() -> None:
+    soup = BeautifulSoup(
+        '<div data-bic="M1234567892" data-title="Operations Officer" data-unit="Example Unit"></div>',
+        "html.parser",
+    )
+
+    billets = parse_billet_cards(soup, "https://www.marforres.marines.mil/Billets/")
+
+    assert len(billets) == 1
+    assert billets[0].bic == "M1234567892"
+    assert billets[0].title == "Operations Officer"
 
 
 def test_billet_recommendations_rank_relevant_matches() -> None:
