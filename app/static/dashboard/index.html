@@ -835,6 +835,7 @@
               <p>Tracked POAM items with owner, status, and suspense.</p>
             </div>
             <div id="action-watch" class="row-stack empty-state">Load workspace to see this</div>
+            <div id="action-undo-region" class="undo-stack" role="status" aria-live="polite"></div>
           </article>
 
           <article class="panel">
@@ -1937,6 +1938,45 @@
       </main>
     </div>
 
+    <dialog
+      id="external-processing-dialog"
+      class="workflow-dialog external-processing-dialog"
+      aria-labelledby="external-processing-title"
+      aria-describedby="external-processing-summary"
+    >
+      <div class="workflow-dialog-header">
+        <h2 id="external-processing-title">Review external processing</h2>
+      </div>
+      <div class="workflow-dialog-body">
+        <p id="external-processing-summary"></p>
+        <ul id="external-processing-warnings" class="bullet-list"></ul>
+        <div id="external-processing-findings" class="row-stack"></div>
+        <details open>
+          <summary>Sanitized preview</summary>
+          <pre id="external-processing-sanitized" class="external-preview"></pre>
+        </details>
+        <details>
+          <summary>Original preview</summary>
+          <pre id="external-processing-original" class="external-preview"></pre>
+        </details>
+        <label class="external-acknowledgement">
+          <input type="checkbox" id="external-processing-acknowledge" />
+          <span>
+            I understand this content will be sent to the named external provider. I confirm that
+            I am authorized to disclose it, that it is appropriate for external processing, and
+            that it complies with this project's UNCLASSIFIED-only handling rule.
+          </span>
+        </label>
+        <div class="button-row external-processing-actions">
+          <button type="button" id="external-processing-local" class="secondary">Use local template</button>
+          <button type="button" id="external-processing-sanitized-send" disabled>Send sanitized</button>
+          <button type="button" id="external-processing-original-send" class="critical-button" disabled>
+            Send as written
+          </button>
+        </div>
+      </div>
+    </dialog>
+
     <!-- Workflow dialog — floating panel for quick-launch tools (Lone Planner, Staff Package) -->
     <dialog id="workflow-dialog" class="workflow-dialog" aria-labelledby="workflow-dialog-title">
       <div class="workflow-dialog-header">
@@ -1949,11 +1989,12 @@
     <script>
       (function loadDashboardAssets() {
         const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
-        const assetVersion = "20260621b";
+        const assetVersion = "20260710a";
         const stylesheet = document.getElementById("dashboard-style");
         stylesheet.href = `${staticBase}/dashboard.css?v=${assetVersion}`;
 
         const script = document.createElement("script");
+        script.type = "module";
         script.src = `${staticBase}/dashboard.js?v=${assetVersion}`;
         document.body.appendChild(script);
       })();

@@ -8,9 +8,10 @@ and what is scaffolding for future work.
 ## What This Is
 
 A local-first advisory toolkit for SMCR staff workflows. It runs on your machine.
-No cloud infrastructure, no LLM calls at runtime — the reasoning comes from your
-connected AI assistant reading the repo patterns, or from a human reading structured
-output. Advisory drafts only; human review required before acting on anything.
+Most behavior is deterministic and local. Scenario-capable agents may use a configured
+OpenAI-compatible endpoint only after a preview-bound user approval; the normal runtime
+does not require a cloud service. Advisory drafts only; human review required before
+acting on anything. See `docs/decisions/ADR-001-user-controlled-external-processing.md`.
 
 ---
 
@@ -23,6 +24,11 @@ output. Advisory drafts only; human review required before acting on anything.
 Pattern: `AgentContext` in → structured text advisory out. Each agent wraps a domain
 (staff echelon, MOS, function) with citations, confidence level, and human-review
 warnings. The registry (`registry.py`) exposes them all via `POST /agents/{id}/run`.
+
+Scenario-capable agents can additionally return a validated, role-specific
+`scenario_output`. External responses use one provider-neutral JSON envelope; invalid
+structured output is never passed to the next externally processed chain step. See
+`docs/decisions/ADR-002-validated-scenario-envelopes.md`.
 
 **Where to look first:** `app/services/agents/base.py`, `app/services/agents/registry.py`,
 any `*_agent.py` file — they all follow the same pattern.
@@ -45,6 +51,9 @@ This is the "survives between drills" value. It actually works.
 `app/static/dashboard/` — a single-page browser app (HTML + vanilla JS + CSS).
 Served at `http://localhost:8000/dashboard`. Aggregates the advisory agent layer
 and the file-store continuity layer into an operator interface.
+
+`dashboard.js` is a native ES module. Tracked-action rendering and Mark done/Undo
+behavior are isolated in `actions.js`; the remaining lane code stays in the main module.
 
 Lane navigation: Overview / Watch / Bench+Files / Workflows / Workspace.
 
@@ -85,7 +94,7 @@ by the running application. This is a deliberate "future schema" decision, not a
 
 | Prefix | Purpose |
 |---|---|
-| `/agents` | Run any advisory agent by ID |
+| `/agents` | Preview external processing, run agents, and run validated chains |
 | `/planning` | Staff-package and planning-cell workflows |
 | `/staff` | Staff council, section planners, admin workflows |
 | `/training` | Training scenarios, S3/S4 planning, TDG |
@@ -122,8 +131,8 @@ Full inventory: `http://localhost:8000/docs`
 
 ## What Is Not Here
 
-- **No LLM calls at runtime.** Advisory text is templated and structured. Connect your
-  own AI assistant (Claude, ChatGPT, etc.) to the repo for generative reasoning.
+- **No silent LLM calls.** Optional scenario inference is off without `LLM_API_KEY` and
+  requires a current outbound preview digest plus explicit acknowledgement before send.
 - **No auth server.** `LocalApiKeyDependency` gates personal routes behind a locally
   configured passphrase — not OAuth, not JWT.
 - **No live email or calendar connectors.** Interface stubs exist; live providers are

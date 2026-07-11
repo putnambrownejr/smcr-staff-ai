@@ -8,7 +8,24 @@ compiled from a curated static lookup and formatted as markdown.
 
 from __future__ import annotations
 
-_MOS_CATALOG: dict[str, dict] = {
+from typing import TypedDict
+
+
+class MosInfo(TypedDict):
+    name: str
+    navmc: str | None
+    roles: list[str]
+    doctrine: list[str]
+    notes: str
+
+
+class BilletInfo(TypedDict):
+    title: str
+    responsibilities: list[str]
+    key_pubs: list[str]
+
+
+_MOS_CATALOG: dict[str, MosInfo] = {
     "01": {
         "name": "Personnel and Administration",
         "navmc": "NAVMC 3500.3",
@@ -190,7 +207,7 @@ _MOS_CATALOG: dict[str, dict] = {
     },
 }
 
-_BILLET_CATALOG: dict[str, dict] = {
+_BILLET_CATALOG: dict[str, BilletInfo] = {
     "co": {
         "title": "Commanding Officer (CO)",
         "responsibilities": [
@@ -321,14 +338,14 @@ def _normalize(s: str) -> str:
     return s.lower().strip()
 
 
-def _lookup_mos(mos: str) -> dict | None:
+def _lookup_mos(mos: str) -> MosInfo | None:
     if not mos:
         return None
     prefix = mos[:2]
     return _MOS_CATALOG.get(prefix)
 
 
-def _lookup_billet(billet: str) -> dict | None:
+def _lookup_billet(billet: str) -> BilletInfo | None:
     if not billet:
         return None
     normalized = _normalize(billet).replace("/", "-").replace(" ", "-")

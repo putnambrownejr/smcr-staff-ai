@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -52,6 +53,7 @@ def test_discovery_reads_manifest(modules_dir: Path) -> None:
 def test_discovery_unsupported_files_excluded(modules_dir: Path) -> None:
     d = ModuleDiscovery(modules_dir)
     detail = d.get_pack("alpha-pack")
+    assert detail is not None
     filenames = [f.filename for f in detail.files]
     assert "ignored.exe" not in filenames
     assert "manifest.json" not in filenames
@@ -80,7 +82,7 @@ def test_discovery_no_manifest_uses_folder_name(modules_dir: Path) -> None:
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def module_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
+def module_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]:
     pack = tmp_path / "test-pack"
     pack.mkdir()
     (pack / "manifest.json").write_text(

@@ -9,21 +9,27 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.external_processing import ExternalProcessingApproval
 
 # ---------------------------------------------------------------------------
 # G-9 Civil Estimate
 # ---------------------------------------------------------------------------
 
-class CivilSituation(BaseModel):
+
+class StrictScenarioModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class CivilSituation(StrictScenarioModel):
     area: str = ""
     population: str = ""
     infrastructure: str = ""
     governance: str = ""
 
 
-class AscopeEntry(BaseModel):
+class AscopeEntry(StrictScenarioModel):
     areas: str = ""
     structures: str = ""
     capabilities: str = ""
@@ -32,21 +38,21 @@ class AscopeEntry(BaseModel):
     events: str = ""
 
 
-class InteragencyCoordination(BaseModel):
+class InteragencyCoordination(StrictScenarioModel):
     embassy_country_team: str = ""
     dos_dhr: str = ""
     un_ocha: str = ""
     ngo_landscape: str = ""
 
 
-class CmoRecommendations(BaseModel):
+class CmoRecommendations(StrictScenarioModel):
     priority_actions: list[str] = Field(default_factory=list)
     liaison_requirements: list[str] = Field(default_factory=list)
     civil_info_requirements: list[str] = Field(default_factory=list)
     risks: list[str] = Field(default_factory=list)
 
 
-class G9ScenarioOutput(BaseModel):
+class G9ScenarioOutput(StrictScenarioModel):
     role: str = "g9"
     civil_situation: CivilSituation = Field(default_factory=CivilSituation)
     ascope: AscopeEntry = Field(default_factory=AscopeEntry)
@@ -59,7 +65,7 @@ class G9ScenarioOutput(BaseModel):
 # S-2 Intelligence Estimate
 # ---------------------------------------------------------------------------
 
-class ThreatAssessment(BaseModel):
+class ThreatAssessment(StrictScenarioModel):
     threat_actors: list[str] = Field(default_factory=list)
     disposition_and_capabilities: str = ""
     most_likely_coa: str = ""
@@ -67,13 +73,13 @@ class ThreatAssessment(BaseModel):
     historical_pattern: str = ""
 
 
-class IntelGaps(BaseModel):
+class IntelGaps(StrictScenarioModel):
     unknown_items: list[str] = Field(default_factory=list)
     priority_intel_requirements: list[str] = Field(default_factory=list)
     recommended_collection: list[str] = Field(default_factory=list)
 
 
-class S2ScenarioOutput(BaseModel):
+class S2ScenarioOutput(StrictScenarioModel):
     role: str = "s2"
     area_of_operations: str = ""
     key_terrain_weather: str = ""
@@ -89,7 +95,7 @@ class S2ScenarioOutput(BaseModel):
 # S-4 Logistics Estimate
 # ---------------------------------------------------------------------------
 
-class SupportRequirements(BaseModel):
+class SupportRequirements(StrictScenarioModel):
     class_i_rations: str = ""
     class_iii_fuel: str = ""
     class_v_ammo: str = ""
@@ -97,7 +103,7 @@ class SupportRequirements(BaseModel):
     transportation: str = ""
 
 
-class S4ScenarioOutput(BaseModel):
+class S4ScenarioOutput(StrictScenarioModel):
     role: str = "s4"
     logistics_environment: str = ""
     support_requirements: SupportRequirements = Field(default_factory=SupportRequirements)
@@ -111,14 +117,14 @@ class S4ScenarioOutput(BaseModel):
 # S-6 Communications Assessment
 # ---------------------------------------------------------------------------
 
-class PacePlan(BaseModel):
+class PacePlan(StrictScenarioModel):
     primary: str = ""
     alternate: str = ""
     contingency: str = ""
     emergency: str = ""
 
 
-class S6ScenarioOutput(BaseModel):
+class S6ScenarioOutput(StrictScenarioModel):
     role: str = "s6"
     comms_environment: str = ""
     pace_plan: PacePlan = Field(default_factory=PacePlan)
@@ -131,23 +137,23 @@ class S6ScenarioOutput(BaseModel):
 # Planning Advisor — Mission Analysis Shell
 # ---------------------------------------------------------------------------
 
-class MissionAnalysis(BaseModel):
+class MissionAnalysis(StrictScenarioModel):
     higher_intent: str = ""
     restated_mission: str = ""
 
 
-class TaskBreakdown(BaseModel):
+class TaskBreakdown(StrictScenarioModel):
     specified: list[str] = Field(default_factory=list)
     implied: list[str] = Field(default_factory=list)
     essential: list[str] = Field(default_factory=list)
 
 
-class Constraints(BaseModel):
+class Constraints(StrictScenarioModel):
     must_do: list[str] = Field(default_factory=list)
     must_not_do: list[str] = Field(default_factory=list)
 
 
-class PlanningScenarioOutput(BaseModel):
+class PlanningScenarioOutput(StrictScenarioModel):
     role: str = "planning"
     tempo: str = ""
     mission_analysis: MissionAnalysis = Field(default_factory=MissionAnalysis)
@@ -163,7 +169,7 @@ class PlanningScenarioOutput(BaseModel):
 # Chief of Staff — Commander's Watch List
 # ---------------------------------------------------------------------------
 
-class StaffTasking(BaseModel):
+class StaffTasking(StrictScenarioModel):
     s2: str = ""
     s3: str = ""
     s4: str = ""
@@ -172,7 +178,7 @@ class StaffTasking(BaseModel):
     pao: str = ""
 
 
-class CoSScenarioOutput(BaseModel):
+class CoSScenarioOutput(StrictScenarioModel):
     role: str = "cos"
     immediate_actions: list[str] = Field(default_factory=list)
     staff_tasking: StaffTasking = Field(default_factory=StaffTasking)
@@ -214,6 +220,7 @@ class ChainRequest(BaseModel):
     scenario: str = Field(min_length=1)
     steps: list[ChainStep] = Field(min_length=1)
     context: dict[str, Any] = Field(default_factory=dict)
+    external_processing_approval: ExternalProcessingApproval | None = None
 
 
 class ChainStepResult(BaseModel):
@@ -226,3 +233,6 @@ class ChainResponse(BaseModel):
     scenario: str
     results: list[ChainStepResult]
     warnings: list[str] = Field(default_factory=list)
+    completed: bool = True
+    stopped_at_agent_id: str | None = None
+    stopped_reason: str | None = None

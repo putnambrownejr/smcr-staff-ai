@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 
 from app.api.routes.custom_mos_recipes import _get_store
@@ -5,13 +7,13 @@ from app.main import app
 from app.services.staff.custom_mos_store import CustomMosRecipeStoreService
 
 
-def _override_store(tmp_path):
+def _override_store(tmp_path: Path) -> CustomMosRecipeStoreService:
     store = CustomMosRecipeStoreService(tmp_path / "custom-mos-recipes")
     app.dependency_overrides[_get_store] = lambda: store
     return store
 
 
-def test_create_and_list_custom_mos_recipe(tmp_path) -> None:
+def test_create_and_list_custom_mos_recipe(tmp_path: Path) -> None:
     _override_store(tmp_path)
     client = TestClient(app)
     try:
@@ -38,7 +40,7 @@ def test_create_and_list_custom_mos_recipe(tmp_path) -> None:
         app.dependency_overrides.clear()
 
 
-def test_upsert_replaces_existing_mos_code(tmp_path) -> None:
+def test_upsert_replaces_existing_mos_code(tmp_path: Path) -> None:
     _override_store(tmp_path)
     client = TestClient(app)
     try:
@@ -69,7 +71,7 @@ def test_upsert_replaces_existing_mos_code(tmp_path) -> None:
         app.dependency_overrides.clear()
 
 
-def test_delete_custom_mos_recipe(tmp_path) -> None:
+def test_delete_custom_mos_recipe(tmp_path: Path) -> None:
     _override_store(tmp_path)
     client = TestClient(app)
     try:
@@ -89,7 +91,7 @@ def test_delete_custom_mos_recipe(tmp_path) -> None:
         app.dependency_overrides.clear()
 
 
-def test_invalid_parent_agent_rejected(tmp_path) -> None:
+def test_invalid_parent_agent_rejected(tmp_path: Path) -> None:
     _override_store(tmp_path)
     client = TestClient(app)
     try:
@@ -108,7 +110,7 @@ def test_invalid_parent_agent_rejected(tmp_path) -> None:
         app.dependency_overrides.clear()
 
 
-def test_empty_user_key_returns_empty(tmp_path) -> None:
+def test_empty_user_key_returns_empty(tmp_path: Path) -> None:
     _override_store(tmp_path)
     client = TestClient(app)
     try:

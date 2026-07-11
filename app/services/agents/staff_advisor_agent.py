@@ -11,9 +11,12 @@ The echelon modifier lives in ``ECHELON_CONTEXT`` and ``_echelon_adapt()``.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
+from pydantic import BaseModel
+
+from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, ScenarioOutputStatus
 from app.schemas.scenario_handoff import G9ScenarioOutput, S2ScenarioOutput, S4ScenarioOutput, S6ScenarioOutput
 from app.schemas.staff import MagtfLens, StaffEchelon, StaffRoleMetadata
 from app.services.agents.base import Agent, AgentContext
@@ -76,15 +79,32 @@ _COUNTRY_SIGNALS = (
 )
 
 
+def _contains_signal(text: str, signals: tuple[str, ...]) -> bool:
+    return any(re.search(rf"(?<!\w){re.escape(signal)}(?!\w)", text) for signal in signals)
+
+
 def _detect_scenario(input_text: str) -> bool:
     """Return True when the user input describes a specific scenario."""
     lowered = input_text.lower()
-    has_scenario_signal = any(s in lowered for s in _SCENARIO_SIGNALS)
-    has_country = any(c in lowered for c in _COUNTRY_SIGNALS)
-    has_specifics = any(word in lowered for word in (
-        "magnitude", "category", "casualties", "displaced", "population",
-        "km", "miles", "destroyed", "damaged", "airport", "port", "road",
-    ))
+    has_scenario_signal = _contains_signal(lowered, _SCENARIO_SIGNALS)
+    has_country = _contains_signal(lowered, _COUNTRY_SIGNALS)
+    has_specifics = _contains_signal(
+        lowered,
+        (
+            "magnitude",
+            "category",
+            "casualties",
+            "displaced",
+            "population",
+            "km",
+            "miles",
+            "destroyed",
+            "damaged",
+            "airport",
+            "port",
+            "road",
+        ),
+    )
     # Scenario if: (scenario keyword + country) OR (scenario keyword + specific details)
     return has_scenario_signal and (has_country or has_specifics)
 
@@ -858,14 +878,14 @@ class StaffAdvisorAgent(Agent):
                 + "\n"
             )
 
-        answer, scenario_output = _build_answer(
+        population = _build_answer(
             arch, ectx, focus_lines, osint_note, mos_section,
             active_context_block, input_text, context,
             self.metadata.system_prompt or "",
         )
 
         return self._response(
-            answer=answer,
+            answer=population.answer,
             input_text=input_text,
             citations=citations,
             structured_citations=structured,
@@ -876,7 +896,10 @@ class StaffAdvisorAgent(Agent):
                 "What is the timeline and next suspense?",
                 "What source or local context should this role review?",
             ],
-            scenario_output=scenario_output,
+            scenario_output=population.scenario_output,
+            scenario_output_status=population.status,
+            additional_warnings=population.warnings,
+            allow_warning_override=population.allow_warning_override,
         )
 
 
@@ -894,7 +917,7 @@ def _build_answer(
     input_text: str = "",
     context: AgentContext | None = None,
     system_prompt: str = "",
-) -> tuple[str, dict[str, object] | None]:
+) -> ScenarioPopulation:
     role = arch.role
     title = f"{arch.title} ({ectx.scope_adjective})"
 
@@ -909,7 +932,7 @@ def _build_answer(
 
     # Non-scenario: return text only, no structured output
     text = _build_answer_text(arch, role, title, ectx, focus_lines, osint_note, mos_section, active_context_block)
-    return text, None
+    return ScenarioPopulation(answer=text)
 
 
 def _build_answer_text(
@@ -1258,22 +1281,101 @@ def _build_answer_text(
 # Scenario-mode answer builders
 # ---------------------------------------------------------------------------
 
-_LLM_FALLBACK_NOTICE = (
+_LLM_UNAVAILABLE_NOTICE = (
     "\n\n---\n"
-    "NOTE: Bracketed fields above are template placeholders. To populate them "
-    "automatically from your scenario input, set LLM_API_KEY in .env (requires "
-    "an OpenAI-compatible API key, ~$0.01-0.05 per scenario at GPT-4o-mini pricing)."
+    "NOTE: This is a local deterministic template. Configure external processing "
+    "and approve its preview to populate the assessment automatically."
+)
+
+_LLM_LOCAL_ONLY_NOTICE = (
+    "\n\n---\n"
+    "NOTE: You selected the local-only path. No scenario content was sent to an external provider."
+)
+
+_LLM_FAILURE_NOTICE = (
+    "\n\n---\n"
+    "NOTE: The approved external request did not return usable content. "
+    "The local deterministic template is shown instead."
 )
 
 
-def _try_llm_populate(template: str, input_text: str, system_prompt: str) -> str:
-    """Try LLM inference to populate a scenario template; return template with notice on failure."""
-    from app.services.llm_client import generate_scenario_response
+@dataclass(frozen=True)
+class ScenarioPopulation:
+    answer: str
+    scenario_output: dict[str, object] | None = None
+    status: ScenarioOutputStatus = ScenarioOutputStatus.not_applicable
+    warnings: list[str] | None = None
+    allow_warning_override: bool = False
 
-    result = generate_scenario_response(system_prompt, template, input_text)
-    if result is not None:
-        return result
-    return template + _LLM_FALLBACK_NOTICE
+
+def _try_llm_populate(
+    template: str,
+    input_text: str,
+    system_prompt: str,
+    output_model: type[BaseModel],
+    expected_role: str,
+    context: AgentContext | None = None,
+) -> ScenarioPopulation:
+    """Populate a scenario template only after the outbound preview is approved."""
+    from app.services.agents.scenario_envelope import (
+        ScenarioEnvelopeParser,
+        ScenarioEnvelopeValidationError,
+        build_envelope_template,
+    )
+    from app.services.llm_client import ScenarioGenerationStatus, generate_scenario_response
+
+    active_context = context or AgentContext()
+    outbound_template = build_envelope_template(template, output_model)
+    result = generate_scenario_response(
+        system_prompt,
+        outbound_template,
+        input_text,
+        approval=active_context.external_processing_approval,
+        preview_only=active_context.external_processing_preview_only,
+        user_key=active_context.user_key,
+        scope_label=active_context.external_processing_scope_label or "agent:scenario",
+        expected_call_count=active_context.external_processing_expected_call_count,
+        approval_digest_override=active_context.external_processing_approval_digest_override,
+    )
+    if result.content is not None:
+        try:
+            parsed = ScenarioEnvelopeParser().parse(
+                result.content,
+                output_model=output_model,
+                expected_role=expected_role,
+            )
+        except ScenarioEnvelopeValidationError as exc:
+            fallback_answer = exc.answer or (template + _LLM_FAILURE_NOTICE)
+            return ScenarioPopulation(
+                answer=fallback_answer,
+                status=ScenarioOutputStatus.invalid,
+                warnings=[f"Structured scenario handoff unavailable: {exc.reason}"],
+                allow_warning_override=result.warning_override_authorized,
+            )
+        return ScenarioPopulation(
+            answer=parsed.answer,
+            scenario_output=parsed.scenario_output,
+            status=ScenarioOutputStatus.validated,
+            allow_warning_override=result.warning_override_authorized,
+        )
+    if result.status is ScenarioGenerationStatus.local_only:
+        return ScenarioPopulation(
+            answer=template + _LLM_LOCAL_ONLY_NOTICE,
+            status=ScenarioOutputStatus.template_only,
+            allow_warning_override=result.warning_override_authorized,
+        )
+    if result.status is ScenarioGenerationStatus.failed:
+        return ScenarioPopulation(
+            answer=template + _LLM_FAILURE_NOTICE,
+            status=ScenarioOutputStatus.invalid,
+            warnings=["Approved external processing failed; no structured handoff was produced."],
+            allow_warning_override=result.warning_override_authorized,
+        )
+    return ScenarioPopulation(
+        answer=template + _LLM_UNAVAILABLE_NOTICE,
+        status=ScenarioOutputStatus.template_only,
+        allow_warning_override=result.warning_override_authorized,
+    )
 
 
 def _prior_assessment_context(context: AgentContext | None) -> str:
@@ -1304,8 +1406,8 @@ def _build_scenario_answer(
     input_text: str,
     context: AgentContext | None = None,
     system_prompt: str = "",
-) -> tuple[str, dict[str, object]] | None:
-    """Return (text, structured_output) for scenario mode, or None to fall through."""
+) -> ScenarioPopulation | None:
+    """Return a scenario population result, or None to fall through."""
 
     prior_context = _prior_assessment_context(context)
 
@@ -1357,8 +1459,7 @@ def _build_scenario_answer(
             "   - Identify the civil assumption that would most change the plan if wrong\n"
             f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
-        structured = G9ScenarioOutput(role="g9").model_dump()
-        return _try_llm_populate(text, input_text, system_prompt), structured
+        return _try_llm_populate(text, input_text, system_prompt, G9ScenarioOutput, "g9", context)
 
     if role == "s2":
         text = (
@@ -1387,8 +1488,7 @@ def _build_scenario_answer(
             "   - Describe what changes if the most dangerous threat COA materializes\n"
             f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
-        structured = S2ScenarioOutput(role="s2").model_dump()
-        return _try_llm_populate(text, input_text, system_prompt), structured
+        return _try_llm_populate(text, input_text, system_prompt, S2ScenarioOutput, "s2", context)
 
     if role == "s4":
         text = (
@@ -1413,8 +1513,7 @@ def _build_scenario_answer(
             "   - Identify the logistics assumption that breaks the plan if wrong\n"
             f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
-        structured = S4ScenarioOutput(role="s4").model_dump()
-        return _try_llm_populate(text, input_text, system_prompt), structured
+        return _try_llm_populate(text, input_text, system_prompt, S4ScenarioOutput, "s4", context)
 
     if role == "s6":
         text = (
@@ -1439,8 +1538,7 @@ def _build_scenario_answer(
             "   - Identify the comms assumption most likely to fail first\n"
             f"{active_context_block}{mos_section}{osint_note}{prior_context}"
         )
-        structured = S6ScenarioOutput(role="s6").model_dump()
-        return _try_llm_populate(text, input_text, system_prompt), structured
+        return _try_llm_populate(text, input_text, system_prompt, S6ScenarioOutput, "s6", context)
 
     # Roles without a specific scenario template fall through to framework mode
     return None

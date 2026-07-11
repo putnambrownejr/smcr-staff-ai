@@ -1119,6 +1119,81 @@ textarea {
   padding: 18px 20px 24px;
 }
 
+.external-processing-dialog {
+  width: min(900px, 96vw);
+}
+
+.external-processing-dialog details {
+  margin: 12px 0;
+}
+
+.external-preview {
+  max-height: 260px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-3);
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.external-acknowledgement {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid var(--amber);
+  border-radius: var(--radius);
+  background: var(--amber-soft);
+}
+
+.external-acknowledgement input {
+  margin-top: 3px;
+}
+
+.external-processing-actions {
+  justify-content: flex-end;
+}
+
+.critical-button {
+  border-color: var(--amber);
+  background: var(--amber-soft);
+  color: var(--text);
+}
+
+.action-row-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.undo-stack {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.undo-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.action-row-removing {
+  opacity: 0;
+}
+
 /* Help hints — compact collapsible usage guides inside each panel */
 .help-hint {
   margin-top: 10px;

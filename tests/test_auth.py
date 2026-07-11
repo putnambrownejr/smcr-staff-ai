@@ -5,6 +5,8 @@ identically to the unset (None) case so a first-run user is never locked out.
 """
 from __future__ import annotations
 
+from collections.abc import Generator
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -22,7 +24,7 @@ def _clear_cache() -> None:
 
 
 @pytest.fixture(autouse=True)
-def reset_settings_cache() -> None:
+def reset_settings_cache() -> Generator[None, None, None]:
     _clear_cache()
     yield
     _clear_cache()

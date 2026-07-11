@@ -39,13 +39,50 @@ List all agents:
 curl http://127.0.0.1:8000/agents
 ```
 
-Run an agent:
+Run a local/non-scenario agent:
 
 ```powershell
-curl -X POST http://127.0.0.1:8000/agents/run `
+curl -X POST http://127.0.0.1:8000/agents/planning-advisor/run `
   -H "Content-Type: application/json" `
-  -d "{\"agent_id\":\"planning-advisor\",\"input\":\"Help me plan next drill weekend.\",\"context\":{\"user_role\":\"OpsO\"}}"
+  -d "{\"input\":\"Help me plan next drill weekend.\",\"context\":{\"user_role\":\"OpsO\"}}"
 ```
+
+### External-processing preview and approval
+
+When a configured scenario-capable agent would use an external provider, preview the
+prospective messages first. This endpoint never performs the external call:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/agents/planning-advisor/external-processing-preview `
+  -H "Content-Type: application/json" `
+  -d "{\"input\":\"Training scenario: assess the planning problem described here.\",\"context\":{\"request_is_training_or_fictional\":true}}"
+```
+
+The response includes `original_preview`, `sanitized_preview`, warning-only `findings`,
+`finding_categories`, provider/model display values, expected call count, a
+`payload_digest`, and an `approval_digest`. For a chain, the approval digest binds the
+workflow while the payload digest identifies the currently displayed step messages.
+To proceed, resubmit the unchanged request with one of these modes:
+
+- `local_only` — do not call the provider; no digest or acknowledgement is required.
+- `sanitized` — send the displayed sanitized messages.
+- `original` — send the displayed original messages.
+
+Both external modes require `acknowledged: true` and the preview's current digest:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/agents/planning-advisor/run `
+  -H "Content-Type: application/json" `
+  -d "{\"input\":\"Training scenario: assess the planning problem described here.\",\"context\":{\"request_is_training_or_fictional\":true},\"external_processing_approval\":{\"disclosure_mode\":\"sanitized\",\"approval_digest\":\"<64-character digest from preview>\",\"acknowledged_finding_categories\":[],\"acknowledged\":true}}"
+```
+
+Missing or stale approval returns HTTP 409 with a fresh preview under `detail.preview`.
+Agent responses expose `scenario_output_status` as `not_applicable`, `template_only`,
+`validated`, or `invalid`. Only `validated` structured values are passed downstream.
+
+Chains use the same two-step pattern at `POST /agents/chain/external-processing-preview`
+and `POST /agents/chain`. An externally processed chain returns `completed: false`,
+`stopped_at_agent_id`, and `stopped_reason` when a required structured handoff is invalid.
 
 ## Staff Council
 

@@ -1,6 +1,8 @@
 """Tests for ChiefOfStaffAideAgent — context-sensitive questions and confidence scaling."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from app.schemas.agents import Confidence
@@ -17,7 +19,7 @@ def agent() -> ChiefOfStaffAideAgent:
     return ChiefOfStaffAideAgent()
 
 
-def _ctx(handoff: dict | None = None) -> AgentContext:
+def _ctx(handoff: Mapping[str, object] | None = None) -> AgentContext:
     return AgentContext(extra={"handoff": handoff} if handoff is not None else {})
 
 
@@ -104,6 +106,18 @@ def test_follow_up_admin_present_asks_suspense() -> None:
 def test_agent_run_no_handoff_returns_low_confidence(agent: ChiefOfStaffAideAgent) -> None:
     resp = agent.run("What should I focus on?", _ctx())
     assert resp.confidence is Confidence.low
+
+
+def test_plain_situation_question_does_not_activate_scenario_mode(agent: ChiefOfStaffAideAgent) -> None:
+    resp = agent.run("What's the current situation with our drill schedule?", _ctx())
+
+    assert "SCENARIO ASSESSMENT" not in resp.answer
+
+
+def test_specific_situation_activates_scenario_mode(agent: ChiefOfStaffAideAgent) -> None:
+    resp = agent.run("Exercise in Japan after the port was damaged.", _ctx())
+
+    assert "SCENARIO ASSESSMENT" in resp.answer
 
 
 def test_agent_run_full_handoff_returns_medium_confidence(agent: ChiefOfStaffAideAgent) -> None:

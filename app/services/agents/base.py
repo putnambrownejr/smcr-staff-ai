@@ -3,7 +3,14 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel, Field
 
 from app.core.security import DEFAULT_WARNINGS, detect_sensitive_input, should_limit_to_generic_response
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
+from app.schemas.agents import (
+    AgentMetadata,
+    AgentRunResponse,
+    Confidence,
+    ScenarioOutputStatus,
+    StructuredCitation,
+)
+from app.schemas.external_processing import ExternalProcessingApproval
 from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
 from app.schemas.user_context import ActiveUserContext
 
@@ -15,6 +22,11 @@ class AgentContext(BaseModel):
     request_is_training_or_fictional: bool = False
     prior_assessments: dict[str, object] = Field(default_factory=dict)
     extra: dict[str, object] = Field(default_factory=dict)
+    external_processing_approval: ExternalProcessingApproval | None = None
+    external_processing_preview_only: bool = False
+    external_processing_scope_label: str | None = None
+    external_processing_expected_call_count: int = 1
+    external_processing_approval_digest_override: str | None = None
 
 
 class Agent(ABC):
@@ -34,9 +46,12 @@ class Agent(ABC):
         source_trust: list[SourceTrustMarker] | None = None,
         confidence: Confidence = Confidence.low,
         scenario_output: dict[str, object] | None = None,
+        scenario_output_status: ScenarioOutputStatus = ScenarioOutputStatus.not_applicable,
+        additional_warnings: list[str] | None = None,
+        allow_warning_override: bool = False,
     ) -> AgentRunResponse:
-        warnings = [*DEFAULT_WARNINGS, *detect_sensitive_input(input_text)]
-        if should_limit_to_generic_response(input_text):
+        warnings = [*DEFAULT_WARNINGS, *detect_sensitive_input(input_text), *(additional_warnings or [])]
+        if should_limit_to_generic_response(input_text) and not allow_warning_override:
             answer = (
                 "I cannot process classified, controlled, COMSEC, keying material, real frequencies, "
                 "call signs, exact movements, or sensitive operational details. "
@@ -55,6 +70,7 @@ class Agent(ABC):
             confidence=confidence,
             follow_up_questions=follow_up_questions or [],
             scenario_output=scenario_output,
+            scenario_output_status=scenario_output_status,
         )
 
     def _active_context_lines(self, context: AgentContext) -> list[str]:

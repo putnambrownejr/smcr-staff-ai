@@ -1,6 +1,7 @@
 """Tests for the handoff creation path and its effect on /dashboard/data/{user_key}."""
 from __future__ import annotations
 
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,7 @@ from app.services.session.handoff_store import SessionHandoffStore
 
 
 @pytest.fixture()
-def dashboard_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
+def dashboard_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]:
     store = SessionHandoffStore(tmp_path / "handoffs")
     monkeypatch.setenv("LOCAL_CONTEXT_STORAGE_DIR", str(tmp_path / "context"))
     monkeypatch.setenv("SESSION_HANDOFF_STORAGE_DIR", str(tmp_path / "handoffs"))

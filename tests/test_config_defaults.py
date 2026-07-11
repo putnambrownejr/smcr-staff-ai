@@ -56,6 +56,9 @@ def test_settings_default_paths_point_outside_repo_when_unset(monkeypatch: Monke
     assert Path(settings.drill_plans_storage_dir) == Path(settings.local_context_storage_dir) / "drill_plans"
     assert Path(settings.opportunities_storage_dir) == Path(settings.local_context_storage_dir) / "opportunities"
     assert Path(settings.source_states_storage_dir) == Path(settings.local_context_storage_dir) / "source_states"
+    assert Path(settings.external_processing_audits_storage_dir) == (
+        Path(settings.local_context_storage_dir) / "external_processing_audits"
+    )
     assert settings.database_url.endswith("/smcr-staff-ai/smcr_staff_ai.db")
 
 
@@ -71,6 +74,7 @@ def test_configured_storage_dirs_include_first_class_substores(monkeypatch: Monk
     assert Path(settings.drill_plans_storage_dir) in storage_dirs
     assert Path(settings.opportunities_storage_dir) in storage_dirs
     assert Path(settings.source_states_storage_dir) in storage_dirs
+    assert Path(settings.external_processing_audits_storage_dir) in storage_dirs
 
 
 def test_warns_when_local_api_key_unset(caplog: LogCaptureFixture) -> None:

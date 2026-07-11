@@ -211,12 +211,16 @@ class PlanningAdvisorAgent(Agent):
             "- Flag any product being drafted before the thinking is done\n"
             f"{prior_context}"
         )
-        answer = _try_llm_populate(
-            template, input_text, self.metadata.system_prompt or "",
+        population = _try_llm_populate(
+            template,
+            input_text,
+            self.metadata.system_prompt or "",
+            PlanningScenarioOutput,
+            "planning",
+            context,
         )
-        structured = PlanningScenarioOutput(role="planning", tempo=tempo_label).model_dump()
         return self._response(
-            answer=answer,
+            answer=population.answer,
             input_text=input_text,
             citations=citation_titles(_PLANNING_REFERENCES),
             structured_citations=structured_citations(_PLANNING_REFERENCES),
@@ -232,7 +236,10 @@ class PlanningAdvisorAgent(Agent):
                 "What interagency or coalition coordination is required?",
                 "What assumption would force you to replan if it breaks?",
             ],
-            scenario_output=structured,
+            scenario_output=population.scenario_output,
+            scenario_output_status=population.status,
+            additional_warnings=population.warnings,
+            allow_warning_override=population.allow_warning_override,
         )
 
 

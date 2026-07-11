@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -81,7 +82,7 @@ def test_store_invalid_key_raises() -> None:
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
+def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]:
     monkeypatch.setenv("USER_PROFILE_STORAGE_DIR", str(tmp_path / "profiles"))
     monkeypatch.setenv("BILLET_RESEARCH_STORAGE_DIR", str(tmp_path / "research"))
     from app.core.config import get_settings
