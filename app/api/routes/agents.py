@@ -9,9 +9,11 @@ from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.agents import AgentMetadata, AgentRunRequest, AgentRunResponse, ScenarioOutputStatus
 from app.schemas.external_processing import DisclosureMode, ExternalProcessingApproval, ExternalProcessingPreview
+from app.schemas.roundtable import RoundtableRequest, RoundtableResponse
 from app.schemas.scenario_handoff import ChainRequest, ChainResponse, ChainStepResult
-from app.services.agents.base import AgentContext
+from app.services.agents.base import Agent, AgentContext
 from app.services.agents.registry import agent_registry
+from app.services.agents.roundtable import RoundtableService, resolve_participants
 from app.services.external_processing.preflight import (
     ExternalProcessingApprovalRequiredError,
     ExternalProcessingPreviewReadyError,
@@ -57,6 +59,97 @@ def preview_chain_external_processing(
     except ExternalProcessingPreviewReadyError as exc:
         return exc.preview
     return _no_external_preview("chain", "The requested chain does not use external scenario inference.")
+
+
+@router.post("/roundtable/external-processing-preview", response_model=ExternalProcessingPreview)
+def preview_roundtable_external_processing(
+    request: RoundtableRequest,
+    active_context_store: Annotated[ActiveUserContextStore, Depends(get_active_context_store)],
+) -> ExternalProcessingPreview:
+    participants, _, agents = _resolve_roundtable_agents(request)
+    scope_label = _roundtable_scope_label(participants, request.synthesizer)
+    if not get_settings().llm_api_key:
+        return _no_external_preview(scope_label, "No external LLM is configured; execution remains local-only.")
+    try:
+        _run_roundtable(request, active_context_store, preview_only=True)
+    except ExternalProcessingPreviewReadyError as exc:
+        return exc.preview
+    return _no_external_preview(scope_label, "The requested round table does not use external scenario inference.")
+
+
+@router.post("/roundtable", response_model=RoundtableResponse)
+def run_roundtable(
+    request: RoundtableRequest,
+    active_context_store: Annotated[ActiveUserContextStore, Depends(get_active_context_store)],
+) -> RoundtableResponse:
+    """Run a virtual staff round table: concurrent assessments, cross-review, synthesis."""
+    try:
+        return _run_roundtable(request, active_context_store)
+    except ExternalProcessingApprovalRequiredError as exc:
+        raise _approval_http_error(exc) from exc
+
+
+def _resolve_roundtable_agents(
+    request: RoundtableRequest,
+) -> tuple[list[str], list[str], dict[str, Agent]]:
+    participants, auto_selected = resolve_participants(request.scenario, request.agents, request.synthesizer)
+    if not participants:
+        raise HTTPException(status_code=422, detail="No participants resolved for the round table.")
+    agents: dict[str, Agent] = {}
+    agent_ids = [*participants, *([request.synthesizer] if request.synthesizer else [])]
+    for agent_id in agent_ids:
+        agent = agent_registry.get(agent_id)
+        if agent is None:
+            raise HTTPException(status_code=404, detail=f"Unknown agent in round table: {agent_id}")
+        agents[agent_id] = agent
+    return participants, auto_selected, agents
+
+
+def _roundtable_scope_label(participants: list[str], synthesizer: str | None) -> str:
+    label = "roundtable:" + "+".join(participants)
+    if synthesizer:
+        label += f"->{synthesizer}"
+    return label
+
+
+def _run_roundtable(
+    request: RoundtableRequest,
+    active_context_store: ActiveUserContextStore,
+    *,
+    preview_only: bool = False,
+) -> RoundtableResponse:
+    participants, auto_selected, agents = _resolve_roundtable_agents(request)
+    settings = get_settings()
+    scope_label = _roundtable_scope_label(participants, request.synthesizer)
+    agent_ids = [*participants, *([request.synthesizer] if request.synthesizer else [])]
+    roundtable_digest = build_chain_approval_digest(
+        base_url=settings.llm_base_url,
+        model=settings.llm_model,
+        scenario=request.scenario,
+        steps=[{"agent_id": agent_id} for agent_id in agent_ids],
+        context={**request.context, "roundtable_rounds": request.rounds},
+    )
+    expected_call_count = len(participants) * request.rounds + (1 if request.synthesizer else 0)
+
+    def context_factory(prior_assessments: dict[str, object]) -> AgentContext:
+        return _build_agent_context(
+            request.context,
+            active_context_store,
+            approval=request.external_processing_approval,
+            preview_only=preview_only,
+            scope_label=scope_label,
+            expected_call_count=expected_call_count,
+            approval_digest_override=roundtable_digest,
+            prior_assessments=prior_assessments,
+        )
+
+    return RoundtableService(agents).run(
+        request,
+        context_factory,
+        participants,
+        auto_selected,
+        preview_only=preview_only,
+    )
 
 
 @router.post("/{agent_id}/external-processing-preview", response_model=ExternalProcessingPreview)
