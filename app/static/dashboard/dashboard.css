@@ -15,9 +15,15 @@
   --field-soft: #171c22;
   --amber: #b4892f;
   --amber-soft: #2d2618;
-  --accent: #5a9fd4;
+  --gold: #c9a54a;
+  --success: #4a9e6a;
+  --success-text: #7fae8f;
+  --danger-text: #d8a0a5;
+  --accent: #7db2e0;
   --shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
   --radius: 6px;
+  --radius-card: 8px;
+  --font-mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
 }
 
 * {
@@ -227,33 +233,60 @@ button.small {
   display: flex;
   justify-content: space-between;
   gap: 24px;
-  align-items: flex-start;
-  padding: 24px 28px 18px;
+  align-items: center;
+  padding: 14px 28px;
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
+  background: linear-gradient(180deg, var(--bg) 0%, #0f1318 100%);
 }
 
-.title-stack h1,
+.topbar-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.topbar-crest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #3a2226;
+  border-radius: var(--radius);
+  background: #1b1114;
+  color: #c99a9e;
+}
+
+.title-stack h1 {
+  margin: 2px 0 0;
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
 .panel h2 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.16rem;
   line-height: 1.2;
 }
 
 .service-mark {
-  margin: 0 0 8px;
-  color: #d8b2b6;
-  font-size: 0.82rem;
+  margin: 0;
+  color: #c99a9e;
+  font-size: 0.68rem;
   font-weight: 700;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
 .subhead,
 .panel-header p,
 .helper-text {
-  margin: 8px 0 0;
-  color: var(--muted);
-  font-size: 0.94rem;
+  margin: 6px 0 0;
+  color: #8a94a0;
+  font-size: 0.84rem;
   line-height: 1.45;
 }
 
@@ -265,69 +298,86 @@ button.small {
 }
 
 .timezone-cluster {
-  min-width: min(100%, 460px);
+  position: relative;
+  flex: 0 1 auto;
 }
 
 .timezone-panel {
   display: grid;
   gap: 10px;
-  width: min(100%, 460px);
+  justify-items: end;
 }
 
-.timezone-panel-head {
+.topbar-clock-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
 .timezone-toggle {
-  min-height: 32px;
+  min-height: 28px;
   padding: 0 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #8a94a0;
 }
 
 .timezone-display {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
 }
 
 .timezone-card {
   display: grid;
-  gap: 4px;
-  min-height: 76px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: rgba(18, 22, 27, 0.96);
-  box-shadow: var(--shadow);
+  gap: 1px;
+  text-align: right;
 }
 
 .timezone-card-label {
-  color: var(--muted);
-  font-size: 0.77rem;
-  font-weight: 700;
+  order: 2;
+  color: #8a94a0;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .timezone-card-time {
-  font-size: 1.15rem;
-  font-weight: 700;
+  order: 1;
+  font-family: var(--font-mono);
+  font-size: 0.94rem;
+  font-weight: 600;
   line-height: 1.15;
 }
 
 .timezone-card-meta {
-  color: var(--muted);
-  font-size: 0.8rem;
+  display: none;
 }
 
 .timezone-controls {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  width: min(92vw, 480px);
+  max-height: 70vh;
+  overflow-y: auto;
   display: grid;
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: rgba(18, 22, 27, 0.98);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.timezone-controls.is-hidden {
+  display: none;
 }
 
 .timezone-option-list {
@@ -392,7 +442,10 @@ button.small {
 .layout {
   display: grid;
   gap: 18px;
-  padding: 20px 28px 36px;
+  width: 100%;
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 20px 28px 48px;
 }
 
 .panel,
@@ -403,7 +456,7 @@ button.small {
 .document-row,
 .document-preview {
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-card);
   background: var(--surface);
 }
 
@@ -412,8 +465,27 @@ button.small {
   box-shadow: var(--shadow);
 }
 
+/* Command panel reads as a nav strip + content cards, not a boxed panel */
 .command-panel {
-  border-top: 4px solid var(--scarlet);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.command-panel > .panel-header {
+  display: none;
+}
+
+.command-panel > .command-toolbar {
+  gap: 2px;
+  padding-bottom: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.command-panel .command-grid .strip,
+.command-panel .quick-actions {
+  margin-top: 4px;
 }
 
 .summary-grid,
@@ -571,32 +643,55 @@ button.small {
   font-size: 0.84rem;
 }
 
-.lane-button,
 button {
-  min-height: 38px;
+  min-height: 34px;
   border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 0 12px;
+  border-radius: var(--radius);
+  padding: 0 14px;
   font: inherit;
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 0.86rem;
   cursor: pointer;
 }
 
-.lane-button,
 button.secondary {
   background: var(--surface-2);
   border-color: var(--line);
   color: var(--text);
 }
 
-button,
-.lane-button.active {
+button {
   background: var(--scarlet);
   border-color: var(--scarlet);
   color: #f5ebe9;
 }
 
-.lane-button:hover,
+/* Lane tabs: flat strip with a scarlet underline on the active lane */
+.lane-button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #8a94a0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.lane-button.active {
+  border-bottom-color: var(--scarlet);
+  background: transparent;
+  color: var(--text);
+}
+
+.lane-button:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
 button:hover {
   filter: brightness(1.06);
 }
@@ -1481,20 +1576,35 @@ textarea {
 .mode-badge {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
-  padding: 0 12px;
+  gap: 7px;
+  min-height: 26px;
+  padding: 0 11px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface-2);
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   font-weight: 700;
+  letter-spacing: 0.03em;
   white-space: nowrap;
 }
 
+.mode-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
 .mode-badge[data-mode="personal"] {
-  border-color: var(--amber);
-  color: var(--amber);
+  border-color: #2a4a38;
+  background: #12211a;
+  color: var(--success-text);
+}
+
+.mode-badge[data-mode="personal"]::before {
+  background: var(--success);
 }
 
 /* Handoff staleness banner */

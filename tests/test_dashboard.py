@@ -64,8 +64,8 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "Planning Cell" in response.text
     assert "Brief Clinic" in response.text
     assert "Uniform Quick Reference" in response.text
-    assert "Time watch" in response.text
     assert "Time zones" in response.text
+    assert 'id="timezone-display"' in response.text
     assert "Battle Rhythm Board" in response.text
     assert "Continuity watch" in response.text
     assert "Section Bench Notebook" in response.text
@@ -147,8 +147,8 @@ def test_links_directory_replaces_legacy_chips_and_bumps_asset_version() -> None
 
     assert "renderQuickLinks" not in script
     assert "ql-" not in script
-    assert 'const assetVersion = "20260711b"' in html
-    assert 'from "./actions.js?v=20260711b"' in script
+    assert 'const assetVersion = "20260712a"' in html
+    assert 'from "./actions.js?v=20260712a"' in script
 
 
 def test_external_processing_call_count_is_labeled_as_an_upper_bound() -> None:

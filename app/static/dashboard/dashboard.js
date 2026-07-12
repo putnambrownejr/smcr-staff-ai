@@ -1,4 +1,4 @@
-import { TrackedActionsController } from "./actions.js?v=20260711b";
+import { TrackedActionsController } from "./actions.js?v=20260712a";
 
 // Module split readiness: when this file exceeds ~4000 lines or a second contributor joins,
 // split along these seams: state.js, ui.js, lanes/overview.js, lanes/watch.js,
