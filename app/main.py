@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import (
     actions,
     admin,
+    agent_notes,
     agents,
     analysis,
     battle_rhythm,
@@ -36,6 +37,7 @@ from app.api.routes import (
     planning,
     privacy,
     product_templates,
+    prompt_packs,
     reading,
     reading_state,
     resource_links,
@@ -76,6 +78,7 @@ def create_app() -> FastAPI:
     app.include_router(admin.router)
     app.include_router(analysis.router)
     app.include_router(agents.router)
+    app.include_router(agent_notes.router)
     app.include_router(battle_rhythm.router)
     app.include_router(billets.router)
     app.include_router(career.router)
@@ -112,6 +115,7 @@ def create_app() -> FastAPI:
     app.include_router(staff_products.router)
     app.include_router(sharing.router)
     app.include_router(skills.router)
+    app.include_router(prompt_packs.router)
     app.include_router(source_updates.router)
     app.include_router(training.router)
     app.include_router(travel_cases.router)

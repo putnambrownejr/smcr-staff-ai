@@ -47,19 +47,33 @@ def load_bundle(path: Path) -> tuple[str, int, int, str]:
     return html, json_start, json_end, inner
 
 
-def apply_patches(inner_html: str, patches: list[tuple[str, str, str]]) -> str:
+def apply_patches(inner_html: str, patches: list[tuple[str, ...]]) -> str:
     # Idempotent by design: this script runs against whatever is CURRENTLY in
-    # index.html, which after the first run is already-patched. A patch whose
-    # `new` text is already present (and whose `old` text is gone) is treated
-    # as already-applied and skipped, so the full PATCHES list stays safely
-    # re-runnable both against a fresh design-tool re-export (nothing applied
-    # yet) and against the current committed bundle (some/all already applied).
-    for label, old, new in patches:
-        # Check `new` first, not `old`: most patches append to/wrap `old`, so
-        # `new` contains `old` as a substring once applied -- counting `old`
-        # first would see a nonzero count even after a successful apply and
-        # misidentify an already-applied patch as still-pending.
-        if inner_html.count(new) >= 1:
+    # index.html, which after the first run is already-patched. A patch is
+    # treated as already-applied and skipped when its marker is present, so
+    # the full PATCHES list stays safely re-runnable both against a fresh
+    # design-tool re-export (nothing applied yet) and against the current
+    # committed bundle (some/all already applied).
+    #
+    # Each entry is (label, old, new) or (label, marker, old, new). The
+    # marker -- not `new` -- is what's checked for "already applied". Plain
+    # 3-tuples use `new` as their own marker, which is correct UNLESS this
+    # patch inserts a multi-method block immediately before a stable anchor
+    # (e.g. "before go(lane)") that a LATER patch in the list also inserts
+    # before: once that later patch runs, it sits between this patch's
+    # insertion and the anchor, so this patch's exact `new` text (which ends
+    # at the anchor) stops matching verbatim even though it's still fully
+    # present earlier in the file. That happened twice already (see git
+    # history) before markers were introduced -- multi-method "add X helpers"
+    # patches MUST pass an explicit, stable marker (e.g. one method's def
+    # line) that no other patch's inserted text will ever sit inside of.
+    for entry in patches:
+        if len(entry) == 4:
+            label, marker, old, new = entry
+        else:
+            label, old, new = entry
+            marker = new
+        if inner_html.count(marker) >= 1:
             print(f"already applied, skipping: {label}")
             continue
         old_count = inner_html.count(old)
@@ -99,7 +113,7 @@ def write_bundle(path: Path, html: str, json_start: int, json_end: int, new_inne
 # real /dashboard/data and /actions APIs instead of in-memory demo state.
 # See docs/superpowers/plans/2026-07-12-dashboard-bundle-remediation.md.
 
-PATCHES: list[tuple[str, str, str]] = [
+PATCHES: list[tuple[str, ...]] = [
     (
         "componentDidMount: kick off real workspace load",
         "  componentDidMount() {\n"
@@ -110,6 +124,7 @@ PATCHES: list[tuple[str, str, str]] = [
     ),
     (
         "add _resolveUserKey/_apiHeaders/_loadRealWorkspace helpers",
+        "  _resolveUserKey() {",  # stable marker -- see apply_patches docstring
         "  componentWillUnmount() { clearInterval(this._t); }\n",
         "  componentWillUnmount() { clearInterval(this._t); }\n\n"
         "  // --- Real backend wiring (dashboard bundle remediation, step 2) ---\n"
@@ -290,6 +305,7 @@ PATCHES: list[tuple[str, str, str]] = [
     ),
     (
         "add _loadRealFeeds/_loadRealLinks/_loadRealHandoff helpers",
+        "  async _loadRealFeeds() {",  # stable marker -- see apply_patches docstring
         '  async _loadRealWorkspace() {\n'
         '    this.userKey = this._resolveUserKey();\n'
         '    try {\n'
@@ -603,6 +619,7 @@ PATCHES: list[tuple[str, str, str]] = [
     ),
     (
         "add User Docs helpers: notebook/fitreps/generations load + project list",
+        "  async _loadRealNotes() {",  # stable marker -- see apply_patches docstring
         '  _saveHandoff() {\n'
         '    if (!this.userKey) return;\n'
         '    const base = this._handoffData || { user_key: this.userKey };\n'
@@ -1201,6 +1218,154 @@ PATCHES: list[tuple[str, str, str]] = [
         '      ...((this.state.benchCards.find((c) => c.title === "Project files") || { items: [] }).items || []).map((it) => it.name),\n'
         '      ...(this._realProjectNames || []),\n'
         '    ]));\n',
+    ),
+    (
+        "componentDidMount: also load the real agent/skill catalog, prompt packs, and agent notes",
+        "    this._loadRealNotes();\n"
+        "    this._loadRealFitreps();\n"
+        "    this._loadRealGenerations();\n"
+        "    this._loadRealProjects();\n",
+        "    this._loadRealNotes();\n"
+        "    this._loadRealFitreps();\n"
+        "    this._loadRealGenerations();\n"
+        "    this._loadRealProjects();\n"
+        "    this._loadRealAgents();\n"
+        "    this._loadRealSkills();\n"
+        "    this._loadRealPromptPacks();\n"
+        "    this._loadRealAgentNotes();\n",
+    ),
+    (
+        "add AI-page helpers: real agents/skills/prompt-packs catalog + notes",
+        "  async _loadRealAgents() {",  # stable marker -- see apply_patches docstring
+        '  // Real project folder names, for the "Save to project" dropdown\n'
+        '  async _loadRealProjects() {\n'
+        '    try {\n'
+        '      const res = await fetch("/user-docs/projects", { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("projects fetch failed: " + res.status);\n'
+        '      this._realProjectNames = await res.json();\n'
+        '      this.forceUpdate();\n'
+        '    } catch (err) {\n'
+        '      this._realProjectNames = [];\n'
+        '    }\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+        '  // Real project folder names, for the "Save to project" dropdown\n'
+        '  async _loadRealProjects() {\n'
+        '    try {\n'
+        '      const res = await fetch("/user-docs/projects", { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("projects fetch failed: " + res.status);\n'
+        '      this._realProjectNames = await res.json();\n'
+        '      this.forceUpdate();\n'
+        '    } catch (err) {\n'
+        '      this._realProjectNames = [];\n'
+        '    }\n'
+        '  }\n'
+        '\n'
+        '  // --- AI page: real agent/skill catalog + notes backend wiring.\n'
+        '  // AGENTS_CATALOG/SKILLS_CATALOG are static class fields the demo bundle\n'
+        '  // hardcoded; reassigning them at runtime (then forceUpdate) is far less\n'
+        '  // invasive than converting every render-time reference to state.\n'
+        '  async _loadRealAgents() {\n'
+        '    try {\n'
+        '      const res = await fetch("/agents", { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("agents fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      Component.AGENTS_CATALOG = data.map((a) => ({\n'
+        '        id: a.id,\n'
+        '        name: a.name,\n'
+        '        category: a.domain,\n'
+        '        description: a.description,\n'
+        '        limitations: (a.disallowed_inputs || []).join(", ") || "None listed.",\n'
+        '      }));\n'
+        '      this.forceUpdate();\n'
+        '    } catch (err) {\n'
+        '      // Keep the built-in demo catalog visible if this fails.\n'
+        '    }\n'
+        '  }\n'
+        '  async _loadRealSkills() {\n'
+        '    try {\n'
+        '      const res = await fetch("/skills", { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("skills fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      Component.SKILLS_CATALOG = (data.skills || []).map((s) => ({ slug: s.name, name: s.name, description: s.description }));\n'
+        '      this.forceUpdate();\n'
+        '    } catch (err) {\n'
+        '      // Keep the built-in demo catalog visible if this fails.\n'
+        '    }\n'
+        '  }\n'
+        '  async _loadRealPromptPacks() {\n'
+        '    try {\n'
+        '      const res = await fetch("/prompt-packs", { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("prompt packs fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      this._repoPromptPacks = data.packs || [];\n'
+        '      this.forceUpdate();\n'
+        '    } catch (err) {\n'
+        '      this._repoPromptPacks = [];\n'
+        '    }\n'
+        '  }\n'
+        '  copyRepoPromptPack(content) {\n'
+        '    return () => { navigator.clipboard && navigator.clipboard.writeText(content); };\n'
+        '  }\n'
+        '  async _loadRealAgentNotes() {\n'
+        '    try {\n'
+        '      const res = await fetch("/agent-notes/" + encodeURIComponent(this.userKey), { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("agent notes fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      this.setState({ agentNotes: data.agent_notes || {}, skillNotes: data.skill_notes || {} });\n'
+        '    } catch (err) {\n'
+        '      // Keep whatever notes are already in state if this fails.\n'
+        '    }\n'
+        '  }\n'
+        '  _scheduleAgentNoteSave(kind, id) {\n'
+        '    this._agentNoteSaveTimers = this._agentNoteSaveTimers || {};\n'
+        '    const key = kind + ":" + id;\n'
+        '    clearTimeout(this._agentNoteSaveTimers[key]);\n'
+        '    this._agentNoteSaveTimers[key] = setTimeout(() => this._saveAgentNote(kind, id), 800);\n'
+        '  }\n'
+        '  _saveAgentNote(kind, id) {\n'
+        '    const note = kind === "agent" ? (this.state.agentNotes[id] || "") : (this.state.skillNotes[id] || "");\n'
+        '    fetch("/agent-notes/" + encodeURIComponent(this.userKey) + "/" + kind + "/" + encodeURIComponent(id), {\n'
+        '      method: "PUT",\n'
+        '      headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '      body: JSON.stringify({ note }),\n'
+        '    }).catch(() => {});\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+    ),
+    (
+        "updateAgentNote: debounce a PUT /agent-notes/{userKey}/agent/{id}",
+        '  updateAgentNote(id) {\n'
+        '    return (e) => {\n'
+        '      const val = e.target.value;\n'
+        '      this.setState((s) => ({ agentNotes: { ...s.agentNotes, [id]: val } }));\n'
+        '    };\n'
+        '  }\n',
+        '  updateAgentNote(id) {\n'
+        '    return (e) => {\n'
+        '      const val = e.target.value;\n'
+        '      this.setState((s) => ({ agentNotes: { ...s.agentNotes, [id]: val } }));\n'
+        '      this._scheduleAgentNoteSave("agent", id);\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "updateSkillNote: debounce a PUT /agent-notes/{userKey}/skill/{id}",
+        '  updateSkillNote(slug) {\n'
+        '    return (e) => {\n'
+        '      const val = e.target.value;\n'
+        '      this.setState((s) => ({ skillNotes: { ...s.skillNotes, [slug]: val } }));\n'
+        '    };\n'
+        '  }\n',
+        '  updateSkillNote(slug) {\n'
+        '    return (e) => {\n'
+        '      const val = e.target.value;\n'
+        '      this.setState((s) => ({ skillNotes: { ...s.skillNotes, [slug]: val } }));\n'
+        '      this._scheduleAgentNoteSave("skill", slug);\n'
+        '    };\n'
+        '  }\n',
     ),
 ]
 
