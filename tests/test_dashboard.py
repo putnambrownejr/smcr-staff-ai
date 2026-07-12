@@ -3,8 +3,10 @@ from datetime import UTC, date, datetime, timedelta
 _FUTURE_DRILL = date.today() + timedelta(days=21)
 from pathlib import Path  # noqa: E402
 
+import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
+import app.api.routes.dashboard as dashboard_routes  # noqa: E402
 from app.api.routes.dashboard import (  # noqa: E402
     get_action_tracker,
     get_admin_service,
@@ -55,67 +57,13 @@ def test_dashboard_route_serves_html_shell() -> None:
 
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
-    assert "SMCR Staff AI" in response.text
-    assert "Next Drill Readiness" in response.text
-    assert "Thin Staff Assist" in response.text
-    assert "Walk-In Brief Pack" in response.text
-    assert "Decisive action now" in response.text
-    assert "Staff update cycle" in response.text
-    assert "Planning Cell" in response.text
-    assert "Brief Clinic" in response.text
-    assert "Uniform Quick Reference" in response.text
-    assert "Time watch" in response.text
-    assert "Time zones" in response.text
-    assert "Battle Rhythm Board" in response.text
-    assert "Continuity watch" in response.text
-    assert "Section Bench Notebook" in response.text
-    assert "MOS bench" in response.text
-    assert "MOS advisor" in response.text
-    assert "Doctrine / Reference Library" in response.text
-    assert "Use suggestion" in response.text
-    assert 'id="reference-select"' in response.text
-    assert "Open reference library" in response.text
-    assert "Save section memory" in response.text
-    assert "Save battle rhythm board" in response.text
-    assert "Open reading tracker" in response.text
-    assert 'id="reading-book-select"' in response.text
-    assert "Commander decision log (one per line" in response.text
-    assert "Save to battle rhythm board" in response.text
-    assert "Build planning cell package" in response.text
-    assert "Run lone planner mode" in response.text
-    assert "Build section gap cover" in response.text
-    assert "Refresh MARADMIN feed" in response.text
-    assert "Open second-tier watch" in response.text
-    assert "Open watch lane" in response.text
-    assert "Open bench / files" in response.text
-    assert "Open workflows" in response.text
-    assert "Run lone planner" in response.text
-    assert "Watch lane" in response.text
-    assert "Bench / Files lane" in response.text
-    assert "Data Check" in response.text
-    assert "Marine Corps History Fact" in response.text
-    assert "Workflow lane" in response.text
-    assert "Command Snapshots" in response.text
-    assert "Start Here" in response.text
-    assert "Integrated Staff Package" in response.text
-    assert "Battle Rhythm Editor" in response.text
-    assert "Act Now" in response.text
-    assert "Skip to dashboard content" in response.text
-    assert "dashboard.js" in response.text
-    assert 'id="external-processing-dialog"' in response.text
-    assert 'id="action-undo-region"' in response.text
-    assert 'id="good-links-search"' in response.text
-    assert 'id="good-links-filter-category"' in response.text
-    assert 'id="good-links-clear-filters"' in response.text
-    assert 'id="good-links-state"' in response.text
-    assert 'id="good-links-results"' in response.text
-    assert 'id="good-links-my-grid"' in response.text
-    assert 'id="good-links-resource-grid"' in response.text
-    assert 'id="good-links-action-status"' in response.text
-    assert 'id="good-links-form-status"' in response.text
-    assert 'id="good-links-retry"' in response.text
-    assert 'id="good-links-open-workspace"' in response.text
-    assert 'script.type = "module"' in response.text
+    # The dashboard is a compiled, self-contained bundle.
+    assert "__bundler/manifest" in response.text
+    assert "Bench / Files" in response.text
+    assert "A Few Good" in response.text
+    # The route injects the file-open shim at serve time.
+    assert "window.__SMCR_REPO_ROOT__" in response.text
+    assert "/static/dashboard/reveal-shim.js" in response.text
 
 
 def test_dashboard_assets_are_served() -> None:
@@ -141,14 +89,60 @@ def test_links_directory_css_has_responsive_columns() -> None:
     assert "@media (max-width: 699px)" in stylesheet
 
 
-def test_links_directory_replaces_legacy_chips_and_bumps_asset_version() -> None:
-    html = Path("app/static/dashboard/index.html").read_text(encoding="utf-8")
-    script = Path("app/static/dashboard/dashboard.js").read_text(encoding="utf-8")
+def test_reveal_requires_dashboard_header() -> None:
+    client = TestClient(app)
 
-    assert "renderQuickLinks" not in script
-    assert "ql-" not in script
-    assert 'const assetVersion = "20260711b"' in html
-    assert 'from "./actions.js?v=20260711b"' in script
+    response = client.get("/dashboard/files/reveal", params={"path": "README.md"})
+
+    assert response.status_code == 403
+
+
+def test_reveal_rejects_paths_outside_repo_root(monkeypatch: pytest.MonkeyPatch) -> None:
+    opened: list[Path] = []
+    monkeypatch.setattr(dashboard_routes, "_reveal_in_file_explorer", opened.append)
+    client = TestClient(app)
+
+    response = client.get(
+        "/dashboard/files/reveal",
+        params={"path": "../outside.txt"},
+        headers={"X-SMCR-Dashboard": "1"},
+    )
+
+    assert response.status_code == 403
+    assert opened == []
+
+
+def test_reveal_opens_existing_file_and_strips_fragment(monkeypatch: pytest.MonkeyPatch) -> None:
+    opened: list[Path] = []
+    monkeypatch.setattr(dashboard_routes, "_reveal_in_file_explorer", opened.append)
+    client = TestClient(app)
+
+    response = client.get(
+        "/dashboard/files/reveal",
+        params={"path": "data/seed/system_templates.example.yaml#sys-opord"},
+        headers={"X-SMCR-Dashboard": "1"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["resolved"].endswith("data/seed/system_templates.example.yaml")
+    assert len(opened) == 1
+    assert opened[0].name == "system_templates.example.yaml"
+
+
+def test_reveal_falls_back_to_nearest_existing_ancestor(monkeypatch: pytest.MonkeyPatch) -> None:
+    opened: list[Path] = []
+    monkeypatch.setattr(dashboard_routes, "_reveal_in_file_explorer", opened.append)
+    client = TestClient(app)
+
+    response = client.get(
+        "/dashboard/files/reveal",
+        params={"path": "personal/AT-orders-FY26.pdf"},
+        headers={"X-SMCR-Dashboard": "1"},
+    )
+
+    assert response.status_code == 200
+    assert len(opened) == 1
+    assert opened[0] == dashboard_routes.REPO_ROOT.resolve()
 
 
 def test_external_processing_call_count_is_labeled_as_an_upper_bound() -> None:
@@ -162,111 +156,6 @@ def test_external_processing_dialog_removes_cancel_listener_on_every_finish() ->
 
     assert 'dialog.addEventListener("cancel", onCancel)' in script
     assert 'dialog.removeEventListener("cancel", onCancel)' in script
-
-
-def test_dashboard_button_inventory_has_wiring() -> None:
-    html = Path("app/static/dashboard/index.html").read_text(encoding="utf-8")
-    js = Path("app/static/dashboard/dashboard.js").read_text(encoding="utf-8")
-
-    button_ids = [
-        "toggle-timezone-panel",
-        "load-demo",
-        "load-personal",
-        "refresh-maradmins",
-        "refresh-reading",
-        "refresh-source-watch",
-        "refresh-navadmins",
-        "refresh-alnavs",
-        "refresh-dod-watch",
-        "clear-section-memory-form",
-        "quick-open-watch",
-        "quick-open-library",
-        "quick-open-workflows",
-        "quick-run-lone-planner",
-        "watch-open-workspace",
-        "library-open-workspace",
-        "draft-open-planning-cell",
-        "draft-open-brief-clinic",
-        "workflow-open-lone-planner",
-        "workflow-open-planning-cell",
-        "workflow-run-staff-package",
-        "workflow-open-brief-clinic",
-        "battle-rhythm-open-editor",
-        "battle-rhythm-open-planning-cell",
-        "thin-staff-run-lone-planner",
-        "thin-staff-open-mission-analysis",
-        "thin-staff-open-planning-cell",
-        "thin-staff-open-update-cycle",
-        "thin-staff-open-admin",
-        "walk-in-open-lone-planner",
-        "walk-in-open-brief-clinic",
-        "run-lone-planner",
-        "run-section-gap-cover",
-        "run-staff-package",
-        "save-planning-cell-board",
-        "save-document-type",
-        "apply-document-suggestion",
-    ]
-    for button_id in button_ids:
-        assert f'id="{button_id}"' in html
-        assert f'getElementById("{button_id}")' in js
-
-    form_ids = [
-        "battle-rhythm-form",
-        "personnel-form",
-        "staff-form",
-        "brief-clinic-form",
-        "staff-cycle-form",
-        "planning-cell-form",
-        "section-memory-form",
-        "mos-advisor-form",
-    ]
-    for form_id in form_ids:
-        assert f'id="{form_id}"' in html
-        assert f'getElementById("{form_id}")' in js
-        assert "addEventListener(\"submit\"" in js
-
-    delegated_controls = [
-        "data-document-id",
-        "data-feed-toggle",
-        "data-feed-refresh",
-        "data-reading-save",
-        "data-timezone-option",
-    ]
-    for control in delegated_controls:
-        assert control in html or control in js
-
-    assert 'id="battle-rhythm-health-posture"' in html
-    assert 'id="battle-rhythm-health-summary"' in html
-    assert 'id="battle-rhythm-hot-items"' in html
-    assert 'renderBattleRhythmHealth(' in js
-    assert 'id="section-gap-cover-output"' in html
-    assert 'id="staff-package-output"' in html
-    assert 'renderSectionGapCoverOutput(' in js
-    assert 'renderStaffPlanningPackageOutput(' in js
-    assert 'id="section-memory-library"' in html
-    assert 'id="mos-bench-library"' in html
-    assert 'id="reading-book-select"' in html
-    assert 'id="reference-summary"' in html
-    assert 'id="reference-select"' in html
-    assert 'id="document-select"' in html
-    assert 'id="reference-library"' in html
-    assert 'id="mos-advisor-output"' in html
-    assert 'renderSectionMemoryProfile(' in js
-    assert 'renderMosBenchLibrary(' in js
-    assert 'renderReferenceLibrary(' in js
-    assert 'renderReadingBooks(' in js
-    assert 'renderAgentAdvisoryOutput(' in js
-    assert 'data-section-memory-edit' in js
-    assert 'data-section-memory-delete' in js
-    assert 'data-section-memory-seed' in js
-    assert 'data-mos-bench' in js
-    assert 'id="document-type-select"' in html
-    assert 'id="document-type-suggestion"' in html
-    assert 'DOCUMENT_TYPE_OPTIONS' in js
-    assert 'saveSelectedDocumentType(' in js
-    assert 'applySuggestedDocumentType(' in js
-    assert 'runStaffPlanningPackage(' in js
 
 
 def test_demo_dashboard_data_route_returns_workspace_payload() -> None:
