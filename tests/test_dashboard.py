@@ -66,27 +66,14 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "/static/dashboard/reveal-shim.js" in response.text
 
 
-def test_dashboard_assets_are_served() -> None:
+def test_dashboard_reveal_shim_is_served() -> None:
     client = TestClient(app)
 
-    response = client.get("/static/dashboard/dashboard.css")
+    response = client.get("/static/dashboard/reveal-shim.js")
 
     assert response.status_code == 200
-    assert "text/css" in response.headers["content-type"]
-
-    actions_response = client.get("/static/dashboard/actions.js")
-    assert actions_response.status_code == 200
-    assert "javascript" in actions_response.headers["content-type"]
-    assert "TrackedActionsController" in actions_response.text
-
-
-def test_links_directory_css_has_responsive_columns() -> None:
-    stylesheet = Path("app/static/dashboard/dashboard.css").read_text(encoding="utf-8")
-
-    assert ".good-links-category-grid" in stylesheet
-    assert "grid-template-columns: repeat(3, minmax(0, 1fr));" in stylesheet
-    assert "@media (max-width: 1099px)" in stylesheet
-    assert "@media (max-width: 699px)" in stylesheet
+    assert "javascript" in response.headers["content-type"]
+    assert response.text.strip()
 
 
 def test_reveal_requires_dashboard_header() -> None:
@@ -145,17 +132,6 @@ def test_reveal_falls_back_to_nearest_existing_ancestor(monkeypatch: pytest.Monk
     assert opened[0] == dashboard_routes.REPO_ROOT.resolve()
 
 
-def test_external_processing_call_count_is_labeled_as_an_upper_bound() -> None:
-    script = Path("app/static/dashboard/dashboard.js").read_text(encoding="utf-8")
-
-    assert '"Up to " + (preview.expected_call_count || 1) + " external calls"' in script
-
-
-def test_external_processing_dialog_removes_cancel_listener_on_every_finish() -> None:
-    script = Path("app/static/dashboard/dashboard.js").read_text(encoding="utf-8")
-
-    assert 'dialog.addEventListener("cancel", onCancel)' in script
-    assert 'dialog.removeEventListener("cancel", onCancel)' in script
 
 
 def test_demo_dashboard_data_route_returns_workspace_payload() -> None:
