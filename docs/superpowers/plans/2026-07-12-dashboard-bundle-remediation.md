@@ -1,7 +1,11 @@
 # Dashboard Bundle Remediation Plan
 
-**Status:** Fact-finding complete, not yet started. Written for a future session
-with full token budget.
+**Status (2026-07-12, updated):** Steps 0 and 1 done and committed. Step 2 started —
+the bundle-patch mechanism exists and the Actions tracker is fully wired to the real
+backend and verified end-to-end in a live browser (add/toggle-done/delete all persist
+server-side; reload survives). All other state domains (notes, fitreps, feeds,
+quickLinks, benchCards, profile, handoff, travel, "save to project") are still
+demo-only. See "Step 2 progress" below for exact status and how to extend the pattern.
 
 **Context:** The compiled Claude-design-tool bundle (`app/static/dashboard/index.html`,
 2.3MB, merged via commits `3f2bf82`/`de9a99e`/`c54b742`) replaced the working,
@@ -57,27 +61,104 @@ the one net-new feature (drafted-files/"save to project") which has no backend a
   frontend can show "opened a parent folder instead" rather than implying success.
 
 ### Step 2 — Wire the bundle to real data (the core of the P0)
-This is the large piece. The bundle is a single 2.3MB minified/bundled file —
-**do not hand-edit it** (per its own header comment). Two possible approaches,
-scope each before picking:
-- **(a) Re-export from the design tool with data hooks wired**, if the Claude
-  design-tool workflow supports binding its `{{ }}` template variables to a real
-  fetch layer instead of in-memory mock state. Check whether the original design
-  session (still open per the user) can be pointed at the 13 real endpoints from
-  finding #2 instead of its built-in demo data, then re-export.
-- **(b) Post-process the bundle**: write a thin adapter script injected at serve
-  time (same pattern as the existing `reveal-shim.js`) that intercepts the
-  bundle's internal state-update calls and mirrors them to/from the real API.
-  Likely more fragile than (a) since it means reverse-engineering the bundle's
-  internal state contract without source.
-- Whichever approach: the 13 endpoint prefixes from finding #2 are the wiring
-  checklist. Confirm each one round-trips (create/read/update/delete as
-  applicable) before calling this step done.
-- Demo mode should stay client-only fake data (that's legitimate — it's a "safe
-  tour" mode), but "Personal mode" must actually persist through the real API.
-  Fix the date/greeting hardcoding (finding #9) as part of this — those should
-  compute from `Date.now()` and the loaded workspace's drill date, not be static
-  strings.
+
+**Architecture discovery (supersedes the "two approaches, unknown which" framing
+below from the first pass at this doc):** The bundle is not opaque. It's a
+Claude-design-tool export whose `<script type="__bundler/manifest">` holds a
+26-asset map (fonts, one PNG, React 18 + ReactDOM production builds, and a
+64KB "dc-runtime" — the tool's own template interpreter). The entire app view
++ logic lives as ONE JSON-string-encoded blob in a sibling
+`<script type="__bundler/template">` tag. Decoded, that string is a normal,
+readable HTML document containing a `<script type="text/x-dc" data-dc-script="">`
+block with a plain `class Component extends DCLogic { state = {...}; ... }` —
+a single-component, React-class-shaped app with a flat state object and
+ordinary methods (`addAction()`, `toggleActionDone(id)`, `componentDidMount()`,
+etc). `DCLogic.setState()` re-renders through the wrapping React component;
+`componentDidMount()` is a real lifecycle hook. **Approach (a) below did not
+end up mattering** — editing the decoded source directly and re-encoding it is
+entirely tractable and is what actually got used (approach (b), but concrete
+rather than reverse-engineered, since the source turned out to be readable).
+
+**Tooling:** `scripts/patch_dashboard_bundle.py` does the decode → patch →
+re-encode cycle safely. Patches are exact-string find/replace pairs against
+the *decoded* component source; the script aborts loudly (no write) if a
+patch's target text isn't found exactly once, so a future re-export from the
+design tool can't silently corrupt or double-apply a patch. **Gotcha already
+hit and fixed:** the original export escapes every `</` as `/` inside the
+JSON string so embedded closing tags (`</script>`, `</head>`, ...) can't be
+mistaken by the outer HTML parser for the end of the `__bundler/template`
+element itself. `json.dumps()` does not do this by default — the script
+replicates it by post-processing, and self-verifies by re-decoding what it
+just wrote before declaring success. Run `uv run python
+scripts/patch_dashboard_bundle.py --check` for a dry run, or without `--check`
+to apply and write.
+
+**Done so far — Actions tracker, full CRUD, verified live:**
+- `_resolveUserKey()`: reads/generates `localStorage["smcr_user_key"]`,
+  matching the pre-bundle `dashboard.js`'s exact key name and
+  `crypto.randomUUID()` generation, so a browser that already used this app
+  reaches the same stored personal data.
+- `_apiHeaders()`: attaches `X-Local-API-Key` from `window.__SMCR_API_KEY__`
+  (injected by the `/dashboard` route from `get_settings().local_api_key`,
+  same mechanism as the reveal-shim fix in step 1) when one is configured.
+- `componentDidMount()` now also calls `_loadRealWorkspace()`, which fetches
+  `/dashboard/data/{userKey}` and replaces the hardcoded demo `actions` array
+  with `tracked_actions` from the response.
+- `addAction`, `toggleActionDone`, `deleteAction` now call
+  `POST /actions/track`, `PATCH /actions/{id}`, `DELETE /actions/{id}`
+  respectively, with optimistic local updates and rollback-on-failure.
+- Verified end-to-end in a live browser (not just unit tests): added a real
+  action through the actual form UI → confirmed `POST /actions/track` fired →
+  confirmed the record exists server-side via a direct fetch with real
+  `action_id`/timestamps/history → **reloaded the page and the action
+  survived** (the core P0 this whole remediation exists to fix) → toggled
+  done via a real checkbox click → confirmed `PATCH` fired and server-side
+  `status` changed to `"closed"` → deleted via the UI → confirmed `DELETE`
+  fired and the record is gone server-side. All other lanes (Overview, Bench
+  / Files, Workflows, Workspace, Links) still render with no new console
+  errors after the patch.
+- Pinned with `tests/test_dashboard.py::test_dashboard_bundle_is_wired_to_real_actions_api`,
+  which decodes the served bundle and asserts the real-fetch code is present
+  — so a careless future bundle re-export that drops this wiring fails CI
+  instead of failing silently at runtime.
+
+**Known limitation in the current wiring (acceptable for this pass, flagged
+here rather than hidden):** the bundle's `due` field is free text (e.g. "15
+AUG", "overdue") with no matching free-text field on the real `ActionRecord`
+schema (which has a strict `suspense_date: date | None`). Rather than force a
+lossy/fragile parse, `due` text is currently written into `notes` as `"Due:
+<text>"` on create and is **not** read back out of `notes` into the `due`
+display field on load (so after a reload, a `due` you typed shows up in
+`notes` instead of the `Due` column). A cleaner fix is a real date picker
+mapped to `suspense_date`, deferred to keep this pass scoped.
+
+**Also discovered, not yet fixed:** the hardcoded date/greeting strings from
+finding #9 (`"18 days"`, `"Good evening"`) are still present — they weren't
+touched by this pass, which focused on the actions slice specifically. They
+live in the same decoded component source and are equally patchable with the
+same tool; this is the natural next patch to write.
+
+**Remaining state domains, still demo-only (not started):** notes/logbook,
+FitRep tracker, quick links / feeds (Watch lane), quickLinks (Overview pinned
+links), benchCards (file/template/doctrine references), staff bench lanes
+(doctrine/resources/prompts per staff-lane modal), profile fields, session
+handoff, travel status, quote-of-the-day rotation, today-in-history. Each is
+its own `state.X` slice with its own mutation methods in the same component
+source — the Actions wiring above is the reference pattern to replicate:
+(1) find the relevant backend endpoint(s) from the finding-#2 checklist below,
+(2) add a `_loadX()` call from `componentDidMount`, (3) rewrite each mutation
+method to call the real endpoint with optimistic update + rollback, (4) add a
+patch-tool entry, (5) verify live in a browser, (6) pin with a test like the
+one added for actions.
+
+The 13 endpoint prefixes from finding #2 are the full wiring checklist:
+`/bench-sections/`, `/custom-mos-recipes/`, `/custom-watch-feeds/`,
+`/dashboard/data/` (done — read path only, used by `_loadRealWorkspace`),
+`/handoffs/`, `/modules/`, `/personal-documents/`, `/product-templates/`,
+`/reading-list/state/`, `/resource-links/`, `/section-memory/`,
+`/staff/battle-rhythm/`, `/user-profile/`, plus `/actions/` (done, full CRUD)
+which wasn't in the original 13 since it's a separate router from
+`app/api/routes/dashboard.py`'s own endpoint set.
 
 ### Step 3 — Build the missing "save to project" backend (net-new, finding #12)
 - Design a minimal endpoint (e.g. `POST /dashboard/drafts` and

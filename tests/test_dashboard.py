@@ -1,6 +1,7 @@
 from datetime import UTC, date, datetime, timedelta
 
 _FUTURE_DRILL = date.today() + timedelta(days=21)
+import json  # noqa: E402
 from pathlib import Path  # noqa: E402
 
 import pytest  # noqa: E402
@@ -64,6 +65,29 @@ def test_dashboard_route_serves_html_shell() -> None:
     # The route injects the file-open shim at serve time.
     assert "window.__SMCR_REPO_ROOT__" in response.text
     assert "/static/dashboard/reveal-shim.js" in response.text
+
+
+def test_dashboard_bundle_is_wired_to_real_actions_api() -> None:
+    """The compiled dashboard bundle is a static export from a design tool with
+    all state (and demo data) hardcoded client-side -- see
+    docs/superpowers/plans/2026-07-12-dashboard-bundle-remediation.md. This
+    pins the real-backend wiring applied by scripts/patch_dashboard_bundle.py
+    so a future bundle re-export can't silently drop it: fail loud here
+    instead of failing silently at runtime in a browser.
+    """
+    bundle_html = dashboard_routes._DASHBOARD_HTML.read_text(encoding="utf-8")
+    template_open = '<script type="__bundler/template">'
+    json_start = bundle_html.index(template_open) + len(template_open)
+    json_end = bundle_html.index("</script>", json_start)
+    component_source = json.loads(bundle_html[json_start:json_end].strip())
+
+    assert "this._loadRealWorkspace();" in component_source
+    assert "_resolveUserKey()" in component_source
+    assert '"smcr_user_key"' in component_source
+    assert "fetch(\"/dashboard/data/\"" in component_source
+    assert "fetch(\"/actions/track\"" in component_source
+    assert 'method: "PATCH"' in component_source
+    assert 'fetch("/actions/" + encodeURIComponent(id), { method: "DELETE"' in component_source
 
 
 def test_dashboard_reveal_shim_is_served() -> None:
