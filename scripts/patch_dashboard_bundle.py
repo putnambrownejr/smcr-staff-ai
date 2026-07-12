@@ -1367,6 +1367,62 @@ PATCHES: list[tuple[str, ...]] = [
         '    };\n'
         '  }\n',
     ),
+    (
+        "Prompts tab HTML: add a read-only 'Repo prompt packs' section above the editable ones",
+        '      <sc-if value="{{ isAiTabPrompts }}" hint-placeholder-val="{{ false }}">\n'
+        '      <div style="display:grid;gap:16px;">\n'
+        '        <sc-for list="{{ promptPacksRendered }}" as="pack" hint-placeholder-count="4">\n',
+        '      <sc-if value="{{ isAiTabPrompts }}" hint-placeholder-val="{{ false }}">\n'
+        '      <div style="display:grid;gap:16px;">\n'
+        '        <sc-if value="{{ hasRepoPromptPacks }}" hint-placeholder-val="{{ false }}">\n'
+        '        <section style="border:1px solid #313844;border-radius:8px;background:#0f1318;padding:16px 18px;">\n'
+        '          <h3 style="margin:0 0 4px;font-size:0.96rem;font-weight:700;">Repo prompt packs</h3>\n'
+        '          <p style="margin:0 0 12px;color:#8a94a0;font-size:0.8rem;line-height:1.4;">Read-only copies of the packs in <span style="font-family:\'IBM Plex Mono\',monospace;">prompt-packs/</span> — paste the full text into any AI chat.</p>\n'
+        '          <div style="display:grid;gap:8px;">\n'
+        '            <sc-for list="{{ repoPromptPacksRendered }}" as="rp" hint-placeholder-count="4">\n'
+        '              <div style="padding:10px 11px;border:1px solid #313844;border-radius:6px;background:#0d1014;">\n'
+        '                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">\n'
+        '                  <div style="font-size:0.85rem;font-weight:600;">{{ rp.title }}</div>\n'
+        '                  <button type="button" sc-camel-on-click="{{ rp.onCopy }}" style="flex:0 0 auto;height:24px;padding:0 8px;border:1px solid #313844;border-radius:5px;background:#1a2027;color:#aab4bf;font:inherit;font-size:0.7rem;font-weight:600;cursor:pointer;">{{ rp.copyLabel }}</button>\n'
+        '                </div>\n'
+        '                <p style="margin:5px 0 0;font-size:0.79rem;color:#aab4bf;line-height:1.4;">{{ rp.summary }}</p>\n'
+        '              </div>\n'
+        '            </sc-for>\n'
+        '          </div>\n'
+        '        </section>\n'
+        '        </sc-if>\n'
+        '        <sc-for list="{{ promptPacksRendered }}" as="pack" hint-placeholder-count="4">\n',
+    ),
+    (
+        "computed vals: repoPromptPacksRendered from the real /prompt-packs fetch",
+        '    const promptPacksRendered = this.state.promptPacks.map((pack) => ({\n'
+        '      id: pack.id,\n'
+        '      title: pack.title,\n'
+        '      onAddItem: this.addPackItem(pack.id),\n',
+        '    const repoPromptPacksRendered = (this._repoPromptPacks || []).map((rp) => ({\n'
+        '      slug: rp.slug,\n'
+        '      title: rp.title,\n'
+        '      summary: rp.summary,\n'
+        '      copyLabel: this.state.copiedPackSlug === rp.slug ? "Copied" : "Copy",\n'
+        '      onCopy: () => {\n'
+        '        navigator.clipboard && navigator.clipboard.writeText(rp.content);\n'
+        '        this.setState({ copiedPackSlug: rp.slug });\n'
+        '        clearTimeout(this._copiedPackTimer);\n'
+        '        this._copiedPackTimer = setTimeout(() => this.setState({ copiedPackSlug: null }), 1500);\n'
+        '      },\n'
+        '    }));\n'
+        '    const hasRepoPromptPacks = repoPromptPacksRendered.length > 0;\n'
+        '    const promptPacksRendered = this.state.promptPacks.map((pack) => ({\n'
+        '      id: pack.id,\n'
+        '      title: pack.title,\n'
+        '      onAddItem: this.addPackItem(pack.id),\n',
+    ),
+    (
+        "vals object: expose repoPromptPacksRendered/hasRepoPromptPacks to the template",
+        '      skillsRendered, promptPacksRendered, combosRendered,\n',
+        '      skillsRendered, promptPacksRendered, combosRendered,\n'
+        '      repoPromptPacksRendered, hasRepoPromptPacks,\n',
+    ),
 ]
 
 
