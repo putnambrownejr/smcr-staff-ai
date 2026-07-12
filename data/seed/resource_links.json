@@ -201,5 +201,264 @@
     "url": "https://www.med.navy.mil",
     "category": "reference",
     "description": "Medical readiness, dental, and health records"
+  },
+  {
+    "id": "mrows",
+    "title": "MROWS",
+    "url": "https://mrows.tfs.usmc.mil",
+    "category": "admin_pay",
+    "description": "Marine Corps Reserve Order Writing System"
+  },
+  {
+    "id": "ridt",
+    "title": "RIDT",
+    "url": "https://ridt.usmc.mil",
+    "category": "admin_pay",
+    "description": "Reserve Inactive Duty Training system"
+  },
+  {
+    "id": "navadmins",
+    "title": "NAVADMINs",
+    "url": "https://www.mynavyhr.navy.mil/References/Messages/NAVADMIN/",
+    "category": "news_info",
+    "description": "Navy administrative messages"
+  },
+  {
+    "id": "alnavs",
+    "title": "ALNAVs",
+    "url": "https://www.secnav.navy.mil/ALNAVS/",
+    "category": "news_info",
+    "description": "All-Navy administrative messages"
+  },
+  {
+    "id": "secnav-instructions",
+    "title": "SECNAV instructions",
+    "url": "https://www.secnav.navy.mil/doni/",
+    "category": "news_info",
+    "description": "Department of the Navy Issuances — SECNAV/OPNAV instructions"
+  },
+  {
+    "id": "dod-releases",
+    "title": "DoD releases",
+    "url": "https://www.defense.gov/News/Releases/",
+    "category": "news_info",
+    "description": "Department of Defense news releases"
+  },
+  {
+    "id": "commandants-reading-list",
+    "title": "Commandant's Reading List",
+    "url": "https://grc-usmcu.libguides.com/CMCReadingList",
+    "category": "training_pme",
+    "description": "Official Commandant's professional reading list"
+  },
+  {
+    "id": "mctims",
+    "title": "MCTIMS",
+    "url": "https://mctims.usmc.mil",
+    "category": "training_pme",
+    "description": "Marine Corps Training Information Management System"
+  },
+  {
+    "id": "ews",
+    "title": "Expeditionary Warfare School",
+    "url": "https://www.usmcu.edu/EWS/",
+    "category": "training_pme",
+    "description": "EWS resident and nonresident programs"
+  },
+  {
+    "id": "csc",
+    "title": "Command & Staff College",
+    "url": "https://www.usmcu.edu/CSC/",
+    "category": "training_pme",
+    "description": "Command and Staff College resident and nonresident programs"
+  },
+  {
+    "id": "ompf-request",
+    "title": "OMPF request",
+    "url": "https://hrom.usmc.mil",
+    "category": "admin_pay",
+    "description": "Official Military Personnel File request portal"
+  },
+  {
+    "id": "awards-writing-guide",
+    "title": "Awards writing guide",
+    "url": "https://www.marines.mil/Resources/Publications/",
+    "category": "reference",
+    "description": "Award citation writing references and examples"
+  },
+  {
+    "id": "efitrep-eprofile",
+    "title": "eFitRep / eProFile",
+    "url": "https://hqmc.marines.mil",
+    "category": "admin_pay",
+    "description": "Electronic FitRep and ProFile submission"
+  },
+  {
+    "id": "board-results",
+    "title": "Board results",
+    "url": "https://hqmc.marines.mil/Boards/",
+    "category": "reference",
+    "description": "Selection and promotion board results"
+  },
+  {
+    "id": "mco-uniforms",
+    "title": "MCO P1020.34 (uniforms)",
+    "url": "https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1020.34/",
+    "category": "reference",
+    "description": "Marine Corps Uniform Regulations"
+  },
+  {
+    "id": "mcx",
+    "title": "Marine Corps Exchange",
+    "url": "https://www.mymcx.com",
+    "category": "benefits",
+    "description": "Marine Corps Exchange online shopping"
+  },
+  {
+    "id": "ribbon-rack-builder",
+    "title": "Ribbon rack builder",
+    "url": "https://marines.togetherweserved.com",
+    "category": "reference",
+    "description": "Build and check ribbon precedence order"
+  },
+  {
+    "id": "cac-pki-troubleshooting",
+    "title": "CAC/PKI troubleshooting",
+    "url": "https://www.cac.mil",
+    "category": "it_access",
+    "description": "CAC and PKI troubleshooting reference"
+  },
+  {
+    "id": "legal-assistance-locator",
+    "title": "Legal assistance locator",
+    "url": "https://www.jag.navy.mil",
+    "category": "benefits",
+    "description": "Find a Marine Corps/Navy legal assistance office"
+  },
+  {
+    "id": "ig-hotline",
+    "title": "IG hotline",
+    "url": "https://www.ig.usmc.mil",
+    "category": "reference",
+    "description": "Inspector General of the Marine Corps hotline"
+  },
+  {
+    "id": "pha",
+    "title": "PHA / periodic health assessment",
+    "url": "https://mods.army.mil",
+    "category": "benefits",
+    "description": "Periodic Health Assessment portal"
+  },
+  {
+    "id": "rped-career-planner",
+    "title": "Career planner (RPED)",
+    "url": "https://www.manpower.usmc.mil",
+    "category": "reserve",
+    "description": "Reserve Personnel Employment Directory career planning"
+  },
+  {
+    "id": "billet-search",
+    "title": "Billet search",
+    "url": "https://www.manpower.usmc.mil/BilletSearch/",
+    "category": "reserve",
+    "description": "Search open Reserve billets"
+  },
+  {
+    "id": "govt-travel-policy",
+    "title": "Government travel policy",
+    "url": "https://www.defensetravel.dod.mil/site/travelreg.cfm",
+    "category": "comms",
+    "description": "Joint Travel Regulations"
+  },
+  {
+    "id": "ngi-lodging",
+    "title": "Lodging (Navy Gateway Inns)",
+    "url": "https://www.dodlodging.net",
+    "category": "comms",
+    "description": "DoD/Navy Gateway Inns and Suites reservations"
+  },
+  {
+    "id": "mcen-portal",
+    "title": "MCEN portal",
+    "url": "https://portal.usmc.mil",
+    "category": "it_access",
+    "description": "Marine Corps Enterprise Network portal"
+  },
+  {
+    "id": "it-service-desk",
+    "title": "IT service desk",
+    "url": "https://hqmc.marines.mil/HelpDesk/",
+    "category": "it_access",
+    "description": "Marine Corps IT help desk"
+  },
+  {
+    "id": "joint-electronic-library",
+    "title": "Joint Electronic Library",
+    "url": "https://www.jcs.mil/Doctrine/",
+    "category": "reference",
+    "description": "Joint Chiefs of Staff doctrine and publications library"
+  },
+  {
+    "id": "white-house-briefings",
+    "title": "White House briefings",
+    "url": "https://www.whitehouse.gov/briefing-room/",
+    "category": "news_info",
+    "description": "White House press briefings and statements"
+  },
+  {
+    "id": "state-dept-press",
+    "title": "Dept. of State press releases",
+    "url": "https://www.state.gov/press-releases/",
+    "category": "news_info",
+    "description": "Department of State press releases"
+  },
+  {
+    "id": "dow-news",
+    "title": "Dept. of War (DoD) news",
+    "url": "https://www.war.gov/News/",
+    "category": "news_info",
+    "description": "Department of War news releases"
+  },
+  {
+    "id": "c-span",
+    "title": "C-SPAN",
+    "url": "https://www.c-span.org",
+    "category": "news_info",
+    "description": "Unedited coverage of government proceedings"
+  },
+  {
+    "id": "foreign-policy",
+    "title": "Foreign Policy",
+    "url": "https://foreignpolicy.com",
+    "category": "news_info",
+    "description": "Foreign policy news and analysis"
+  },
+  {
+    "id": "cfr",
+    "title": "Council on Foreign Relations",
+    "url": "https://www.cfr.org",
+    "category": "news_info",
+    "description": "Foreign relations research and analysis"
+  },
+  {
+    "id": "dod-mwr-libraries",
+    "title": "DoD MWR Libraries",
+    "url": "https://www.dodmwrlibraries.org",
+    "category": "benefits",
+    "description": "Digital library access for MWR patrons"
+  },
+  {
+    "id": "mccs",
+    "title": "Marine Corps Community Services",
+    "url": "https://www.usmc-mccs.org",
+    "category": "benefits",
+    "description": "MCCS programs, MWR, and family services"
+  },
+  {
+    "id": "semper-fit",
+    "title": "Semper Fit",
+    "url": "https://www.usmc-mccs.org/semperfit/",
+    "category": "benefits",
+    "description": "Marine Corps fitness and wellness programs"
   }
 ]
