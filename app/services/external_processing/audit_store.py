@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import threading
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -13,6 +14,11 @@ from app.schemas.external_processing import (
 
 MAX_AUDIT_ENTRIES = 200
 
+# Appends are read-modify-write; concurrent agents (e.g. a round table) must
+# not interleave them or entries are lost. Module-level because a fresh store
+# instance is created per audit record.
+_APPEND_LOCK = threading.Lock()
+
 
 class ExternalProcessingAuditStore:
     def __init__(self, root_dir: str | Path) -> None:
@@ -22,10 +28,11 @@ class ExternalProcessingAuditStore:
     def append(self, user_key: str | None, entry: ExternalProcessingAuditEntry) -> ExternalProcessingAuditEntry:
         key = user_key or "local"
         normalized = entry.model_copy(update={"user_key_digest": self.user_key_digest(key)})
-        log = self.get(key)
-        log.entries.append(normalized)
-        log.entries = log.entries[-MAX_AUDIT_ENTRIES:]
-        self._path(key).write_text(log.model_dump_json(indent=2), encoding="utf-8")
+        with _APPEND_LOCK:
+            log = self.get(key)
+            log.entries.append(normalized)
+            log.entries = log.entries[-MAX_AUDIT_ENTRIES:]
+            self._path(key).write_text(log.model_dump_json(indent=2), encoding="utf-8")
         return normalized
 
     def get(self, user_key: str | None) -> ExternalProcessingAuditLog:
