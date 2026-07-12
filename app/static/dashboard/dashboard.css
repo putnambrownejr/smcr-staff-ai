@@ -819,8 +819,19 @@ textarea {
   overflow-wrap: break-word;
 }
 
+/* Readiness hero — posture left, decisive action right of a divider */
 .readiness-panel {
-  border-top: 4px solid var(--field);
+  border-top: 3px solid var(--gold);
+}
+
+.readiness-primary .strip-label {
+  padding: 0;
+  background: transparent;
+  color: #8a94a0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .readiness-panel[data-posture="critical"] {
@@ -828,45 +839,85 @@ textarea {
 }
 
 .readiness-panel[data-posture="watch"] {
-  border-top-color: var(--amber);
+  border-top-color: var(--gold);
 }
 
 .readiness-shell {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 2.1fr);
 }
 
 .readiness-primary {
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--field-soft);
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 1.4fr);
+  grid-template-rows: auto auto 1fr;
+  column-gap: 22px;
+  align-items: start;
+  padding: 6px 4px;
 }
 
-.readiness-panel[data-posture="critical"] .readiness-primary {
-  background: var(--scarlet-soft);
+.readiness-primary > * {
+  grid-column: 1;
 }
 
-.readiness-panel[data-posture="watch"] .readiness-primary {
-  background: var(--amber-soft);
+.readiness-primary > .decisive-box {
+  grid-column: 2;
+  grid-row: 1 / span 3;
 }
 
 .readiness-primary h3 {
-  margin: 12px 0 0;
-  font-size: 1.34rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 0;
+  font-size: 1.3rem;
   line-height: 1.25;
 }
 
+.readiness-primary h3::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--field);
+  box-shadow: 0 0 0 4px rgba(201, 165, 74, 0.15);
+}
+
+.readiness-panel[data-posture="watch"] .readiness-primary h3::before {
+  background: var(--gold);
+}
+
+.readiness-panel[data-posture="critical"] .readiness-primary h3::before {
+  background: var(--scarlet);
+  box-shadow: 0 0 0 4px rgba(178, 31, 45, 0.18);
+}
+
 .decisive-box {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 0;
+  padding-left: 22px;
+  border-left: 2px solid var(--line);
+  align-self: stretch;
 }
 
 .decisive-box p {
   margin: 10px 0 0;
-  font-weight: 700;
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+@media (max-width: 980px) {
+  .readiness-primary {
+    grid-template-columns: 1fr;
+  }
+
+  .decisive-box {
+    padding-left: 0;
+    padding-top: 14px;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
 }
 
 .readiness-columns {
