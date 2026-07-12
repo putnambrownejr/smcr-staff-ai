@@ -132,17 +132,6 @@ PATCHES: list[tuple[str, str, str]] = [
         "    if (window.__SMCR_API_KEY__) headers[\"X-Local-API-Key\"] = window.__SMCR_API_KEY__;\n"
         "    return headers;\n"
         "  }\n"
-        "  _mapRealAction(a) {\n"
-        "    return {\n"
-        "      id: a.action_id,\n"
-        "      title: a.title,\n"
-        "      owner: a.owner || \"Unassigned\",\n"
-        "      due: a.suspense_date || \"unscheduled\",\n"
-        "      done: a.status === \"closed\" || a.status === \"complete\",\n"
-        "      notes: a.notes || \"\",\n"
-        "      editOpen: false,\n"
-        "    };\n"
-        "  }\n"
         "  async _loadRealWorkspace() {\n"
         "    this.userKey = this._resolveUserKey();\n"
         "    try {\n"
@@ -157,6 +146,47 @@ PATCHES: list[tuple[str, str, str]] = [
         "      this.setState({ workspaceLoadError: String((err && err.message) || err) });\n"
         "    }\n"
         "  }\n",
+        # NOTE: _mapRealAction is intentionally NOT defined here -- it's its own
+        # patch below ("add _mapRealAction helper"), inserted right after
+        # _apiHeaders. Defining it here too would embed its body as a substring
+        # of *this* patch's `new` text; the due-date patch that edits
+        # _mapRealAction's body would then make this patch's `new` text stop
+        # matching (idempotency check fails on substring, not method identity),
+        # causing this whole block to be silently re-inserted and duplicated on
+        # a second run. Learned this the hard way -- see git history.
+    ),
+    (
+        "add _mapRealAction helper (with due-date round-trip already applied)",
+        "  _apiHeaders(extra) {\n"
+        "    const headers = Object.assign({}, extra || {});\n"
+        "    if (window.__SMCR_API_KEY__) headers[\"X-Local-API-Key\"] = window.__SMCR_API_KEY__;\n"
+        "    return headers;\n"
+        "  }\n"
+        "  async _loadRealWorkspace() {\n",
+        "  _apiHeaders(extra) {\n"
+        "    const headers = Object.assign({}, extra || {});\n"
+        "    if (window.__SMCR_API_KEY__) headers[\"X-Local-API-Key\"] = window.__SMCR_API_KEY__;\n"
+        "    return headers;\n"
+        "  }\n"
+        '  _mapRealAction(a) {\n'
+        '    // addAction stashes free-text "due" as "Due: <text>\\n<rest>" in notes\n'
+        '    // (ActionRecord has no matching free-text field -- suspense_date is a\n'
+        '    // strict date and the UI supports non-date values like "overdue" or\n'
+        '    // "before drill"). Parse it back out here so it survives a reload\n'
+        '    // instead of only showing up in the Notes field.\n'
+        '    const notes = a.notes || "";\n'
+        '    const dueMatch = /^Due: ([^\\n]+)\\n?([\\s\\S]*)$/.exec(notes);\n'
+        '    return {\n'
+        '      id: a.action_id,\n'
+        '      title: a.title,\n'
+        '      owner: a.owner || "Unassigned",\n'
+        '      due: a.suspense_date || (dueMatch ? dueMatch[1] : "unscheduled"),\n'
+        '      done: a.status === "closed" || a.status === "complete",\n'
+        '      notes: dueMatch ? dueMatch[2] : notes,\n'
+        '      editOpen: false,\n'
+        '    };\n'
+        '  }\n'
+        "  async _loadRealWorkspace() {\n",
     ),
     (
         "toggleActionDone: PATCH /actions/{id} with optimistic update + rollback",
@@ -245,38 +275,6 @@ PATCHES: list[tuple[str, str, str]] = [
         "        this.setState((s) => ({ actions: s.actions.filter((a) => a.id !== tempId) }));\n"
         "        window.alert(\"Could not save this action to the server. It was not added.\");\n"
         "      });",
-    ),
-    (
-        "_mapRealAction: round-trip the due-date text stashed in notes on create",
-        '  _mapRealAction(a) {\n'
-        '    return {\n'
-        '      id: a.action_id,\n'
-        '      title: a.title,\n'
-        '      owner: a.owner || "Unassigned",\n'
-        '      due: a.suspense_date || "unscheduled",\n'
-        '      done: a.status === "closed" || a.status === "complete",\n'
-        '      notes: a.notes || "",\n'
-        '      editOpen: false,\n'
-        '    };\n'
-        '  }\n',
-        '  _mapRealAction(a) {\n'
-        '    // addAction stashes free-text "due" as "Due: <text>\\n<rest>" in notes\n'
-        '    // (ActionRecord has no matching free-text field -- suspense_date is a\n'
-        '    // strict date and the UI supports non-date values like "overdue" or\n'
-        '    // "before drill"). Parse it back out here so it survives a reload\n'
-        '    // instead of only showing up in the Notes field.\n'
-        '    const notes = a.notes || "";\n'
-        '    const dueMatch = /^Due: ([^\\n]+)\\n?([\\s\\S]*)$/.exec(notes);\n'
-        '    return {\n'
-        '      id: a.action_id,\n'
-        '      title: a.title,\n'
-        '      owner: a.owner || "Unassigned",\n'
-        '      due: a.suspense_date || (dueMatch ? dueMatch[1] : "unscheduled"),\n'
-        '      done: a.status === "closed" || a.status === "complete",\n'
-        '      notes: dueMatch ? dueMatch[2] : notes,\n'
-        '      editOpen: false,\n'
-        '    };\n'
-        '  }\n',
     ),
     (
         "componentDidMount: also load real feeds, links, and handoff/profile",
@@ -583,6 +581,626 @@ PATCHES: list[tuple[str, str, str]] = [
         '        this.setState((s) => ({ profileLastName: v, demoMode: s.demoModeManual ? s.demoMode : !(v.trim() || s.profileRank.trim()) }));\n'
         '        this._scheduleHandoffSave();\n'
         '      },\n',
+    ),
+    (
+        "componentDidMount: also load real notebook, fitreps, generations, and project list",
+        "  componentDidMount() {\n"
+        "    this._t = setInterval(() => this.setState({ now: new Date() }), 1000 * 30);\n"
+        "    this._loadRealWorkspace();\n"
+        "    this._loadRealFeeds();\n"
+        "    this._loadRealLinks();\n"
+        "    this._loadRealHandoff();",
+        "  componentDidMount() {\n"
+        "    this._t = setInterval(() => this.setState({ now: new Date() }), 1000 * 30);\n"
+        "    this._loadRealWorkspace();\n"
+        "    this._loadRealFeeds();\n"
+        "    this._loadRealLinks();\n"
+        "    this._loadRealHandoff();\n"
+        "    this._loadRealNotes();\n"
+        "    this._loadRealFitreps();\n"
+        "    this._loadRealGenerations();\n"
+        "    this._loadRealProjects();",
+    ),
+    (
+        "add User Docs helpers: notebook/fitreps/generations load + project list",
+        '  _saveHandoff() {\n'
+        '    if (!this.userKey) return;\n'
+        '    const base = this._handoffData || { user_key: this.userKey };\n'
+        '    const payload = Object.assign({}, base, {\n'
+        '      user_key: this.userKey,\n'
+        '      rank: this.state.profileRank || null,\n'
+        '      display_name: [this.state.profileRank, this.state.profileLastName].filter(Boolean).join(" ") || null,\n'
+        '      billet: this.state.profileBillet || null,\n'
+        '      unit_id: this.state.profileUnit || null,\n'
+        '    });\n'
+        '    fetch("/handoffs/" + encodeURIComponent(this.userKey), {\n'
+        '      method: "PUT",\n'
+        '      headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '      body: JSON.stringify(payload),\n'
+        '    })\n'
+        '      .then((res) => { if (!res.ok) throw new Error("save failed: " + res.status); return res.json(); })\n'
+        '      .then((body) => { this._handoffData = body.handoff; })\n'
+        '      .catch(() => {});\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+        '  _saveHandoff() {\n'
+        '    if (!this.userKey) return;\n'
+        '    const base = this._handoffData || { user_key: this.userKey };\n'
+        '    const payload = Object.assign({}, base, {\n'
+        '      user_key: this.userKey,\n'
+        '      rank: this.state.profileRank || null,\n'
+        '      display_name: [this.state.profileRank, this.state.profileLastName].filter(Boolean).join(" ") || null,\n'
+        '      billet: this.state.profileBillet || null,\n'
+        '      unit_id: this.state.profileUnit || null,\n'
+        '    });\n'
+        '    fetch("/handoffs/" + encodeURIComponent(this.userKey), {\n'
+        '      method: "PUT",\n'
+        '      headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '      body: JSON.stringify(payload),\n'
+        '    })\n'
+        '      .then((res) => { if (!res.ok) throw new Error("save failed: " + res.status); return res.json(); })\n'
+        '      .then((body) => { this._handoffData = body.handoff; })\n'
+        '      .catch(() => {});\n'
+        '  }\n'
+        '\n'
+        '  // --- User Docs: real backend wiring for the personal notebook, FitRep\n'
+        '  // writer, and staff-product generations from the Bench/Files workflow\n'
+        '  // tiles. Each category is a real markdown file under settings.user_docs_dir\n'
+        '  // (see app/services/user_docs/store.py), not a JSON blob like the other\n'
+        '  // domains above -- so these can also be moved into a real project folder.\n'
+        '  _isPending(id) {\n'
+        '    return typeof id === "string" && id.indexOf("pending-") === 0;\n'
+        '  }\n'
+        '\n'
+        '  // Notebook\n'
+        '  _mapRealNote(entry) {\n'
+        '    return { id: entry.id, title: entry.title, date: entry.updated_at.slice(0, 10), body: entry.body, archived: !!(entry.fields || {}).archived };\n'
+        '  }\n'
+        '  async _loadRealNotes() {\n'
+        '    try {\n'
+        '      const res = await fetch("/user-docs/notebook/" + encodeURIComponent(this.userKey), { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("notebook fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      const notes = data.map((entry) => this._mapRealNote(entry));\n'
+        '      const first = notes.find((n) => !n.archived) || notes[0];\n'
+        '      this.setState({ notes, activeNoteId: first ? first.id : null, draftTitle: first ? first.title : "", draftBody: first ? first.body : "" });\n'
+        '    } catch (err) {\n'
+        '      // Keep the built-in demo notes visible if this fails.\n'
+        '    }\n'
+        '  }\n'
+        '\n'
+        '  // FitReps\n'
+        '  _mapRealFitrep(entry) {\n'
+        '    return Object.assign({ id: entry.id, name: entry.title, archived: false }, entry.fields || {});\n'
+        '  }\n'
+        '  _fitrepPayload(f) {\n'
+        '    const fields = Object.assign({}, f);\n'
+        '    delete fields.id;\n'
+        '    delete fields.name;\n'
+        '    return { title: f.name, fields };\n'
+        '  }\n'
+        '  async _loadRealFitreps() {\n'
+        '    try {\n'
+        '      const res = await fetch("/user-docs/fitreps/" + encodeURIComponent(this.userKey), { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("fitreps fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      const fitreps = data.map((entry) => this._mapRealFitrep(entry));\n'
+        '      this.setState((s) => ({ fitreps, activeFitrepId: fitreps[0] ? fitreps[0].id : s.activeFitrepId }));\n'
+        '    } catch (err) {\n'
+        '      // Keep the built-in demo fitreps visible if this fails.\n'
+        '    }\n'
+        '  }\n'
+        '  _scheduleFitrepSave(id) {\n'
+        '    if (!id || this._isPending(id)) return;\n'
+        '    this._fitrepSaveTimers = this._fitrepSaveTimers || {};\n'
+        '    clearTimeout(this._fitrepSaveTimers[id]);\n'
+        '    this._fitrepSaveTimers[id] = setTimeout(() => this._saveFitrep(id), 800);\n'
+        '  }\n'
+        '  _saveFitrep(id) {\n'
+        '    const f = this.state.fitreps.find((x) => x.id === id);\n'
+        '    if (!f) return;\n'
+        '    fetch("/user-docs/fitreps/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(id), {\n'
+        '      method: "PATCH",\n'
+        '      headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '      body: JSON.stringify(this._fitrepPayload(f)),\n'
+        '    }).catch(() => {});\n'
+        '  }\n'
+        '\n'
+        '  // Generations (workflow-drafted staff products)\n'
+        '  _mapRealGeneration(entry) {\n'
+        '    const fields = entry.fields || {};\n'
+        '    return {\n'
+        '      id: entry.id,\n'
+        '      title: entry.title,\n'
+        '      templateType: fields.templateType,\n'
+        '      kind: fields.kind,\n'
+        '      path: fields.path || "",\n'
+        '      receiptsFolder: fields.receiptsFolder || "",\n'
+        '      receipts: fields.receipts || [],\n'
+        '      created: entry.created_at.slice(0, 10),\n'
+        '      data: fields.data || {},\n'
+        '    };\n'
+        '  }\n'
+        '  _generationPayload(d) {\n'
+        '    return {\n'
+        '      title: d.title,\n'
+        '      fields: {\n'
+        '        templateType: d.templateType,\n'
+        '        kind: d.kind,\n'
+        '        path: d.path,\n'
+        '        receiptsFolder: d.receiptsFolder,\n'
+        '        receipts: d.receipts,\n'
+        '        data: d.data,\n'
+        '      },\n'
+        '    };\n'
+        '  }\n'
+        '  async _loadRealGenerations() {\n'
+        '    try {\n'
+        '      const res = await fetch("/user-docs/generations/" + encodeURIComponent(this.userKey), { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("generations fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      this.setState({ workflowDocs: data.map((entry) => this._mapRealGeneration(entry)) });\n'
+        '    } catch (err) {\n'
+        '      // Keep whatever local drafts exist if this fails.\n'
+        '    }\n'
+        '  }\n'
+        '  _scheduleGenerationSave(id) {\n'
+        '    if (!id || this._isPending(id)) return;\n'
+        '    this._generationSaveTimers = this._generationSaveTimers || {};\n'
+        '    clearTimeout(this._generationSaveTimers[id]);\n'
+        '    this._generationSaveTimers[id] = setTimeout(() => this._saveGeneration(id), 800);\n'
+        '  }\n'
+        '  _saveGeneration(id) {\n'
+        '    const d = this.state.workflowDocs.find((x) => x.id === id);\n'
+        '    if (!d) return;\n'
+        '    fetch("/user-docs/generations/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(id), {\n'
+        '      method: "PATCH",\n'
+        '      headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '      body: JSON.stringify(this._generationPayload(d)),\n'
+        '    }).catch(() => {});\n'
+        '  }\n'
+        '\n'
+        '  // Real project folder names, for the "Save to project" dropdown\n'
+        '  async _loadRealProjects() {\n'
+        '    try {\n'
+        '      const res = await fetch("/user-docs/projects", { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("projects fetch failed: " + res.status);\n'
+        '      this._realProjectNames = await res.json();\n'
+        '      this.forceUpdate();\n'
+        '    } catch (err) {\n'
+        '      this._realProjectNames = [];\n'
+        '    }\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+    ),
+    (
+        "newNote: POST /user-docs/notebook",
+        '  newNote() {\n'
+        '    return () => {\n'
+        '      const id = Date.now();\n'
+        '      const n = { id, title: "Untitled note", date: "today", body: "", archived: false };\n'
+        '      this.setState((s) => ({ notes: [n, ...s.notes], activeNoteId: id, draftTitle: n.title, draftBody: "" }));\n'
+        '    };\n'
+        '  }\n',
+        '  newNote() {\n'
+        '    return () => {\n'
+        '      const tempId = "pending-" + Date.now();\n'
+        '      const n = { id: tempId, title: "Untitled note", date: "today", body: "", archived: false };\n'
+        '      this.setState((s) => ({ notes: [n, ...s.notes], activeNoteId: tempId, draftTitle: n.title, draftBody: "" }));\n'
+        '      fetch("/user-docs/notebook/" + encodeURIComponent(this.userKey), {\n'
+        '        method: "POST",\n'
+        '        headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '        body: JSON.stringify({ title: n.title, body: "" }),\n'
+        '      })\n'
+        '        .then((res) => res.json().then((body) => ({ ok: res.ok, body })))\n'
+        '        .then(({ ok, body }) => {\n'
+        '          if (!ok) throw new Error("save failed");\n'
+        '          const real = this._mapRealNote(body);\n'
+        '          this.setState((s) => ({\n'
+        '            notes: s.notes.map((x) => (x.id === tempId ? real : x)),\n'
+        '            activeNoteId: s.activeNoteId === tempId ? real.id : s.activeNoteId,\n'
+        '          }));\n'
+        '        })\n'
+        '        .catch(() => {\n'
+        '          this.setState((s) => ({ notes: s.notes.filter((x) => x.id !== tempId) }));\n'
+        '          window.alert("Could not save this note to the server. It was not added.");\n'
+        '        });\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "saveNote: PATCH /user-docs/notebook/{id}",
+        '  saveNote() {\n'
+        '    return () => {\n'
+        '      this.setState((s) => ({\n'
+        '        notes: s.notes.map((n) => (n.id === s.activeNoteId ? { ...n, title: s.draftTitle || "Untitled note", body: s.draftBody } : n)),\n'
+        '      }));\n'
+        '    };\n'
+        '  }\n',
+        '  saveNote() {\n'
+        '    return () => {\n'
+        '      const id = this.state.activeNoteId;\n'
+        '      const title = this.state.draftTitle || "Untitled note";\n'
+        '      const body = this.state.draftBody;\n'
+        '      this.setState((s) => ({ notes: s.notes.map((n) => (n.id === id ? { ...n, title, body } : n)) }));\n'
+        '      if (this._isPending(id)) return;\n'
+        '      fetch("/user-docs/notebook/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(id), {\n'
+        '        method: "PATCH",\n'
+        '        headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '        body: JSON.stringify({ title, body }),\n'
+        '      }).catch(() => window.alert("Could not save this note to the server."));\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "deleteNote: DELETE /user-docs/notebook/{id}",
+        '  deleteNote() {\n'
+        '    return () => {\n'
+        '      const n = this.state.notes.find((x) => x.id === this.state.activeNoteId);\n'
+        '      if (!window.confirm(`Permanently delete "${n ? n.title : "this note"}"? This cannot be undone.`)) return;\n'
+        '      this.setState((s) => {\n'
+        '        const notes = s.notes.filter((x) => x.id !== s.activeNoteId);\n'
+        '        const next = notes[0];\n'
+        '        return { notes, activeNoteId: next ? next.id : null, draftTitle: next ? next.title : "", draftBody: next ? next.body : "" };\n'
+        '      });\n'
+        '    };\n'
+        '  }\n',
+        '  deleteNote() {\n'
+        '    return () => {\n'
+        '      const n = this.state.notes.find((x) => x.id === this.state.activeNoteId);\n'
+        '      if (!window.confirm(`Permanently delete "${n ? n.title : "this note"}"? This cannot be undone.`)) return;\n'
+        '      const deletedId = this.state.activeNoteId;\n'
+        '      this.setState((s) => {\n'
+        '        const notes = s.notes.filter((x) => x.id !== s.activeNoteId);\n'
+        '        const next = notes[0];\n'
+        '        return { notes, activeNoteId: next ? next.id : null, draftTitle: next ? next.title : "", draftBody: next ? next.body : "" };\n'
+        '      });\n'
+        '      if (!this._isPending(deletedId)) {\n'
+        '        fetch("/user-docs/notebook/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(deletedId), { method: "DELETE", headers: this._apiHeaders() }).catch(() => {});\n'
+        '      }\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "archiveNote: persist the archived flag",
+        '  archiveNote(archived) {\n'
+        '    return () => {\n'
+        '      this.setState((s) => {\n'
+        '        const notes = s.notes.map((n) => (n.id === s.activeNoteId ? { ...n, archived } : n));\n'
+        '        const pool = notes.filter((n) => !!n.archived === (s.noteView === "archived"));\n'
+        '        const next = pool[0] || null;\n'
+        '        return { notes, activeNoteId: next ? next.id : null, draftTitle: next ? next.title : "", draftBody: next ? next.body : "" };\n'
+        '      });\n'
+        '    };\n'
+        '  }\n',
+        '  archiveNote(archived) {\n'
+        '    return () => {\n'
+        '      const targetId = this.state.activeNoteId;\n'
+        '      this.setState((s) => {\n'
+        '        const notes = s.notes.map((n) => (n.id === s.activeNoteId ? { ...n, archived } : n));\n'
+        '        const pool = notes.filter((n) => !!n.archived === (s.noteView === "archived"));\n'
+        '        const next = pool[0] || null;\n'
+        '        return { notes, activeNoteId: next ? next.id : null, draftTitle: next ? next.title : "", draftBody: next ? next.body : "" };\n'
+        '      });\n'
+        '      if (!this._isPending(targetId)) {\n'
+        '        fetch("/user-docs/notebook/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(targetId), {\n'
+        '          method: "PATCH",\n'
+        '          headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '          body: JSON.stringify({ fields: { archived } }),\n'
+        '        }).catch(() => {});\n'
+        '      }\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "newFitrep: POST /user-docs/fitreps",
+        '  newFitrep() {\n'
+        '    return () => {\n'
+        '      const id = Date.now();\n'
+        '      const f = { id, name: "New Marine", rank: "", unit: "", period: "", role: "RS", scores: { mission: 4, individual: 4, leadership: 4, intellect: 4, fitness: 4 }, statement: "", notes: "", tree: 0, roComments: "", archived: false };\n'
+        '      this.setState((s) => ({ fitreps: [f, ...s.fitreps], activeFitrepId: id }));\n'
+        '    };\n'
+        '  }\n',
+        '  newFitrep() {\n'
+        '    return () => {\n'
+        '      const tempId = "pending-" + Date.now();\n'
+        '      const f = { id: tempId, name: "New Marine", rank: "", unit: "", period: "", role: "RS", scores: { mission: 4, individual: 4, leadership: 4, intellect: 4, fitness: 4 }, statement: "", notes: "", tree: 0, roComments: "", archived: false };\n'
+        '      this.setState((s) => ({ fitreps: [f, ...s.fitreps], activeFitrepId: tempId }));\n'
+        '      fetch("/user-docs/fitreps/" + encodeURIComponent(this.userKey), {\n'
+        '        method: "POST",\n'
+        '        headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '        body: JSON.stringify(this._fitrepPayload(f)),\n'
+        '      })\n'
+        '        .then((res) => res.json().then((body) => ({ ok: res.ok, body })))\n'
+        '        .then(({ ok, body }) => {\n'
+        '          if (!ok) throw new Error("save failed");\n'
+        '          const real = this._mapRealFitrep(body);\n'
+        '          this.setState((s) => ({\n'
+        '            fitreps: s.fitreps.map((x) => (x.id === tempId ? real : x)),\n'
+        '            activeFitrepId: s.activeFitrepId === tempId ? real.id : s.activeFitrepId,\n'
+        '          }));\n'
+        '        })\n'
+        '        .catch(() => {\n'
+        '          this.setState((s) => ({ fitreps: s.fitreps.filter((x) => x.id !== tempId) }));\n'
+        '          window.alert("Could not save this report to the server. It was not added.");\n'
+        '        });\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "updateFitrepField: debounce a PATCH /user-docs/fitreps/{id}",
+        '  updateFitrepField(field) {\n'
+        '    return (e) => {\n'
+        '      const val = e.target.value;\n'
+        '      this.setState((s) => ({ fitreps: s.fitreps.map((f) => (f.id === s.activeFitrepId ? { ...f, [field]: val } : f)) }));\n'
+        '    };\n'
+        '  }\n',
+        '  updateFitrepField(field) {\n'
+        '    return (e) => {\n'
+        '      const val = e.target.value;\n'
+        '      this.setState((s) => ({ fitreps: s.fitreps.map((f) => (f.id === s.activeFitrepId ? { ...f, [field]: val } : f)) }));\n'
+        '      this._scheduleFitrepSave(this.state.activeFitrepId);\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "setFitrepRole: debounce a PATCH /user-docs/fitreps/{id}",
+        '  setFitrepRole(role) {\n'
+        '    return () => this.setState((s) => ({ fitreps: s.fitreps.map((f) => (f.id === s.activeFitrepId ? { ...f, role } : f)) }));\n'
+        '  }\n',
+        '  setFitrepRole(role) {\n'
+        '    return () => {\n'
+        '      this.setState((s) => ({ fitreps: s.fitreps.map((f) => (f.id === s.activeFitrepId ? { ...f, role } : f)) }));\n'
+        '      this._scheduleFitrepSave(this.state.activeFitrepId);\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "updateFitrepScore: debounce a PATCH /user-docs/fitreps/{id}",
+        '  updateFitrepScore(traitId) {\n'
+        '    return (e) => {\n'
+        '      const val = parseInt(e.target.value, 10);\n'
+        '      this.setState((s) => ({ fitreps: s.fitreps.map((f) => (f.id === s.activeFitrepId ? { ...f, scores: { ...f.scores, [traitId]: val } } : f)) }));\n'
+        '    };\n'
+        '  }\n',
+        '  updateFitrepScore(traitId) {\n'
+        '    return (e) => {\n'
+        '      const val = parseInt(e.target.value, 10);\n'
+        '      this.setState((s) => ({ fitreps: s.fitreps.map((f) => (f.id === s.activeFitrepId ? { ...f, scores: { ...f.scores, [traitId]: val } } : f)) }));\n'
+        '      this._scheduleFitrepSave(this.state.activeFitrepId);\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "deleteFitrep: DELETE /user-docs/fitreps/{id}",
+        '  deleteFitrep() {\n'
+        '    return () => {\n'
+        '      const active = this.state.fitreps.find((f) => f.id === this.state.activeFitrepId);\n'
+        '      const name = active ? active.name : "this report";\n'
+        '      if (!window.confirm(`Permanently delete the tracked report for ${name}? This cannot be undone. Consider Archive instead if you just want it out of the active list.`)) return;\n'
+        '      this.setState((s) => {\n'
+        '        const fitreps = s.fitreps.filter((f) => f.id !== s.activeFitrepId);\n'
+        '        const visible = fitreps.filter((f) => !f.archived);\n'
+        '        return { fitreps, activeFitrepId: visible[0] ? visible[0].id : (fitreps[0] ? fitreps[0].id : null) };\n'
+        '      });\n'
+        '    };\n'
+        '  }\n',
+        '  deleteFitrep() {\n'
+        '    return () => {\n'
+        '      const active = this.state.fitreps.find((f) => f.id === this.state.activeFitrepId);\n'
+        '      const name = active ? active.name : "this report";\n'
+        '      if (!window.confirm(`Permanently delete the tracked report for ${name}? This cannot be undone. Consider Archive instead if you just want it out of the active list.`)) return;\n'
+        '      const deletedId = this.state.activeFitrepId;\n'
+        '      this.setState((s) => {\n'
+        '        const fitreps = s.fitreps.filter((f) => f.id !== s.activeFitrepId);\n'
+        '        const visible = fitreps.filter((f) => !f.archived);\n'
+        '        return { fitreps, activeFitrepId: visible[0] ? visible[0].id : (fitreps[0] ? fitreps[0].id : null) };\n'
+        '      });\n'
+        '      if (!this._isPending(deletedId)) {\n'
+        '        fetch("/user-docs/fitreps/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(deletedId), { method: "DELETE", headers: this._apiHeaders() }).catch(() => {});\n'
+        '      }\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "archiveFitrep: persist the archived flag",
+        '  archiveFitrep(archived) {\n'
+        '    return () => {\n'
+        '      this.setState((s) => {\n'
+        '        const fitreps = s.fitreps.map((f) => (f.id === s.activeFitrepId ? { ...f, archived } : f));\n'
+        '        const pool = fitreps.filter((f) => !!f.archived === (s.fitrepView === "archived"));\n'
+        '        return { fitreps, activeFitrepId: pool[0] ? pool[0].id : null };\n'
+        '      });\n'
+        '    };\n'
+        '  }\n',
+        '  archiveFitrep(archived) {\n'
+        '    return () => {\n'
+        '      const targetId = this.state.activeFitrepId;\n'
+        '      this.setState((s) => {\n'
+        '        const fitreps = s.fitreps.map((f) => (f.id === s.activeFitrepId ? { ...f, archived } : f));\n'
+        '        const pool = fitreps.filter((f) => !!f.archived === (s.fitrepView === "archived"));\n'
+        '        return { fitreps, activeFitrepId: pool[0] ? pool[0].id : null };\n'
+        '      });\n'
+        '      this._scheduleFitrepSave(targetId);\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "setTree: debounce a PATCH /user-docs/fitreps/{id}",
+        '  setTree(n) {\n'
+        '    return () => this.setState((s) => ({ fitreps: s.fitreps.map((f) => (f.id === s.activeFitrepId ? { ...f, tree: n } : f)) }));\n'
+        '  }\n',
+        '  setTree(n) {\n'
+        '    return () => {\n'
+        '      this.setState((s) => ({ fitreps: s.fitreps.map((f) => (f.id === s.activeFitrepId ? { ...f, tree: n } : f)) }));\n'
+        '      this._scheduleFitrepSave(this.state.activeFitrepId);\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "createWorkflowDoc: POST /user-docs/generations",
+        '  createWorkflowDoc(w) {\n'
+        '    return () => {\n'
+        '      const id = Date.now();\n'
+        '      const slug = w.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");\n'
+        '      const tpl = Component.WORKFLOW_TEMPLATES[w.templateType];\n'
+        '      const data = {};\n'
+        '      tpl.fields.forEach((f) => { data[f.key] = ""; });\n'
+        '      if (w.templateType === "awards") data.awardType = Component.AWARD_TYPES[0].value;\n'
+        '      const doc = {\n'
+        '        id, title: w.title, templateType: w.templateType, kind: w.kind,\n'
+        '        path: `projects/_drafts/${slug}-${id}.md`,\n'
+        '        receiptsFolder: `projects/_drafts/${slug}-${id}-receipts/`,\n'
+        '        receipts: [],\n'
+        '        created: "today",\n'
+        '        data,\n'
+        '      };\n'
+        '      this.setState((s) => ({ workflowDocs: [doc, ...s.workflowDocs], workflowEditorId: id }));\n'
+        '    };\n'
+        '  }\n',
+        '  createWorkflowDoc(w) {\n'
+        '    return () => {\n'
+        '      const tempId = "pending-" + Date.now();\n'
+        '      const slug = w.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");\n'
+        '      const tpl = Component.WORKFLOW_TEMPLATES[w.templateType];\n'
+        '      const data = {};\n'
+        '      tpl.fields.forEach((f) => { data[f.key] = ""; });\n'
+        '      if (w.templateType === "awards") data.awardType = Component.AWARD_TYPES[0].value;\n'
+        '      const doc = {\n'
+        '        id: tempId, title: w.title, templateType: w.templateType, kind: w.kind,\n'
+        '        path: `User Docs/Generations/${slug}-${tempId}.md`,\n'
+        '        receiptsFolder: `projects/_drafts/${slug}-${tempId}-receipts/`,\n'
+        '        receipts: [],\n'
+        '        created: "today",\n'
+        '        data,\n'
+        '      };\n'
+        '      this.setState((s) => ({ workflowDocs: [doc, ...s.workflowDocs], workflowEditorId: tempId }));\n'
+        '      fetch("/user-docs/generations/" + encodeURIComponent(this.userKey), {\n'
+        '        method: "POST",\n'
+        '        headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '        body: JSON.stringify(this._generationPayload(doc)),\n'
+        '      })\n'
+        '        .then((res) => res.json().then((body) => ({ ok: res.ok, body })))\n'
+        '        .then(({ ok, body }) => {\n'
+        '          if (!ok) throw new Error("save failed");\n'
+        '          const real = this._mapRealGeneration(body);\n'
+        '          this.setState((s) => ({\n'
+        '            workflowDocs: s.workflowDocs.map((x) => (x.id === tempId ? real : x)),\n'
+        '            workflowEditorId: s.workflowEditorId === tempId ? real.id : s.workflowEditorId,\n'
+        '          }));\n'
+        '        })\n'
+        '        .catch(() => {\n'
+        '          this.setState((s) => ({ workflowDocs: s.workflowDocs.filter((x) => x.id !== tempId) }));\n'
+        '          window.alert("Could not save this draft to the server. It was not added.");\n'
+        '        });\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "updateWorkflowField: debounce a PATCH /user-docs/generations/{id}",
+        '  updateWorkflowField(id, field) {\n'
+        '    return (e) => {\n'
+        '      const val = e.target.value;\n'
+        '      this.setState((s) => ({ workflowDocs: s.workflowDocs.map((d) => (d.id === id ? { ...d, data: { ...d.data, [field]: val } } : d)) }));\n'
+        '    };\n'
+        '  }\n',
+        '  updateWorkflowField(id, field) {\n'
+        '    return (e) => {\n'
+        '      const val = e.target.value;\n'
+        '      this.setState((s) => ({ workflowDocs: s.workflowDocs.map((d) => (d.id === id ? { ...d, data: { ...d.data, [field]: val } } : d)) }));\n'
+        '      this._scheduleGenerationSave(id);\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "deleteWorkflowDoc: DELETE /user-docs/generations/{id}",
+        '  deleteWorkflowDoc(id) {\n'
+        '    return () => {\n'
+        '      if (!window.confirm("Delete this draft? This cannot be undone.")) return;\n'
+        '      this.setState((s) => ({ workflowDocs: s.workflowDocs.filter((d) => d.id !== id), workflowEditorId: s.workflowEditorId === id ? null : s.workflowEditorId }));\n'
+        '    };\n'
+        '  }\n',
+        '  deleteWorkflowDoc(id) {\n'
+        '    return () => {\n'
+        '      if (!window.confirm("Delete this draft? This cannot be undone.")) return;\n'
+        '      this.setState((s) => ({ workflowDocs: s.workflowDocs.filter((d) => d.id !== id), workflowEditorId: s.workflowEditorId === id ? null : s.workflowEditorId }));\n'
+        '      if (!this._isPending(id)) {\n'
+        '        fetch("/user-docs/generations/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(id), { method: "DELETE", headers: this._apiHeaders() }).catch(() => {});\n'
+        '      }\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "moveWorkflowDocToProject: real POST /user-docs/generations/{id}/save-to-project",
+        '  moveWorkflowDocToProject(docId) {\n'
+        '    return () => {\n'
+        '      const folder = this.state.draftMoveTarget[docId];\n'
+        '      if (!folder) return;\n'
+        '      this.setState((s) => {\n'
+        '        const doc = s.workflowDocs.find((d) => d.id === docId);\n'
+        '        if (!doc) return null;\n'
+        '        const slug = doc.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");\n'
+        '        const newPath = `projects/${folder}/${slug}.md`;\n'
+        '        const benchCards = s.benchCards.map((c) => (c.title !== "Project files" ? c : {\n'
+        '          ...c,\n'
+        '          items: [...c.items, { name: doc.title, meta: "moved draft", path: newPath }],\n'
+        '        }));\n'
+        '        return {\n'
+        '          benchCards,\n'
+        '          workflowDocs: s.workflowDocs.filter((d) => d.id !== docId),\n'
+        '          workflowEditorId: s.workflowEditorId === docId ? null : s.workflowEditorId,\n'
+        '        };\n'
+        '      });\n'
+        '    };\n'
+        '  }\n',
+        '  moveWorkflowDocToProject(docId) {\n'
+        '    return () => {\n'
+        '      const folder = this.state.draftMoveTarget[docId];\n'
+        '      if (!folder) return;\n'
+        '      const doc = this.state.workflowDocs.find((d) => d.id === docId);\n'
+        '      if (!doc) return;\n'
+        '      const finish = (newPath) => {\n'
+        '        this.setState((s) => {\n'
+        '          const benchCards = s.benchCards.map((c) => (c.title !== "Project files" ? c : {\n'
+        '            ...c,\n'
+        '            items: [...c.items, { name: doc.title, meta: "moved draft", path: newPath }],\n'
+        '          }));\n'
+        '          return {\n'
+        '            benchCards,\n'
+        '            workflowDocs: s.workflowDocs.filter((d) => d.id !== docId),\n'
+        '            workflowEditorId: s.workflowEditorId === docId ? null : s.workflowEditorId,\n'
+        '          };\n'
+        '        });\n'
+        '      };\n'
+        '      if (this._isPending(docId)) {\n'
+        '        const slug = doc.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");\n'
+        '        finish(`projects/${folder}/${slug}.md`);\n'
+        '        return;\n'
+        '      }\n'
+        '      fetch("/user-docs/generations/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(docId) + "/save-to-project", {\n'
+        '        method: "POST",\n'
+        '        headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '        body: JSON.stringify({ project: folder }),\n'
+        '      })\n'
+        '        .then((res) => res.json().then((body) => ({ ok: res.ok, body })))\n'
+        '        .then(({ ok, body }) => {\n'
+        '          if (!ok) throw new Error("save failed");\n'
+        '          finish(body.path);\n'
+        '          this._loadRealProjects();\n'
+        '        })\n'
+        '        .catch(() => window.alert("Could not save this draft to the project. It is still in Drafted files."));\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "projectFolderNames: include real project folders alongside the local bench card list",
+        '    const projectFolderNames = ((this.state.benchCards.find((c) => c.title === "Project files") || { items: [] }).items || []).map((it) => it.name);\n',
+        '    const projectFolderNames = Array.from(new Set([\n'
+        '      ...((this.state.benchCards.find((c) => c.title === "Project files") || { items: [] }).items || []).map((it) => it.name),\n'
+        '      ...(this._realProjectNames || []),\n'
+        '    ]));\n',
     ),
 ]
 

@@ -182,6 +182,55 @@ def test_reveal_rejects_paths_outside_repo_root(monkeypatch: pytest.MonkeyPatch)
     assert opened == []
 
 
+def test_reveal_falls_back_to_local_state_root_for_project_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # projects_dir has a computed static default baked in at Settings class
+    # definition time (see app/core/config.py), so setting SMCR_STAFF_AI_HOME
+    # here wouldn't retroactively change it -- monkeypatch the cached
+    # settings instance's projects_dir attribute directly instead.
+    from app.core.config import get_settings
+
+    projects_dir = tmp_path / "projects"
+    products_dir = projects_dir / "at-2026" / "products"
+    products_dir.mkdir(parents=True)
+    (products_dir / "sitrep.md").write_text("content", encoding="utf-8")
+    monkeypatch.setattr(get_settings(), "projects_dir", str(projects_dir))
+    opened: list[Path] = []
+    monkeypatch.setattr(dashboard_routes, "_reveal_in_file_explorer", opened.append)
+    client = TestClient(app)
+
+    response = client.get(
+        "/dashboard/files/reveal",
+        params={"path": "projects/at-2026/products/sitrep.md"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "opened"
+    assert len(opened) == 1
+    assert opened[0].name == "sitrep.md"
+
+
+def test_reveal_rejects_traversal_that_would_escape_local_state_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "projects_dir", str(tmp_path / "projects"))
+    opened: list[Path] = []
+    monkeypatch.setattr(dashboard_routes, "_reveal_in_file_explorer", opened.append)
+    client = TestClient(app)
+
+    response = client.get(
+        "/dashboard/files/reveal",
+        params={"path": "../../../../outside.txt"},
+    )
+
+    assert response.status_code == 403
+    assert opened == []
+
+
 def test_reveal_opens_existing_file_and_strips_fragment(monkeypatch: pytest.MonkeyPatch) -> None:
     opened: list[Path] = []
     monkeypatch.setattr(dashboard_routes, "_reveal_in_file_explorer", opened.append)

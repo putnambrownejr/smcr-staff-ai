@@ -110,15 +110,39 @@ def _resolve_reveal_target(raw: str) -> tuple[Path, bool]:
     if not cleaned:
         raise HTTPException(status_code=400, detail="No path provided.")
     candidate = Path(cleaned)
-    if not candidate.is_absolute():
-        candidate = REPO_ROOT / cleaned
-    try:
-        resolved = candidate.resolve()
-    except OSError as exc:
-        raise HTTPException(status_code=400, detail=f"Invalid path: {raw}") from exc
-    root = REPO_ROOT.resolve()
-    if not resolved.is_relative_to(root):
-        raise HTTPException(status_code=403, detail="Path is outside the repo root.")
+    repo_root = REPO_ROOT.resolve()
+
+    # projects_dir is "{local_state_root}/projects" (see app/core/config.py),
+    # so its parent is the local state root -- the same root User Docs and
+    # every other local store lives under. Deriving it this way (rather than
+    # importing default_local_state_root separately) respects SMCR_STAFF_AI_HOME
+    # overrides and test fixtures that override projects_dir directly.
+    local_state_root = Path(get_settings().projects_dir).resolve().parent
+
+    if candidate.is_absolute():
+        resolved = _safe_resolve(candidate, raw)
+        allowed_roots = [repo_root, local_state_root]
+        root = next((r for r in allowed_roots if resolved.is_relative_to(r)), None)
+        if root is None:
+            raise HTTPException(status_code=403, detail="Path is outside the allowed roots.")
+    else:
+        # Bundle-referenced paths are usually repo-relative (doctrine/seed
+        # data committed to the repo). "projects/..." and "User Docs/..."
+        # paths written by save-to-project live under the local state root
+        # instead (see app/services/user_docs/store.py). Join against each
+        # root and keep only candidates that stayed inside their own root
+        # (a ".." in `cleaned` could otherwise escape either one) -- prefer
+        # whichever candidate actually exists, repo root breaking ties.
+        candidates: list[tuple[Path, Path]] = []
+        for candidate_root in (repo_root, local_state_root):
+            joined = _safe_resolve(candidate_root / cleaned, raw)
+            if joined.is_relative_to(candidate_root):
+                candidates.append((candidate_root, joined))
+        if not candidates:
+            raise HTTPException(status_code=403, detail="Path is outside the allowed roots.")
+        existing = [c for c in candidates if c[1].exists()]
+        root, resolved = existing[0] if existing else candidates[0]
+
     requested = resolved
     # Demo/seed items may reference paths that do not exist yet; fall back to
     # the nearest existing ancestor so the button still lands somewhere useful.
@@ -127,6 +151,13 @@ def _resolve_reveal_target(raw: str) -> tuple[Path, bool]:
     while not resolved.exists() and resolved != root:
         resolved = resolved.parent
     return resolved, resolved == requested
+
+
+def _safe_resolve(path: Path, raw: str) -> Path:
+    try:
+        return path.resolve()
+    except OSError as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid path: {raw}") from exc
 
 
 def _reveal_in_file_explorer(target: Path) -> None:

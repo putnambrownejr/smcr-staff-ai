@@ -49,6 +49,7 @@ from app.api.routes import (
     training,
     travel_cases,
     user_context,
+    user_docs,
     user_profile,
 )
 from app.core.config import Settings, ensure_storage_dirs, get_settings
@@ -99,6 +100,7 @@ def create_app() -> FastAPI:
     app.include_router(reading_state.router)
     app.include_router(bench_sections.router)
     app.include_router(resource_links.router)
+    app.include_router(user_docs.router)
     app.include_router(user_profile.router)
     app.include_router(section_memory.router)
     app.include_router(maradmins.router)

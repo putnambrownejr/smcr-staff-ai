@@ -132,6 +132,10 @@ def default_projects_dir() -> Path:
     return default_local_state_root() / "projects"
 
 
+def default_user_docs_dir() -> Path:
+    return default_local_state_root() / "User Docs"
+
+
 def default_database_url() -> str:
     database_path = default_local_state_root() / "smcr_staff_ai.db"
     return f"sqlite:///{database_path.as_posix()}"
@@ -170,6 +174,7 @@ class Settings(BaseSettings):
     custom_mos_recipes_storage_dir: str = str(default_custom_mos_recipes_dir())
     external_processing_audits_storage_dir: str = str(default_external_processing_audits_dir())
     projects_dir: str = str(default_projects_dir())
+    user_docs_dir: str = str(default_user_docs_dir())
     local_api_key: str | None = None
     max_upload_bytes: int = 50_000_000
     public_source_only: bool = True
@@ -210,6 +215,7 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.custom_mos_recipes_storage_dir),
         Path(settings.external_processing_audits_storage_dir),
         Path(settings.projects_dir),
+        Path(settings.user_docs_dir),
     ]
 
 
