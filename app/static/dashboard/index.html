@@ -10,21 +10,25 @@
     <a class="skip-link" href="#dashboard-main">Skip to dashboard content</a>
     <div class="app-shell">
       <header class="topbar">
-        <div class="title-stack">
-          <p class="service-mark">UNCLASSIFIED advisory workspace</p>
-          <h1>SMCR Staff AI Dashboard</h1>
-          <p class="subhead">Readiness, continuity, staff products, and local context in one working board.</p>
-          <!-- A5: mode indicator so users always know which workspace is active -->
-          <span id="mode-badge" class="mode-badge" data-mode="demo">Demo mode</span>
+        <div class="topbar-identity">
+          <div class="topbar-crest" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.35 6.53 6.93.18-5.5 4.22 1.97 6.65L12 15.6l-5.75 3.98 1.97-6.65-5.5-4.22 6.93-.18z"/></svg>
+          </div>
+          <div class="title-stack">
+            <p class="service-mark">Unclassified &middot; advisory workspace</p>
+            <h1>SMCR Staff AI Dashboard</h1>
+            <p class="subhead sr-only">Readiness, continuity, staff products, and local context in one working board.</p>
+          </div>
         </div>
         <div class="status-cluster timezone-cluster">
           <div class="timezone-panel">
-            <div class="timezone-panel-head">
-              <span class="strip-label">Time watch</span>
+            <div class="topbar-clock-row">
+              <div id="timezone-display" class="timezone-display" aria-live="polite"></div>
               <!-- A8: aria-expanded reflects open/closed state of the timezone control panel -->
-              <button type="button" class="secondary timezone-toggle" id="toggle-timezone-panel" aria-expanded="false" aria-controls="timezone-controls">Time zones</button>
+              <button type="button" class="secondary timezone-toggle" id="toggle-timezone-panel" aria-expanded="false" aria-controls="timezone-controls" title="Choose visible clocks">Time zones</button>
+              <!-- A5: mode indicator so users always know which workspace is active -->
+              <span id="mode-badge" class="mode-badge" data-mode="demo">Demo mode</span>
             </div>
-            <div id="timezone-display" class="timezone-display" aria-live="polite"></div>
             <div id="timezone-controls" class="timezone-controls is-hidden">
               <p class="helper-text">Choose which clocks stay visible in this browser.</p>
               <div id="timezone-option-list" class="timezone-option-list"></div>
@@ -2029,7 +2033,7 @@
     <script>
       (function loadDashboardAssets() {
         const staticBase = window.location.protocol === "file:" ? "." : "/static/dashboard";
-        const assetVersion = "20260711b";
+        const assetVersion = "20260712a";
         const stylesheet = document.getElementById("dashboard-style");
         stylesheet.href = `${staticBase}/dashboard.css?v=${assetVersion}`;
 
