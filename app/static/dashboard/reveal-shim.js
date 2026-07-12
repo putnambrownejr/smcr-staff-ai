@@ -7,6 +7,7 @@
 // "enter your repo root" prompt with the real repo root the server injected.
 (function () {
   var ROOT = (window.__SMCR_REPO_ROOT__ || "").replace(/\/+$/, "");
+  var API_KEY = window.__SMCR_API_KEY__ || "";
   var origOpen = window.open.bind(window);
   var origPrompt = window.prompt.bind(window);
 
@@ -20,9 +21,9 @@
   window.open = function (url, target, features) {
     if (typeof url === "string" && url.indexOf("file://") === 0) {
       var path = url.slice("file://".length);
-      fetch("/dashboard/files/reveal?path=" + encodeURIComponent(path), {
-        headers: { "X-SMCR-Dashboard": "1" }
-      })
+      var headers = {};
+      if (API_KEY) headers["X-Local-API-Key"] = API_KEY;
+      fetch("/dashboard/files/reveal?path=" + encodeURIComponent(path), { headers: headers })
         .then(function (res) {
           return res
             .json()
@@ -32,6 +33,8 @@
         .then(function (r) {
           if (!r.ok) {
             window.alert("Could not open file location: " + (r.body.detail || "unknown error"));
+          } else if (r.body.status === "opened_fallback") {
+            window.alert("That exact file/folder doesn't exist yet — opened the nearest folder that does: " + r.body.resolved);
           }
         })
         .catch(function () {

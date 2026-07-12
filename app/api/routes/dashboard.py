@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 
 from app.core.auth import LocalApiKeyDependency
@@ -75,9 +75,16 @@ def get_dashboard() -> HTMLResponse:
     # The dashboard is a compiled, self-contained bundle (do not hand-edit it).
     # File-open buttons inside it target file:// URLs, which browsers block, so
     # inject a shim at serve time that reroutes them to /dashboard/files/reveal.
+    # The shim also needs the configured local API key (if any) so its request
+    # passes the same LocalApiKeyDependency gate every other write-capable route
+    # uses — this page is same-origin/loopback-only, so handing it back the key
+    # the user already configured is no different than the key living in the
+    # workspace passkey field the user types it into elsewhere in the app.
     html = _DASHBOARD_HTML.read_text(encoding="utf-8")
+    api_key = get_settings().local_api_key or ""
     shim_tags = (
-        f"<script>window.__SMCR_REPO_ROOT__ = {json.dumps(REPO_ROOT.as_posix())};</script>"
+        f"<script>window.__SMCR_REPO_ROOT__ = {json.dumps(REPO_ROOT.as_posix())};"
+        f"window.__SMCR_API_KEY__ = {json.dumps(api_key)};</script>"
         '<script src="/static/dashboard/reveal-shim.js"></script>'
     )
     html = html.replace("<head>", "<head>" + shim_tags, 1)
@@ -87,19 +94,18 @@ def get_dashboard() -> HTMLResponse:
 @router.get(
     "/dashboard/files/reveal",
     summary="Open the OS file explorer at a repo path requested by a dashboard button",
+    dependencies=[LocalApiKeyDependency],
 )
-def reveal_file_location(
-    path: str,
-    x_smcr_dashboard: Annotated[str | None, Header()] = None,
-) -> dict[str, str]:
-    if x_smcr_dashboard != "1":
-        raise HTTPException(status_code=403, detail="This endpoint only serves the local dashboard.")
-    target = _resolve_reveal_target(path)
+def reveal_file_location(path: str) -> dict[str, str]:
+    target, matched_request = _resolve_reveal_target(path)
     _reveal_in_file_explorer(target)
-    return {"status": "opened", "resolved": target.as_posix()}
+    return {
+        "status": "opened" if matched_request else "opened_fallback",
+        "resolved": target.as_posix(),
+    }
 
 
-def _resolve_reveal_target(raw: str) -> Path:
+def _resolve_reveal_target(raw: str) -> tuple[Path, bool]:
     cleaned = raw.split("#", 1)[0].strip().replace("\\", "/")
     if not cleaned:
         raise HTTPException(status_code=400, detail="No path provided.")
@@ -113,11 +119,14 @@ def _resolve_reveal_target(raw: str) -> Path:
     root = REPO_ROOT.resolve()
     if not resolved.is_relative_to(root):
         raise HTTPException(status_code=403, detail="Path is outside the repo root.")
+    requested = resolved
     # Demo/seed items may reference paths that do not exist yet; fall back to
     # the nearest existing ancestor so the button still lands somewhere useful.
+    # The caller is told when this happened (matched_request=False) instead of
+    # silently reporting success for a path it never actually opened.
     while not resolved.exists() and resolved != root:
         resolved = resolved.parent
-    return resolved
+    return resolved, resolved == requested
 
 
 def _reveal_in_file_explorer(target: Path) -> None:

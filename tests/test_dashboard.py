@@ -76,12 +76,50 @@ def test_dashboard_reveal_shim_is_served() -> None:
     assert response.text.strip()
 
 
-def test_reveal_requires_dashboard_header() -> None:
+def test_reveal_is_open_when_no_local_api_key_is_configured() -> None:
     client = TestClient(app)
 
     response = client.get("/dashboard/files/reveal", params={"path": "README.md"})
 
-    assert response.status_code == 403
+    assert response.status_code == 200
+
+
+def test_dashboard_shell_injects_configured_api_key_for_the_shim(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOCAL_API_KEY", "reveal-secret")
+    from app.core.config import get_settings
+
+    get_settings.cache_clear()
+    client = TestClient(app)
+
+    response = client.get("/dashboard")
+
+    assert "window.__SMCR_API_KEY__ = \"reveal-secret\"" in response.text
+    get_settings.cache_clear()
+
+
+def test_reveal_requires_configured_local_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOCAL_API_KEY", "reveal-secret")
+    from app.core.config import get_settings
+
+    get_settings.cache_clear()
+    client = TestClient(app)
+
+    without_key = client.get("/dashboard/files/reveal", params={"path": "README.md"})
+    wrong_key = client.get(
+        "/dashboard/files/reveal",
+        params={"path": "README.md"},
+        headers={"X-Local-API-Key": "wrong"},
+    )
+    right_key = client.get(
+        "/dashboard/files/reveal",
+        params={"path": "README.md"},
+        headers={"X-Local-API-Key": "reveal-secret"},
+    )
+
+    assert without_key.status_code == 401
+    assert wrong_key.status_code == 401
+    assert right_key.status_code == 200
+    get_settings.cache_clear()
 
 
 def test_reveal_rejects_paths_outside_repo_root(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -89,11 +127,7 @@ def test_reveal_rejects_paths_outside_repo_root(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setattr(dashboard_routes, "_reveal_in_file_explorer", opened.append)
     client = TestClient(app)
 
-    response = client.get(
-        "/dashboard/files/reveal",
-        params={"path": "../outside.txt"},
-        headers={"X-SMCR-Dashboard": "1"},
-    )
+    response = client.get("/dashboard/files/reveal", params={"path": "../outside.txt"})
 
     assert response.status_code == 403
     assert opened == []
@@ -107,11 +141,12 @@ def test_reveal_opens_existing_file_and_strips_fragment(monkeypatch: pytest.Monk
     response = client.get(
         "/dashboard/files/reveal",
         params={"path": "data/seed/system_templates.example.yaml#sys-opord"},
-        headers={"X-SMCR-Dashboard": "1"},
     )
 
     assert response.status_code == 200
-    assert response.json()["resolved"].endswith("data/seed/system_templates.example.yaml")
+    body = response.json()
+    assert body["status"] == "opened"
+    assert body["resolved"].endswith("data/seed/system_templates.example.yaml")
     assert len(opened) == 1
     assert opened[0].name == "system_templates.example.yaml"
 
@@ -124,10 +159,13 @@ def test_reveal_falls_back_to_nearest_existing_ancestor(monkeypatch: pytest.Monk
     response = client.get(
         "/dashboard/files/reveal",
         params={"path": "personal/AT-orders-FY26.pdf"},
-        headers={"X-SMCR-Dashboard": "1"},
     )
 
     assert response.status_code == 200
+    body = response.json()
+    # The exact path doesn't exist, so the endpoint must say so rather than
+    # silently reporting success for a different path it opened instead.
+    assert body["status"] == "opened_fallback"
     assert len(opened) == 1
     assert opened[0] == dashboard_routes.REPO_ROOT.resolve()
 
