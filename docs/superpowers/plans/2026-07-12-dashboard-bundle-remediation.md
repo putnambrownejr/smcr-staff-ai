@@ -1,11 +1,16 @@
 # Dashboard Bundle Remediation Plan
 
-**Status (2026-07-12, updated):** Steps 0 and 1 done and committed. Step 2 started —
-the bundle-patch mechanism exists and the Actions tracker is fully wired to the real
-backend and verified end-to-end in a live browser (add/toggle-done/delete all persist
-server-side; reload survives). All other state domains (notes, fitreps, feeds,
-quickLinks, benchCards, profile, handoff, travel, "save to project") are still
-demo-only. See "Step 2 progress" below for exact status and how to extend the pattern.
+**Status (2026-07-12, updated again):** Steps 0 and 1 done and committed. Step 2 is
+substantially further along: **Actions, custom watch Feeds, resource Links, and
+profile identity fields (via session Handoff) are all wired to the real backend and
+verified end-to-end in a live browser** — add/edit/toggle/delete round-trip through
+the actual API and survive a reload. The due-date field mismatch flagged in the first
+pass is also fixed (free-text "due" now round-trips correctly instead of only showing
+up in Notes after reload). Still demo-only: the personal notebook/logbook, the rich
+scored FitRep writer, benchCards (file/template/doctrine reference cards), travel
+status, and "save to project" — each needs either a backend design decision or new
+endpoint before it can be wired the same way (see "Remaining state domains" below,
+now updated with concrete per-domain findings from checking every relevant schema).
 
 **Context:** The compiled Claude-design-tool bundle (`app/static/dashboard/index.html`,
 2.3MB, merged via commits `3f2bf82`/`de9a99e`/`c54b742`) replaced the working,
@@ -122,43 +127,104 @@ to apply and write.
   — so a careless future bundle re-export that drops this wiring fails CI
   instead of failing silently at runtime.
 
-**Known limitation in the current wiring (acceptable for this pass, flagged
-here rather than hidden):** the bundle's `due` field is free text (e.g. "15
-AUG", "overdue") with no matching free-text field on the real `ActionRecord`
-schema (which has a strict `suspense_date: date | None`). Rather than force a
-lossy/fragile parse, `due` text is currently written into `notes` as `"Due:
-<text>"` on create and is **not** read back out of `notes` into the `due`
-display field on load (so after a reload, a `due` you typed shows up in
-`notes` instead of the `Due` column). A cleaner fix is a real date picker
-mapped to `suspense_date`, deferred to keep this pass scoped.
+**Due-date field mismatch: fixed.** `_mapRealAction` now parses the `"Due:
+<text>"` prefix back out of `notes` on load (`dueMatch` regex), so a `due`
+value typed on create (e.g. "before drill", "overdue", "15 AUG") shows up
+correctly in the Due column after a reload instead of leaking into Notes.
+Verified live: created an action with `due: "before drill"`, confirmed the
+server stored `notes: "Due: before drill"`, reloaded the page, confirmed the
+UI showed `Due · before drill` (not "unscheduled", not stuck in Notes).
+
+**Feeds — done (load + create + delete), verified live.** Custom watch feeds
+are a global backend store (`/custom-watch-feeds`, no per-user scoping — the
+route list confirmed this: `GET/POST ""`, `PATCH/DELETE "/{feed_id}"`, no
+`user_key` anywhere). The 4 built-in demo feeds (MARADMIN/NAVADMIN/Gazette/unit
+bulletin) have no backend equivalent and stay local, marked apart from real
+ones via an `isReal` flag so `removeFeed` only calls DELETE for feeds that
+actually exist server-side. `CreateCustomWatchFeedRequest.url` is a required
+`HttpUrl`, but the bundle's UI supports a "manual — no source URL" feed type;
+those stay local-only (can't be created server-side as-is). Trust labels
+("Official"/"Professional"/"Unit"/"Custom") map to the backend's
+`CustomWatchFeedTrustLevel` enum via a small lookup table. **Not wired:**
+inline editing of an existing feed's fields (`toggleFeedEdit`/
+`updateFeedField`) — the backend supports `PATCH`, but the current UI has no
+explicit "save" commit point for those live-per-keystroke fields, and wiring
+it well needs the same debounce treatment as profile fields below; scoped out
+to keep this pass bounded. Verified live: added a feed through the real form,
+confirmed `POST /custom-watch-feeds` fired and persisted with a real
+`feed_id`/timestamps, removed it through the UI, confirmed `DELETE` fired and
+it's gone server-side.
+
+**Links ("A Few Good Links") — done (load + create), verified live.** Unlike
+feeds, `/resource-links/{user_key}` already has real seed data
+(`data/seed/resource_links.json`) serving the same "always show curated
+links" role the bundle's hardcoded `linkGroups` served, so this **fully
+replaces** `linkGroups` from the real fetch on load rather than merging —
+after wiring, the Links tab shows the actual seed catalog (IPPS-A, milConnect,
+DTS, etc.) instead of the bundle's own smaller hardcoded set. The category
+field is a fixed 10-value enum (`ResourceLinkCategory`) but the bundle's "Add
+link" form is free text; `_categoryKeyForLabel` matches typed text against the
+fetched category labels case-insensitively and falls back to `"unit"`.
+**Not wired:** no delete-link UI exists in the bundle at all (not a regression
+— it never had one), though the backend supports `DELETE`; adding that button
+means touching the HTML template, not just component logic, deferred. Verified
+live: added a link through the real form with category "Admin & pay", confirmed
+`POST /resource-links/{user_key}` fired and persisted with `category:
+"admin_pay"` (correct label→enum mapping) and a real link `id`.
+
+**Profile identity fields — done (load + debounced save), verified live.**
+`profileRank`/`profileLastName`/`profileBillet`/`profileUnit` map to
+`UserSessionHandoff.rank`/`display_name`/`billet`/`unit_id` via
+`/handoffs/{user_key}` — **not** `/user-profile/{user_key}`, which is a
+separate, smaller concept (format preference / style notes only). No explicit
+"Save" button exists in this drawer (fields save live per keystroke in the
+demo), so real saves debounce 800ms after the last change via
+`_scheduleHandoffSave` → `PUT /handoffs/{user_key}` with the previously-loaded
+handoff object as a base (so fields this UI doesn't expose, like
+`admin_watch_items` or `fitreps` reminders, aren't clobbered). A 404 on load
+is treated as normal (brand-new profile, fields stay blank) rather than an
+error. Verified live: typed a rank and last name, waited past the debounce,
+confirmed `GET /handoffs/{user_key}` returned `display_name: "Capt TestE2E"`
+and `rank: "Capt"` server-side.
 
 **Also discovered, not yet fixed:** the hardcoded date/greeting strings from
-finding #9 (`"18 days"`, `"Good evening"`) are still present — they weren't
-touched by this pass, which focused on the actions slice specifically. They
-live in the same decoded component source and are equally patchable with the
-same tool; this is the natural next patch to write.
+finding #9 (`"18 days"`, `"Good evening"`) are still present — untouched by
+this pass. Same tool, same pattern; natural next small patch.
 
-**Remaining state domains, still demo-only (not started):** notes/logbook,
-FitRep tracker, quick links / feeds (Watch lane), quickLinks (Overview pinned
-links), benchCards (file/template/doctrine references), staff bench lanes
-(doctrine/resources/prompts per staff-lane modal), profile fields, session
-handoff, travel status, quote-of-the-day rotation, today-in-history. Each is
-its own `state.X` slice with its own mutation methods in the same component
-source — the Actions wiring above is the reference pattern to replicate:
-(1) find the relevant backend endpoint(s) from the finding-#2 checklist below,
-(2) add a `_loadX()` call from `componentDidMount`, (3) rewrite each mutation
-method to call the real endpoint with optimistic update + rollback, (4) add a
-patch-tool entry, (5) verify live in a browser, (6) pin with a test like the
-one added for actions.
+**Remaining state domains, still demo-only:**
+- **Personal notebook/logbook** (`notes` — locker combos, running notes,
+  free-form title+body) — checked `/section-memory/{user_key}` as the closest
+  candidate; its schema (`recurring_questions`/`recurring_failure_modes`/
+  `preferred_checks`/`notes: list[str]` per named section) is structured for a
+  different purpose, not free-form title+body notes. **No clean backend match
+  — needs a new lightweight endpoint**, or a deliberate decision to repurpose
+  something.
+- **FitRep writer** (`fitreps` — 5 scored traits, statement, RO comments,
+  relative-value tree per Marine) — checked `UserSessionHandoff.fitreps`;
+  it's `FitrepReminder` (`occasion`/`due_date`/`role`/`notes`), a due-date
+  *reminder*, not a scoring tool. **No backend match — this is genuinely new
+  backend work**, not a wiring job, if the bundle's rich writer is to be kept
+  as-is.
+- **"Save to project" / drafted files** — confirmed zero backend, see finding
+  #12 and Step 3 below.
+- **benchCards** (file/template/doctrine reference cards) — partial matches
+  exist (`/product-templates`, `/personal-documents`) but need per-card
+  investigation; some entries (doctrine reference URLs) are fine to leave
+  hardcoded since they're just links, not user data.
+- Not investigated this pass: quote-of-the-day rotation, today-in-history,
+  travel status, staff-lane doctrine/resources/prompts (per staff-lane modal),
+  quickLinks (the small Overview-pinned subset, distinct from the full Links
+  directory above — likely fine as a client-side "pin" list referencing the
+  now-real link data rather than needing its own backend).
 
-The 13 endpoint prefixes from finding #2 are the full wiring checklist:
-`/bench-sections/`, `/custom-mos-recipes/`, `/custom-watch-feeds/`,
-`/dashboard/data/` (done — read path only, used by `_loadRealWorkspace`),
-`/handoffs/`, `/modules/`, `/personal-documents/`, `/product-templates/`,
-`/reading-list/state/`, `/resource-links/`, `/section-memory/`,
-`/staff/battle-rhythm/`, `/user-profile/`, plus `/actions/` (done, full CRUD)
-which wasn't in the original 13 since it's a separate router from
-`app/api/routes/dashboard.py`'s own endpoint set.
+The reference pattern to extend any of these: (1) confirm the backend
+endpoint and exact schema shape (don't assume — check, as the FitRep/notes
+findings above show assumptions here are often wrong), (2) add a `_loadX()`
+call from `componentDidMount`, (3) rewrite each mutation method to call the
+real endpoint with optimistic update + rollback, (4) add patch-tool entries
+(remember: idempotent by design now, checks `new` text first — see the
+`apply_patches` docstring), (5) verify live in a browser end-to-end including
+a reload, (6) pin with a test like the ones added for actions/feeds/links/handoff.
 
 ### Step 3 — Build the missing "save to project" backend (net-new, finding #12)
 - Design a minimal endpoint (e.g. `POST /dashboard/drafts` and

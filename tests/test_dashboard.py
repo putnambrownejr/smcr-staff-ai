@@ -67,6 +67,16 @@ def test_dashboard_route_serves_html_shell() -> None:
     assert "/static/dashboard/reveal-shim.js" in response.text
 
 
+def _decoded_dashboard_component_source() -> str:
+    bundle_html = dashboard_routes._DASHBOARD_HTML.read_text(encoding="utf-8")
+    template_open = '<script type="__bundler/template">'
+    json_start = bundle_html.index(template_open) + len(template_open)
+    json_end = bundle_html.index("</script>", json_start)
+    decoded = json.loads(bundle_html[json_start:json_end].strip())
+    assert isinstance(decoded, str)
+    return decoded
+
+
 def test_dashboard_bundle_is_wired_to_real_actions_api() -> None:
     """The compiled dashboard bundle is a static export from a design tool with
     all state (and demo data) hardcoded client-side -- see
@@ -75,11 +85,7 @@ def test_dashboard_bundle_is_wired_to_real_actions_api() -> None:
     so a future bundle re-export can't silently drop it: fail loud here
     instead of failing silently at runtime in a browser.
     """
-    bundle_html = dashboard_routes._DASHBOARD_HTML.read_text(encoding="utf-8")
-    template_open = '<script type="__bundler/template">'
-    json_start = bundle_html.index(template_open) + len(template_open)
-    json_end = bundle_html.index("</script>", json_start)
-    component_source = json.loads(bundle_html[json_start:json_end].strip())
+    component_source = _decoded_dashboard_component_source()
 
     assert "this._loadRealWorkspace();" in component_source
     assert "_resolveUserKey()" in component_source
@@ -88,6 +94,25 @@ def test_dashboard_bundle_is_wired_to_real_actions_api() -> None:
     assert "fetch(\"/actions/track\"" in component_source
     assert 'method: "PATCH"' in component_source
     assert 'fetch("/actions/" + encodeURIComponent(id), { method: "DELETE"' in component_source
+    # Round-trips the free-text "due" stashed in notes back into the due field.
+    assert "_mapRealAction(a)" in component_source
+    assert "dueMatch" in component_source
+
+
+def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:
+    """Same guard as the actions test above, for the feeds/links/profile wiring
+    added in the same remediation pass (step 2, items 2-4)."""
+    component_source = _decoded_dashboard_component_source()
+
+    assert "this._loadRealFeeds();" in component_source
+    assert "this._loadRealLinks();" in component_source
+    assert "this._loadRealHandoff();" in component_source
+    assert 'fetch("/custom-watch-feeds"' in component_source
+    assert 'fetch("/custom-watch-feeds/" + encodeURIComponent(id), { method: "DELETE"' in component_source
+    assert 'fetch("/resource-links/" + encodeURIComponent(this.userKey)' in component_source
+    assert 'fetch("/handoffs/" + encodeURIComponent(this.userKey)' in component_source
+    assert "_scheduleHandoffSave()" in component_source
+    assert 'method: "PUT"' in component_source
 
 
 def test_dashboard_reveal_shim_is_served() -> None:

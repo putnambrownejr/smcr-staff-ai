@@ -48,16 +48,29 @@ def load_bundle(path: Path) -> tuple[str, int, int, str]:
 
 
 def apply_patches(inner_html: str, patches: list[tuple[str, str, str]]) -> str:
+    # Idempotent by design: this script runs against whatever is CURRENTLY in
+    # index.html, which after the first run is already-patched. A patch whose
+    # `new` text is already present (and whose `old` text is gone) is treated
+    # as already-applied and skipped, so the full PATCHES list stays safely
+    # re-runnable both against a fresh design-tool re-export (nothing applied
+    # yet) and against the current committed bundle (some/all already applied).
     for label, old, new in patches:
-        count = inner_html.count(old)
-        if count == 0:
+        # Check `new` first, not `old`: most patches append to/wrap `old`, so
+        # `new` contains `old` as a substring once applied -- counting `old`
+        # first would see a nonzero count even after a successful apply and
+        # misidentify an already-applied patch as still-pending.
+        if inner_html.count(new) >= 1:
+            print(f"already applied, skipping: {label}")
+            continue
+        old_count = inner_html.count(old)
+        if old_count == 0:
             raise SystemExit(
                 f"Patch {label!r} target text not found -- the bundle was likely "
                 "re-exported and this patch needs updating. Aborting without writing."
             )
-        if count > 1:
+        if old_count > 1:
             raise SystemExit(
-                f"Patch {label!r} target text matched {count} times (expected 1) -- "
+                f"Patch {label!r} target text matched {old_count} times (expected 1) -- "
                 "make the search text more specific. Aborting without writing."
             )
         inner_html = inner_html.replace(old, new, 1)
@@ -232,6 +245,344 @@ PATCHES: list[tuple[str, str, str]] = [
         "        this.setState((s) => ({ actions: s.actions.filter((a) => a.id !== tempId) }));\n"
         "        window.alert(\"Could not save this action to the server. It was not added.\");\n"
         "      });",
+    ),
+    (
+        "_mapRealAction: round-trip the due-date text stashed in notes on create",
+        '  _mapRealAction(a) {\n'
+        '    return {\n'
+        '      id: a.action_id,\n'
+        '      title: a.title,\n'
+        '      owner: a.owner || "Unassigned",\n'
+        '      due: a.suspense_date || "unscheduled",\n'
+        '      done: a.status === "closed" || a.status === "complete",\n'
+        '      notes: a.notes || "",\n'
+        '      editOpen: false,\n'
+        '    };\n'
+        '  }\n',
+        '  _mapRealAction(a) {\n'
+        '    // addAction stashes free-text "due" as "Due: <text>\\n<rest>" in notes\n'
+        '    // (ActionRecord has no matching free-text field -- suspense_date is a\n'
+        '    // strict date and the UI supports non-date values like "overdue" or\n'
+        '    // "before drill"). Parse it back out here so it survives a reload\n'
+        '    // instead of only showing up in the Notes field.\n'
+        '    const notes = a.notes || "";\n'
+        '    const dueMatch = /^Due: ([^\\n]+)\\n?([\\s\\S]*)$/.exec(notes);\n'
+        '    return {\n'
+        '      id: a.action_id,\n'
+        '      title: a.title,\n'
+        '      owner: a.owner || "Unassigned",\n'
+        '      due: a.suspense_date || (dueMatch ? dueMatch[1] : "unscheduled"),\n'
+        '      done: a.status === "closed" || a.status === "complete",\n'
+        '      notes: dueMatch ? dueMatch[2] : notes,\n'
+        '      editOpen: false,\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "componentDidMount: also load real feeds, links, and handoff/profile",
+        "  componentDidMount() {\n"
+        "    this._t = setInterval(() => this.setState({ now: new Date() }), 1000 * 30);\n"
+        "    this._loadRealWorkspace();",
+        "  componentDidMount() {\n"
+        "    this._t = setInterval(() => this.setState({ now: new Date() }), 1000 * 30);\n"
+        "    this._loadRealWorkspace();\n"
+        "    this._loadRealFeeds();\n"
+        "    this._loadRealLinks();\n"
+        "    this._loadRealHandoff();",
+    ),
+    (
+        "add _loadRealFeeds/_loadRealLinks/_loadRealHandoff helpers",
+        '  async _loadRealWorkspace() {\n'
+        '    this.userKey = this._resolveUserKey();\n'
+        '    try {\n'
+        '      const res = await fetch("/dashboard/data/" + encodeURIComponent(this.userKey), {\n'
+        '        headers: this._apiHeaders(),\n'
+        '      });\n'
+        '      if (!res.ok) throw new Error("workspace fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      const actions = (data.tracked_actions || []).map((a) => this._mapRealAction(a));\n'
+        '      this.setState({ actions, workspaceLoaded: true, workspaceLoadError: null });\n'
+        '    } catch (err) {\n'
+        '      this.setState({ workspaceLoadError: String((err && err.message) || err) });\n'
+        '    }\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+        '  async _loadRealWorkspace() {\n'
+        '    this.userKey = this._resolveUserKey();\n'
+        '    try {\n'
+        '      const res = await fetch("/dashboard/data/" + encodeURIComponent(this.userKey), {\n'
+        '        headers: this._apiHeaders(),\n'
+        '      });\n'
+        '      if (!res.ok) throw new Error("workspace fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      const actions = (data.tracked_actions || []).map((a) => this._mapRealAction(a));\n'
+        '      this.setState({ actions, workspaceLoaded: true, workspaceLoadError: null });\n'
+        '    } catch (err) {\n'
+        '      this.setState({ workspaceLoadError: String((err && err.message) || err) });\n'
+        '    }\n'
+        '  }\n'
+        '\n'
+        '  // --- Feeds: real backend wiring. Custom watch feeds are global (no\n'
+        '  // per-user scoping on the backend), so the built-in demo feeds\n'
+        '  // (MARADMIN/NAVADMIN/etc, which have no backend record at all) stay\n'
+        '  // local and only real ones (marked isReal) round-trip through the API.\n'
+        '  _feedTrustToLevel(trust) {\n'
+        '    const MAP = { Official: "official", Professional: "professional", Unit: "unit_local", Custom: "personal_watch" };\n'
+        '    return MAP[trust] || "personal_watch";\n'
+        '  }\n'
+        '  _mapRealFeed(f) {\n'
+        '    const REVERSE = { official: "Official", professional: "Professional", unit_local: "Unit", personal_watch: "Custom", low_trust: "Custom" };\n'
+        '    return {\n'
+        '      id: f.feed_id,\n'
+        '      name: f.name,\n'
+        '      meta: f.category || "",\n'
+        '      trust: REVERSE[f.trust_level] || "Custom",\n'
+        '      type: "url",\n'
+        '      url: f.url,\n'
+        '      staticItems: null,\n'
+        '      editOpen: false,\n'
+        '      isReal: true,\n'
+        '    };\n'
+        '  }\n'
+        '  async _loadRealFeeds() {\n'
+        '    try {\n'
+        '      const res = await fetch("/custom-watch-feeds", { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("feeds fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      const realFeeds = (data || []).map((f) => this._mapRealFeed(f));\n'
+        '      this.setState((s) => ({ feeds: [...s.feeds.filter((f) => !f.isReal), ...realFeeds] }));\n'
+        '    } catch (err) {\n'
+        '      // Keep the built-in demo feeds visible even if this fails.\n'
+        '    }\n'
+        '  }\n'
+        '\n'
+        '  // --- Links: real backend wiring. Unlike feeds, the backend seed set\n'
+        '  // (data/seed/resource_links.json) serves the same "always show curated\n'
+        '  // links" purpose as the bundle\'s hardcoded linkGroups, so this fully\n'
+        '  // replaces linkGroups from the real fetch rather than merging.\n'
+        '  _mapRealLinkGroups(response) {\n'
+        '    const categories = response.categories || {};\n'
+        '    const order = [];\n'
+        '    const groups = {};\n'
+        '    (response.links || []).forEach((l) => {\n'
+        '      const label = categories[l.category] || l.category;\n'
+        '      if (!groups[label]) { groups[label] = { title: label, links: [] }; order.push(label); }\n'
+        '      let host = l.url;\n'
+        '      try { host = new URL(l.url).hostname.replace(/^www\\./, ""); } catch (err) {}\n'
+        '      groups[label].links.push({ name: l.title, host, url: l.url, id: l.id, isSeed: l.is_seed });\n'
+        '    });\n'
+        '    return order.map((label) => groups[label]);\n'
+        '  }\n'
+        '  _categoryKeyForLabel(label) {\n'
+        '    const dict = this._resourceLinkCategories || {};\n'
+        '    const target = (label || "").trim().toLowerCase();\n'
+        '    for (const key in dict) { if (dict[key].toLowerCase() === target) return key; }\n'
+        '    return "unit";\n'
+        '  }\n'
+        '  async _loadRealLinks() {\n'
+        '    try {\n'
+        '      const res = await fetch("/resource-links/" + encodeURIComponent(this.userKey), { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("links fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      this._resourceLinkCategories = data.categories || {};\n'
+        '      this.setState({ linkGroups: this._mapRealLinkGroups(data) });\n'
+        '    } catch (err) {\n'
+        '      // Keep the built-in demo link groups visible if this fails.\n'
+        '    }\n'
+        '  }\n'
+        '\n'
+        '  // --- Profile / handoff: real backend wiring. rank/display_name/\n'
+        '  // billet/unit_id live on UserSessionHandoff (not /user-profile, which\n'
+        '  // is a separate format-preference concept). No explicit Save button\n'
+        '  // exists in this drawer, so field edits debounce into a PUT.\n'
+        '  async _loadRealHandoff() {\n'
+        '    try {\n'
+        '      const res = await fetch("/handoffs/" + encodeURIComponent(this.userKey), { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) return; // 404 is normal for a brand-new profile -- keep blank fields.\n'
+        '      const handoff = await res.json();\n'
+        '      this._handoffData = handoff;\n'
+        '      const rank = handoff.rank || "";\n'
+        '      let lastName = "";\n'
+        '      if (handoff.display_name) {\n'
+        '        lastName = rank && handoff.display_name.indexOf(rank + " ") === 0\n'
+        '          ? handoff.display_name.slice(rank.length + 1)\n'
+        '          : handoff.display_name;\n'
+        '      }\n'
+        '      this.setState((s) => ({\n'
+        '        profileRank: rank,\n'
+        '        profileLastName: lastName,\n'
+        '        profileBillet: handoff.billet || "",\n'
+        '        profileUnit: handoff.unit_id || "",\n'
+        '        demoModeManual: true,\n'
+        '        demoMode: !(rank.trim() || lastName.trim()) && s.demoMode,\n'
+        '      }));\n'
+        '    } catch (err) {\n'
+        '      // Keep whatever is already in state if this fails.\n'
+        '    }\n'
+        '  }\n'
+        '  _scheduleHandoffSave() {\n'
+        '    clearTimeout(this._handoffSaveTimer);\n'
+        '    this._handoffSaveTimer = setTimeout(() => this._saveHandoff(), 800);\n'
+        '  }\n'
+        '  _saveHandoff() {\n'
+        '    if (!this.userKey) return;\n'
+        '    const base = this._handoffData || { user_key: this.userKey };\n'
+        '    const payload = Object.assign({}, base, {\n'
+        '      user_key: this.userKey,\n'
+        '      rank: this.state.profileRank || null,\n'
+        '      display_name: [this.state.profileRank, this.state.profileLastName].filter(Boolean).join(" ") || null,\n'
+        '      billet: this.state.profileBillet || null,\n'
+        '      unit_id: this.state.profileUnit || null,\n'
+        '    });\n'
+        '    fetch("/handoffs/" + encodeURIComponent(this.userKey), {\n'
+        '      method: "PUT",\n'
+        '      headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '      body: JSON.stringify(payload),\n'
+        '    })\n'
+        '      .then((res) => { if (!res.ok) throw new Error("save failed: " + res.status); return res.json(); })\n'
+        '      .then((body) => { this._handoffData = body.handoff; })\n'
+        '      .catch(() => {});\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+    ),
+    (
+        "onSubmitFeed: POST /custom-watch-feeds for real feeds, keep manual/no-URL feeds local",
+        '    const onSubmitFeed = (e) => {\n'
+        '      e.preventDefault();\n'
+        '      const name = (this.state.draftFeedName || "").trim();\n'
+        '      if (!name) return;\n'
+        '      const meta = (this.state.draftFeedMeta || "").trim();\n'
+        '      const type = this.state.draftFeedType;\n'
+        '      let url = (this.state.draftFeedUrl || "").trim();\n'
+        '      if (type !== "manual" && url && !/^https?:\\/\\//i.test(url)) url = "https://" + url;\n'
+        '      const trust = this.state.draftFeedTrust;\n'
+        '      this.setState((s) => ({\n'
+        '        feeds: [...s.feeds, { id: Date.now(), name, meta, type, url: type === "manual" ? "" : url, trust, staticItems: null, editOpen: false }],\n'
+        '        addFeedOpen: false, draftFeedName: "", draftFeedMeta: "", draftFeedUrl: "", draftFeedType: "rss", draftFeedTrust: "Unit",\n'
+        '      }));\n'
+        '    };\n',
+        '    const onSubmitFeed = (e) => {\n'
+        '      e.preventDefault();\n'
+        '      const name = (this.state.draftFeedName || "").trim();\n'
+        '      if (!name) return;\n'
+        '      const meta = (this.state.draftFeedMeta || "").trim();\n'
+        '      const type = this.state.draftFeedType;\n'
+        '      let url = (this.state.draftFeedUrl || "").trim();\n'
+        '      if (type !== "manual" && url && !/^https?:\\/\\//i.test(url)) url = "https://" + url;\n'
+        '      const trust = this.state.draftFeedTrust;\n'
+        '      this.setState({ addFeedOpen: false, draftFeedName: "", draftFeedMeta: "", draftFeedUrl: "", draftFeedType: "rss", draftFeedTrust: "Unit" });\n'
+        '      if (type === "manual" || !url) {\n'
+        '        // No backend field for manual/no-URL feeds -- keep it local, matching the prior behavior.\n'
+        '        this.setState((s) => ({ feeds: [...s.feeds, { id: Date.now(), name, meta, type, url: "", trust, staticItems: null, editOpen: false }] }));\n'
+        '        return;\n'
+        '      }\n'
+        '      fetch("/custom-watch-feeds", {\n'
+        '        method: "POST",\n'
+        '        headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '        body: JSON.stringify({ name, url, category: meta || "unit", trust_level: this._feedTrustToLevel(trust) }),\n'
+        '      })\n'
+        '        .then((res) => res.json().then((body) => ({ ok: res.ok, body })))\n'
+        '        .then(({ ok, body }) => {\n'
+        '          if (!ok) throw new Error("save failed");\n'
+        '          this.setState((s) => ({ feeds: [...s.feeds, this._mapRealFeed(body)] }));\n'
+        '        })\n'
+        '        .catch(() => window.alert("Could not save this feed to the server. It was not added."));\n'
+        '    };\n',
+    ),
+    (
+        "removeFeed: DELETE /custom-watch-feeds/{id} for real feeds only",
+        '  removeFeed(id) {\n'
+        '    return (e) => {\n'
+        '      if (e) { e.preventDefault(); e.stopPropagation(); }\n'
+        '      if (!window.confirm("Remove this feed?")) return;\n'
+        '      this.setState((s) => ({ feeds: s.feeds.filter((f) => f.id !== id) }));\n'
+        '    };\n'
+        '  }\n',
+        '  removeFeed(id) {\n'
+        '    return (e) => {\n'
+        '      if (e) { e.preventDefault(); e.stopPropagation(); }\n'
+        '      if (!window.confirm("Remove this feed?")) return;\n'
+        '      const removed = this.state.feeds.find((f) => f.id === id);\n'
+        '      this.setState((s) => ({ feeds: s.feeds.filter((f) => f.id !== id) }));\n'
+        '      if (!removed || !removed.isReal) return;\n'
+        '      fetch("/custom-watch-feeds/" + encodeURIComponent(id), { method: "DELETE", headers: this._apiHeaders() })\n'
+        '        .then((res) => { if (res.status !== 204 && !res.ok) throw new Error("delete failed: " + res.status); })\n'
+        '        .catch(() => {\n'
+        '          this.setState((s) => ({ feeds: [...s.feeds, removed] }));\n'
+        '          window.alert("Could not delete that feed on the server. Restored.");\n'
+        '        });\n'
+        '    };\n'
+        '  }\n',
+    ),
+    (
+        "addLink: POST /resource-links/{userKey}",
+        '  addLink(e) {\n'
+        '    e.preventDefault();\n'
+        '    const category = (this.state.newLinkCategory || "Custom links").trim() || "Custom links";\n'
+        '    const name = (this.state.newLinkName || "").trim();\n'
+        '    let url = (this.state.newLinkUrl || "").trim();\n'
+        '    if (!name || !url) return;\n'
+        '    if (!/^https?:\\/\\//i.test(url)) url = "https://" + url;\n'
+        '    let host = url;\n'
+        '    try { host = new URL(url).hostname.replace(/^www\\./, ""); } catch (e2) { /* keep raw */ }\n'
+        '    this.setState((s) => {\n'
+        '      const groups = s.linkGroups.map((g) => ({ ...g, links: g.links.slice() }));\n'
+        '      const existing = groups.find((g) => g.title.toLowerCase() === category.toLowerCase());\n'
+        '      if (existing) {\n'
+        '        existing.links.push({ name, host, url });\n'
+        '      } else {\n'
+        '        groups.push({ title: category, links: [{ name, host, url }] });\n'
+        '      }\n'
+        '      return { linkGroups: groups, newLinkCategory: "", newLinkName: "", newLinkUrl: "" };\n'
+        '    });\n'
+        '  }\n',
+        '  addLink(e) {\n'
+        '    e.preventDefault();\n'
+        '    const categoryLabel = (this.state.newLinkCategory || "Custom links").trim() || "Custom links";\n'
+        '    const name = (this.state.newLinkName || "").trim();\n'
+        '    let url = (this.state.newLinkUrl || "").trim();\n'
+        '    if (!name || !url) return;\n'
+        '    if (!/^https?:\\/\\//i.test(url)) url = "https://" + url;\n'
+        '    this.setState({ newLinkCategory: "", newLinkName: "", newLinkUrl: "" });\n'
+        '    const category = this._categoryKeyForLabel(categoryLabel);\n'
+        '    fetch("/resource-links/" + encodeURIComponent(this.userKey), {\n'
+        '      method: "POST",\n'
+        '      headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '      body: JSON.stringify({ title: name, url, category, tags: [] }),\n'
+        '    })\n'
+        '      .then((res) => { if (!res.ok) throw new Error("save failed: " + res.status); })\n'
+        '      .then(() => this._loadRealLinks())\n'
+        '      .catch(() => window.alert("Could not save this link to the server. It was not added."));\n'
+        '  }\n',
+    ),
+    (
+        "profile field handlers: debounce a PUT /handoffs/{userKey} on every change",
+        '      onBilletChange: (e) => this.setState({ profileBillet: e.target.value }),\n'
+        '      onUnitChange: (e) => this.setState({ profileUnit: e.target.value }),\n'
+        '      profilePasskey: this.state.profilePasskey,\n'
+        '      onRankChange: (e) => {\n'
+        '        const v = e.target.value;\n'
+        '        this.setState((s) => ({ profileRank: v, demoMode: s.demoModeManual ? s.demoMode : !(v.trim() || s.profileLastName.trim()) }));\n'
+        '      },\n'
+        '      onLastNameChange: (e) => {\n'
+        '        const v = e.target.value;\n'
+        '        this.setState((s) => ({ profileLastName: v, demoMode: s.demoModeManual ? s.demoMode : !(v.trim() || s.profileRank.trim()) }));\n'
+        '      },\n',
+        '      onBilletChange: (e) => { this.setState({ profileBillet: e.target.value }); this._scheduleHandoffSave(); },\n'
+        '      onUnitChange: (e) => { this.setState({ profileUnit: e.target.value }); this._scheduleHandoffSave(); },\n'
+        '      profilePasskey: this.state.profilePasskey,\n'
+        '      onRankChange: (e) => {\n'
+        '        const v = e.target.value;\n'
+        '        this.setState((s) => ({ profileRank: v, demoMode: s.demoModeManual ? s.demoMode : !(v.trim() || s.profileLastName.trim()) }));\n'
+        '        this._scheduleHandoffSave();\n'
+        '      },\n'
+        '      onLastNameChange: (e) => {\n'
+        '        const v = e.target.value;\n'
+        '        this.setState((s) => ({ profileLastName: v, demoMode: s.demoModeManual ? s.demoMode : !(v.trim() || s.profileRank.trim()) }));\n'
+        '        this._scheduleHandoffSave();\n'
+        '      },\n',
     ),
 ]
 
