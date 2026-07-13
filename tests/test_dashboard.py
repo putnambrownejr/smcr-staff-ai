@@ -125,6 +125,42 @@ def test_dashboard_reveal_shim_is_served() -> None:
     assert response.text.strip()
 
 
+def test_dashboard_route_injects_pwa_metadata() -> None:
+    # Lets the browser offer "Install SMCR Staff AI" as a standalone app
+    # window (see scripts/launch_dashboard.pyw for the desktop-shortcut path).
+    client = TestClient(app)
+
+    response = client.get("/dashboard")
+
+    assert '<link rel="manifest" href="/static/dashboard/manifest.webmanifest">' in response.text
+    assert '<link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png">' in response.text
+    assert '<link rel="apple-touch-icon" href="/static/dashboard/icons/icon-192.png">' in response.text
+    assert '<meta name="theme-color" content="#0d1014">' in response.text
+
+
+def test_pwa_manifest_and_icons_are_served() -> None:
+    client = TestClient(app)
+
+    manifest = client.get("/static/dashboard/manifest.webmanifest")
+    assert manifest.status_code == 200
+    # Pinned in app/main.py -- Python's mimetypes doesn't know .webmanifest,
+    # so without the pin this is application/octet-stream on some machines.
+    assert manifest.headers["content-type"].startswith("application/manifest+json")
+    body = manifest.json()
+    assert body["name"] == "SMCR Staff AI"
+    assert body["start_url"] == "/dashboard"
+    assert body["display"] == "standalone"
+    icon_srcs = {icon["src"] for icon in body["icons"]}
+    assert "/static/dashboard/icons/icon-192.png" in icon_srcs
+    assert "/static/dashboard/icons/icon-512.png" in icon_srcs
+
+    for src in sorted(icon_srcs):
+        icon_response = client.get(src)
+        assert icon_response.status_code == 200
+        assert icon_response.headers["content-type"] == "image/png"
+        assert icon_response.content[:8] == b"\x89PNG\r\n\x1a\n"
+
+
 def test_reveal_is_open_when_no_local_api_key_is_configured() -> None:
     client = TestClient(app)
 

@@ -87,7 +87,16 @@ def get_dashboard() -> HTMLResponse:
         f"window.__SMCR_API_KEY__ = {json.dumps(api_key)};</script>"
         '<script src="/static/dashboard/reveal-shim.js"></script>'
     )
-    html = html.replace("<head>", "<head>" + shim_tags, 1)
+    # PWA metadata: lets the browser offer "Install SMCR Staff AI" as a
+    # standalone app window with its own icon/taskbar entry, separate from the
+    # desktop-shortcut launcher (see scripts/launch_dashboard.pyw).
+    pwa_tags = (
+        '<link rel="manifest" href="/static/dashboard/manifest.webmanifest">'
+        '<link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png">'
+        '<link rel="apple-touch-icon" href="/static/dashboard/icons/icon-192.png">'
+        '<meta name="theme-color" content="#0d1014">'
+    )
+    html = html.replace("<head>", "<head>" + pwa_tags + shim_tags, 1)
     return HTMLResponse(html)
 
 
