@@ -19,8 +19,10 @@ from app.schemas.actions import (
     ActionPriority,
     ActionStatus,
 )
+from app.schemas.chief_setup import ChiefSetupUpsertRequest
 from app.schemas.user_docs import UserDocCategory, UserDocCreateRequest, UserDocUpdateRequest
 from app.services.actions.tracker import ActionTracker
+from app.services.chief.setup_store import ChiefSetupStore
 from app.services.demo.scenarios import DEMO_USER_KEY
 from app.services.user_docs.store import UserDocsStore
 
@@ -34,7 +36,11 @@ def demo_workspace_is_empty(store: UserDocsStore, tracker: ActionTracker) -> boo
 
 
 def seed_demo_workspace(
-    store: UserDocsStore, tracker: ActionTracker, *, only_if_empty: bool = False
+    store: UserDocsStore,
+    tracker: ActionTracker,
+    chief_store: ChiefSetupStore | None = None,
+    *,
+    only_if_empty: bool = False,
 ) -> dict[str, int] | None:
     """Wipe and recreate the demo user's baseline files. Returns counts.
 
@@ -53,7 +59,40 @@ def seed_demo_workspace(
         "generations": _seed_generations(store),
         "actions": _seed_actions(tracker),
     }
+    if chief_store is not None:
+        counts["chief_setup"] = _seed_chief_setup(chief_store)
     return counts
+
+
+def _seed_chief_setup(chief_store: ChiefSetupStore) -> int:
+    chief_store.upsert(
+        DEMO_USER_KEY,
+        ChiefSetupUpsertRequest(
+            unit="4th CAG",
+            billet="S-4A / Logistics",
+            echelon="Battalion",
+            drill_schedule="09-10 AUG (next drill)",
+            commander_intent="Rebuild the reserve bench: readiness, retention, and a clean AT.",
+            priorities=[
+                "Close the three open RQS entries before drill",
+                "FitReps for Sgt Alvarez and Cpl Diaz by 31 AUG",
+                "Confirm AT travel claims are submitted in DTS",
+            ],
+            battle_rhythm=[
+                "0730 COC sync each drill morning",
+                "1600 debrief to the SgtMaj",
+                "Post-drill handoff before close of business Sunday",
+            ],
+            watch_items=[
+                "FY27 Reserve Component AT budget MARADMIN",
+                "Update to FitRep reporting occasions for SMCR",
+            ],
+            output_format="Bullet",
+            tone="Direct and brief",
+            standing_notes="Keep me ahead of suspenses. Flag anything that needs a commander's decision early.",
+        ),
+    )
+    return 1
 
 
 def _wipe_demo_docs(store: UserDocsStore) -> None:

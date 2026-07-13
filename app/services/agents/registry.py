@@ -27,6 +27,57 @@ from app.services.agents.uniform_agent import build_uniform_agent
 from app.services.agents.writing_briefing_agent import build_writing_briefing_agent
 
 
+# Curated, human-facing groups for the dashboard AI page. Each agent's own
+# `domain` stays its fine-grained self-description; this buckets the 30+ agents
+# into a handful of categories (several agents each) so the page reads cleanly.
+# Any id starting with "staff-" is a virtual staff-council seat (see
+# build_staff_advisor_agents) and is grouped together automatically.
+_AGENT_CATEGORY_BY_ID: dict[str, str] = {
+    "chief-of-staff": "Command & Leadership",
+    "leadership-advisor": "Command & Leadership",
+    "drill-prep-calendar": "Command & Leadership",
+    "unit-checkin": "Command & Leadership",
+    "planning-advisor": "Planning & Decision",
+    "red-team-assumptions-challenge": "Planning & Decision",
+    "assessment-learning-advisor": "Planning & Decision",
+    "staff-products": "Staff Products & Communication",
+    "writing-briefing-coach": "Staff Products & Communication",
+    "ace": "MAGTF Warfighting Elements",
+    "gce": "MAGTF Warfighting Elements",
+    "lce": "MAGTF Warfighting Elements",
+    "fires-advisor": "MAGTF Warfighting Elements",
+    "infantry-tactics-advisor": "MAGTF Warfighting Elements",
+    "osint-research-assistant": "Intelligence & Research",
+    "terrain-map-advisor": "Intelligence & Research",
+    "pki-cac-troubleshooter": "Reserve Admin & Readiness",
+    "uniform-advisor": "Reserve Admin & Readiness",
+    "installation-practical-advisor": "Reserve Admin & Readiness",
+    "orm-risk-management": "Reserve Admin & Readiness",
+}
+_STAFF_COUNCIL_CATEGORY = "Virtual Staff Council"
+# Order categories intentionally so the page leads with the most-used groups.
+AGENT_CATEGORY_ORDER: list[str] = [
+    "Command & Leadership",
+    "Planning & Decision",
+    "Staff Products & Communication",
+    "Reserve Admin & Readiness",
+    "MAGTF Warfighting Elements",
+    "Intelligence & Research",
+    "Virtual Staff Council",
+    "Other Advisors",
+]
+
+
+def category_for_agent(agent_id: str) -> str:
+    # Explicit mapping wins first -- "staff-products" starts with "staff-" but is
+    # a real staff-product agent, not a virtual staff-council seat.
+    if agent_id in _AGENT_CATEGORY_BY_ID:
+        return _AGENT_CATEGORY_BY_ID[agent_id]
+    if agent_id.startswith("staff-"):
+        return _STAFF_COUNCIL_CATEGORY
+    return "Other Advisors"
+
+
 class AgentRegistry:
     def __init__(self, agents: Iterable[Agent] | None = None) -> None:
         self._agents: dict[str, Agent] = {}
@@ -40,7 +91,10 @@ class AgentRegistry:
         return self._agents.get(agent_id)
 
     def list_metadata(self) -> list[AgentMetadata]:
-        return [agent.metadata for agent in self._agents.values()]
+        return [
+            agent.metadata.model_copy(update={"category": category_for_agent(agent.metadata.id)})
+            for agent in self._agents.values()
+        ]
 
     @classmethod
     def from_yaml(cls, path: str) -> "AgentRegistry":

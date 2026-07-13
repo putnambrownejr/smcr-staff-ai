@@ -128,6 +128,10 @@ def default_agent_notes_dir() -> Path:
     return default_local_context_dir() / "agent_notes"
 
 
+def default_chief_setup_dir() -> Path:
+    return default_local_context_dir() / "chief_setup"
+
+
 def default_external_processing_audits_dir() -> Path:
     return default_local_context_dir() / "external_processing_audits"
 
@@ -180,6 +184,7 @@ class Settings(BaseSettings):
     resource_links_storage_dir: str = str(default_resource_links_dir())
     custom_mos_recipes_storage_dir: str = str(default_custom_mos_recipes_dir())
     agent_notes_storage_dir: str = str(default_agent_notes_dir())
+    chief_setup_storage_dir: str = str(default_chief_setup_dir())
     external_processing_audits_storage_dir: str = str(default_external_processing_audits_dir())
     projects_dir: str = str(default_projects_dir())
     user_docs_dir: str = str(default_user_docs_dir())
@@ -222,6 +227,7 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.resource_links_storage_dir),
         Path(settings.custom_mos_recipes_storage_dir),
         Path(settings.agent_notes_storage_dir),
+        Path(settings.chief_setup_storage_dir),
         Path(settings.external_processing_audits_storage_dir),
         Path(settings.projects_dir),
         Path(settings.user_docs_dir),

@@ -21,11 +21,13 @@ def seeded_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, Pa
         "user_docs": tmp_path / "User Docs",
         "projects": tmp_path / "projects",
         "actions": tmp_path / "actions",
+        "chief_setup": tmp_path / "chief_setup",
     }
     settings = get_settings()
     monkeypatch.setattr(settings, "user_docs_dir", str(dirs["user_docs"]))
     monkeypatch.setattr(settings, "projects_dir", str(dirs["projects"]))
     monkeypatch.setattr(settings, "actions_storage_dir", str(dirs["actions"]))
+    monkeypatch.setattr(settings, "chief_setup_storage_dir", str(dirs["chief_setup"]))
     return dirs
 
 
@@ -37,7 +39,14 @@ def test_seed_creates_baseline_demo_files(seeded_dirs: dict[str, Path]) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["user_key"] == DEMO_USER_KEY
-    assert body["seeded"] == {"notebook": 3, "fitreps": 2, "generations": 2, "actions": 3}
+    assert body["seeded"] == {"notebook": 3, "fitreps": 2, "generations": 2, "actions": 3, "chief_setup": 1}
+
+    # The demo Chief of Staff setup is populated so the Automations tab has a
+    # worked example in demo mode.
+    from app.services.chief.setup_store import ChiefSetupStore
+
+    chief = ChiefSetupStore(seeded_dirs["chief_setup"]).get(DEMO_USER_KEY)
+    assert chief is not None and chief.unit == "4th CAG"
 
     store = UserDocsStore(seeded_dirs["user_docs"], seeded_dirs["projects"])
     notes = store.list_category(UserDocCategory.notebook, DEMO_USER_KEY)
