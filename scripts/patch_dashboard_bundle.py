@@ -1373,6 +1373,11 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "Prompts tab HTML: add a read-only 'Repo prompt packs' section above the editable ones",
+        # Explicit marker: a LATER patch ("collapse the build-your-own editable
+        # packs") inserts a <details> right before <sc-for promptPacksRendered>,
+        # which sits inside this patch's `new` text and would break a plain
+        # new-as-marker idempotency check on re-run.
+        '<h3 style="margin:0 0 4px;font-size:0.96rem;font-weight:700;">Repo prompt packs</h3>',
         '      <sc-if value="{{ isAiTabPrompts }}" hint-placeholder-val="{{ false }}">\n'
         '      <div style="display:grid;gap:16px;">\n'
         '        <sc-for list="{{ promptPacksRendered }}" as="pack" hint-placeholder-count="4">\n',
@@ -1701,6 +1706,430 @@ PATCHES: list[tuple[str, ...]] = [
         '      // A load that lands with demo mode still on switches to the demo\n'
         '      // key, seeding only if empty so refreshing mid-demo keeps edits.\n'
         '      if (firstResolve && stillDemo) this._switchDemoMode(true, { seed: "ifEmpty" });\n',
+    ),
+    # ------------------------------------------------------------------
+    # AI page redesign (2026-07-13): curated agent categories + richer cards,
+    # staff-only skills, real prompt packs as the hero, expanded combos, and a
+    # new Automations tab that sets up the user's Chief of Staff.
+    # ------------------------------------------------------------------
+    (
+        "_loadRealAgents: use curated category + carry intended users",
+        '        category: a.category || a.domain || "Other Advisors",\n',
+        '      Component.AGENTS_CATALOG = data.map((a) => ({\n'
+        '        id: a.id,\n'
+        '        name: a.name,\n'
+        '        category: a.domain,\n'
+        '        description: a.description,\n'
+        '        limitations: (a.disallowed_inputs || []).join(", ") || "None listed.",\n'
+        '      }));\n',
+        '      Component.AGENTS_CATALOG = data.map((a) => ({\n'
+        '        id: a.id,\n'
+        '        name: a.name,\n'
+        '        category: a.category || a.domain || "Other Advisors",\n'
+        '        description: a.description,\n'
+        '        intendedUsers: (a.intended_users || []).join(", "),\n'
+        '        limitations: (a.disallowed_inputs || []).join(", ") || "None listed.",\n'
+        '      }));\n',
+    ),
+    (
+        "_loadRealSkills: carry audience so the page can show staff skills only",
+        'Component.SKILLS_CATALOG = (data.skills || []).map((s) => ({ slug: s.name, name: s.name, description: s.description, audience: s.audience || "staff" }));',
+        'Component.SKILLS_CATALOG = (data.skills || []).map((s) => ({ slug: s.name, name: s.name, description: s.description }));',
+        'Component.SKILLS_CATALOG = (data.skills || []).map((s) => ({ slug: s.name, name: s.name, description: s.description, audience: s.audience || "staff" }));',
+    ),
+    (
+        "aiTabs: add the Automations tab",
+        '      { id: "combos", label: "Combos" },\n'
+        '      { id: "automations", label: "Automations" },\n'
+        '    ].map((t) => ({\n',
+        '      { id: "combos", label: "Combos" },\n'
+        '    ].map((t) => ({\n',
+        '      { id: "combos", label: "Combos" },\n'
+        '      { id: "automations", label: "Automations" },\n'
+        '    ].map((t) => ({\n',
+    ),
+    (
+        "aiTab flags: add isAiTabAutomations",
+        '    const isAiTabCombos = this.state.aiTab === "combos";\n'
+        '    const isAiTabAutomations = this.state.aiTab === "automations";\n',
+        '    const isAiTabCombos = this.state.aiTab === "combos";\n',
+        '    const isAiTabCombos = this.state.aiTab === "combos";\n'
+        '    const isAiTabAutomations = this.state.aiTab === "automations";\n',
+    ),
+    (
+        "agentGroups: carry intended users onto each agent card",
+        '        agents: agentsFiltered.filter((a) => a.category === cat).map((a) => ({\n'
+        '          id: a.id,\n'
+        '          name: a.name,\n'
+        '          description: a.description,\n'
+        '          limitations: a.limitations,\n',
+        '        agents: agentsFiltered.filter((a) => a.category === cat).map((a) => ({\n'
+        '          id: a.id,\n'
+        '          name: a.name,\n'
+        '          description: a.description,\n'
+        '          intendedUsers: a.intendedUsers || "",\n'
+        '          hasIntendedUsers: !!(a.intendedUsers && a.intendedUsers.length),\n'
+        '          limitations: a.limitations,\n',
+    ),
+    (
+        "agent note toggle label: clearer wording",
+        '          noteToggleLabel: agentNotesOpen[a.id] ? "Collapse" : "Expand",\n',
+        '          noteToggleLabel: agentNotesOpen[a.id] ? "Close notes" : "+ Notes",\n',
+    ),
+    (
+        "skillsRendered: show staff skills only, count hidden dev skills",
+        '    const staffSkills = Component.SKILLS_CATALOG.filter((sk) => (sk.audience || "staff") !== "development");\n'
+        '    const hiddenDevSkillCount = Component.SKILLS_CATALOG.length - staffSkills.length;\n'
+        '    const skillsRendered = staffSkills.map((sk) => ({\n',
+        '    const skillsRendered = Component.SKILLS_CATALOG.map((sk) => ({\n',
+        '    const staffSkills = Component.SKILLS_CATALOG.filter((sk) => (sk.audience || "staff") !== "development");\n'
+        '    const hiddenDevSkillCount = Component.SKILLS_CATALOG.length - staffSkills.length;\n'
+        '    const skillsRendered = staffSkills.map((sk) => ({\n',
+    ),
+    (
+        "vals object: expose isAiTabAutomations + hiddenDevSkillCount + automations bindings",
+        '      aiTabs, isAiTabAgents, isAiTabSkills, isAiTabPrompts, isAiTabCombos,\n',
+        '      aiTabs, isAiTabAgents, isAiTabSkills, isAiTabPrompts, isAiTabCombos, isAiTabAutomations,\n'
+        '      hiddenDevSkillCount, hasHiddenDevSkills: hiddenDevSkillCount > 0,\n'
+        '      ...this._automationsVals(),\n',
+    ),
+    (
+        "componentDidMount: also load the Chief of Staff setup",
+        "    this._loadRealPromptPacks();\n"
+        "    this._loadRealAgentNotes();\n"
+        "    this._loadRealChiefSetup();\n",
+        "    this._loadRealPromptPacks();\n"
+        "    this._loadRealAgentNotes();\n",
+        "    this._loadRealPromptPacks();\n"
+        "    this._loadRealAgentNotes();\n"
+        "    this._loadRealChiefSetup();\n",
+    ),
+    (
+        "_switchDemoMode: also reload the Chief of Staff setup on key switch",
+        # Anchor on the _switchDemoMode-unique preceding line (_loadRealGenerations
+        # then _loadRealAgentNotes); componentDidMount instead precedes
+        # _loadRealAgentNotes with _loadRealPromptPacks. Do NOT reach to go(lane):
+        # a later patch inserts methods between this method and go(lane).
+        "    this._loadRealGenerations();\n"
+        "    this._loadRealAgentNotes();\n"
+        "    this._loadRealChiefSetup();\n"
+        "  }\n",
+        "    this._loadRealGenerations();\n"
+        "    this._loadRealAgentNotes();\n"
+        "  }\n",
+        "    this._loadRealGenerations();\n"
+        "    this._loadRealAgentNotes();\n"
+        "    this._loadRealChiefSetup();\n"
+        "  }\n",
+    ),
+    (
+        "add Chief of Staff setup helpers: load, save, and the automations vals",
+        "  _automationsVals() {",  # stable marker
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+        '  // --- Automations tab: the user\'s Chief of Staff setup. Saved per user to\n'
+        '  // /chief-setup and rendered by the backend into a portable "Chief of\n'
+        '  // Staff" block the user can paste into any chatbot.\n'
+        '  async _loadRealChiefSetup() {\n'
+        '    try {\n'
+        '      const res = await fetch("/chief-setup/" + encodeURIComponent(this.userKey), { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) return;\n'
+        '      const data = await res.json();\n'
+        '      const s = data.setup || {};\n'
+        '      this.setState({\n'
+        '        chiefUnit: s.unit || "", chiefBillet: s.billet || "", chiefEchelon: s.echelon || "",\n'
+        '        chiefDrill: s.drill_schedule || "", chiefIntent: s.commander_intent || "",\n'
+        '        chiefPriorities: (s.priorities || []).join("\\n"),\n'
+        '        chiefRhythm: (s.battle_rhythm || []).join("\\n"),\n'
+        '        chiefWatch: (s.watch_items || []).join("\\n"),\n'
+        '        chiefFormat: s.output_format || "Naval letter", chiefTone: s.tone || "Direct and professional",\n'
+        '        chiefNotes: s.standing_notes || "",\n'
+        '        chiefBriefingBlock: data.briefing_block || "", chiefConfigured: !!data.is_configured,\n'
+        '      });\n'
+        '    } catch (err) { /* keep whatever is in state */ }\n'
+        '  }\n'
+        '  _saveChiefSetup() {\n'
+        '    const splitLines = (t) => (t || "").split("\\n").map((x) => x.trim()).filter(Boolean);\n'
+        '    const payload = {\n'
+        '      unit: this.state.chiefUnit || "", billet: this.state.chiefBillet || "", echelon: this.state.chiefEchelon || "",\n'
+        '      drill_schedule: this.state.chiefDrill || "", commander_intent: this.state.chiefIntent || "",\n'
+        '      priorities: splitLines(this.state.chiefPriorities),\n'
+        '      battle_rhythm: splitLines(this.state.chiefRhythm),\n'
+        '      watch_items: splitLines(this.state.chiefWatch),\n'
+        '      output_format: this.state.chiefFormat || "Naval letter", tone: this.state.chiefTone || "Direct and professional",\n'
+        '      standing_notes: this.state.chiefNotes || "",\n'
+        '    };\n'
+        '    this.setState({ chiefSaving: true });\n'
+        '    fetch("/chief-setup/" + encodeURIComponent(this.userKey), {\n'
+        '      method: "PUT",\n'
+        '      headers: this._apiHeaders({ "Content-Type": "application/json" }),\n'
+        '      body: JSON.stringify(payload),\n'
+        '    })\n'
+        '      .then((res) => res.json().then((body) => ({ ok: res.ok, body })))\n'
+        '      .then(({ ok, body }) => {\n'
+        '        if (!ok) throw new Error("save failed");\n'
+        '        this.setState({ chiefBriefingBlock: body.briefing_block || "", chiefConfigured: !!body.is_configured, chiefSaving: false, chiefSaved: true });\n'
+        '        clearTimeout(this._chiefSavedTimer);\n'
+        '        this._chiefSavedTimer = setTimeout(() => this.setState({ chiefSaved: false }), 2000);\n'
+        '      })\n'
+        '      .catch(() => { this.setState({ chiefSaving: false }); window.alert("Could not save your Chief of Staff setup to the server."); });\n'
+        '  }\n'
+        '  _automationsVals() {\n'
+        '    const bind = (key) => (e) => this.setState({ [key]: e.target.value });\n'
+        '    return {\n'
+        '      chiefUnit: this.state.chiefUnit || "", onChiefUnit: bind("chiefUnit"),\n'
+        '      chiefBillet: this.state.chiefBillet || "", onChiefBillet: bind("chiefBillet"),\n'
+        '      chiefEchelon: this.state.chiefEchelon || "", onChiefEchelon: bind("chiefEchelon"),\n'
+        '      chiefDrill: this.state.chiefDrill || "", onChiefDrill: bind("chiefDrill"),\n'
+        '      chiefIntent: this.state.chiefIntent || "", onChiefIntent: bind("chiefIntent"),\n'
+        '      chiefPriorities: this.state.chiefPriorities || "", onChiefPriorities: bind("chiefPriorities"),\n'
+        '      chiefRhythm: this.state.chiefRhythm || "", onChiefRhythm: bind("chiefRhythm"),\n'
+        '      chiefWatch: this.state.chiefWatch || "", onChiefWatch: bind("chiefWatch"),\n'
+        '      chiefFormat: this.state.chiefFormat || "Naval letter", onChiefFormat: bind("chiefFormat"),\n'
+        '      chiefTone: this.state.chiefTone || "Direct and professional", onChiefTone: bind("chiefTone"),\n'
+        '      chiefNotes: this.state.chiefNotes || "", onChiefNotes: bind("chiefNotes"),\n'
+        '      chiefBriefingBlock: this.state.chiefBriefingBlock || "",\n'
+        '      chiefHasBlock: !!(this.state.chiefBriefingBlock && this.state.chiefBriefingBlock.length),\n'
+        '      chiefConfigured: !!this.state.chiefConfigured,\n'
+        '      chiefSaveLabel: this.state.chiefSaving ? "Saving…" : (this.state.chiefSaved ? "Saved ✓" : "Save setup"),\n'
+        '      onChiefSave: (e) => { if (e) e.preventDefault(); this._saveChiefSetup(); },\n'
+        '      chiefCopyLabel: this.state.chiefCopiedBlock ? "Copied" : "Copy Chief of Staff block",\n'
+        '      onChiefCopy: () => { navigator.clipboard && navigator.clipboard.writeText(this.state.chiefBriefingBlock || ""); this.setState({ chiefCopiedBlock: true }); clearTimeout(this._chiefCopyTimer); this._chiefCopyTimer = setTimeout(() => this.setState({ chiefCopiedBlock: false }), 1500); },\n'
+        '    };\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+    ),
+    (
+        "state defaults: Chief of Staff setup fields",
+        '    chiefFormat: "Naval letter",',  # stable marker
+        '    skillNotes: {},\n',
+        '    skillNotes: {},\n'
+        '    chiefUnit: "", chiefBillet: "", chiefEchelon: "", chiefDrill: "", chiefIntent: "",\n'
+        '    chiefPriorities: "", chiefRhythm: "", chiefWatch: "",\n'
+        '    chiefFormat: "Naval letter", chiefTone: "Direct and professional", chiefNotes: "",\n'
+        '    chiefBriefingBlock: "", chiefConfigured: false,\n',
+    ),
+    (
+        "AI top intro: mention setting up your Chief of Staff",
+        '<strong style="color:#eef2f6;">Use this page to</strong> understand what each agent/skill actually does, leave notes to feed back into their files, keep editable prompt packs for any chatbot, and see suggested agent combinations for common situations.',
+        '<strong style="color:#eef2f6;">Use this page to</strong> understand what each agent and skill does, set up your own Chief of Staff, keep copy-paste prompt packs for any chatbot, and see suggested agent combinations for common situations. New here? Start on the Automations tab.',
+    ),
+    (
+        "Agents tab: add a what/why/how-to-call explainer block",
+        '<h3 style="margin:0 0 6px;font-size:0.95rem;font-weight:700;">What these agents are</h3>',  # stable marker
+        '      <sc-if value="{{ isAiTabAgents }}" hint-placeholder-val="{{ true }}">\n'
+        '      <div style="display:grid;gap:16px;">\n'
+        '        <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;max-width:260px;">Category\n',
+        '      <sc-if value="{{ isAiTabAgents }}" hint-placeholder-val="{{ true }}">\n'
+        '      <div style="display:grid;gap:16px;">\n'
+        '        <section style="border:1px solid #2a3c4a;border-radius:8px;background:#0f1620;padding:14px 18px;">\n'
+        '          <h3 style="margin:0 0 6px;font-size:0.95rem;font-weight:700;">What these agents are</h3>\n'
+        '          <p style="margin:0 0 8px;color:#c7cfd8;font-size:0.84rem;line-height:1.55;">Each agent is a <strong>role-tuned AI advisor</strong> defined in this repo — a Chief of Staff, a Planning Advisor, a full virtual staff council, and more. Each carries its own doctrine references, guardrails, and a job it is good at, and produces advisory drafts you verify — never authoritative products.</p>\n'
+        '          <p style="margin:0 0 6px;color:#c7cfd8;font-size:0.84rem;line-height:1.55;"><strong style="color:#eef2f6;">Agentic AI</strong> means the AI does not just answer once — it works a task: it takes your inputs, applies a role’s judgment and references, and can hand off to another agent (see the Combos tab).</p>\n'
+        '          <p style="margin:0;color:#8a94a0;font-size:0.8rem;line-height:1.5;"><strong style="color:#aab4bf;">How to call one:</strong> open this repo in an AI code assistant (Claude Code, Codex) and ask for that role by name, or copy a Prompt pack into any chatbot. To ground your Chief of Staff first, use the <strong>Automations</strong> tab.</p>\n'
+        '        </section>\n'
+        '        <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;max-width:260px;">Category\n',
+    ),
+    (
+        "Agents tab: description + who-for always visible, limitations under notes",
+        '                  <p style="margin:8px 0 0;color:#c7cfd8;font-size:0.84rem;line-height:1.5;">{{ a.description }}</p>\n'
+        '                  <sc-if value="{{ a.hasIntendedUsers }}" hint-placeholder-val="{{ true }}">',  # stable marker
+        '                  <sc-if value="{{ a.noteOpen }}" hint-placeholder-val="{{ false }}">\n'
+        '                    <p style="margin:10px 0 0;color:#c7cfd8;font-size:0.84rem;line-height:1.5;">{{ a.description }}</p>\n'
+        '                    <p style="margin:6px 0 0;color:#8a94a0;font-size:0.78rem;line-height:1.45;"><strong style="color:#aab4bf;">Limitations:</strong> {{ a.limitations }}</p>\n',
+        '                  <p style="margin:8px 0 0;color:#c7cfd8;font-size:0.84rem;line-height:1.5;">{{ a.description }}</p>\n'
+        '                  <sc-if value="{{ a.hasIntendedUsers }}" hint-placeholder-val="{{ true }}">\n'
+        '                  <p style="margin:6px 0 0;color:#8a94a0;font-size:0.78rem;line-height:1.45;"><strong style="color:#aab4bf;">Who it\'s for:</strong> {{ a.intendedUsers }}</p>\n'
+        '                  </sc-if>\n'
+        '                  <sc-if value="{{ a.noteOpen }}" hint-placeholder-val="{{ false }}">\n'
+        '                    <p style="margin:8px 0 0;color:#8a94a0;font-size:0.78rem;line-height:1.45;"><strong style="color:#aab4bf;">Not for:</strong> {{ a.limitations }}</p>\n',
+    ),
+    (
+        "expand AGENT_COMBOS with more, richer plays",
+        "  static AGENT_COMBOS = [\n    {\n      title: \"Building a training progression\",",
+        "  static AGENT_COMBOS = [\n    {\n      title: \"Building a training progression\",\n"
+        "      chain: [\"planning-advisor\", \"staff-products\", \"assessment-learning-advisor\"],\n"
+        "      description: \"Set the planning tempo and OPT structure first, draft the actual training/OPORD scaffold, then close the loop by wiring the next AAR's measures back into the next cycle's plan.\",\n"
+        "    },",
+        "  static AGENT_COMBOS = [\n"
+        "    {\n"
+        "      title: \"Set up your Chief of Staff, then work\",\n"
+        "      chain: [\"chief-of-staff\", \"planning-advisor\", \"staff-products\"],\n"
+        "      description: \"Start in the Automations tab to give your Chief of Staff your unit, priorities, and battle rhythm. Then it frames the drill period, the Planning Advisor sets tempo, and Staff Products drafts what's due.\",\n"
+        "    },\n"
+        "    {\n"
+        "      title: \"Building a training progression\",\n"
+        "      chain: [\"planning-advisor\", \"staff-products\", \"assessment-learning-advisor\"],\n"
+        "      description: \"Set the planning tempo and OPT structure first, draft the actual training/OPORD scaffold, then close the loop by wiring the next AAR's measures back into the next cycle's plan.\",\n"
+        "    },",
+    ),
+    (
+        "add three more combos before the closing bracket of AGENT_COMBOS",
+        '      description: "Draft the report scaffold and comments, then run it through the writing coach to make sure the narrative tone matches the marks before it\'s submitted.",\n'
+        '    },\n'
+        '  ];',
+        '      description: "Draft the report scaffold and comments, then run it through the writing coach to make sure the narrative tone matches the marks before it\'s submitted.",\n'
+        '    },\n'
+        '    {\n'
+        '      title: "MAGTF cross-talk on a scheme of maneuver",\n'
+        '      chain: ["gce", "fires-advisor", "ace", "lce"],\n'
+        '      description: "Walk a concept around the MAGTF: GCE frames the ground scheme, Fires integrates fire support, ACE checks air-ground support and airspace, and LCE pressure-tests whether sustainment actually supports it.",\n'
+        '    },\n'
+        '    {\n'
+        '      title: "Full staff estimate before a decision brief",\n'
+        '      chain: ["staff-opso", "staff-s2", "staff-s4", "red-team-assumptions-challenge", "staff-products"],\n'
+        '      description: "Run the idea past the OpsO, Intel, and Logistics seats of the Virtual Staff Council, red-team the assumptions, then have Staff Products assemble the decision brief from what survived.",\n'
+        '    },\n'
+        '    {\n'
+        '      title: "New-join in-processing sprint",\n'
+        '      chain: ["unit-checkin", "pki-cac-troubleshooter", "chief-of-staff"],\n'
+        '      description: "Unit Check-In lays out the admin and reporting path, the PKI/CAC troubleshooter clears the inevitable access blocker, and the Chief of Staff folds the follow-ups into your running action list.",\n'
+        '    },\n'
+        '  ];',
+    ),
+    (
+        "Skills tab: intro, condensed cards (notes collapsed), hidden-dev note",
+        '          <h3 style="margin:0 0 6px;font-size:0.95rem;font-weight:700;">Skills — staff shortcuts</h3>',  # stable marker
+        '      <div style="display:grid;gap:10px;">\n'
+        '        <sc-for list="{{ skillsRendered }}" as="s" hint-placeholder-count="4">\n'
+        '          <section style="border:1px solid #313844;border-radius:8px;background:#12161b;padding:16px 18px;">\n'
+        '            <h3 style="margin:0;font-size:0.96rem;font-weight:700;font-family:\'IBM Plex Mono\',monospace;">{{ s.name }}</h3>\n'
+        '            <p style="margin:8px 0 0;color:#c7cfd8;font-size:0.84rem;line-height:1.5;">{{ s.description }}</p>\n'
+        '            <textarea rows="2" value="{{ s.note }}" sc-camel-on-change="{{ s.onNoteChange }}" placeholder="Notes to feed back into this skill\'s file…" style="margin-top:10px;width:100%;box-sizing:border-box;border:1px solid #313844;border-radius:6px;padding:8px 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.82rem;resize:vertical;"></textarea>\n'
+        '            <button type="button" sc-camel-on-click="{{ s.onCopyNote }}" style="margin-top:6px;height:28px;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;font-size:0.76rem;cursor:pointer;">Copy note for repo</button>\n'
+        '          </section>\n'
+        '        </sc-for>\n'
+        '      </div>\n',
+        '      <div style="display:grid;gap:10px;">\n'
+        '        <section style="border:1px solid #2a3c4a;border-radius:8px;background:#0f1620;padding:14px 18px;">\n'
+        '          <h3 style="margin:0 0 6px;font-size:0.95rem;font-weight:700;">Skills — staff shortcuts</h3>\n'
+        '          <p style="margin:0;color:#c7cfd8;font-size:0.84rem;line-height:1.55;">Skills are pre-packaged procedures an AI assistant follows for a recurring staff task — build a brief, turn a meeting into action items, write a session handoff. In an AI code assistant working this repo, name the skill or just describe the task. Showing staff-work skills only.</p>\n'
+        '        </section>\n'
+        '        <sc-for list="{{ skillsRendered }}" as="s" hint-placeholder-count="4">\n'
+        '          <section style="border:1px solid #313844;border-radius:8px;background:#12161b;padding:13px 16px;">\n'
+        '            <h3 style="margin:0;font-size:0.9rem;font-weight:700;font-family:\'IBM Plex Mono\',monospace;">{{ s.name }}</h3>\n'
+        '            <p style="margin:6px 0 0;color:#c7cfd8;font-size:0.83rem;line-height:1.5;">{{ s.description }}</p>\n'
+        '            <details style="margin-top:8px;">\n'
+        '              <summary style="cursor:pointer;color:#8a94a0;font-size:0.76rem;font-weight:600;">Add a note for this skill\'s file</summary>\n'
+        '              <textarea rows="2" value="{{ s.note }}" sc-camel-on-change="{{ s.onNoteChange }}" placeholder="Notes to feed back into this skill\'s file…" style="margin-top:8px;width:100%;box-sizing:border-box;border:1px solid #313844;border-radius:6px;padding:8px 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.82rem;resize:vertical;"></textarea>\n'
+        '              <button type="button" sc-camel-on-click="{{ s.onCopyNote }}" style="margin-top:6px;height:28px;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;font-size:0.76rem;cursor:pointer;">Copy note for repo</button>\n'
+        '            </details>\n'
+        '          </section>\n'
+        '        </sc-for>\n'
+        '        <sc-if value="{{ hasHiddenDevSkills }}" hint-placeholder-val="{{ false }}">\n'
+        '          <p style="margin:0;color:#5a6572;font-size:0.76rem;line-height:1.45;">Some repo-development skills are hidden here — they are for contributors building the app, not staff work. See <span style="font-family:\'IBM Plex Mono\',monospace;">skills/README.md</span>.</p>\n'
+        '        </sc-if>\n'
+        '      </div>\n',
+    ),
+    (
+        "Prompt packs: stronger repo-pack intro (pseudo staff agent)",
+        "pseudo staff section in a tool you already have",  # stable marker (new-text fragment)
+        'Read-only copies of the packs in <span style="font-family:\'IBM Plex Mono\',monospace;">prompt-packs/</span> — paste the full text into any AI chat.',
+        'Each pack turns any chatbot (ChatGPT, Claude, Gemini) into a Marine staff advisor for that lane — a pseudo staff section in a tool you already have. Copy the whole pack and paste it as your first message, then ask your question.',
+    ),
+    (
+        "Prompt packs: collapse the build-your-own editable packs below the repo packs",
+        '<details style="border:1px solid #313844;border-radius:8px;background:#0f1318;">\n'
+        '          <summary style="cursor:pointer;list-style:none;padding:12px 16px;font-size:0.9rem;font-weight:700;color:#eef2f6;">Build your own quick prompts (optional)</summary>\n'
+        '          <div style="padding:0 16px 16px;display:grid;gap:16px;">\n'
+        '        <sc-for list="{{ promptPacksRendered }}" as="pack" hint-placeholder-count="4">\n',
+        '        <sc-for list="{{ promptPacksRendered }}" as="pack" hint-placeholder-count="4">\n',
+        '        <details style="border:1px solid #313844;border-radius:8px;background:#0f1318;">\n'
+        '          <summary style="cursor:pointer;list-style:none;padding:12px 16px;font-size:0.9rem;font-weight:700;color:#eef2f6;">Build your own quick prompts (optional)</summary>\n'
+        '          <div style="padding:0 16px 16px;display:grid;gap:16px;">\n'
+        '        <sc-for list="{{ promptPacksRendered }}" as="pack" hint-placeholder-count="4">\n',
+    ),
+    (
+        "Prompt packs: close the build-your-own details wrapper after the add-pack form",
+        '<button type="submit" style="height:36px;padding:0 16px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font:inherit;font-weight:600;font-size:0.84rem;cursor:pointer;">+ Add pack</button>\n'
+        '        </form>\n'
+        '        </div>\n'
+        '        </details>\n'
+        '      </div>\n'
+        '      </sc-if>\n',
+        '<button type="submit" style="height:36px;padding:0 16px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font:inherit;font-weight:600;font-size:0.84rem;cursor:pointer;">+ Add pack</button>\n'
+        '        </form>\n'
+        '      </div>\n'
+        '      </sc-if>\n',
+        '<button type="submit" style="height:36px;padding:0 16px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font:inherit;font-weight:600;font-size:0.84rem;cursor:pointer;">+ Add pack</button>\n'
+        '        </form>\n'
+        '        </div>\n'
+        '        </details>\n'
+        '      </div>\n'
+        '      </sc-if>\n',
+    ),
+    (
+        "Automations tab: Chief of Staff setup wizard template",
+        '<sc-if value="{{ isAiTabAutomations }}" hint-placeholder-val="{{ false }}">',  # stable marker
+        '      </sc-if>\n'
+        '    </div>\n'
+        '    </sc-if>\n'
+        '\n'
+        '    <!-- ==================== LINKS LANE ==================== -->\n',
+        '      </sc-if>\n'
+        '\n'
+        '      <sc-if value="{{ isAiTabAutomations }}" hint-placeholder-val="{{ false }}">\n'
+        '      <div style="display:grid;gap:16px;">\n'
+        '        <section style="border:1px solid #2a3c4a;border-radius:8px;background:#0f1620;padding:16px 18px;">\n'
+        '          <h3 style="margin:0 0 6px;font-size:1rem;font-weight:700;">Set up your Chief of Staff</h3>\n'
+        '          <p style="margin:0;color:#c7cfd8;font-size:0.84rem;line-height:1.55;">Fill this in once. The app remembers your context, and you get a copy-paste <strong>Chief of Staff</strong> block you can drop into ChatGPT, Claude, Gemini — any chatbot — to get an advisor that already knows your unit, priorities, and battle rhythm. UNCLASSIFIED only.</p>\n'
+        '        </section>\n'
+        '        <form sc-camel-on-submit="{{ onChiefSave }}" style="display:grid;gap:14px;border:1px solid #313844;border-radius:8px;background:#12161b;padding:18px 20px;">\n'
+        '          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">\n'
+        '            <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;">Unit\n'
+        '              <input value="{{ chiefUnit }}" sc-camel-on-change="{{ onChiefUnit }}" placeholder="e.g. 4th CAG" style="height:36px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.84rem;">\n'
+        '            </label>\n'
+        '            <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;">Billet\n'
+        '              <input value="{{ chiefBillet }}" sc-camel-on-change="{{ onChiefBillet }}" placeholder="e.g. S-4A" style="height:36px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.84rem;">\n'
+        '            </label>\n'
+        '            <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;">Echelon\n'
+        '              <input value="{{ chiefEchelon }}" sc-camel-on-change="{{ onChiefEchelon }}" placeholder="e.g. Battalion" style="height:36px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.84rem;">\n'
+        '            </label>\n'
+        '            <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;">Next drill / schedule\n'
+        '              <input value="{{ chiefDrill }}" sc-camel-on-change="{{ onChiefDrill }}" placeholder="e.g. 09–10 AUG" style="height:36px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.84rem;">\n'
+        '            </label>\n'
+        '          </div>\n'
+        '          <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;">Commander\'s intent / your focus\n'
+        '            <textarea rows="2" value="{{ chiefIntent }}" sc-camel-on-change="{{ onChiefIntent }}" placeholder="What matters most right now…" style="border:1px solid #313844;border-radius:6px;padding:8px 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.84rem;resize:vertical;"></textarea>\n'
+        '          </label>\n'
+        '          <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;">Current priorities (one per line)\n'
+        '            <textarea rows="3" value="{{ chiefPriorities }}" sc-camel-on-change="{{ onChiefPriorities }}" placeholder="e.g. Close RQS gaps" style="border:1px solid #313844;border-radius:6px;padding:8px 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.84rem;resize:vertical;"></textarea>\n'
+        '          </label>\n'
+        '          <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;">Recurring battle rhythm (one per line)\n'
+        '            <textarea rows="3" value="{{ chiefRhythm }}" sc-camel-on-change="{{ onChiefRhythm }}" placeholder="e.g. 0730 COC sync" style="border:1px solid #313844;border-radius:6px;padding:8px 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.84rem;resize:vertical;"></textarea>\n'
+        '          </label>\n'
+        '          <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;">Watch items — keep me ahead of these (one per line)\n'
+        '            <textarea rows="2" value="{{ chiefWatch }}" sc-camel-on-change="{{ onChiefWatch }}" placeholder="e.g. AT budget MARADMIN" style="border:1px solid #313844;border-radius:6px;padding:8px 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.84rem;resize:vertical;"></textarea>\n'
+        '          </label>\n'
+        '          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">\n'
+        '            <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;">Default output format\n'
+        '              <input value="{{ chiefFormat }}" sc-camel-on-change="{{ onChiefFormat }}" placeholder="Naval letter / Bullet / SMEAC" style="height:36px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.84rem;">\n'
+        '            </label>\n'
+        '            <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;">Tone\n'
+        '              <input value="{{ chiefTone }}" sc-camel-on-change="{{ onChiefTone }}" placeholder="Direct and professional" style="height:36px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.84rem;">\n'
+        '            </label>\n'
+        '          </div>\n'
+        '          <label style="display:grid;gap:4px;font-size:0.74rem;font-weight:600;color:#8a94a0;">Standing notes\n'
+        '            <textarea rows="2" value="{{ chiefNotes }}" sc-camel-on-change="{{ onChiefNotes }}" placeholder="Anything your Chief of Staff should always keep in mind…" style="border:1px solid #313844;border-radius:6px;padding:8px 10px;background:#0d1014;color:#eef2f6;font:inherit;font-size:0.84rem;resize:vertical;"></textarea>\n'
+        '          </label>\n'
+        '          <button type="submit" style="justify-self:start;height:38px;padding:0 20px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font:inherit;font-weight:700;font-size:0.86rem;cursor:pointer;">{{ chiefSaveLabel }}</button>\n'
+        '        </form>\n'
+        '        <sc-if value="{{ chiefHasBlock }}" hint-placeholder-val="{{ false }}">\n'
+        '        <section style="border:1px solid #313844;border-radius:8px;background:#0f1318;padding:16px 18px;">\n'
+        '          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;">\n'
+        '            <h3 style="margin:0;font-size:0.95rem;font-weight:700;">Your Chief of Staff block</h3>\n'
+        '            <button type="button" sc-camel-on-click="{{ onChiefCopy }}" style="flex:0 0 auto;height:28px;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;font-size:0.76rem;cursor:pointer;">{{ chiefCopyLabel }}</button>\n'
+        '          </div>\n'
+        '          <p style="margin:0 0 8px;color:#8a94a0;font-size:0.78rem;line-height:1.45;">Paste this as your first message in any chatbot. Update the fields above and save to regenerate it.</p>\n'
+        '          <pre style="margin:0;white-space:pre-wrap;word-break:break-word;font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem;line-height:1.5;color:#c7cfd8;background:#0b0e12;border:1px solid #313844;border-radius:6px;padding:12px 14px;max-height:340px;overflow:auto;">{{ chiefBriefingBlock }}</pre>\n'
+        '        </section>\n'
+        '        </sc-if>\n'
+        '      </div>\n'
+        '      </sc-if>\n'
+        '    </div>\n'
+        '    </sc-if>\n'
+        '\n'
+        '    <!-- ==================== LINKS LANE ==================== -->\n',
     ),
 ]
 

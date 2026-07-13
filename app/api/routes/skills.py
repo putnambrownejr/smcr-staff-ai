@@ -23,6 +23,9 @@ def _load_skill_catalog() -> list[SkillEntry]:
     skills: list[SkillEntry] = []
     in_section = False
     current_name: str | None = None
+    # Audience comes from the "### Staff work" / "### Building this app"
+    # subsections under "## Available Skills"; default to staff if unlabeled.
+    audience = "staff"
     for raw_line in lines:
         line = raw_line.strip()
         if line == "## Available Skills":
@@ -32,10 +35,13 @@ def _load_skill_catalog() -> list[SkillEntry]:
             break
         if not in_section:
             continue
+        if line.startswith("### "):
+            audience = "development" if "building" in line.lower() else "staff"
+            continue
         if line.startswith("- `") and "`" in line[3:]:
             current_name = line.split("`", 2)[1]
             continue
         if current_name and line.startswith("- "):
-            skills.append(SkillEntry(name=current_name, description=line[2:].strip()))
+            skills.append(SkillEntry(name=current_name, description=line[2:].strip(), audience=audience))
             current_name = None
     return skills

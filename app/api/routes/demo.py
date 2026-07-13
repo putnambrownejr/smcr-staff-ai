@@ -27,6 +27,7 @@ from app.services.billets.recommender import DEFAULT_BILLET_WARNINGS, recommend_
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.services.actions.tracker import ActionTracker
+from app.services.chief.setup_store import ChiefSetupStore
 from app.services.demo.scenarios import DEMO_USER_KEY, build_demo_career_watch, build_demo_chief_brief
 from app.services.demo.workspace_seed import seed_demo_workspace
 from app.services.planning.orchestrator import StaffPlanningOrchestrator
@@ -76,7 +77,8 @@ def seed_demo_workspace_route(only_if_empty: bool = False) -> dict[str, object]:
     settings = get_settings()
     store = UserDocsStore(settings.user_docs_dir, settings.projects_dir)
     tracker = ActionTracker(settings.actions_storage_dir)
-    counts = seed_demo_workspace(store, tracker, only_if_empty=only_if_empty)
+    chief_store = ChiefSetupStore(settings.chief_setup_storage_dir)
+    counts = seed_demo_workspace(store, tracker, chief_store, only_if_empty=only_if_empty)
     return {"user_key": DEMO_USER_KEY, "seeded": counts, "skipped": counts is None}
 
 

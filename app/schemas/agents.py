@@ -25,6 +25,10 @@ class AgentMetadata(BaseModel):
     name: str
     description: str
     domain: str
+    # Curated grouping for presentation (dashboard AI page). `domain` stays the
+    # agent's own fine-grained self-description; `category` buckets agents into a
+    # handful of human-facing groups (assigned in the registry, not per-builder).
+    category: str = "Other Advisors"
     intended_users: list[str]
     allowed_sources: list[str]
     disallowed_inputs: list[str]

@@ -584,3 +584,26 @@ def test_checkin_agent_detects_lateral_move() -> None:
 
     assert "Lateral move" in response.answer or "transfer" in response.answer.lower()
     assert "losing unit" in response.answer or "OMPF" in response.answer
+
+
+def test_list_metadata_assigns_curated_categories() -> None:
+    registry = AgentRegistry()
+    by_id = {m.id: m for m in registry.list_metadata()}
+
+    # A handful of agents map into a few human-facing groups (several each),
+    # rather than one raw domain per agent.
+    assert by_id["chief-of-staff"].category == "Command & Leadership"
+    assert by_id["planning-advisor"].category == "Planning & Decision"
+    assert by_id["ace"].category == "MAGTF Warfighting Elements"
+    assert by_id["gce"].category == "MAGTF Warfighting Elements"
+
+    # "staff-products" starts with "staff-" but is a real product agent, not a
+    # virtual staff-council seat.
+    assert by_id["staff-products"].category == "Staff Products & Communication"
+    assert by_id["staff-opso"].category == "Virtual Staff Council"
+
+    # Every category holds at least two agents (no one-agent categories).
+    from collections import Counter
+
+    counts = Counter(m.category for m in registry.list_metadata())
+    assert all(n >= 2 for n in counts.values()), counts
