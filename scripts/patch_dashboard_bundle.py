@@ -2131,6 +2131,28 @@ PATCHES: list[tuple[str, ...]] = [
         '\n'
         '    <!-- ==================== LINKS LANE ==================== -->\n',
     ),
+    (
+        "_switchDemoMode: wipe demo files from disk when toggling off",
+        'fetch("/demo/workspace", { method: "DELETE", headers: this._apiHeaders() }).catch(() => {});',  # stable marker
+        '    } else {\n'
+        '      this.userKey = this._realUserKey || this._resolveUserKey();\n'
+        '      // Clear the demo profile fields; _loadRealHandoff refills them from\n'
+        '      // the real personal handoff, or leaves them blank if none is saved.\n'
+        '      this.setState({ profileRank: "", profileLastName: "", profileBillet: "", profileUnit: "" });\n'
+        '      this._loadRealHandoff();\n'
+        '    }\n',
+        '    } else {\n'
+        '      this.userKey = this._realUserKey || this._resolveUserKey();\n'
+        '      // Toggling off is an explicit exit from demo mode, so remove the\n'
+        '      // disposable demo files from disk instead of leaving them under the\n'
+        '      // shared demo key. Targets the demo key server-side; no-op if absent.\n'
+        '      fetch("/demo/workspace", { method: "DELETE", headers: this._apiHeaders() }).catch(() => {});\n'
+        '      // Clear the demo profile fields; _loadRealHandoff refills them from\n'
+        '      // the real personal handoff, or leaves them blank if none is saved.\n'
+        '      this.setState({ profileRank: "", profileLastName: "", profileBillet: "", profileUnit: "" });\n'
+        '      this._loadRealHandoff();\n'
+        '    }\n',
+    ),
 ]
 
 

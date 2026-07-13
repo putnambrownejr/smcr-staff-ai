@@ -64,6 +64,35 @@ def seed_demo_workspace(
     return counts
 
 
+def clear_demo_workspace(
+    store: UserDocsStore,
+    tracker: ActionTracker,
+    chief_store: ChiefSetupStore | None = None,
+) -> dict[str, int]:
+    """Delete all demo-user files from disk. Returns per-category removed counts.
+
+    Called when demo mode is toggled off, so the disposable demo files do not
+    linger under the demo key after the user leaves demo mode. Only touches the
+    shared demo key; real per-user data is never affected.
+    """
+    removed = {
+        "notebook": 0,
+        "fitreps": 0,
+        "generations": 0,
+        "actions": 0,
+        "chief_setup": 0,
+    }
+    for category in UserDocCategory:
+        entries = store.list_category(category, DEMO_USER_KEY)
+        for entry in entries:
+            store.delete(category, DEMO_USER_KEY, entry.id)
+        removed[category.value] = len(entries)
+    removed["actions"] = _wipe_demo_actions(tracker)
+    if chief_store is not None and chief_store.delete(DEMO_USER_KEY):
+        removed["chief_setup"] = 1
+    return removed
+
+
 def _seed_chief_setup(chief_store: ChiefSetupStore) -> int:
     chief_store.upsert(
         DEMO_USER_KEY,
@@ -101,12 +130,15 @@ def _wipe_demo_docs(store: UserDocsStore) -> None:
             store.delete(category, DEMO_USER_KEY, entry.id)
 
 
-def _wipe_demo_actions(tracker: ActionTracker) -> None:
+def _wipe_demo_actions(tracker: ActionTracker) -> int:
     # list(user_key=...) also matches records with no user_key at all; only
     # delete records that are explicitly the demo user's.
+    removed = 0
     for record in tracker.list(user_key=DEMO_USER_KEY, include_closed=True):
         if record.user_key == DEMO_USER_KEY:
             tracker.delete(record.action_id)
+            removed += 1
+    return removed
 
 
 def _seed_notebook(store: UserDocsStore) -> int:
