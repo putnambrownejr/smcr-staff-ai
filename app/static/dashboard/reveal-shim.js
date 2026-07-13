@@ -11,6 +11,32 @@
   var origOpen = window.open.bind(window);
   var origPrompt = window.prompt.bind(window);
 
+  // Non-blocking toast instead of window.alert: a native alert() halts the
+  // page's event loop (and has wedged automation/screen readers on this page
+  // before), which is overkill for a "opened the nearest folder" notice.
+  function showToast(message) {
+    try {
+      var toast = document.createElement("div");
+      toast.setAttribute("role", "status");
+      toast.style.cssText =
+        "position:fixed;left:50%;bottom:28px;transform:translateX(-50%);" +
+        "max-width:min(560px,90vw);padding:10px 16px;border:1px solid #313844;" +
+        "border-radius:8px;background:#1a2027;color:#eef2f6;font:500 0.84rem/1.45 " +
+        "'IBM Plex Sans','Segoe UI',sans-serif;box-shadow:0 6px 24px rgba(0,0,0,0.45);" +
+        "z-index:2147483647;opacity:0;transition:opacity 0.25s;";
+      toast.textContent = message;
+      (document.body || document.documentElement).appendChild(toast);
+      requestAnimationFrame(function () { toast.style.opacity = "1"; });
+      setTimeout(function () {
+        toast.style.opacity = "0";
+        setTimeout(function () { toast.remove(); }, 400);
+      }, 6000);
+    } catch (err) {
+      // Fall back to the console rather than a blocking dialog.
+      console.warn("[reveal-shim]", message);
+    }
+  }
+
   window.prompt = function (message, defaultValue) {
     if (ROOT && typeof message === "string" && message.indexOf("smcr-staff-ai repo") !== -1) {
       return ROOT;
@@ -32,13 +58,13 @@
         })
         .then(function (r) {
           if (!r.ok) {
-            window.alert("Could not open file location: " + (r.body.detail || "unknown error"));
+            showToast("Could not open file location: " + (r.body.detail || "unknown error"));
           } else if (r.body.status === "opened_fallback") {
-            window.alert("That exact file/folder doesn't exist yet — opened the nearest folder that does: " + r.body.resolved);
+            showToast("That exact file/folder doesn't exist yet — opened the nearest folder that does: " + r.body.resolved);
           }
         })
         .catch(function () {
-          window.alert("Could not reach the dashboard backend to open the file location.");
+          showToast("Could not reach the dashboard backend to open the file location.");
         });
       return null;
     }

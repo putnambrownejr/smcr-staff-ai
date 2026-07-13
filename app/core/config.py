@@ -133,7 +133,10 @@ def default_external_processing_audits_dir() -> Path:
 
 
 def default_projects_dir() -> Path:
-    return default_local_state_root() / "projects"
+    # AGENTS.md ("Saving User Work Products"): user work saves to the repo-root
+    # projects/ folder, which is gitignored. The dashboard's Project files
+    # tiles open this same path, so save-to-project and open-folder agree.
+    return Path(__file__).resolve().parents[2] / "projects"
 
 
 def default_user_docs_dir() -> Path:

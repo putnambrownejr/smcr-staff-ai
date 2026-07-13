@@ -182,34 +182,63 @@ def test_reveal_rejects_paths_outside_repo_root(monkeypatch: pytest.MonkeyPatch)
     assert opened == []
 
 
-def test_reveal_falls_back_to_local_state_root_for_project_paths(
+def test_reveal_resolves_user_docs_paths_through_the_digest_folder(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # projects_dir has a computed static default baked in at Settings class
+    # user_docs_dir has a computed static default baked in at Settings class
     # definition time (see app/core/config.py), so setting SMCR_STAFF_AI_HOME
     # here wouldn't retroactively change it -- monkeypatch the cached
-    # settings instance's projects_dir attribute directly instead.
+    # settings instance's user_docs_dir attribute directly instead.
     from app.core.config import get_settings
 
-    projects_dir = tmp_path / "projects"
-    products_dir = projects_dir / "at-2026" / "products"
-    products_dir.mkdir(parents=True)
-    (products_dir / "sitrep.md").write_text("content", encoding="utf-8")
-    monkeypatch.setattr(get_settings(), "projects_dir", str(projects_dir))
+    user_docs_dir = tmp_path / "User Docs"
+    doc_dir = user_docs_dir / "Generations" / "abcdef0123456789abcdef01"
+    doc_dir.mkdir(parents=True)
+    (doc_dir / "4254ab7907b7.md").write_text("---\n---\n", encoding="utf-8")
+    monkeypatch.setattr(get_settings(), "user_docs_dir", str(user_docs_dir))
+    opened: list[Path] = []
+    monkeypatch.setattr(dashboard_routes, "_reveal_in_file_explorer", opened.append)
+    client = TestClient(app)
+
+    # The dashboard shows drafts as "User Docs/<Category>/<id>.md" (no digest
+    # level) and prefixes the repo root; both spellings must land on the real
+    # file under the local state root.
+    for raw in (
+        "User Docs/Generations/4254ab7907b7.md",
+        (dashboard_routes.REPO_ROOT / "User Docs/Generations/4254ab7907b7.md").as_posix(),
+    ):
+        opened.clear()
+        response = client.get("/dashboard/files/reveal", params={"path": raw})
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["status"] == "opened"
+        assert len(opened) == 1
+        assert opened[0] == doc_dir / "4254ab7907b7.md"
+
+
+def test_reveal_falls_back_to_the_user_docs_category_for_unknown_drafts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.core.config import get_settings
+
+    user_docs_dir = tmp_path / "User Docs"
+    (user_docs_dir / "Generations").mkdir(parents=True)
+    monkeypatch.setattr(get_settings(), "user_docs_dir", str(user_docs_dir))
     opened: list[Path] = []
     monkeypatch.setattr(dashboard_routes, "_reveal_in_file_explorer", opened.append)
     client = TestClient(app)
 
     response = client.get(
         "/dashboard/files/reveal",
-        params={"path": "projects/at-2026/products/sitrep.md"},
+        params={"path": "User Docs/Generations/sitrep-pending-123.md"},
     )
 
     assert response.status_code == 200
     body = response.json()
-    assert body["status"] == "opened"
+    assert body["status"] == "opened_fallback"
     assert len(opened) == 1
-    assert opened[0].name == "sitrep.md"
+    assert opened[0] == user_docs_dir / "Generations"
 
 
 def test_reveal_rejects_traversal_that_would_escape_local_state_root(
@@ -217,7 +246,7 @@ def test_reveal_rejects_traversal_that_would_escape_local_state_root(
 ) -> None:
     from app.core.config import get_settings
 
-    monkeypatch.setattr(get_settings(), "projects_dir", str(tmp_path / "projects"))
+    monkeypatch.setattr(get_settings(), "user_docs_dir", str(tmp_path / "User Docs"))
     opened: list[Path] = []
     monkeypatch.setattr(dashboard_routes, "_reveal_in_file_explorer", opened.append)
     client = TestClient(app)

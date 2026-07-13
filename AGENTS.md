@@ -126,10 +126,10 @@ projects/
   what was produced, inputs used, corrections applied, and outstanding gaps.
 - **The `projects/` directory is gitignored.** User work products never get committed to the
   public repo. This is intentional — scenario content may contain exercise-specific details.
-- **Storage path on disk:** The app also provisions a `projects/` folder under the user's
-  local data directory (`%LOCALAPPDATA%\smcr-staff-ai\projects\` on Windows). The repo-local
-  `projects/` folder is the preferred location when working from the repo; the app-data path
-  is used by the running server.
+- **Storage path on disk:** The running server saves projects to this same repo-root
+  `projects/` folder (see `default_projects_dir()` in `app/core/config.py`), so files
+  saved from the dashboard and files saved by AI assistants land in one place. Set
+  `PROJECTS_DIR` in `.env` to relocate it (e.g., for Docker deployments).
 - **UNCLASSIFIED only** — the security constraint applies to project files too.
 
 ---
