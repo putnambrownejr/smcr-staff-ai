@@ -24,9 +24,14 @@ from app.services.agents.base import AgentContext
 from app.services.agents.registry import agent_registry
 from app.services.analysis.summarizer import TextAnalysisService
 from app.services.billets.recommender import DEFAULT_BILLET_WARNINGS, recommend_billets
+from app.core.auth import LocalApiKeyDependency
+from app.core.config import get_settings
+from app.services.actions.tracker import ActionTracker
 from app.services.demo.scenarios import DEMO_USER_KEY, build_demo_career_watch, build_demo_chief_brief
+from app.services.demo.workspace_seed import seed_demo_workspace
 from app.services.planning.orchestrator import StaffPlanningOrchestrator
 from app.services.staff_products.builder import StaffProductBuilder
+from app.services.user_docs.store import UserDocsStore
 
 router = APIRouter(prefix="/demo", tags=["demo"])
 _analysis_service = TextAnalysisService()
@@ -47,7 +52,32 @@ DEMO_ROUTES = [
     "/demo/billets/recommend",
     "/demo/staff-products/draft",
     "/demo/agents/{agent_id}/run",
+    "/demo/workspace/seed",
 ]
+
+
+@router.post(
+    "/workspace/seed",
+    dependencies=[LocalApiKeyDependency],
+    summary="Reset the demo user's baseline workspace files",
+)
+def seed_demo_workspace_route(only_if_empty: bool = False) -> dict[str, object]:
+    """(Re)create baseline demo files under the shared demo user key.
+
+    Unlike the other /demo routes this one WRITES local state -- real markdown
+    files under `User Docs/` and tracked-action records -- so the dashboard's
+    demo mode has working, disposable content for every workspace flow.
+
+    The dashboard calls this two ways: an explicit demo-mode toggle resets to a
+    known baseline (default), while an initial page load passes
+    ``only_if_empty=true`` so a refresh mid-demo keeps the session's edits and
+    only a first-ever load populates the baseline.
+    """
+    settings = get_settings()
+    store = UserDocsStore(settings.user_docs_dir, settings.projects_dir)
+    tracker = ActionTracker(settings.actions_storage_dir)
+    counts = seed_demo_workspace(store, tracker, only_if_empty=only_if_empty)
+    return {"user_key": DEMO_USER_KEY, "seeded": counts, "skipped": counts is None}
 
 
 @router.get("/status", summary="Show repo-mode demo capabilities")

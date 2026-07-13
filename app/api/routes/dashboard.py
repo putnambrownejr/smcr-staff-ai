@@ -105,6 +105,12 @@ def reveal_file_location(path: str) -> dict[str, str]:
     }
 
 
+# First path segments that always live under the local state root, never the
+# repo, even though the dashboard bundle prefixes every path with the repo root
+# (see openFileLocation in the bundle and reveal-shim.js).
+_LOCAL_STATE_SEGMENTS = ("User Docs", "local_context")
+
+
 def _resolve_reveal_target(raw: str) -> tuple[Path, bool]:
     cleaned = raw.split("#", 1)[0].strip().replace("\\", "/")
     if not cleaned:
@@ -112,45 +118,75 @@ def _resolve_reveal_target(raw: str) -> tuple[Path, bool]:
     candidate = Path(cleaned)
     repo_root = REPO_ROOT.resolve()
 
-    # projects_dir is "{local_state_root}/projects" (see app/core/config.py),
-    # so its parent is the local state root -- the same root User Docs and
+    # user_docs_dir is "{local_state_root}/User Docs" (see app/core/config.py),
+    # so its parent is the local state root -- the same root local_context and
     # every other local store lives under. Deriving it this way (rather than
     # importing default_local_state_root separately) respects SMCR_STAFF_AI_HOME
-    # overrides and test fixtures that override projects_dir directly.
-    local_state_root = Path(get_settings().projects_dir).resolve().parent
+    # overrides and test fixtures that override user_docs_dir directly.
+    local_state_root = Path(get_settings().user_docs_dir).resolve().parent
 
+    candidates: list[tuple[Path, Path]] = []
     if candidate.is_absolute():
         resolved = _safe_resolve(candidate, raw)
-        allowed_roots = [repo_root, local_state_root]
-        root = next((r for r in allowed_roots if resolved.is_relative_to(r)), None)
+        root = next((r for r in (repo_root, local_state_root) if resolved.is_relative_to(r)), None)
         if root is None:
             raise HTTPException(status_code=403, detail="Path is outside the allowed roots.")
+        candidates.append((root, resolved))
+        # The bundle prefixes the repo root onto every path, but "User Docs/..."
+        # and "local_context/..." live under the local state root -- re-root
+        # those so the button lands on the real file instead of a repo miss.
+        if root == repo_root:
+            rel = resolved.relative_to(repo_root)
+            if rel.parts and rel.parts[0] in _LOCAL_STATE_SEGMENTS:
+                candidates.insert(0, (local_state_root, local_state_root / rel))
     else:
         # Bundle-referenced paths are usually repo-relative (doctrine/seed
-        # data committed to the repo). "projects/..." and "User Docs/..."
-        # paths written by save-to-project live under the local state root
-        # instead (see app/services/user_docs/store.py). Join against each
-        # root and keep only candidates that stayed inside their own root
-        # (a ".." in `cleaned` could otherwise escape either one) -- prefer
-        # whichever candidate actually exists, repo root breaking ties.
-        candidates: list[tuple[Path, Path]] = []
-        for candidate_root in (repo_root, local_state_root):
+        # data and projects/ committed or gitignored in the repo). "User
+        # Docs/..." and "local_context/..." paths live under the local state
+        # root instead. Join against each root and keep only candidates that
+        # stayed inside their own root (a ".." in `cleaned` could otherwise
+        # escape either one) -- prefer whichever candidate actually exists,
+        # the first root breaking ties (and anchoring the fallback walk).
+        roots = (repo_root, local_state_root)
+        if candidate.parts and candidate.parts[0] in _LOCAL_STATE_SEGMENTS:
+            roots = (local_state_root, repo_root)
+        for candidate_root in roots:
             joined = _safe_resolve(candidate_root / cleaned, raw)
             if joined.is_relative_to(candidate_root):
                 candidates.append((candidate_root, joined))
         if not candidates:
             raise HTTPException(status_code=403, detail="Path is outside the allowed roots.")
-        existing = [c for c in candidates if c[1].exists()]
-        root, resolved = existing[0] if existing else candidates[0]
 
-    requested = resolved
+    for _, resolved in candidates:
+        exact = _existing_user_doc(resolved) or (resolved if resolved.exists() else None)
+        if exact is not None:
+            return exact, True
+
+    root, resolved = candidates[0]
     # Demo/seed items may reference paths that do not exist yet; fall back to
     # the nearest existing ancestor so the button still lands somewhere useful.
     # The caller is told when this happened (matched_request=False) instead of
     # silently reporting success for a path it never actually opened.
     while not resolved.exists() and resolved != root:
         resolved = resolved.parent
-    return resolved, resolved == requested
+    return resolved, False
+
+
+def _existing_user_doc(resolved: Path) -> Path | None:
+    """Match a drafted doc's UI path to its real on-disk file.
+
+    The dashboard shows drafts as "User Docs/<Category>/<id>.md", but the
+    store writes them one level deeper, as "<Category>/<user_digest>/<id>.md"
+    (see app/services/user_docs/store.py) -- glob across the digest level.
+    """
+    user_docs_root = Path(get_settings().user_docs_dir).resolve()
+    if not resolved.is_relative_to(user_docs_root):
+        return None
+    rel = resolved.relative_to(user_docs_root)
+    if len(rel.parts) != 2 or not rel.name.endswith(".md"):
+        return None
+    matches = sorted(user_docs_root.glob(f"{rel.parts[0]}/*/{rel.name}"))
+    return matches[0] if matches else None
 
 
 def _safe_resolve(path: Path, raw: str) -> Path:

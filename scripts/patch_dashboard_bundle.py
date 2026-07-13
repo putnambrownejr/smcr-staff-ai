@@ -1058,6 +1058,10 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "createWorkflowDoc: POST /user-docs/generations",
+        # stable marker -- later patches ("adopt the real server path",
+        # "receipts folder under User Docs") edit this method's inserted body,
+        # so the full `new` text stops matching verbatim after they run.
+        '  createWorkflowDoc(w) {\n    return () => {\n      const tempId = "pending-" + Date.now();',
         '  createWorkflowDoc(w) {\n'
         '    return () => {\n'
         '      const id = Date.now();\n'
@@ -1422,6 +1426,281 @@ PATCHES: list[tuple[str, ...]] = [
         '      skillsRendered, promptPacksRendered, combosRendered,\n',
         '      skillsRendered, promptPacksRendered, combosRendered,\n'
         '      repoPromptPacksRendered, hasRepoPromptPacks,\n',
+    ),
+    # ------------------------------------------------------------------
+    # Validation-pass fixes (2026-07-12): real feed tickers, real personal
+    # files, real project folders, and correct drafted-file paths/copy.
+    # ------------------------------------------------------------------
+    (
+        "workspace load: capture real tickers and personal files from /dashboard/data",
+        "      const mapTicker = (items)",  # stable marker
+        '      if (!res.ok) throw new Error("workspace fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      const actions = (data.tracked_actions || []).map((a) => this._mapRealAction(a));\n'
+        '      this.setState({ actions, workspaceLoaded: true, workspaceLoadError: null });\n',
+        '      if (!res.ok) throw new Error("workspace fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      const actions = (data.tracked_actions || []).map((a) => this._mapRealAction(a));\n'
+        '      // Ticker items and personal documents ride along on the same payload.\n'
+        '      const mapTicker = (items) => (items || []).map((t) => ({ id: t.summary || "", title: t.title, url: t.source_url || "" }));\n'
+        '      const personalItems = (data.document_details || []).map((doc) => ({\n'
+        '        name: doc.filename,\n'
+        '        meta: doc.document_type || "file",\n'
+        '        path: "local_context/files/" + doc.context_id + "-" + doc.filename,\n'
+        '      }));\n'
+        '      this.setState((s) => ({\n'
+        '        actions,\n'
+        '        realMaradmins: mapTicker(data.maradmin_ticker),\n'
+        '        realNavadmins: mapTicker(data.navadmin_ticker),\n'
+        '        benchCards: s.benchCards.map((c) => (c.title !== "Personal files" ? c : { ...c, items: personalItems })),\n'
+        '        workspaceLoaded: true,\n'
+        '        workspaceLoadError: null,\n'
+        '      }));\n',
+    ),
+    (
+        "overview ticker consts: prefer real feed items once the workspace loads",
+        "    const demoMaradmins = [",  # stable marker
+        '    const maradmins = [\n'
+        '      { id: "MARADMIN 312/26", title: "FY27 Reserve Component AT budget guidance and submission windows" },\n'
+        '      { id: "MARADMIN 305/26", title: "Update to FitRep reporting occasions for SMCR reporting seniors" },\n'
+        '      { id: "MARADMIN 298/26", title: "Revised PME completion requirements for promotion eligibility" },\n'
+        '    ];\n'
+        '    const navadmins = [\n'
+        '      { id: "NAVADMIN 148/26", title: "Reserve pay and MROWS processing schedule for Q4 FY26" },\n'
+        '      { id: "NAVADMIN 141/26", title: "DTS travel policy change — lodging receipt thresholds" },\n'
+        '      { id: "NAVADMIN 136/26", title: "Updated guidance on reserve retirement point capture" },\n'
+        '    ];\n',
+        '    // Demo ticker items only show until the real /dashboard/data load\n'
+        '    // succeeds; after that the live feed items (or an honest empty notice)\n'
+        '    // replace them, so the "live" badge never sits on top of canned data.\n'
+        '    const MARADMIN_PORTAL = "https://www.marines.mil/News/Messages/MARADMINS/";\n'
+        '    const NAVADMIN_PORTAL = "https://www.mynavyhr.navy.mil/References/Messages/NAVADMIN/";\n'
+        '    const demoMaradmins = [\n'
+        '      { id: "MARADMIN 312/26", title: "FY27 Reserve Component AT budget guidance and submission windows", url: MARADMIN_PORTAL },\n'
+        '      { id: "MARADMIN 305/26", title: "Update to FitRep reporting occasions for SMCR reporting seniors", url: MARADMIN_PORTAL },\n'
+        '      { id: "MARADMIN 298/26", title: "Revised PME completion requirements for promotion eligibility", url: MARADMIN_PORTAL },\n'
+        '    ];\n'
+        '    const demoNavadmins = [\n'
+        '      { id: "NAVADMIN 148/26", title: "Reserve pay and MROWS processing schedule for Q4 FY26", url: NAVADMIN_PORTAL },\n'
+        '      { id: "NAVADMIN 141/26", title: "DTS travel policy change — lodging receipt thresholds", url: NAVADMIN_PORTAL },\n'
+        '      { id: "NAVADMIN 136/26", title: "Updated guidance on reserve retirement point capture", url: NAVADMIN_PORTAL },\n'
+        '    ];\n'
+        '    const emptyTicker = (label, url) => [{ id: "—", title: "No " + label + " messages pulled yet — refresh feeds to pull from the live source.", url }];\n'
+        '    const maradmins = !this.state.workspaceLoaded\n'
+        '      ? demoMaradmins\n'
+        '      : ((this.state.realMaradmins || []).length ? this.state.realMaradmins.slice(0, 4) : emptyTicker("MARADMIN", MARADMIN_PORTAL));\n'
+        '    const navadmins = !this.state.workspaceLoaded\n'
+        '      ? demoNavadmins\n'
+        '      : ((this.state.realNavadmins || []).length ? this.state.realNavadmins.slice(0, 4) : emptyTicker("NAVADMIN", NAVADMIN_PORTAL));\n',
+    ),
+    (
+        "overview MARADMIN card: link each item to its own message",
+        '              <sc-for list="{{ maradmins }}" as="m" hint-placeholder-count="3">\n'
+        '                <a href="https://www.marines.mil/News/Messages/MARADMINS/" target="_blank" rel="noopener" style="display:block;padding:11px 12px;border:1px solid #313844;border-radius:6px;background:#0d1014;">\n',
+        '              <sc-for list="{{ maradmins }}" as="m" hint-placeholder-count="3">\n'
+        '                <a href="{{ m.url }}" target="_blank" rel="noopener" style="display:block;padding:11px 12px;border:1px solid #313844;border-radius:6px;background:#0d1014;">\n',
+    ),
+    (
+        "overview NAVADMIN card: link each item to its own message",
+        '              <sc-for list="{{ navadmins }}" as="m" hint-placeholder-count="3">\n'
+        '                <a href="https://www.mynavyhr.navy.mil/References/Messages/NAVADMIN/" target="_blank" rel="noopener" style="display:block;padding:11px 12px;border:1px solid #313844;border-radius:6px;background:#0d1014;">\n',
+        '              <sc-for list="{{ navadmins }}" as="m" hint-placeholder-count="3">\n'
+        '                <a href="{{ m.url }}" target="_blank" rel="noopener" style="display:block;padding:11px 12px;border:1px solid #313844;border-radius:6px;background:#0d1014;">\n',
+    ),
+    (
+        "watch feed accordions: use each ticker item's own url",
+        '    const staticFeedItems = {\n'
+        '      maradmin: maradmins.map((m) => ({ text: `${m.id} — ${m.title}`, url: "https://www.marines.mil/News/Messages/MARADMINS/" })),\n'
+        '      navadmin: navadmins.map((m) => ({ text: `${m.id} — ${m.title}`, url: "https://www.mynavyhr.navy.mil/References/Messages/NAVADMIN/" })),\n',
+        '    const tickerFeedItem = (m) => ({ text: (m.id ? m.id + " — " : "") + m.title, url: m.url });\n'
+        '    const staticFeedItems = {\n'
+        '      maradmin: maradmins.map(tickerFeedItem),\n'
+        '      navadmin: navadmins.map(tickerFeedItem),\n',
+    ),
+    (
+        "feed list metas: drop the canned new-today counts",
+        '      { id: 1, name: "MARADMIN RSS", meta: "official · HQMC · 3 new today", trust: "Official", type: "rss", url: "https://www.marines.mil/News/Messages/MARADMINS/", staticItems: "maradmin", editOpen: false },\n'
+        '      { id: 2, name: "NAVADMIN RSS", meta: "official · Navy · 2 new today", trust: "Official", type: "rss", url: "https://www.mynavyhr.navy.mil/References/Messages/NAVADMIN/", staticItems: "navadmin", editOpen: false },\n',
+        '      { id: 1, name: "MARADMIN RSS", meta: "official · HQMC", trust: "Official", type: "rss", url: "https://www.marines.mil/News/Messages/MARADMINS/", staticItems: "maradmin", editOpen: false },\n'
+        '      { id: 2, name: "NAVADMIN RSS", meta: "official · Navy", trust: "Official", type: "rss", url: "https://www.mynavyhr.navy.mil/References/Messages/NAVADMIN/", staticItems: "navadmin", editOpen: false },\n',
+    ),
+    (
+        "Personal files bench card: start empty instead of demo files",
+        '      { title: "Personal files", desc: "Local-only orders, RQS, BIO, receipts — yours alone, never mixed with project or template files.", items: [ { name: "AT orders — FY26.pdf", meta: "orders", path: "personal/AT-orders-FY26.pdf" }, { name: "RQS roster — JUL.xlsx", meta: "reference", path: "personal/RQS-roster-JUL.xlsx" }, { name: "Officer BIO.docx", meta: "bio", path: "personal/Officer-BIO.docx" } ], addOpen: false, draftName: "", draftMeta: "" },\n',
+        '      { title: "Personal files", desc: "Local-only orders, RQS, BIO, receipts — yours alone, never mixed with project or template files.", items: [], addOpen: false, draftName: "", draftMeta: "" },\n',
+    ),
+    (
+        "Project files bench card: start empty instead of demo folders",
+        '      { title: "Project files", desc: "Scenario and exercise folders under projects/ in the repo, plus loose drafts you\'ve started before sorting them into one. Open the path to reach subfiles.", items: [ { name: "4thCAGFEX042027", meta: "project folder", path: "projects/4thCAGFEX042027/" }, { name: "repo-maintenance", meta: "project folder", path: "projects/repo-maintenance/" } ], addOpen: false, draftName: "", draftMeta: "" },\n',
+        '      { title: "Project files", desc: "Scenario and exercise folders under projects/ in the repo, plus loose drafts you\'ve started before sorting them into one. Open the path to reach subfiles.", items: [], addOpen: false, draftName: "", draftMeta: "" },\n',
+    ),
+    (
+        "_loadRealProjects: rebuild the Project files card from the real folders",
+        "      // The Project files bench card starts empty",  # stable marker
+        '  async _loadRealProjects() {\n'
+        '    try {\n'
+        '      const res = await fetch("/user-docs/projects", { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("projects fetch failed: " + res.status);\n'
+        '      this._realProjectNames = await res.json();\n'
+        '      this.forceUpdate();\n'
+        '    } catch (err) {\n'
+        '      this._realProjectNames = [];\n'
+        '    }\n'
+        '  }\n',
+        '  async _loadRealProjects() {\n'
+        '    try {\n'
+        '      const res = await fetch("/user-docs/projects", { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("projects fetch failed: " + res.status);\n'
+        '      this._realProjectNames = await res.json();\n'
+        '      // The Project files bench card starts empty; fill it with the real\n'
+        '      // folders under projects/ so no phantom demo folders are shown.\n'
+        '      const items = (this._realProjectNames || []).map((n) => ({ name: n, meta: "project folder", path: "projects/" + n + "/" }));\n'
+        '      this.setState((s) => ({ benchCards: s.benchCards.map((c) => (c.title !== "Project files" ? c : { ...c, items })) }));\n'
+        '    } catch (err) {\n'
+        '      this._realProjectNames = [];\n'
+        '    }\n'
+        '  }\n',
+    ),
+    (
+        "createWorkflowDoc: adopt the real server path after create",
+        "          real.path = ",  # stable marker
+        '          const real = this._mapRealGeneration(body);\n'
+        '          this.setState((s) => ({\n'
+        '            workflowDocs: s.workflowDocs.map((x) => (x.id === tempId ? real : x)),\n'
+        '            workflowEditorId: s.workflowEditorId === tempId ? real.id : s.workflowEditorId,\n'
+        '          }));\n',
+        '          const real = this._mapRealGeneration(body);\n'
+        '          // The optimistic doc carried a pending filename; the store wrote\n'
+        '          // the entry as <id>.md (see app/services/user_docs/store.py), so\n'
+        '          // adopt the real path and persist it back into the entry fields.\n'
+        '          real.path = "User Docs/Generations/" + real.id + ".md";\n'
+        '          real.receiptsFolder = "User Docs/Generations/" + real.id + "-receipts/";\n'
+        '          this.setState((s) => ({\n'
+        '            workflowDocs: s.workflowDocs.map((x) => (x.id === tempId ? real : x)),\n'
+        '            workflowEditorId: s.workflowEditorId === tempId ? real.id : s.workflowEditorId,\n'
+        '          }));\n'
+        '          this._scheduleGenerationSave(real.id);\n',
+    ),
+    (
+        "createWorkflowDoc: receipts folder lives under User Docs, not projects/_drafts",
+        '        receiptsFolder: `projects/_drafts/${slug}-${tempId}-receipts/`,\n',
+        '        receiptsFolder: `User Docs/Generations/${slug}-${tempId}-receipts/`,\n',
+    ),
+    (
+        "drafted files copy: name the real User Docs holding location",
+        'Every file you start above lands here in <span style="font-family:\'IBM Plex Mono\',monospace;">projects/_drafts/</span> — a holding folder, not a project. Nothing here is committed until you pick a project and click "Save to project."',
+        'Every file you start above is saved to your local <span style="font-family:\'IBM Plex Mono\',monospace;">User Docs/Generations/</span> folder — a holding area, not a project. Nothing lands in a project until you pick one and click "Save to project."',
+    ),
+    (
+        "personal files modal note: these are local app files, not repo files",
+        '        benchModalNote = `Local repo file: ${item.path || "(no path set)"} — open it at that location in your file explorer, or replace it with a new upload from there.`;\n',
+        '        benchModalNote = `Local file: ${item.path || "(no path set)"} — open it at that location in your file explorer, or replace it with a new upload from there.`;\n',
+    ),
+    # ------------------------------------------------------------------
+    # Demo mode baseline files (2026-07-12): toggling demo on re-seeds the
+    # shared demo user key on the backend and points the app at it, so demo
+    # mode shows working, disposable content instead of being badge-only.
+    # ------------------------------------------------------------------
+    (
+        "add _switchDemoMode: seed + swap user key when demo mode toggles",
+        "  async _switchDemoMode(on, opts) {",  # stable marker
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+        '  // --- Demo mode: baseline demo files. Switching to demo points the app\n'
+        '  // at a shared demo user key and seeds it on the backend (POST\n'
+        '  // /demo/workspace/seed writes real files under User Docs plus tracked\n'
+        '  // actions, so sliders, saves, and open-location all genuinely work);\n'
+        '  // switching off returns to the personal key. opts.seed controls the\n'
+        '  // seeding: "reset" (default, explicit toggle) always restores a known\n'
+        '  // baseline; "ifEmpty" (initial page load) only populates a first-ever\n'
+        '  // demo so a refresh mid-demo keeps your edits; false skips seeding.\n'
+        '  async _switchDemoMode(on, opts) {\n'
+        '    if (on) {\n'
+        '      if (!this._realUserKey) this._realUserKey = this.userKey;\n'
+        '      let demoKey = "demo-smcr-officer";\n'
+        '      const seedMode = opts && "seed" in opts ? opts.seed : "reset";\n'
+        '      try {\n'
+        '        if (seedMode) {\n'
+        '          const q = seedMode === "ifEmpty" ? "?only_if_empty=true" : "";\n'
+        '          const res = await fetch("/demo/workspace/seed" + q, { method: "POST", headers: this._apiHeaders() });\n'
+        '          if (res.ok) { const body = await res.json(); demoKey = body.user_key || demoKey; }\n'
+        '        }\n'
+        '      } catch (err) { /* seed failure still leaves demo mode usable, just empty */ }\n'
+        '      this.userKey = demoKey;\n'
+        '      this.setState({ profileRank: "Capt", profileLastName: "Schmuckatelli", profileBillet: "S-4A", profileUnit: "4th CAG" });\n'
+        '    } else {\n'
+        '      this.userKey = this._realUserKey || this._resolveUserKey();\n'
+        '      // Clear the demo profile fields; _loadRealHandoff refills them from\n'
+        '      // the real personal handoff, or leaves them blank if none is saved.\n'
+        '      this.setState({ profileRank: "", profileLastName: "", profileBillet: "", profileUnit: "" });\n'
+        '      this._loadRealHandoff();\n'
+        '    }\n'
+        '    this._loadRealWorkspace();\n'
+        '    this._loadRealNotes();\n'
+        '    this._loadRealFitreps();\n'
+        '    this._loadRealGenerations();\n'
+        '    this._loadRealAgentNotes();\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+    ),
+    (
+        "onToggleDemoMode: seed and reload through _switchDemoMode",
+        '      onToggleDemoMode: () => this.setState((s) => ({ demoMode: !s.demoMode, demoModeManual: true })),\n',
+        '      onToggleDemoMode: () => {\n'
+        '        const next = !this.state.demoMode;\n'
+        '        this.setState({ demoMode: next, demoModeManual: true });\n'
+        '        this._switchDemoMode(next);\n'
+        '      },\n',
+    ),
+    (
+        "_loadRealHandoff: reconcile an initial demo-mode load onto the demo key (no handoff)",
+        'if (!this.state.demoModeManual && this.state.demoMode) this._switchDemoMode(true, { seed: "ifEmpty" });',  # stable marker
+        '      if (!res.ok) return; // 404 is normal for a brand-new profile -- keep blank fields.\n',
+        '      if (!res.ok) {\n'
+        '        // 404 is normal for a brand-new profile -- keep blank fields. A\n'
+        '        // brand-new profile also means demo mode stays on, so point the\n'
+        '        // app at the demo key (seed only if the demo workspace is empty).\n'
+        '        if (!this.state.demoModeManual && this.state.demoMode) this._switchDemoMode(true, { seed: "ifEmpty" });\n'
+        '        return;\n'
+        '      }\n',
+    ),
+    (
+        "_loadRealWorkspace: don't clobber a userKey that demo-mode switching set",
+        # Runs after the "add _resolveUserKey/_apiHeaders/_loadRealWorkspace"
+        # patch inserts this method. _switchDemoMode sets this.userKey to the
+        # demo (or restored personal) key, then calls the loaders; this method's
+        # original first line reset it straight back to the localStorage key, so
+        # demo reads went to the wrong key. Only resolve when nothing is set yet.
+        '    this.userKey = this.userKey || this._resolveUserKey();\n',
+        '  async _loadRealWorkspace() {\n'
+        '    this.userKey = this._resolveUserKey();\n',
+        '  async _loadRealWorkspace() {\n'
+        '    this.userKey = this.userKey || this._resolveUserKey();\n',
+    ),
+    (
+        "_loadRealHandoff: reconcile an initial demo-mode load onto the demo key (blank profile)",
+        '      if (firstResolve && stillDemo) this._switchDemoMode(true, { seed: "ifEmpty" });\n',  # stable marker
+        '      this.setState((s) => ({\n'
+        '        profileRank: rank,\n'
+        '        profileLastName: lastName,\n'
+        '        profileBillet: handoff.billet || "",\n'
+        '        profileUnit: handoff.unit_id || "",\n'
+        '        demoModeManual: true,\n'
+        '        demoMode: !(rank.trim() || lastName.trim()) && s.demoMode,\n'
+        '      }));\n',
+        '      const stillDemo = !(rank.trim() || lastName.trim()) && this.state.demoMode;\n'
+        '      const firstResolve = !this.state.demoModeManual;\n'
+        '      this.setState((s) => ({\n'
+        '        profileRank: rank,\n'
+        '        profileLastName: lastName,\n'
+        '        profileBillet: handoff.billet || "",\n'
+        '        profileUnit: handoff.unit_id || "",\n'
+        '        demoModeManual: true,\n'
+        '        demoMode: !(rank.trim() || lastName.trim()) && s.demoMode,\n'
+        '      }));\n'
+        '      // A load that lands with demo mode still on switches to the demo\n'
+        '      // key, seeding only if empty so refreshing mid-demo keeps edits.\n'
+        '      if (firstResolve && stillDemo) this._switchDemoMode(true, { seed: "ifEmpty" });\n',
     ),
 ]
 
