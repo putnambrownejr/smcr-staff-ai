@@ -36,9 +36,19 @@ downloaded this repo and needs to be walked through setup. Do this:
    them through: Workspace tab → Profile & preferences → fill in rank, MOS, billet,
    unit. Then show them the five lanes (Overview, Watch, Bench+Files, Workflows,
    Workspace).
-5. **Regardless of server:** tell them they can ask you questions right now. Give
+5. **On Windows, offer a desktop shortcut** so they don't have to come back to an AI
+   assistant just to open the dashboard next time. Ask something like "Want a desktop
+   icon so you can open this anytime without going through me?" If yes, run:
+   `powershell -ExecutionPolicy Bypass -File scripts\create_desktop_shortcut.ps1`
+   This creates two desktop icons ("SMCR Staff AI" to open it, "Stop SMCR Staff AI" to
+   close it) and registers the server to start quietly at login (no browser tab pops
+   open on its own — the desktop icon is the "take me there" trigger). See
+   **Desktop Shortcut / Auto-Start** below for details, flags, and how to undo it.
+   Skip this on Mac/Linux for now (not yet built) — a bookmark to
+   http://localhost:8000/dashboard plus `./start.sh` is the flow there.
+6. **Regardless of server:** tell them they can ask you questions right now. Give
    them 2-3 starter prompts based on what they said their billet/needs are.
-6. **Set expectations:** UNCLASSIFIED only, everything is a draft requiring human
+7. **Set expectations:** UNCLASSIFIED only, everything is a draft requiring human
    review, AI doesn't access DoD systems, verify cited regulations are current.
 
 Tone: direct, practical, no AI jargon. Talk like a helpful Staff NCO walking
@@ -60,6 +70,48 @@ docker compose up
 ```
 
 Server runs at **http://localhost:8000** — dashboard at **http://localhost:8000/dashboard**
+
+---
+
+## Desktop Shortcut / Auto-Start (Windows)
+
+Once a user has completed setup once (repo cloned, `start.bat` has run successfully
+at least once), they should not need to come back to an AI assistant just to open
+the dashboard again. If a user asks anything like "make me a shortcut," "put this on
+my desktop," "can this just start on its own," "I don't want to open Claude Code
+every time," or similar — run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\create_desktop_shortcut.ps1
+```
+
+By default this installs all of the following (safe to re-run; overwrites, not
+duplicates):
+
+- **Desktop icon "SMCR Staff AI"** — double-click to open the dashboard. Starts the
+  server first if it isn't already running, then opens the browser to it. Works
+  whether or not auto-start (below) is on.
+- **Desktop icon "Stop SMCR Staff AI"** — stops the server.
+- **Login auto-start** — a shortcut in the user's Startup folder that silently starts
+  the server when they log into Windows. It does **not** open a browser tab on its
+  own; the desktop icon is the explicit "take me there" action. This means the
+  dashboard is usually already warm by the time they click the icon.
+
+Useful flags: `-NoAutostart` (desktop icons only), `-NoDesktop` (auto-start only),
+`-RemoveAll` (undo everything this script installed), `-RemoveDesktop` /
+`-RemoveAutostart` (undo just one piece). All of this only touches the current
+user's own Desktop and Startup folder — no admin rights, no system-wide changes.
+
+This is Windows-only for now. On Mac/Linux, point the user to a browser bookmark for
+http://localhost:8000/dashboard and `./start.sh` — no shortcut/auto-start script
+exists for those platforms yet.
+
+The launcher scripts live in `scripts/` (`launch_dashboard.pyw`,
+`stop_dashboard.pyw`, `start_server_hidden.pyw`, `_smcr_launch_lib.py`) and run via
+the repo's own `.venv\Scripts\pythonw.exe` — no new dependencies, no console window.
+Do not hand-edit the generated icon files (`app/static/dashboard/icons/*.png`,
+`scripts/assets/smcr-staff-ai.ico`) — regenerate them with
+`uv run python scripts/generate_app_icon.py` if the design ever needs to change.
 
 ---
 

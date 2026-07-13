@@ -1,4 +1,5 @@
 import logging
+import mimetypes
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -125,6 +126,10 @@ def create_app() -> FastAPI:
     # Use absolute path so the dashboard serves correctly regardless of
     # the working directory the server is launched from (fixes #21 extension)
     _static_dir = Path(__file__).resolve().parent / "static"
+    # Python's mimetypes module doesn't know .webmanifest; without this, the
+    # PWA manifest serves as application/octet-stream on machines whose OS
+    # doesn't register the type (StaticFiles uses mimetypes.guess_type).
+    mimetypes.add_type("application/manifest+json", ".webmanifest")
     app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
     return app
 
