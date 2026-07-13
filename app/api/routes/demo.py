@@ -29,7 +29,7 @@ from app.core.config import get_settings
 from app.services.actions.tracker import ActionTracker
 from app.services.chief.setup_store import ChiefSetupStore
 from app.services.demo.scenarios import DEMO_USER_KEY, build_demo_career_watch, build_demo_chief_brief
-from app.services.demo.workspace_seed import seed_demo_workspace
+from app.services.demo.workspace_seed import clear_demo_workspace, seed_demo_workspace
 from app.services.planning.orchestrator import StaffPlanningOrchestrator
 from app.services.staff_products.builder import StaffProductBuilder
 from app.services.user_docs.store import UserDocsStore
@@ -54,6 +54,7 @@ DEMO_ROUTES = [
     "/demo/staff-products/draft",
     "/demo/agents/{agent_id}/run",
     "/demo/workspace/seed",
+    "/demo/workspace",
 ]
 
 
@@ -80,6 +81,26 @@ def seed_demo_workspace_route(only_if_empty: bool = False) -> dict[str, object]:
     chief_store = ChiefSetupStore(settings.chief_setup_storage_dir)
     counts = seed_demo_workspace(store, tracker, chief_store, only_if_empty=only_if_empty)
     return {"user_key": DEMO_USER_KEY, "seeded": counts, "skipped": counts is None}
+
+
+@router.delete(
+    "/workspace",
+    dependencies=[LocalApiKeyDependency],
+    summary="Delete the demo user's workspace files",
+)
+def clear_demo_workspace_route() -> dict[str, object]:
+    """Remove all demo-user files from disk.
+
+    Called when demo mode is toggled off, so the disposable demo files do not
+    linger under the shared demo key. Only touches the demo key; real per-user
+    data is untouched.
+    """
+    settings = get_settings()
+    store = UserDocsStore(settings.user_docs_dir, settings.projects_dir)
+    tracker = ActionTracker(settings.actions_storage_dir)
+    chief_store = ChiefSetupStore(settings.chief_setup_storage_dir)
+    removed = clear_demo_workspace(store, tracker, chief_store)
+    return {"user_key": DEMO_USER_KEY, "removed": removed}
 
 
 @router.get("/status", summary="Show repo-mode demo capabilities")

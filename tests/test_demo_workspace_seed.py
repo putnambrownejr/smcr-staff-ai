@@ -117,6 +117,42 @@ def test_seed_only_if_empty_populates_a_fresh_demo_then_preserves_edits(
     assert len(store.list_category(UserDocCategory.notebook, DEMO_USER_KEY)) == 3
 
 
+def test_clear_removes_all_demo_files(seeded_dirs: dict[str, Path]) -> None:
+    client = TestClient(app)
+    client.post("/demo/workspace/seed")
+
+    # Everything is present after a seed.
+    store = UserDocsStore(seeded_dirs["user_docs"], seeded_dirs["projects"])
+    assert store.list_category(UserDocCategory.notebook, DEMO_USER_KEY)
+
+    resp = client.delete("/demo/workspace")
+    assert resp.status_code == 200
+    removed = resp.json()["removed"]
+    assert removed == {"notebook": 3, "fitreps": 2, "generations": 2, "actions": 3, "chief_setup": 1}
+
+    # Nothing remains on disk under the demo key.
+    for category in UserDocCategory:
+        assert store.list_category(category, DEMO_USER_KEY) == []
+    from app.services.actions.tracker import ActionTracker
+    from app.services.chief.setup_store import ChiefSetupStore
+
+    tracker = ActionTracker(seeded_dirs["actions"])
+    assert [r for r in tracker.list(include_closed=True) if r.user_key == DEMO_USER_KEY] == []
+    assert ChiefSetupStore(seeded_dirs["chief_setup"]).get(DEMO_USER_KEY) is None
+
+
+def test_clear_leaves_other_users_data_alone(seeded_dirs: dict[str, Path]) -> None:
+    client = TestClient(app)
+    store = UserDocsStore(seeded_dirs["user_docs"], seeded_dirs["projects"])
+    mine = store.create(
+        UserDocCategory.notebook, "real-user-key", UserDocCreateRequest(title="Mine", body="keep me")
+    )
+    client.post("/demo/workspace/seed")
+    client.delete("/demo/workspace")
+
+    assert store.get(UserDocCategory.notebook, "real-user-key", mine.id) is not None
+
+
 def test_seed_leaves_other_users_data_alone(seeded_dirs: dict[str, Path]) -> None:
     client = TestClient(app)
     store = UserDocsStore(seeded_dirs["user_docs"], seeded_dirs["projects"])
