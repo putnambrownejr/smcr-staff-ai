@@ -2871,6 +2871,21 @@ PATCHES: list[tuple[str, ...]] = [
         '        <p style="margin:16px 0 0;padding-top:12px;border-top:1px solid #313844;color:#8a94a0;font-size:0.72rem;line-height:1.45;">DRAFT — Verify all references against current official sources before acting.</p>\n'
         '        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">\n',
     ),
+    (
+        "browser identity: keep CRT EGA metadata in the rendered document head",
+        "<!-- Browser identity metadata -->",
+        '<helmet>\n'
+        '  <link rel="preconnect" href="https://fonts.googleapis.com">\n',
+        '<helmet>\n'
+        '  <!-- Browser identity metadata -->\n'
+        '  <title>SMCR Staff AI</title>\n'
+        '  <link rel="manifest" href="/static/dashboard/manifest.webmanifest">\n'
+        '  <link rel="icon" type="image/png" sizes="16x16" href="/static/dashboard/icons/icon-16.png?v=crt-ega-2">\n'
+        '  <link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png?v=crt-ega-2">\n'
+        '  <link rel="apple-touch-icon" href="/static/dashboard/icons/icon-192.png">\n'
+        '  <meta name="theme-color" content="#0d1014">\n'
+        '  <link rel="preconnect" href="https://fonts.googleapis.com">\n',
+    ),
 ]
 
 

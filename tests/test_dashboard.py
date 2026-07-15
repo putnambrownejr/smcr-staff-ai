@@ -223,6 +223,12 @@ def test_dashboard_route_injects_pwa_metadata() -> None:
     assert '<link rel="apple-touch-icon" href="/static/dashboard/icons/icon-192.png">' in response.text
     assert '<meta name="theme-color" content="#0d1014">' in response.text
 
+    component_source = _decoded_dashboard_component_source()
+    assert "<!-- Browser identity metadata -->" in component_source
+    assert "<title>SMCR Staff AI</title>" in component_source
+    assert '<link rel="icon" type="image/png" sizes="16x16" href="/static/dashboard/icons/icon-16.png?v=crt-ega-2">' in component_source
+    assert '<link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png?v=crt-ega-2">' in component_source
+
 
 def test_shutdown_route_schedules_termination(monkeypatch: pytest.MonkeyPatch) -> None:
     # The in-dash power button. Monkeypatch the scheduler -- actually running
