@@ -1,9 +1,26 @@
-from app.core.security import DEFAULT_WARNINGS
-from app.schemas.staff import G9PlanningRequest, G9PlanningResponse
+import json
+
+from app.core.security import DEFAULT_WARNINGS, detect_sensitive_input
+from app.schemas.staff import (
+    G9CulturalContextItem,
+    G9EvidenceAssessment,
+    G9EvidenceKind,
+    G9InfrastructureSystem,
+    G9OperatingContext,
+    G9PlanningRequest,
+    G9PlanningResponse,
+    G9SourceItem,
+)
+
+_DRAFT_FOOTER = "DRAFT — Verify all references against current official sources before acting."
 
 
 class G9Planner:
     def build(self, request: G9PlanningRequest) -> G9PlanningResponse:
+        boundary_warnings = detect_sensitive_input(_request_text(request))
+        if boundary_warnings:
+            return _safe_response(boundary_warnings)
+
         civil_situation_frame = [
             f"Supported problem: {request.supported_problem}",
             "Describe the civil or partner environment in broad, public, and non-sensitive terms.",
@@ -29,6 +46,10 @@ class G9Planner:
             "What information would most change the commander's decision or engagement posture?",
             "What continuity note should survive between drills so the same questions are not relearned next month?",
         ]
+        if request.operating_context is None:
+            information_requirements.append(
+                "Confirm the operating context (domestic support or overseas/partner exercise) before tailoring coordination."
+            )
 
         engagement_considerations = [
             "Keep interactions lawful, professional, and consistent with command guidance.",
@@ -57,5 +78,177 @@ class G9Planner:
                     "G-9 planning support is advisory only and should be reconciled with current command guidance, "
                     "civil-affairs authorities, and approved coordination channels."
                 ),
+                _DRAFT_FOOTER,
             ],
+            operating_context_frame=_operating_context_frame(request.operating_context),
+            infrastructure_dependency_assessment=_infrastructure_assessment(
+                request.infrastructure_systems
+            ),
+            cultural_context_assessment=_cultural_context_assessment(request.cultural_context_items),
+            evidence_and_assumptions=_evidence_assessments(request.source_items),
+            civil_estimate_outline=_civil_estimate_outline(),
         )
+
+
+def _request_text(request: G9PlanningRequest) -> str:
+    return json.dumps(request.model_dump(mode="json"), sort_keys=True)
+
+
+def _safe_response(boundary_warnings: list[str]) -> G9PlanningResponse:
+    generic_guidance = (
+        "Sensitive details were withheld. Use only generic, training-safe civil-military planning "
+        "questions and route specific details through approved channels."
+    )
+    return G9PlanningResponse(
+        title="G-9 planning support: Sensitive request withheld",
+        civil_situation_frame=[generic_guidance],
+        partner_coordination=[
+            "Confirm approved coordination channels without recording sensitive partner or operational details."
+        ],
+        information_requirements=[
+            "Restate the planning need with fictional or non-sensitive context before identifying information gaps."
+        ],
+        engagement_considerations=[
+            "Use lawful, professional, command-approved engagement procedures and avoid sensitive details."
+        ],
+        continuity_and_transition=[
+            "Keep only non-sensitive, approved continuity notes for the next planning session."
+        ],
+        warnings=[*DEFAULT_WARNINGS, *boundary_warnings, _DRAFT_FOOTER],
+        operating_context_frame=[
+            "Confirm the operating context through approved channels using non-sensitive information only."
+        ],
+        infrastructure_dependency_assessment=[
+            "Use a generic review of essential civil systems; do not record sensitive vulnerabilities or locations."
+        ],
+        cultural_context_assessment=[
+            "Use public, sourced context and avoid profiling or unsupported generalizations."
+        ],
+        evidence_and_assumptions=[],
+        civil_estimate_outline=[
+            "Use a generic civil-estimate outline after the request is restated with non-sensitive context."
+        ],
+    )
+
+
+def _operating_context_frame(context: G9OperatingContext | None) -> list[str]:
+    if context is G9OperatingContext.domestic_support:
+        return [
+            "Domestic-support frame: identify the appropriate civilian lead and emergency-management coordination channels.",
+            "Confirm applicable authorities, approvals, and command guidance with the appropriate officials; this worksheet makes no authority determination.",
+        ]
+    if context is G9OperatingContext.overseas_partner:
+        return [
+            "Overseas/partner frame: coordinate through appropriate host-nation and embassy channels.",
+            "Respect partner and NGO independence; confirm applicable agreements, releasability, and command guidance through approved channels.",
+            "This worksheet does not determine agreement status or authorities.",
+        ]
+    return [
+        "Generic civil-military frame: confirm whether this is domestic support or an overseas/partner exercise before tailoring the package.",
+        "Use only broad, public, non-sensitive civil context until the operating context is confirmed.",
+    ]
+
+
+def _infrastructure_assessment(systems: list[G9InfrastructureSystem]) -> list[str]:
+    if not systems:
+        categories = "water, power, transport, communications, health, fuel, shelter, and waste"
+        return [
+            f"Review broad public context for essential civil systems: {categories}.",
+            "Research gap: identify which system categories are relevant to the event and confirm civil coordination questions through approved channels.",
+        ]
+
+    assessment: list[str] = []
+    for item in systems:
+        details = [f"Infrastructure system: {item.system}."]
+        if item.condition_or_concern:
+            details.append(f"Submitted concern: {item.condition_or_concern}.")
+        if item.known_dependency:
+            details.append(f"Submitted dependency: {item.known_dependency}.")
+        if item.source_label:
+            details.append(f"Source label to verify: {item.source_label}.")
+        details.append(f"Civil-effect question: What broad civil effect should be validated for {item.system}?")
+        details.append("Coordination question: Which approved civil coordination channel should confirm this context?")
+        assessment.append(" ".join(details))
+    return assessment
+
+
+def _cultural_context_assessment(items: list[G9CulturalContextItem]) -> list[str]:
+    if not items:
+        return [
+            "Documented-context prompt: identify public, sourced context relevant to the event.",
+            "Variation prompt: identify regional or situational variation; do not generalize group behavior.",
+            "Engagement-relevance prompt: identify how documented context may inform respectful coordination.",
+            "Assumptions-to-avoid prompt: record unverified generalizations and questions requiring confirmation.",
+        ]
+
+    assessment: list[str] = []
+    for item in items:
+        details = [f"Documented context to verify: {item.documented_context}."]
+        if item.source_label:
+            details.append(f"Source label: {item.source_label}.")
+        if item.regional_variation:
+            details.append(f"Stated variation: {item.regional_variation}.")
+        else:
+            details.append("Variation question: confirm relevant regional or situational variation.")
+        if item.planning_relevance:
+            details.append(f"Stated engagement relevance: {item.planning_relevance}.")
+        else:
+            details.append("Engagement relevance question: confirm how this context informs respectful coordination.")
+        details.append("Avoid predicting group behavior; treat unverified statements as planning assumptions.")
+        assessment.append(" ".join(details))
+    return assessment
+
+
+def _evidence_assessments(items: list[G9SourceItem]) -> list[G9EvidenceAssessment]:
+    assessments: list[G9EvidenceAssessment] = []
+    for item in items:
+        source_label = item.publisher or item.title
+        if item.claim and item.source_type and item.corroborated:
+            assessments.append(
+                G9EvidenceAssessment(
+                    kind=G9EvidenceKind.reported_fact,
+                    statement=item.claim,
+                    source_label=source_label,
+                    source_date=item.retrieved_at,
+                    confidence="moderate",
+                    verification_note="Reported public-source claim; verify currency and applicability before acting.",
+                )
+            )
+        elif item.claim:
+            assessments.append(
+                G9EvidenceAssessment(
+                    kind=G9EvidenceKind.planning_assumption,
+                    statement=item.claim,
+                    source_label=source_label,
+                    source_date=item.retrieved_at,
+                    confidence="low",
+                    verification_note=(
+                        "Validation needed: classify as reported fact only after a source type and corroboration are supplied."
+                    ),
+                )
+            )
+        else:
+            assessments.append(
+                G9EvidenceAssessment(
+                    kind=G9EvidenceKind.planning_assumption,
+                    statement=f"Evidence gap: review source item '{item.title}' and record a relevant claim if supported.",
+                    source_label=source_label,
+                    source_date=item.retrieved_at,
+                    confidence="low",
+                    verification_note="Title-only source item is an evidence gap, not a factual assertion; verify before use.",
+                )
+            )
+    return assessments
+
+
+def _civil_estimate_outline() -> list[str]:
+    return [
+        "Event/context",
+        "Civil situation/actors",
+        "Infrastructure/civil effects",
+        "Cultural context/variation",
+        "Authorities/coordination",
+        "Judgments/assumptions/requirements",
+        "Recommended actions/decision points",
+        "Sources/confidence/verification",
+    ]

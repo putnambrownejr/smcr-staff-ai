@@ -103,3 +103,52 @@ def test_lone_planner_returns_valid_response() -> None:
 
     assert response.status_code == 200
     assert response.json()["walk_in_brief"]
+
+
+def test_g9_plan_returns_source_aware_domestic_civil_context_package() -> None:
+    response = TestClient(app).post(
+        "/staff/g9-plan",
+        headers=HEADERS,
+        json={
+            "title": "County support exercise",
+            "supported_problem": "Coordinate civil support for a hurricane exercise.",
+            "operating_context": "domestic_support",
+            "source_items": [
+                {
+                    "title": "County emergency plan",
+                    "claim": "The county publishes a shelter coordination process.",
+                    "source_type": "local-government",
+                    "corroborated": True,
+                }
+            ],
+            "infrastructure_systems": [
+                {"system": "water", "known_dependency": "power continuity"}
+            ],
+            "cultural_context_items": [
+                {"documented_context": "Use accessible public-information formats."}
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["operating_context_frame"]
+    assert payload["infrastructure_dependency_assessment"]
+    assert payload["cultural_context_assessment"]
+    assert payload["evidence_and_assumptions"][0]["kind"] == "reported_fact"
+    assert len(payload["civil_estimate_outline"]) == 8
+
+
+def test_g9_plan_keeps_legacy_minimal_payload_valid() -> None:
+    response = TestClient(app).post(
+        "/staff/g9-plan",
+        headers=HEADERS,
+        json={
+            "title": "Legacy G9 request",
+            "supported_problem": "Prepare civil-military planning support.",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["civil_situation_frame"]
+    assert response.json()["operating_context_frame"]

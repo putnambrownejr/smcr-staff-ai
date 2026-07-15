@@ -1,6 +1,7 @@
+from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class StaffEchelon(StrEnum):
@@ -250,6 +251,63 @@ class SelExecutionResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class G9OperatingContext(StrEnum):
+    domestic_support = "domestic_support"
+    overseas_partner = "overseas_partner"
+
+
+class G9SourceItem(BaseModel):
+    title: str = Field(min_length=1)
+    url: str | None = None
+    publisher: str | None = None
+    retrieved_at: str | None = None
+    claim: str | None = None
+    source_type: str | None = None
+    corroborated: bool = False
+
+    @field_validator("retrieved_at")
+    @classmethod
+    def validate_retrieved_at(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        try:
+            datetime.fromisoformat(value)
+        except ValueError as error:
+            msg = "retrieved_at must be an ISO-8601 date or datetime."
+            raise ValueError(msg) from error
+        return value
+
+
+class G9InfrastructureSystem(BaseModel):
+    system: str = Field(min_length=1)
+    condition_or_concern: str | None = None
+    known_dependency: str | None = None
+    source_label: str | None = None
+
+
+class G9CulturalContextItem(BaseModel):
+    documented_context: str = Field(min_length=1)
+    source_label: str | None = None
+    regional_variation: str | None = None
+    planning_relevance: str | None = None
+
+
+class G9EvidenceKind(StrEnum):
+    reported_fact = "reported_fact"
+    analytic_inference = "analytic_inference"
+    planning_assumption = "planning_assumption"
+    synthetic_exercise_content = "synthetic_exercise_content"
+
+
+class G9EvidenceAssessment(BaseModel):
+    kind: G9EvidenceKind
+    statement: str
+    source_label: str | None = None
+    source_date: str | None = None
+    confidence: str
+    verification_note: str
+
+
 class G9PlanningRequest(BaseModel):
     title: str
     supported_problem: str
@@ -258,6 +316,10 @@ class G9PlanningRequest(BaseModel):
     civil_considerations: list[str] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
     training_only: bool = True
+    operating_context: G9OperatingContext | None = None
+    source_items: list[G9SourceItem] = Field(default_factory=list)
+    infrastructure_systems: list[G9InfrastructureSystem] = Field(default_factory=list)
+    cultural_context_items: list[G9CulturalContextItem] = Field(default_factory=list)
 
 
 class G9PlanningResponse(BaseModel):
@@ -268,6 +330,11 @@ class G9PlanningResponse(BaseModel):
     engagement_considerations: list[str] = Field(default_factory=list)
     continuity_and_transition: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    operating_context_frame: list[str] = Field(default_factory=list)
+    infrastructure_dependency_assessment: list[str] = Field(default_factory=list)
+    cultural_context_assessment: list[str] = Field(default_factory=list)
+    evidence_and_assumptions: list[G9EvidenceAssessment] = Field(default_factory=list)
+    civil_estimate_outline: list[str] = Field(default_factory=list)
 
 
 class MedicalPlanningRequest(BaseModel):
