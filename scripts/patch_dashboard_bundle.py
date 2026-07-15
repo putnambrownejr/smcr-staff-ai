@@ -1514,6 +1514,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "watch feed accordions: use each ticker item's own url",
+        "const tickerFeedItem = (m) =>",
         '    const staticFeedItems = {\n'
         '      maradmin: maradmins.map((m) => ({ text: `${m.id} — ${m.title}`, url: "https://www.marines.mil/News/Messages/MARADMINS/" })),\n'
         '      navadmin: navadmins.map((m) => ({ text: `${m.id} — ${m.title}`, url: "https://www.mynavyhr.navy.mil/References/Messages/NAVADMIN/" })),\n',
@@ -1541,7 +1542,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "_loadRealProjects: rebuild the Project files card from the real folders",
-        "      // The Project files bench card starts empty",  # stable marker
+        "      this._realProjectNames = visible.map((project) => project.name);",  # preserved by the later demo filter patch
         '  async _loadRealProjects() {\n'
         '    try {\n'
         '      const res = await fetch("/user-docs/projects", { headers: this._apiHeaders() });\n'
@@ -2532,7 +2533,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "watch: map publication dates and per-row actions",
-        "      const formatFeedDate = (value) => {",
+        "    const formatFeedDate = (value) => {",
         "    const tickerFeedItem = (m) => ({ text: (m.id ? m.id + \" — \" : \"\") + m.title, url: m.url });\n",
         "    const formatFeedDate = (value) => {\n"
         "      if (!value) return \"\";\n"
@@ -2637,6 +2638,80 @@ PATCHES: list[tuple[str, ...]] = [
         "vals: expose source update empty state",
         "      actNow, maradmins, navadmins, feeds, actions, srcUpdates,\n",
         "      actNow, maradmins, navadmins, feeds, actions, srcUpdates, srcUpdatesEmpty,\n",
+    ),
+    # ------------------------------------------------------------------
+    # Navigation cleanup (2026-07-14): make the existing FitRep tracker a
+    # first-class lane and identify every AI agent by its stable repo ID.
+    # ------------------------------------------------------------------
+    (
+        "navigation: add top-level FitReps tab between Workspace and AI",
+        '      tab("fitreps", "FitReps"),\n',
+        '      tab("workspace", "Workspace"),\n'
+        '      tab("ai", "AI"),\n',
+        '      tab("workspace", "Workspace"),\n'
+        '      tab("fitreps", "FitReps"),\n'
+        '      tab("ai", "AI"),\n',
+    ),
+    (
+        "navigation: point FitRep quick link to the new lane",
+        '{ kind: "internal", name: "FitReps — Tracker", lane: "fitreps" },',
+        '{ kind: "internal", name: "Workspace — FitRep Tracker", lane: "workspace" },',
+        '{ kind: "internal", name: "FitReps — Tracker", lane: "fitreps" },',
+    ),
+    (
+        "workspace: share the container with the new FitReps lane",
+        '{{ isWorkspaceOrFitreps }}',
+        '    <sc-if value="{{ isWorkspace }}" hint-placeholder-val="{{ false }}">\n'
+        '    <div style="display:grid;gap:20px;">\n'
+        '      <div style="border:1px dashed #3a4450;border-radius:8px;background:#12161b;padding:16px 18px;">\n',
+        '    <sc-if value="{{ isWorkspaceOrFitreps }}" hint-placeholder-val="{{ false }}">\n'
+        '    <div style="display:grid;gap:20px;">\n'
+        '      <sc-if value="{{ isWorkspace }}" hint-placeholder-val="{{ false }}">\n'
+        '      <div style="border:1px dashed #3a4450;border-radius:8px;background:#12161b;padding:16px 18px;">\n',
+    ),
+    (
+        "fitreps: close Workspace content and open dedicated page",
+        '{{ fitrepsPageIntro }}',
+        '        <section style="border:1px solid #313844;border-radius:8px;background:#12161b;padding:18px;">\n'
+        '          <h3 style="margin:0 0 4px;font-size:1.02rem;font-weight:700;">FitRep Tracker</h3>\n',
+        '        </sc-if>\n'
+        '        <sc-if value="{{ isFitreps }}" hint-placeholder-val="{{ false }}">\n'
+        '        <div style="border:1px dashed #3a4450;border-radius:8px;background:#12161b;padding:16px 18px;">\n'
+        '          <h2 style="margin:0;font-size:1.16rem;font-weight:700;">FitReps</h2>\n'
+        '          <p style="margin:6px 0 0;color:#aab4bf;font-size:0.88rem;line-height:1.5;max-width:70ch;">Keep report continuity, trait observations, and counseling links together. This is a local working record; verify the current form and MCO 1610.7 before submitting anything official.</p>\n'
+        '        </div>\n'
+        '        <section style="border:1px solid #313844;border-radius:8px;background:#12161b;padding:18px;">\n'
+        '          <h3 style="margin:0 0 4px;font-size:1.02rem;font-weight:700;">FitRep Tracker</h3>\n',
+    ),
+    (
+        "fitreps: close dedicated page before the shared container",
+        '<!-- dedicated FitReps lane ends -->',
+        '        </section>\n'
+        '    </div>\n'
+        '    </sc-if>\n\n'
+        '    <!-- ==================== AI LANE ==================== -->\n',
+        '        </section>\n'
+        '        </sc-if><!-- dedicated FitReps lane ends -->\n'
+        '    </div>\n'
+        '    </sc-if>\n\n'
+        '    <!-- ==================== AI LANE ==================== -->\n',
+    ),
+    (
+        "vals: expose dedicated FitReps lane flags",
+        '      isFitreps: lane === "fitreps",\n',
+        '      isWorkspace: lane === "workspace",\n'
+        '      isLinks: lane === "links",\n',
+        '      isWorkspace: lane === "workspace",\n'
+        '      isFitreps: lane === "fitreps",\n'
+        '      isWorkspaceOrFitreps: lane === "workspace" || lane === "fitreps",\n'
+        '      isLinks: lane === "links",\n',
+    ),
+    (
+        "AI agents: display stable Agent ID on every card",
+        '<strong style="color:#aab4bf;">Agent ID:</strong> {{ a.id }}',
+        '                  <p style="margin:8px 0 0;color:#c7cfd8;font-size:0.84rem;line-height:1.5;">{{ a.description }}</p>\n',
+        '                  <p style="margin:6px 0 0;color:#8a94a0;font-size:0.76rem;font-family:\'IBM Plex Mono\',monospace;"><strong style="color:#aab4bf;">Agent ID:</strong> {{ a.id }}</p>\n'
+        '                  <p style="margin:8px 0 0;color:#c7cfd8;font-size:0.84rem;line-height:1.5;">{{ a.description }}</p>\n',
     ),
 ]
 

@@ -151,6 +151,19 @@ def test_dashboard_bundle_clears_demo_files_and_filters_demo_projects() -> None:
     assert "this._loadRealProjects(on);" in component_source
 
 
+def test_dashboard_bundle_has_dedicated_fitreps_lane_and_agent_ids() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert 'tab("workspace", "Workspace")' in component_source
+    assert 'tab("fitreps", "FitReps")' in component_source
+    assert component_source.index('tab("workspace", "Workspace")') < component_source.index('tab("fitreps", "FitReps")')
+    assert component_source.index('tab("fitreps", "FitReps")') < component_source.index('tab("ai", "AI")')
+    assert 'isFitreps: lane === "fitreps"' in component_source
+    assert 'name: "FitReps — Tracker", lane: "fitreps"' in component_source
+    assert "<!-- dedicated FitReps lane ends -->" in component_source
+    assert '<strong style="color:#aab4bf;">Agent ID:</strong> {{ a.id }}' in component_source
+
+
 def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:
     """Same guard as the actions test above, for the feeds/links/profile wiring
     added in the same remediation pass (step 2, items 2-4)."""
