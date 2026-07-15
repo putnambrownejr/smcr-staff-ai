@@ -1226,6 +1226,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "componentDidMount: also load the real agent/skill catalog, prompt packs, and agent notes",
+        "    this._loadRealAgents();",
         "    this._loadRealNotes();\n"
         "    this._loadRealFitreps();\n"
         "    this._loadRealGenerations();\n"
@@ -3081,6 +3082,165 @@ PATCHES: list[tuple[str, ...]] = [
         '        </section>\n\n'
         '        </sc-if>\n'
         '        <sc-if value="{{ isFitreps }}" hint-placeholder-val="{{ false }}">\n',
+    ),
+    # ------------------------------------------------------------------
+    # Personal FitRep profile analytics (2026-07-15): reviewed imports,
+    # manual entries, RS snapshots, improvement goals, and exact-value charts.
+    # ------------------------------------------------------------------
+    (
+        "fitrep analytics: add component state",
+        '    fitrepAnalyticsWorkspace: { reports: [], rs_profiles: [], goals: [] },\n'
+        '    fitrepAnalytics: { sample_size: 0, relative_value_trend: [], by_reporting_senior: [], trait_trends: {}, data_quality_warnings: [] },\n'
+        '    fitrepImportProposal: null,\n'
+        '    fitrepProfileStatus: "",\n'
+        '    fitrepManualPeriod: "",\n'
+        '    fitrepManualRs: "",\n'
+        '    fitrepManualRv: "",\n'
+        '    fitrepManualGrade: "",\n'
+        '    fitrepGoalTitle: "",\n'
+        '    fitrepGoalRs: "",\n',
+        '    fitrepPeriodFilter: "",\n'
+        '    profilePasskey: "",\n',
+        '    fitrepPeriodFilter: "",\n'
+        '    fitrepAnalyticsWorkspace: { reports: [], rs_profiles: [], goals: [] },\n'
+        '    fitrepAnalytics: { sample_size: 0, relative_value_trend: [], by_reporting_senior: [], trait_trends: {}, data_quality_warnings: [] },\n'
+        '    fitrepImportProposal: null,\n'
+        '    fitrepProfileStatus: "",\n'
+        '    fitrepManualPeriod: "",\n'
+        '    fitrepManualRs: "",\n'
+        '    fitrepManualRv: "",\n'
+        '    fitrepManualGrade: "",\n'
+        '    fitrepGoalTitle: "",\n'
+        '    fitrepGoalRs: "",\n'
+        '    profilePasskey: "",\n',
+    ),
+    (
+        "fitrep analytics: load profile during mount",
+        '    this._loadFitrepAnalytics();\n',
+        '    this._loadTravelCases();\n'
+        '    this._loadRealNotes();\n'
+        '    this._loadRealFitreps();\n',
+        '    this._loadTravelCases();\n'
+        '    this._loadRealNotes();\n'
+        '    this._loadRealFitreps();\n'
+        '    this._loadFitrepAnalytics();\n'
+    ),
+    (
+        "fitrep and travel: reload profile domains on demo switch",
+        '    this._loadTravelCases();\n'
+        '    this._loadFitrepAnalytics();\n'
+        '    this._loadRealGenerations();\n'
+        '    this._loadRealAgentNotes();\n',
+        '    this._loadRealWorkspace();\n'
+        '    this._loadRealProjects(on);\n'
+        '    this._loadRealNotes();\n'
+        '    this._loadRealFitreps();\n'
+        '    this._loadRealGenerations();\n'
+        '    this._loadRealAgentNotes();\n',
+        '    this._loadRealWorkspace();\n'
+        '    this._loadRealProjects(on);\n'
+        '    this._loadRealNotes();\n'
+        '    this._loadRealFitreps();\n'
+        '    this._loadTravelCases();\n'
+        '    this._loadFitrepAnalytics();\n'
+        '    this._loadRealGenerations();\n'
+        '    this._loadRealAgentNotes();\n',
+    ),
+    (
+        "fitrep analytics: add API helpers and bindings",
+        '  async _loadFitrepAnalytics() {',
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+        '  async _loadFitrepAnalytics() {\n'
+        '    if (!this.userKey) this.userKey = this._resolveUserKey();\n'
+        '    try {\n'
+        '      const base = "/fitreps/" + encodeURIComponent(this.userKey);\n'
+        '      const responses = await Promise.all([fetch(base, { headers: this._apiHeaders() }), fetch(base + "/analytics", { headers: this._apiHeaders() })]);\n'
+        '      if (!responses[0].ok || !responses[1].ok) throw new Error("fitrep profile load failed");\n'
+        '      const values = await Promise.all(responses.map((res) => res.json()));\n'
+        '      this.setState({ fitrepAnalyticsWorkspace: values[0], fitrepAnalytics: values[1], fitrepProfileStatus: "" });\n'
+        '    } catch (err) { this.setState({ fitrepProfileStatus: "Profile analytics could not be loaded." }); }\n'
+        '  }\n'
+        '  uploadFitrepProfile(e, kind) {\n'
+        '    const file = e.target.files && e.target.files[0]; if (!file) return;\n'
+        '    const form = new FormData(); form.append("file", file); form.append("document_type", "fitrep"); form.append("tags", kind === "rs_profile" ? "fitrep,rs-profile" : "fitrep,my-record");\n'
+        '    this.setState({ fitrepProfileStatus: "Reading local document…", fitrepImportProposal: null });\n'
+        '    fetch("/context/upload", { method: "POST", headers: this._apiHeaders(), body: form })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok || !data.item) throw new Error("upload failed"); return fetch("/fitreps/" + encodeURIComponent(this.userKey) + "/imports/preview", { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ user_key: this.userKey, context_id: data.item.context_id, kind }) }); })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok) throw new Error("preview failed"); this.setState({ fitrepImportProposal: data, fitrepProfileStatus: "Review the proposal before saving." }); })\n'
+        '      .catch(() => this.setState({ fitrepProfileStatus: "The document could not be proposed for import." }));\n'
+        '    e.target.value = "";\n'
+        '  }\n'
+        '  confirmFitrepImport() {\n'
+        '    const proposal = this.state.fitrepImportProposal; if (!proposal) return;\n'
+        '    this.setState({ fitrepProfileStatus: "Saving confirmed import…" });\n'
+        '    fetch("/fitreps/" + encodeURIComponent(this.userKey) + "/imports/confirm", { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ user_key: this.userKey, kind: proposal.kind, proposal }) })\n'
+        '      .then((res) => { if (!res.ok) throw new Error("confirm failed"); this.setState({ fitrepImportProposal: null, fitrepProfileStatus: "Import saved locally." }); return this._loadFitrepAnalytics(); })\n'
+        '      .catch(() => this.setState({ fitrepProfileStatus: "The proposed import was not saved." }));\n'
+        '  }\n'
+        '  addManualFitrepProfile(e) {\n'
+        '    e.preventDefault();\n'
+        '    const rv = (this.state.fitrepManualRv || "").trim();\n'
+        '    if (!rv && !(this.state.fitrepManualRs || "").trim() && !(this.state.fitrepManualPeriod || "").trim()) return;\n'
+        '    const body = { user_key: this.userKey, period_end: this.state.fitrepManualPeriod || null, rs_label: this.state.fitrepManualRs || "", grade: this.state.fitrepManualGrade || "" }; if (rv) body.relative_value = rv;\n'
+        '    fetch("/fitreps/" + encodeURIComponent(this.userKey) + "/reports", { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify(body) })\n'
+        '      .then((res) => { if (!res.ok) throw new Error("manual save failed"); this.setState({ fitrepManualPeriod: "", fitrepManualRs: "", fitrepManualRv: "", fitrepManualGrade: "", fitrepProfileStatus: "Manual profile entry saved." }); return this._loadFitrepAnalytics(); })\n'
+        '      .catch(() => this.setState({ fitrepProfileStatus: "Manual profile entry was not saved." }));\n'
+        '  }\n'
+        '  addFitrepGoal(e) {\n'
+        '    e.preventDefault(); const title = (this.state.fitrepGoalTitle || "").trim(); if (!title) return;\n'
+        '    fetch("/fitreps/" + encodeURIComponent(this.userKey) + "/goals", { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ user_key: this.userKey, title, rs_label: (this.state.fitrepGoalRs || "").trim() || "Unspecified RS" }) })\n'
+        '      .then((res) => { if (!res.ok) throw new Error("goal save failed"); this.setState({ fitrepGoalTitle: "", fitrepGoalRs: "", fitrepProfileStatus: "Improvement goal saved." }); return this._loadFitrepAnalytics(); })\n'
+        '      .catch(() => this.setState({ fitrepProfileStatus: "Improvement goal was not saved." }));\n'
+        '  }\n'
+        '  fitrepProfileVals() {\n'
+        '    const workspace = this.state.fitrepAnalyticsWorkspace || { reports: [], rs_profiles: [], goals: [] }; const analytics = this.state.fitrepAnalytics || {}; const proposal = this.state.fitrepImportProposal;\n'
+        '    const trend = (analytics.relative_value_trend || []).map((point) => ({ label: point.label, value: point.value, width: "width:" + Math.max(2, Math.min(100, Number(point.value) || 0)) + "%;height:8px;border-radius:999px;background:#5a9fd4;" }));\n'
+        '    const rs = (analytics.by_reporting_senior || []).map((item) => ({ label: item.rs_label, meta: item.report_count + " report(s) · average RV " + (item.average_relative_value == null ? "not supplied" : item.average_relative_value) }));\n'
+        '    const goals = (workspace.goals || []).map((item) => ({ title: item.title, meta: item.rs_label + " · " + item.status }));\n'
+        '    let proposalSummary = ""; if (proposal && proposal.report) proposalSummary = [proposal.report.period_end, proposal.report.grade, proposal.report.rs_label, proposal.report.relative_value == null ? "RV not found" : "RV " + proposal.report.relative_value].filter(Boolean).join(" · "); else if (proposal && proposal.rs_profile) proposalSummary = [proposal.rs_profile.rs_label || "RS not found", proposal.rs_profile.as_of_date, proposal.rs_profile.report_count == null ? "Report count not found" : proposal.rs_profile.report_count + " reports"].filter(Boolean).join(" · ");\n'
+        '    return {\n'
+        '      fitrepProfileStatus: this.state.fitrepProfileStatus, fitrepImportProposalVisible: !!proposal, fitrepImportProposalSummary: proposalSummary, fitrepImportWarnings: proposal ? (proposal.warnings || []).map((text) => ({ text })) : [],\n'
+        '      fitrepProfileSample: analytics.sample_size || 0, fitrepRvTrend: trend, fitrepRvTrendEmpty: trend.length === 0, fitrepRsSummaries: rs, fitrepRsSummariesEmpty: rs.length === 0, fitrepProfileGoals: goals, fitrepProfileGoalsEmpty: goals.length === 0,\n'
+        '      fitrepProfileWarnings: (analytics.data_quality_warnings || []).map((text) => ({ text })),\n'
+        '      fitrepManualPeriod: this.state.fitrepManualPeriod, fitrepManualRs: this.state.fitrepManualRs, fitrepManualRv: this.state.fitrepManualRv, fitrepManualGrade: this.state.fitrepManualGrade, fitrepGoalTitle: this.state.fitrepGoalTitle, fitrepGoalRs: this.state.fitrepGoalRs,\n'
+        '      onMyRecordFile: (e) => this.uploadFitrepProfile(e, "my_record"), onRsProfileFile: (e) => this.uploadFitrepProfile(e, "rs_profile"), onConfirmFitrepImport: () => this.confirmFitrepImport(), onCancelFitrepImport: () => this.setState({ fitrepImportProposal: null, fitrepProfileStatus: "Import proposal discarded; the local source file remains available." }),\n'
+        '      onFitrepManualPeriod: (e) => this.setState({ fitrepManualPeriod: e.target.value }), onFitrepManualRs: (e) => this.setState({ fitrepManualRs: e.target.value }), onFitrepManualRv: (e) => this.setState({ fitrepManualRv: e.target.value }), onFitrepManualGrade: (e) => this.setState({ fitrepManualGrade: e.target.value }), onAddManualFitrepProfile: (e) => this.addManualFitrepProfile(e),\n'
+        '      onFitrepGoalTitle: (e) => this.setState({ fitrepGoalTitle: e.target.value }), onFitrepGoalRs: (e) => this.setState({ fitrepGoalRs: e.target.value }), onAddFitrepGoal: (e) => this.addFitrepGoal(e),\n'
+        '    };\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+    ),
+    (
+        "fitrep analytics: expose view bindings",
+        '      ...this.fitrepProfileVals(),\n',
+        '      ...this.fitrepVals(),\n'
+        '      ...this.travelWorkspaceVals(),\n',
+        '      ...this.fitrepVals(),\n'
+        '      ...this.fitrepProfileVals(),\n'
+        '      ...this.travelWorkspaceVals(),\n',
+    ),
+    (
+        "fitrep analytics: render profile import and trends panel",
+        '<h3 style="margin:0;font-size:1.02rem;font-weight:700;">My profile analytics</h3>',
+        '        </section>\n'
+        '        </sc-if><!-- dedicated FitReps lane ends -->\n',
+        '        </section>\n'
+        '        <section style="border:1px solid #313844;border-radius:8px;background:#12161b;padding:18px;display:grid;gap:14px;">\n'
+        '          <div><h3 style="margin:0;font-size:1.02rem;font-weight:700;">My profile analytics</h3><p style="margin:5px 0 0;color:#8a94a0;font-size:0.8rem;line-height:1.5;">Track your own confirmed report history, Reporting Senior context, and improvement goals. This descriptive view does not predict promotion, selection, or future marks.</p></div>\n'
+        '          <div style="display:flex;gap:8px;flex-wrap:wrap;"><label style="height:32px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font-size:0.78rem;font-weight:700;cursor:pointer;">Upload My Record<input type="file" sc-camel-on-change="{{ onMyRecordFile }}" style="display:none"></label><label style="height:32px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font-size:0.78rem;font-weight:700;cursor:pointer;">Upload RS Profile<input type="file" sc-camel-on-change="{{ onRsProfileFile }}" style="display:none"></label><span aria-live="polite" style="align-self:center;color:#8a94a0;font-size:0.76rem;">{{ fitrepProfileStatus }}</span></div>\n'
+        '          <sc-if value="{{ fitrepImportProposalVisible }}" hint-placeholder-val="{{ false }}"><div style="padding:12px;border:1px solid #5a4b2a;border-radius:6px;background:#1c1810;display:grid;gap:7px;"><strong style="font-size:0.82rem;color:#e0c77a;">Review proposed import</strong><span style="font-size:0.78rem;color:#c7cfd8;">{{ fitrepImportProposalSummary }}</span><sc-for list="{{ fitrepImportWarnings }}" as="warning" hint-placeholder-count="1"><span style="font-size:0.74rem;color:#d6bd7a;">{{ warning.text }}</span></sc-for><div style="display:flex;gap:8px;"><button type="button" sc-camel-on-click="{{ onConfirmFitrepImport }}" style="height:30px;padding:0 12px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font:inherit;font-size:0.76rem;font-weight:700;cursor:pointer;">Confirm import</button><button type="button" sc-camel-on-click="{{ onCancelFitrepImport }}" style="height:30px;padding:0 12px;border:1px solid #313844;border-radius:6px;background:transparent;color:#c7cfd8;font:inherit;font-size:0.76rem;cursor:pointer;">Discard proposal</button></div></div></sc-if>\n'
+        '          <details><summary style="cursor:pointer;font-size:0.8rem;font-weight:700;color:#c7cfd8;">Manual profile entry</summary><form sc-camel-on-submit="{{ onAddManualFitrepProfile }}" style="display:grid;grid-template-columns:140px 100px 1fr 120px auto;gap:7px;margin-top:10px;"><input type="date" value="{{ fitrepManualPeriod }}" sc-camel-on-change="{{ onFitrepManualPeriod }}" aria-label="Reporting period end" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitrepManualGrade }}" sc-camel-on-change="{{ onFitrepManualGrade }}" placeholder="Grade" aria-label="Grade" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitrepManualRs }}" sc-camel-on-change="{{ onFitrepManualRs }}" placeholder="Reporting Senior label" aria-label="Reporting Senior label" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input type="number" step="0.01" value="{{ fitrepManualRv }}" sc-camel-on-change="{{ onFitrepManualRv }}" placeholder="Relative value" aria-label="Relative value" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><button type="submit" style="height:34px;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">Add</button></form></details>\n'
+        '          <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:14px;">\n'
+        '            <div style="padding:12px;border:1px solid #313844;border-radius:6px;background:#0d1014;display:grid;gap:8px;"><div style="display:flex;justify-content:space-between;gap:10px;"><strong style="font-size:0.82rem;">Relative-value trend</strong><span style="color:#8a94a0;font-size:0.72rem;">{{ fitrepProfileSample }} confirmed reports · Exact values</span></div><sc-for list="{{ fitrepRvTrend }}" as="point" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:100px 1fr 50px;gap:8px;align-items:center;"><span style="font-size:0.72rem;color:#8a94a0;">{{ point.label }}</span><div style="height:8px;background:#1a2027;border-radius:999px;overflow:hidden;"><div style="{{ point.width }}"></div></div><strong style="font-size:0.72rem;text-align:right;">{{ point.value }}</strong></div></sc-for><sc-if value="{{ fitrepRvTrendEmpty }}" hint-placeholder-val="{{ true }}"><span style="color:#8a94a0;font-size:0.76rem;">Add confirmed relative values to build the chart.</span></sc-if></div>\n'
+        '            <div style="padding:12px;border:1px solid #313844;border-radius:6px;background:#0d1014;display:grid;gap:7px;align-content:start;"><strong style="font-size:0.82rem;">Reporting Senior comparison</strong><sc-for list="{{ fitrepRsSummaries }}" as="rs" hint-placeholder-count="2"><div style="padding:7px 0;border-bottom:1px solid #242b33;"><span style="font-size:0.76rem;font-weight:600;">{{ rs.label }}</span><span style="display:block;color:#8a94a0;font-size:0.7rem;margin-top:2px;">{{ rs.meta }}</span></div></sc-for><sc-if value="{{ fitrepRsSummariesEmpty }}" hint-placeholder-val="{{ true }}"><span style="color:#8a94a0;font-size:0.76rem;">No RS groupings yet.</span></sc-if></div>\n'
+        '          </div>\n'
+        '          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"><div style="display:grid;gap:7px;"><strong style="font-size:0.8rem;">Improvement under one RS</strong><sc-for list="{{ fitrepProfileGoals }}" as="goal" hint-placeholder-count="1"><div style="padding:8px 10px;border:1px solid #313844;border-radius:6px;background:#0d1014;"><span style="font-size:0.76rem;font-weight:600;">{{ goal.title }}</span><span style="display:block;color:#8a94a0;font-size:0.7rem;margin-top:2px;">{{ goal.meta }}</span></div></sc-for><sc-if value="{{ fitrepProfileGoalsEmpty }}" hint-placeholder-val="{{ true }}"><span style="color:#8a94a0;font-size:0.74rem;">No improvement goals saved.</span></sc-if></div><form sc-camel-on-submit="{{ onAddFitrepGoal }}" style="display:grid;gap:7px;align-content:start;"><input value="{{ fitrepGoalTitle }}" sc-camel-on-change="{{ onFitrepGoalTitle }}" placeholder="Observable improvement goal" aria-label="FitRep improvement goal" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitrepGoalRs }}" sc-camel-on-change="{{ onFitrepGoalRs }}" placeholder="Reporting Senior label" aria-label="Goal Reporting Senior" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><button type="submit" style="height:32px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">Save goal</button></form></div>\n'
+        '          <sc-for list="{{ fitrepProfileWarnings }}" as="warning" hint-placeholder-count="1"><p style="margin:0;color:#d6bd7a;font-size:0.72rem;">{{ warning.text }}</p></sc-for>\n'
+        '        </section>\n'
+        '        </sc-if><!-- dedicated FitReps lane ends -->\n',
     ),
     (
         "browser identity: keep CRT EGA metadata in the rendered document head",

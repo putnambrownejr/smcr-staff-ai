@@ -25,6 +25,7 @@ from app.api.routes import (
     dashboard,
     demo,
     documents,
+    fitreps,
     git_ops,
     handoffs,
     health,
@@ -90,6 +91,7 @@ def create_app() -> FastAPI:
     app.include_router(demo.router)
     app.include_router(connectors.router)
     app.include_router(documents.router)
+    app.include_router(fitreps.router)
     app.include_router(handoffs.router)
     app.include_router(calendar.router)
     app.include_router(chief.router)

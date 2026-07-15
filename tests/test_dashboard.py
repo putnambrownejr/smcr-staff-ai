@@ -197,6 +197,21 @@ def test_dashboard_bundle_has_user_driven_travel_and_gtcc_workspace() -> None:
     assert "onTravelReceiptFile" in component_source
 
 
+def test_dashboard_bundle_has_fitrep_profile_imports_manual_entry_and_analytics() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "this._loadFitrepAnalytics();" in component_source
+    assert 'fetch(base + "/analytics"' in component_source
+    assert "Upload My Record" in component_source
+    assert "Upload RS Profile" in component_source
+    assert "Review proposed import" in component_source
+    assert "Confirm import" in component_source
+    assert "Manual profile entry" in component_source
+    assert "Relative-value trend" in component_source
+    assert "Exact values" in component_source
+    assert "does not predict promotion" in component_source
+
+
 def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:
     """Same guard as the actions test above, for the feeds/links/profile wiring
     added in the same remediation pass (step 2, items 2-4)."""

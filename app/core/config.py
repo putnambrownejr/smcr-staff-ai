@@ -40,6 +40,10 @@ def default_travel_case_dir() -> Path:
     return default_local_context_dir() / "travel_cases"
 
 
+def default_fitrep_dir() -> Path:
+    return default_local_context_dir() / "fitreps"
+
+
 def default_battle_rhythm_dir() -> Path:
     return default_local_context_dir() / "battle_rhythm"
 
@@ -162,6 +166,7 @@ class Settings(BaseSettings):
     session_handoff_storage_dir: str = str(default_session_handoff_dir())
     product_template_storage_dir: str = str(default_product_template_dir())
     travel_case_storage_dir: str = str(default_travel_case_dir())
+    fitrep_storage_dir: str = str(default_fitrep_dir())
     battle_rhythm_storage_dir: str = str(default_battle_rhythm_dir())
     reading_state_storage_dir: str = str(default_reading_state_dir())
     reading_catalog_storage_dir: str = str(default_reading_catalog_dir())
@@ -206,6 +211,7 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.session_handoff_storage_dir),
         Path(settings.product_template_storage_dir),
         Path(settings.travel_case_storage_dir),
+        Path(settings.fitrep_storage_dir),
         Path(settings.battle_rhythm_storage_dir),
         Path(settings.reading_state_storage_dir),
         Path(settings.reading_catalog_storage_dir),
