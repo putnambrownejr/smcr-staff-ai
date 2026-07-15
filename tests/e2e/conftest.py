@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 from collections.abc import Generator
@@ -18,7 +19,10 @@ def demo_project_name() -> Generator[str, None, None]:
     project_dir = Path(__file__).resolve().parents[2] / "projects" / name
     metadata_path = project_dir / ".smcr-project.json"
     project_dir.mkdir(parents=True, exist_ok=False)
-    metadata_path.write_text('{"is_demo": true}\n', encoding="utf-8")
+    metadata_path.write_text(
+        json.dumps({"name": name, "is_demo": True}) + "\n",
+        encoding="utf-8",
+    )
     try:
         yield name
     finally:
