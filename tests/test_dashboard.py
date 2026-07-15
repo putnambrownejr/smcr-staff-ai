@@ -111,6 +111,20 @@ def test_dashboard_bundle_renders_history_from_workspace_data() -> None:
     assert "11 JUL 1798 — The U.S. Marine Corps was re-established" not in component_source
 
 
+def test_dashboard_bundle_refreshes_real_feed_endpoints() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "async _refreshFeeds()" in component_source
+    assert 'url: "/maradmins/refresh"' in component_source
+    assert 'url: "/message-watch/navadmins/refresh"' in component_source
+    assert 'url: "/message-watch/alnavs/refresh"' in component_source
+    assert 'url: "/message-watch/dod/refresh"' in component_source
+    assert 'url: "/custom-watch-feeds/" + encodeURIComponent(feed.id) + "/refresh"' in component_source
+    assert "failedLabels.join" in component_source
+    assert "refreshFeeds: () => this._refreshFeeds()" in component_source
+    assert 'refreshFeeds: () => this.setState({ feedUpdated: "just now" })' not in component_source
+
+
 def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:
     """Same guard as the actions test above, for the feeds/links/profile wiring
     added in the same remediation pass (step 2, items 2-4)."""

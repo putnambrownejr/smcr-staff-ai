@@ -2297,6 +2297,106 @@ PATCHES: list[tuple[str, ...]] = [
         '      historySourceLabel: historySourceIsLink ? "View official source ↗" : historyReference,\n',
         '      historySourceLabel: historySourceIsLink ? "View source ↗" : historyReference,\n',
     ),
+    # ------------------------------------------------------------------
+    # Feed refresh (2026-07-14): the design export's button only changed the
+    # "Updated" label. Call every real feed refresh route concurrently, then
+    # reload the workspace so the newest ticker data is actually rendered.
+    # ------------------------------------------------------------------
+    (
+        "feeds: add real refresh orchestration with partial-failure feedback",
+        "  async _refreshFeeds() {",  # stable marker
+        "  }\n\n"
+        "  // --- Feeds: real backend wiring. Custom watch feeds are global (no\n",
+        "  }\n\n"
+        "  async _refreshFeeds() {\n"
+        "    if (this.state.feedRefreshRunning) return;\n"
+        "    this.setState({ feedRefreshRunning: true });\n"
+        "    const refreshOne = async (url) => {\n"
+        "      const res = await fetch(url, { method: \"POST\", headers: this._apiHeaders() });\n"
+        "      let payload = null;\n"
+        "      try { payload = await res.json(); } catch (err) {}\n"
+        "      const warnings = payload && Array.isArray(payload.warnings) ? payload.warnings : [];\n"
+        "      if (!res.ok || warnings.length) throw new Error(\"refresh failed: \" + url);\n"
+        "      return payload;\n"
+        "    };\n"
+        "    const refreshTargets = [\n"
+        "      { label: \"MARADMIN\", url: \"/maradmins/refresh\" },\n"
+        "      { label: \"NAVADMIN\", url: \"/message-watch/navadmins/refresh\" },\n"
+        "      { label: \"ALNAV\", url: \"/message-watch/alnavs/refresh\" },\n"
+        "      { label: \"DoD\", url: \"/message-watch/dod/refresh\" },\n"
+        "    ];\n"
+        "    (this.state.feeds || []).filter((feed) => feed.isReal && feed.enabled !== false).forEach((feed) => {\n"
+        "      refreshTargets.push({ label: feed.name, url: \"/custom-watch-feeds/\" + encodeURIComponent(feed.id) + \"/refresh\" });\n"
+        "    });\n"
+        "    const results = await Promise.allSettled(refreshTargets.map((target) => refreshOne(target.url)));\n"
+        "    const failedLabels = results.map((result, index) => result.status === \"rejected\" ? refreshTargets[index].label : null).filter(Boolean);\n"
+        "    await Promise.all([this._loadRealWorkspace(), this._loadRealFeeds()]);\n"
+        "    const failureNote = failedLabels.length ? \" · \" + failedLabels.join(\", \") + \" failed\" : \"\";\n"
+        "    this.setState({ feedRefreshRunning: false, feedUpdated: \"just now\" + failureNote });\n"
+        "  }\n\n"
+        "  // --- Feeds: real backend wiring. Custom watch feeds are global (no\n",
+    ),
+    (
+        "feeds: carry enabled state for custom refresh filtering",
+        "      enabled: f.enabled !== false,",  # stable marker
+        "      isReal: true,\n"
+        "    };\n",
+        "      isReal: true,\n"
+        "      enabled: f.enabled !== false,\n"
+        "    };\n",
+    ),
+    (
+        "overview feeds: show live refresh status",
+        "{{ feedRefreshStatus }}",  # stable marker
+        '          <span style="font-size:0.76rem;color:#8a94a0;">Updated {{ feedUpdated }}</span>\n',
+        '          <span style="font-size:0.76rem;color:#8a94a0;">{{ feedRefreshStatus }}</span>\n',
+    ),
+    (
+        "overview feeds: show progress in the refresh button",
+        "{{ refreshFeedsLabel }}",  # stable marker
+        '          <button type="button" sc-camel-on-click="{{ refreshFeeds }}" style="height:34px;padding:0 16px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;font-size:0.84rem;cursor:pointer;">Refresh feeds</button>\n',
+        '          <button type="button" sc-camel-on-click="{{ refreshFeeds }}" style="height:34px;padding:0 16px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;font-size:0.84rem;cursor:pointer;">{{ refreshFeedsLabel }}</button>\n',
+    ),
+    (
+        "vals: wire Refresh feeds to the real refresh orchestration",
+        "refreshFeeds: () => this._refreshFeeds(),",  # stable marker
+        '      feedUpdated: this.state.feedUpdated,\n'
+        '      refreshFeeds: () => this.setState({ feedUpdated: "just now" }),\n',
+        '      feedUpdated: this.state.feedUpdated,\n'
+        '      feedRefreshStatus: this.state.feedRefreshRunning ? "Refreshing sources…" : "Updated " + this.state.feedUpdated,\n'
+        '      refreshFeedsLabel: this.state.feedRefreshRunning ? "Refreshing…" : "Refresh feeds",\n'
+        '      refreshFeeds: () => this._refreshFeeds(),\n',
+    ),
+    (
+        "feeds: name partial failures in the refresh status",
+        "    const refreshTargets = [",  # stable marker
+        "    const requests = [\n"
+        "      refreshOne(\"/maradmins/refresh\"),\n"
+        "      refreshOne(\"/message-watch/navadmins/refresh\"),\n"
+        "      refreshOne(\"/message-watch/alnavs/refresh\"),\n"
+        "      refreshOne(\"/message-watch/dod/refresh\"),\n"
+        "    ];\n"
+        "    (this.state.feeds || []).filter((feed) => feed.isReal && feed.enabled !== false).forEach((feed) => {\n"
+        "      requests.push(refreshOne(\"/custom-watch-feeds/\" + encodeURIComponent(feed.id) + \"/refresh\"));\n"
+        "    });\n"
+        "    const results = await Promise.allSettled(requests);\n"
+        "    const failures = results.filter((result) => result.status === \"rejected\").length;\n"
+        "    await Promise.all([this._loadRealWorkspace(), this._loadRealFeeds()]);\n"
+        "    const failureNote = failures ? \" · \" + failures + \" source\" + (failures === 1 ? \"\" : \"s\") + \" failed\" : \"\";\n",
+        "    const refreshTargets = [\n"
+        "      { label: \"MARADMIN\", url: \"/maradmins/refresh\" },\n"
+        "      { label: \"NAVADMIN\", url: \"/message-watch/navadmins/refresh\" },\n"
+        "      { label: \"ALNAV\", url: \"/message-watch/alnavs/refresh\" },\n"
+        "      { label: \"DoD\", url: \"/message-watch/dod/refresh\" },\n"
+        "    ];\n"
+        "    (this.state.feeds || []).filter((feed) => feed.isReal && feed.enabled !== false).forEach((feed) => {\n"
+        "      refreshTargets.push({ label: feed.name, url: \"/custom-watch-feeds/\" + encodeURIComponent(feed.id) + \"/refresh\" });\n"
+        "    });\n"
+        "    const results = await Promise.allSettled(refreshTargets.map((target) => refreshOne(target.url)));\n"
+        "    const failedLabels = results.map((result, index) => result.status === \"rejected\" ? refreshTargets[index].label : null).filter(Boolean);\n"
+        "    await Promise.all([this._loadRealWorkspace(), this._loadRealFeeds()]);\n"
+        "    const failureNote = failedLabels.length ? \" · \" + failedLabels.join(\", \") + \" failed\" : \"\";\n",
+    ),
 ]
 
 
