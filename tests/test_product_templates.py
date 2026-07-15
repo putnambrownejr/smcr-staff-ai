@@ -9,6 +9,21 @@ from app.main import app
 from app.schemas.product_templates import CreateProductTemplateFromContextRequest, ProductTemplateType
 from app.services.storage.local_context_store import LocalContextStore
 from app.services.templates.product_template_repository import ProductTemplateRepository
+from app.services.templates.system_template_catalog import SystemTemplateCatalog
+
+
+def test_every_system_template_has_one_real_markdown_file() -> None:
+    catalog = SystemTemplateCatalog.from_yaml(Path("data/seed/system_templates.example.yaml"))
+    records = catalog.list()
+    template_dir = Path("data/templates/system")
+    files = sorted(template_dir.glob("*.md"))
+
+    assert len(files) == len(records)
+    assert {path.stem for path in files} == {record.template_id for record in records}
+    for record in records:
+        content = (template_dir / f"{record.template_id}.md").read_text(encoding="utf-8")
+        assert content.startswith(f"# {record.template_name}\n")
+        assert "DRAFT — Verify all references against current official sources before acting." in content
 
 
 def test_product_template_repository_promotes_local_example(tmp_path: Path) -> None:

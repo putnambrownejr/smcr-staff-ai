@@ -676,5 +676,9 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["navadmin_ticker"][0]["published_at"] == "2026-04-29T13:30:00+00:00"
         assert payload["alnav_ticker"][0]["status"] == "ALNAV"
         assert payload["dod_ticker"][0]["status"] == "DoD"
+        system_template = next(item for item in payload["template_library"] if item["template_source"] == "system")
+        assert system_template["source_path"].startswith("data/templates/system/")
+        assert "#sys-" not in system_template["source_path"]
+        assert Path(system_template["source_path"]).is_file()
     finally:
         app.dependency_overrides.clear()

@@ -60,6 +60,7 @@ class DashboardTemplateReference(BaseModel):
     template_name: str
     template_type: str
     template_source: str
+    source_path: str | None = None
     description: str | None = None
     tags: list[str] = Field(default_factory=list)
     preferred_format: str | None = None
