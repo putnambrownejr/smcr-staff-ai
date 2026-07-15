@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from app.api.routes.dashboard import get_history_service
 from app.main import app
 from app.schemas.history import HistoryScope, TodayInMarineHistoryItem
+from app.services.history.catalog import BUNDLED_HISTORY_PATHS
 from app.services.history.local_history_store import LocalHistoryStore
 from app.services.history.today_in_history import TodayInMarineHistoryService, extract_history_items_from_markdown
 
@@ -209,6 +210,36 @@ def test_seed_history_includes_july_14_event() -> None:
     assert any(item.slug == "uss-iwo-jima-decommissioned" for item in items)
 
 
+def test_bundled_history_catalogs_have_scopes_and_sources() -> None:
+    seen_scopes: set[HistoryScope] = set()
+    for path in BUNDLED_HISTORY_PATHS:
+        payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        assert payload.get("items"), f"No history items in {path}"
+        for raw_item in payload["items"]:
+            assert "scope" in raw_item, f"Missing explicit scope for {raw_item.get('slug')}"
+            item = TodayInMarineHistoryItem.model_validate(raw_item)
+            assert item.references, f"Missing source for {item.slug}"
+            assert all(reference.startswith("https://") for reference in item.references)
+            seen_scopes.add(item.scope)
+    assert seen_scopes == {HistoryScope.usmc, HistoryScope.us_military}
+
+
+def test_markdown_import_preserves_requested_scope() -> None:
+    markdown = (
+        "- **July 15, 1918 – Rock of the Marne:** "
+        "The 38th Infantry held its position."
+    )
+
+    items = extract_history_items_from_markdown(
+        markdown,
+        "https://history.army.mil/",
+        HistoryScope.us_military,
+    )
+
+    assert len(items) == 1
+    assert items[0].scope is HistoryScope.us_military
+
+
 def test_history_import_route_saves_local_history(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     markdown_path = tmp_path / "history.md"
     markdown_path.write_text(
@@ -226,7 +257,11 @@ def test_history_import_route_saves_local_history(tmp_path: Path, monkeypatch: M
         client = TestClient(app)
         response = client.post(
             "/history/import-markdown",
-            json={"markdown_paths": [str(markdown_path)], "replace_existing": True},
+            json={
+                "markdown_paths": [str(markdown_path)],
+                "replace_existing": True,
+                "scope": "us_military",
+            },
         )
         assert response.status_code == 200
         payload = response.json()
@@ -237,5 +272,11 @@ def test_history_import_route_saves_local_history(tmp_path: Path, monkeypatch: M
             item.slug.startswith("11-10-1775")
             for item in history_service.get_for_date(date(2026, 11, 10))
         )
+        imported = next(
+            item
+            for item in history_service.get_for_date(date(2026, 11, 10))
+            if item.slug.startswith("11-10-1775")
+        )
+        assert imported.scope is HistoryScope.us_military
     finally:
         get_settings.cache_clear()

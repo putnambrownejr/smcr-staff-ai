@@ -1,0 +1,67 @@
+items:
+  - slug: "us-army-established"
+    scope: "us_military"
+    title: "Continental Army established"
+    month: 6
+    day: 14
+    year_label: "1775"
+    summary: "The Continental Congress authorized the enlistment of expert riflemen, marking the founding date recognized by the United States Army."
+    significance:
+      - "Provides a joint-service heritage reference for the establishment of the Army."
+    references:
+      - "https://history.army.mil/Research/Reference-Topics/Army-Birthdays/Branch-Birthday/"
+  - slug: "rock-of-the-marne"
+    scope: "us_military"
+    title: "38th Infantry earns the name Rock of the Marne"
+    month: 7
+    day: 15
+    year_label: "1918"
+    summary: "The 38th Infantry Regiment of the 3d Infantry Division held along the Marne against repeated German attacks during the final German offensive of World War I."
+    significance:
+      - "Highlights disciplined defense and combined infantry-artillery action under severe pressure."
+    references:
+      - "https://history.army.mil/Portals/143/Images/Publications/Publication%20By%20Title%20Images/A%20Titles%20PDF/CMH_Pub_30-22.pdf?ver=AZSZhsSpAI4Yo0ejWufwlw%3D%3D"
+  - slug: "us-coast-guard-founded"
+    scope: "us_military"
+    title: "Revenue Cutter Service authorized"
+    month: 8
+    day: 4
+    year_label: "1790"
+    summary: "President George Washington signed legislation authorizing ten cutters, the founding date officially recognized by the United States Coast Guard."
+    significance:
+      - "Connects military service with maritime safety, security, and federal law enforcement."
+    references:
+      - "https://www.history.uscg.mil/home/history-program/"
+  - slug: "us-air-force-established"
+    scope: "us_military"
+    title: "United States Air Force becomes an independent service"
+    month: 9
+    day: 18
+    year_label: "1947"
+    summary: "Following the National Security Act of 1947, W. Stuart Symington became Secretary of the Air Force as the new department and independent service took form."
+    significance:
+      - "Marks the institutional establishment of an independent United States Air Force."
+    references:
+      - "https://www.af.mil/About-Us/Fact-Sheets/Display/Article/433914/the-birth-of-the-united-states-air-force/"
+  - slug: "us-navy-birthday"
+    scope: "us_military"
+    title: "Continental Navy established"
+    month: 10
+    day: 13
+    year_label: "1775"
+    summary: "The Continental Congress authorized the fitting out of armed vessels, a date celebrated as the birthday of the United States Navy."
+    significance:
+      - "Provides the naval-service heritage context for the Navy's origin."
+    references:
+      - "https://www.history.navy.mil/today-in-history/october-13.html"
+  - slug: "us-space-force-established"
+    scope: "us_military"
+    title: "United States Space Force established"
+    month: 12
+    day: 20
+    year_label: "2019"
+    summary: "The National Defense Authorization Act for Fiscal Year 2020 established the United States Space Force as the sixth branch of the armed forces."
+    significance:
+      - "Marks the first new United States armed-service branch established in 73 years."
+    references:
+      - "https://www.spaceforce.mil/News/Article-Display/Article/2045991/department-of-defense-establishes-us-space-force/"

@@ -1,5 +1,6 @@
 items:
   - slug: "fmf-activation"
+    scope: "usmc"
     title: "Fleet Marine Force activated"
     month: 12
     day: 7
@@ -11,6 +12,7 @@ items:
     references:
       - "https://www.usmcu.edu/Research/Marine-Corps-History-Division/"
   - slug: "marine-corps-birthday"
+    scope: "usmc"
     title: "Marine Corps Birthday"
     month: 11
     day: 10
@@ -22,6 +24,7 @@ items:
     references:
       - "https://www.usmcu.edu/Research/Marine-Corps-History-Division/"
   - slug: "belleau-wood"
+    scope: "usmc"
     title: "Belleau Wood phase"
     month: 6
     day: 6
@@ -33,6 +36,7 @@ items:
     references:
       - "https://www.usmcu.edu/Research/Marine-Corps-History-Division/"
   - slug: "guadalcanal-landing"
+    scope: "usmc"
     title: "Guadalcanal landings begin"
     month: 8
     day: 7
@@ -44,6 +48,7 @@ items:
     references:
       - "https://www.usmcu.edu/Research/Marine-Corps-History-Division/"
   - slug: "new-providence-raid"
+    scope: "usmc"
     title: "Marines land at New Providence"
     month: 3
     day: 3
@@ -55,6 +60,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/Chronology%201775-1934%20%5Bcomplete%5D_1.pdf"
   - slug: "marine-corps-reestablished"
+    scope: "usmc"
     title: "Marine Corps reestablished by Congress"
     month: 7
     day: 11
@@ -66,6 +72,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/HD/Brief%20Histories/2025_Update/Brief%20History/U.S.%20Marine%20Corps%20Brief%20History%20-%20FINAL.pdf?ver=3bkEEgtavvOQ2TgcKIscoA%3D%3D"
   - slug: "derna-captured"
+    scope: "usmc"
     title: "Derna captured"
     month: 4
     day: 27
@@ -77,6 +84,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/HD/Brief%20Histories/2025_Update/Brief%20History/U.S.%20Marine%20Corps%20Brief%20History%20-%20FINAL.pdf?ver=3bkEEgtavvOQ2TgcKIscoA%3D%3D"
   - slug: "chapultepec"
+    scope: "usmc"
     title: "Battle of Chapultepec"
     month: 9
     day: 13
@@ -88,6 +96,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/Chronology%201775-1934%20%5Bcomplete%5D_1.pdf"
   - slug: "marine-aviation-first-aviator"
+    scope: "usmc"
     title: "First Marine aviator ordered to flight training"
     month: 5
     day: 22
@@ -99,6 +108,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/Chronology%201775-1934%20%5Bcomplete%5D_1.pdf"
   - slug: "first-woman-marine"
+    scope: "usmc"
     title: "Opha May Johnson becomes first woman Marine"
     month: 8
     day: 13
@@ -110,6 +120,7 @@ items:
     references:
       - "https://www.marines.mil/News/News-Display/Article/1601358/a-century-of-solidarity-celebrating-100-years-of-women-serving-in-the-marine-co/"
   - slug: "wake-island-defense-begins"
+    scope: "usmc"
     title: "Defense of Wake Island begins"
     month: 12
     day: 8
@@ -121,6 +132,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
   - slug: "edsons-ridge"
+    scope: "usmc"
     title: "Battle of Edson's Ridge"
     month: 9
     day: 12
@@ -132,6 +144,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
   - slug: "bougainville-landing"
+    scope: "usmc"
     title: "Bougainville landings begin"
     month: 11
     day: 1
@@ -143,6 +156,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
   - slug: "tarawa-landing"
+    scope: "usmc"
     title: "Battle of Tarawa begins"
     month: 11
     day: 20
@@ -154,6 +168,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
   - slug: "cape-gloucester-landing"
+    scope: "usmc"
     title: "Cape Gloucester landings begin"
     month: 12
     day: 26
@@ -165,6 +180,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
   - slug: "roi-namur"
+    scope: "usmc"
     title: "Roi-Namur assault"
     month: 2
     day: 1
@@ -176,6 +192,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
   - slug: "saipan-landing"
+    scope: "usmc"
     title: "Battle of Saipan begins"
     month: 6
     day: 15
@@ -187,6 +204,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
   - slug: "uss-iwo-jima-decommissioned"
+    scope: "usmc"
     title: "USS Iwo Jima decommissioned"
     month: 7
     day: 14
@@ -198,6 +216,7 @@ items:
     references:
       - "https://www.marines.mil/News/Audio-Marine-Minute/?audioid=48618&dvpTag=Service&dvpmoduleid=514"
   - slug: "guam-liberation-landing"
+    scope: "usmc"
     title: "Guam liberation landings begin"
     month: 7
     day: 21
@@ -209,6 +228,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
   - slug: "peleliu-landing"
+    scope: "usmc"
     title: "Battle of Peleliu begins"
     month: 9
     day: 15
@@ -220,6 +240,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
   - slug: "iwo-jima-landing"
+    scope: "usmc"
     title: "Battle of Iwo Jima begins"
     month: 2
     day: 19
@@ -231,6 +252,7 @@ items:
     references:
       - "https://www.marines.mil/News/News-Display/Article/2088180/marine-corps-commemorates-75th-anniversary-of-iwo-jima/"
   - slug: "iwo-jima-flag-raising"
+    scope: "usmc"
     title: "Iwo Jima flag raising"
     month: 2
     day: 23
@@ -242,6 +264,7 @@ items:
     references:
       - "https://www.marines.mil/News/News-Display/Article/3307599/remembering-iwo-jima-78-years/"
   - slug: "okinawa-landing"
+    scope: "usmc"
     title: "Okinawa landings begin"
     month: 4
     day: 1
@@ -253,6 +276,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
   - slug: "inchon-landing"
+    scope: "usmc"
     title: "Inchon landing"
     month: 9
     day: 15
@@ -264,6 +288,7 @@ items:
     references:
       - "https://www.usmcu.edu/Research/Marine-Corps-History-Division/Brief-Histories/Marines-in-the-Mediterranean/"
   - slug: "chosin-reservoir-campaign"
+    scope: "usmc"
     title: "Chosin Reservoir campaign begins"
     month: 11
     day: 27
@@ -275,6 +300,7 @@ items:
     references:
       - "https://www.usmcu.edu/Outreach/Marine-Corps-University-Press/MCH/Marine-Corps-History-Winter-2025-26/Remembering-Chosin/"
   - slug: "operation-starlite"
+    scope: "usmc"
     title: "Operation Starlite begins"
     month: 8
     day: 18
@@ -286,6 +312,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/The_First_Fight_Starlite.pdf"
   - slug: "khe-sanh-siege-begins"
+    scope: "usmc"
     title: "Siege of Khe Sanh begins"
     month: 1
     day: 21
@@ -297,6 +324,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/US%20Marines%20in%20Vietnam%20The%20Defining%20Year%201968%20%20PCN%2019000313800.pdf"
   - slug: "hue-city-battle"
+    scope: "usmc"
     title: "Battle of Hue City begins"
     month: 1
     day: 31
@@ -308,6 +336,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/HD%20MCUP/HD%20Pubs/DeathInTheImperialCity.pdf?ver=2018-10-16-102102-263"
   - slug: "beirut-barracks-bombing"
+    scope: "usmc"
     title: "Beirut barracks bombing"
     month: 10
     day: 23
@@ -319,6 +348,7 @@ items:
     references:
       - "https://www.usmcu.edu/Portals/218/HD/Brief%20Histories/2025_Update/Operational/16.%20Beirut.pdf?ver=zgVVBXnXQSDXdCWB_Zx5NQ%3D%3D"
   - slug: "mcdp-1-warfighting"
+    scope: "usmc"
     title: "MCDP 1 Warfighting published"
     month: 6
     day: 20
