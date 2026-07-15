@@ -2131,6 +2131,55 @@ PATCHES: list[tuple[str, ...]] = [
         '\n'
         '    <!-- ==================== LINKS LANE ==================== -->\n',
     ),
+    # ------------------------------------------------------------------
+    # In-dash shutdown (2026-07-14): a power button in the top bar replaces
+    # the separate "Stop SMCR Staff AI" desktop shortcut, so one icon (plus
+    # this button) covers the whole lifecycle.
+    # ------------------------------------------------------------------
+    (
+        "top bar: add a power (shut down) button next to the profile button",
+        'title="Shut down SMCR Staff AI"',  # stable marker
+        '      <button type="button" sc-camel-on-click="{{ toggleProfile }}" title="Profile &amp; preferences" style="width:30px;height:30px;border-radius:50%;border:1px solid #313844;background:#1a2027;color:#aab4bf;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:0 0 auto;">\n'
+        '        <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>\n'
+        '      </button>\n',
+        '      <button type="button" sc-camel-on-click="{{ toggleProfile }}" title="Profile &amp; preferences" style="width:30px;height:30px;border-radius:50%;border:1px solid #313844;background:#1a2027;color:#aab4bf;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:0 0 auto;">\n'
+        '        <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>\n'
+        '      </button>\n'
+        '      <button type="button" sc-camel-on-click="{{ onShutdown }}" title="Shut down SMCR Staff AI" style="width:30px;height:30px;border-radius:50%;border:1px solid #3a2226;background:#1b1114;color:#d8a0a5;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:0 0 auto;">\n'
+        '        <svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v9"></path><path d="M6 6.2a8 8 0 1 0 12 0"></path></svg>\n'
+        '      </button>\n',
+    ),
+    (
+        "header: add the powered-down overlay before the profile drawer",
+        "SMCR Staff AI is shut down.",  # stable marker
+        '  <sc-if value="{{ profileOpen }}" hint-placeholder-val="{{ false }}">\n',
+        '  <sc-if value="{{ shutdownDone }}" hint-placeholder-val="{{ false }}">\n'
+        '  <div style="position:fixed;inset:0;z-index:100;background:#0b0e12;display:flex;align-items:center;justify-content:center;">\n'
+        '    <div style="max-width:420px;text-align:center;padding:24px;">\n'
+        '      <div style="font-size:2rem;margin-bottom:12px;color:#4a9e6a;">⏻</div>\n'
+        '      <h2 style="margin:0 0 10px;font-size:1.1rem;font-weight:700;color:#eef2f6;">SMCR Staff AI is shut down.</h2>\n'
+        '      <p style="margin:0;color:#8a94a0;font-size:0.9rem;line-height:1.6;">You can close this tab. To start it again, double-click the <strong style="color:#aab4bf;">SMCR Staff AI</strong> icon on your desktop (or run start.bat).</p>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '  </sc-if>\n'
+        '\n'
+        '  <sc-if value="{{ profileOpen }}" hint-placeholder-val="{{ false }}">\n',
+    ),
+    (
+        "vals: shutdownDone flag + onShutdown handler (confirm, POST, overlay)",
+        "      onShutdown: () => {",  # stable marker
+        '      profileOpen: this.state.profileOpen,\n'
+        '      toggleProfile: () => this.setState((s) => ({ profileOpen: !s.profileOpen })),\n',
+        '      profileOpen: this.state.profileOpen,\n'
+        '      shutdownDone: !!this.state.shutdownDone,\n'
+        '      onShutdown: () => {\n'
+        '        if (!window.confirm("Shut down SMCR Staff AI? The dashboard goes offline until you start it again from the desktop icon (or start.bat).")) return;\n'
+        '        fetch("/dashboard/shutdown", { method: "POST", headers: this._apiHeaders() })\n'
+        '          .then(() => this.setState({ shutdownDone: true }))\n'
+        '          .catch(() => this.setState({ shutdownDone: true }));\n'
+        '      },\n'
+        '      toggleProfile: () => this.setState((s) => ({ profileOpen: !s.profileOpen })),\n',
+    ),
     (
         "_switchDemoMode: wipe demo files from disk when toggling off",
         'fetch("/demo/workspace", { method: "DELETE", headers: this._apiHeaders() }).catch(() => {});',  # stable marker

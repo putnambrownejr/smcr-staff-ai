@@ -1,20 +1,23 @@
-# Installs (or removes) the SMCR Staff AI desktop shortcuts and login
+# Installs (or removes) the SMCR Staff AI desktop shortcut and login
 # auto-start, so the dashboard can be opened without going through an AI
 # assistant. Safe to re-run -- shortcuts are overwritten, not duplicated.
 #
 # Default (no switches): installs everything --
-#   - Desktop: "SMCR Staff AI.lnk"       -> opens the dashboard (starts the
-#     server first if it isn't already running)
-#   - Desktop: "Stop SMCR Staff AI.lnk"  -> stops the server
+#   - Desktop: "SMCR Staff AI.lnk" -> opens the dashboard (starts the server
+#     first if it isn't already running). Shutting down happens INSIDE the
+#     dashboard: the power button in the top bar. One icon, whole lifecycle.
 #   - Startup folder: silently starts the server when you log in (no browser
 #     tab pops open on its own -- the desktop icon is your "take me there")
 #
+# Earlier versions also installed a "Stop SMCR Staff AI" desktop icon; the
+# in-dash power button replaced it, and installing now removes the old icon.
+#
 # Usage:
 #   powershell -ExecutionPolicy Bypass -File scripts\create_desktop_shortcut.ps1
-#   ... -NoAutostart      # desktop icons only, skip login auto-start
-#   ... -NoDesktop        # auto-start only, skip desktop icons
+#   ... -NoAutostart      # desktop icon only, skip login auto-start
+#   ... -NoDesktop        # auto-start only, skip the desktop icon
 #   ... -RemoveAll        # undo everything this script has installed
-#   ... -RemoveDesktop    # remove just the two desktop icons
+#   ... -RemoveDesktop    # remove just the desktop icon
 #   ... -RemoveAutostart  # remove just the login auto-start
 
 param(
@@ -31,7 +34,6 @@ $RepoRoot = Split-Path -Parent $PSScriptRoot
 $PythonwExe = Join-Path $RepoRoot ".venv\Scripts\pythonw.exe"
 $IconPath = Join-Path $RepoRoot "scripts\assets\smcr-staff-ai.ico"
 $LaunchScript = Join-Path $RepoRoot "scripts\launch_dashboard.pyw"
-$StopScript = Join-Path $RepoRoot "scripts\stop_dashboard.pyw"
 $AutostartScript = Join-Path $RepoRoot "scripts\start_server_hidden.pyw"
 
 $DesktopDir = [Environment]::GetFolderPath("Desktop")
@@ -82,11 +84,12 @@ if (-not (Test-Path $PythonwExe)) {
 if (-not $NoDesktop) {
     New-AppShortcut -Path $OpenShortcut -Arguments "`"$LaunchScript`"" `
         -Description "Open the SMCR Staff AI dashboard (starts it first if needed)"
-    New-AppShortcut -Path $StopShortcut -Arguments "`"$StopScript`"" `
-        -Description "Stop the SMCR Staff AI server"
-    Write-Output "Desktop shortcuts created:"
+    # The in-dash power button replaced the separate Stop icon; clean up any
+    # copy an earlier version of this script installed.
+    Remove-IfExists $StopShortcut
+    Write-Output "Desktop shortcut created:"
     Write-Output "  $OpenShortcut"
-    Write-Output "  $StopShortcut"
+    Write-Output "  (shut down from inside the dashboard: the power button in the top bar)"
 }
 
 if (-not $NoAutostart) {

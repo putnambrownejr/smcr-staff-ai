@@ -138,6 +138,47 @@ def test_dashboard_route_injects_pwa_metadata() -> None:
     assert '<meta name="theme-color" content="#0d1014">' in response.text
 
 
+def test_shutdown_route_schedules_termination(monkeypatch: pytest.MonkeyPatch) -> None:
+    # The in-dash power button. Monkeypatch the scheduler -- actually running
+    # it would terminate the test process.
+    calls: list[bool] = []
+    monkeypatch.setattr(dashboard_routes, "_schedule_shutdown", lambda: calls.append(True))
+    client = TestClient(app)
+
+    response = client.post("/dashboard/shutdown")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "shutting_down"}
+    assert calls == [True]
+
+
+def test_shutdown_requires_configured_local_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOCAL_API_KEY", "shutdown-secret")
+    from app.core.config import get_settings
+
+    get_settings.cache_clear()
+    calls: list[bool] = []
+    monkeypatch.setattr(dashboard_routes, "_schedule_shutdown", lambda: calls.append(True))
+    client = TestClient(app)
+
+    without_key = client.post("/dashboard/shutdown")
+    with_key = client.post("/dashboard/shutdown", headers={"X-Local-API-Key": "shutdown-secret"})
+
+    assert without_key.status_code in (401, 403)
+    assert with_key.status_code == 200
+    assert calls == [True]
+    get_settings.cache_clear()
+
+
+def test_looks_like_server_wrapper_matches_reload_and_uv_parents() -> None:
+    assert dashboard_routes._looks_like_server_wrapper(
+        r'"C:\smcr-staff-ai\.venv\Scripts\python.exe" "C:\smcr-staff-ai\.venv\Scripts\uvicorn.exe" app.main:app --reload'
+    )
+    assert dashboard_routes._looks_like_server_wrapper("uv.exe run uvicorn app.main:app --host 127.0.0.1")
+    assert not dashboard_routes._looks_like_server_wrapper(r"C:\Windows\explorer.exe")
+    assert not dashboard_routes._looks_like_server_wrapper("")
+
+
 def test_pwa_manifest_and_icons_are_served() -> None:
     client = TestClient(app)
 

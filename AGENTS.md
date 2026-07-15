@@ -40,10 +40,11 @@ downloaded this repo and needs to be walked through setup. Do this:
    assistant just to open the dashboard next time. Ask something like "Want a desktop
    icon so you can open this anytime without going through me?" If yes, run:
    `powershell -ExecutionPolicy Bypass -File scripts\create_desktop_shortcut.ps1`
-   This creates two desktop icons ("SMCR Staff AI" to open it, "Stop SMCR Staff AI" to
-   close it) and registers the server to start quietly at login (no browser tab pops
-   open on its own — the desktop icon is the "take me there" trigger). See
-   **Desktop Shortcut / Auto-Start** below for details, flags, and how to undo it.
+   This creates one desktop icon ("SMCR Staff AI" — opens the dashboard, starting the
+   server first if needed) and registers the server to start quietly at login (no
+   browser tab pops open on its own — the desktop icon is the "take me there"
+   trigger). Shutting down happens inside the dashboard: the power button in the top
+   bar. See **Desktop Shortcut / Auto-Start** below for details, flags, and undo.
    Skip this on Mac/Linux for now (not yet built) — a bookmark to
    http://localhost:8000/dashboard plus `./start.sh` is the flow there.
 6. **Regardless of server:** tell them they can ask you questions right now. Give
@@ -91,13 +92,19 @@ duplicates):
 - **Desktop icon "SMCR Staff AI"** — double-click to open the dashboard. Starts the
   server first if it isn't already running, then opens the browser to it. Works
   whether or not auto-start (below) is on.
-- **Desktop icon "Stop SMCR Staff AI"** — stops the server.
 - **Login auto-start** — a shortcut in the user's Startup folder that silently starts
   the server when they log into Windows. It does **not** open a browser tab on its
   own; the desktop icon is the explicit "take me there" action. This means the
   dashboard is usually already warm by the time they click the icon.
 
-Useful flags: `-NoAutostart` (desktop icons only), `-NoDesktop` (auto-start only),
+**Shutting down** is a dashboard feature, not a second icon: the power button at the
+right end of the dashboard's top bar (`POST /dashboard/shutdown`) stops the server
+and shows a "shut down — click the desktop icon to restart" screen. Earlier versions
+installed a separate "Stop SMCR Staff AI" desktop icon; re-running the install
+script removes it. If the dashboard itself is ever unreachable, the fallback is
+`scripts\stop_dashboard.pyw` (run via `.venv\Scripts\pythonw.exe`).
+
+Useful flags: `-NoAutostart` (desktop icon only), `-NoDesktop` (auto-start only),
 `-RemoveAll` (undo everything this script installed), `-RemoveDesktop` /
 `-RemoveAutostart` (undo just one piece). All of this only touches the current
 user's own Desktop and Startup folder — no admin rights, no system-wide changes.

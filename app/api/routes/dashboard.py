@@ -1,7 +1,11 @@
 import json
+import os
+import signal
 import subprocess
 import sys
+import threading
 from collections.abc import Iterator
+from contextlib import suppress
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
@@ -118,6 +122,70 @@ def reveal_file_location(path: str) -> dict[str, str]:
 # repo, even though the dashboard bundle prefixes every path with the repo root
 # (see openFileLocation in the bundle and reveal-shim.js).
 _LOCAL_STATE_SEGMENTS = ("User Docs", "local_context")
+
+
+@router.post(
+    "/dashboard/shutdown",
+    summary="Shut down the SMCR Staff AI server from inside the dashboard",
+    dependencies=[LocalApiKeyDependency],
+)
+def shutdown_server() -> dict[str, str]:
+    """Power button for the dashboard: stop the whole local server.
+
+    Replaces the separate "Stop SMCR Staff AI" desktop shortcut so one icon
+    (plus this button) covers the full lifecycle. Responds first, then
+    terminates on a short timer so the browser gets its confirmation.
+    """
+    _schedule_shutdown()
+    return {"status": "shutting_down"}
+
+
+def _schedule_shutdown(delay_seconds: float = 0.6) -> None:
+    threading.Timer(delay_seconds, _terminate_server_process).start()
+
+
+def _terminate_server_process() -> None:
+    # If a wrapper launched us -- a `uvicorn --reload` supervisor (start.bat)
+    # that would resurrect a killed worker, or `uv run` idling as our parent --
+    # take it down first so nothing respawns or lingers. Parent first, then
+    # self: the reload supervisor only respawns after its child exits.
+    ppid = os.getppid()
+    if ppid and ppid > 4 and _looks_like_server_wrapper(_process_cmdline(ppid)):
+        with suppress(OSError):
+            os.kill(ppid, signal.SIGTERM)
+    # On POSIX this is a graceful SIGTERM (uvicorn's own shutdown path); on
+    # Windows os.kill with SIGTERM maps to TerminateProcess, which is fine for
+    # this app -- every store writes synchronously, so there is no state to
+    # flush on the way out.
+    os.kill(os.getpid(), signal.SIGTERM)
+
+
+def _looks_like_server_wrapper(cmdline: str) -> bool:
+    return "uvicorn" in cmdline.lower()
+
+
+def _process_cmdline(pid: int) -> str:
+    try:
+        if sys.platform == "win32":
+            result = subprocess.run(
+                [
+                    "powershell",
+                    "-NoProfile",
+                    "-Command",
+                    f'(Get-CimInstance Win32_Process -Filter "ProcessId={pid}").CommandLine',
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            return result.stdout.strip()
+        proc_cmdline = Path(f"/proc/{pid}/cmdline")
+        if proc_cmdline.exists():
+            return proc_cmdline.read_bytes().replace(b"\x00", b" ").decode(errors="replace")
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return ""
 
 
 def _resolve_reveal_target(raw: str) -> tuple[Path, bool]:
