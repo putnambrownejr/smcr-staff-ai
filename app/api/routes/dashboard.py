@@ -6,7 +6,7 @@ import sys
 import threading
 from collections.abc import Iterator
 from contextlib import suppress
-from datetime import UTC, datetime
+from datetime import date
 from pathlib import Path
 from typing import Annotated
 
@@ -473,6 +473,7 @@ def get_dashboard_data(
     custom_watch_feeds = _custom_watch_feed_summaries(custom_watch_feed_store)
     reading_progress = {item.slug: item for item in reading_state_store.list(user_key).records}
     history_library = history_service.list_items()
+    history_date = date.today()
     return _workspace_response(
         mode="personal",
         user_key=user_key,
@@ -495,7 +496,8 @@ def get_dashboard_data(
         alnav_ticker=_message_watch_ticker(alnav_store.list(limit=8)),
         dod_ticker=_message_watch_ticker(dod_watch_store.list(limit=8)),
         custom_watch_feeds=custom_watch_feeds,
-        today_in_history=history_service.get_or_random(datetime.now(UTC).date()),
+        today_in_history=history_service.get_or_random(history_date),
+        history_is_today=bool(history_service.get_for_date(history_date)),
         history_library=history_library,
         reference_library=_reference_library(),
         reading_books=_reading_books(
@@ -528,6 +530,7 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
         store=ReadingListCatalogStore(settings.reading_catalog_storage_dir),
     )
     demo_battle_rhythm = _demo_battle_rhythm(chief_brief)
+    history_date = date.today()
     return _workspace_response(
         mode="demo",
         user_key=DEMO_USER_KEY,
@@ -550,7 +553,8 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
         alnav_ticker=_message_watch_ticker(alnav_feed),
         dod_ticker=_message_watch_ticker(dod_feed),
         custom_watch_feeds=custom_watch_feeds,
-        today_in_history=history_service.get_or_random(datetime.now(UTC).date()),
+        today_in_history=history_service.get_or_random(history_date),
+        history_is_today=bool(history_service.get_for_date(history_date)),
         history_library=history_service.list_items(),
         reference_library=_reference_library(),
         reading_books=_reading_books(
@@ -581,6 +585,7 @@ def _workspace_response(
     dod_ticker: list[DashboardTickerItem],
     custom_watch_feeds: list[DashboardCustomWatchFeed],
     today_in_history: list[TodayInMarineHistoryItem],
+    history_is_today: bool,
     history_library: list[TodayInMarineHistoryItem],
     reference_library: list[DashboardReferenceEntry],
     reading_books: list[DashboardReadingBook],
@@ -634,6 +639,7 @@ def _workspace_response(
         dod_ticker=dod_ticker,
         custom_watch_feeds=custom_watch_feeds,
         today_in_history=today_in_history,
+        history_is_today=history_is_today,
         history_library=history_library,
         reference_library=reference_library,
         reading_books=reading_books,

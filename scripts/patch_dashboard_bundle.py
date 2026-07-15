@@ -2202,6 +2202,101 @@ PATCHES: list[tuple[str, ...]] = [
         '      this._loadRealHandoff();\n'
         '    }\n',
     ),
+    # ------------------------------------------------------------------
+    # Today in history (2026-07-14): replace the design export's hardcoded
+    # 11 July card with the real workspace payload. Sparse seed data still
+    # supplies a deterministic fallback, but the API tells the UI whether
+    # the item truly matches today's local date so the label stays honest.
+    # ------------------------------------------------------------------
+    (
+        "workspace load: map history spotlight and exact-date flag",
+        "const historySpotlight = (data.today_in_history || [])[0] || null;",  # stable marker
+        "      const actions = (data.tracked_actions || []).map((a) => this._mapRealAction(a));\n"
+        "      // Ticker items and personal documents ride along on the same payload.\n",
+        "      const actions = (data.tracked_actions || []).map((a) => this._mapRealAction(a));\n"
+        "      const historySpotlight = (data.today_in_history || [])[0] || null;\n"
+        "      // Ticker items and personal documents ride along on the same payload.\n",
+    ),
+    (
+        "workspace load: store history spotlight and exact-date flag",
+        "historyIsToday: !!data.history_is_today,",  # stable marker
+        "      this.setState((s) => ({\n"
+        "        actions,\n"
+        "        realMaradmins: mapTicker(data.maradmin_ticker),\n",
+        "      this.setState((s) => ({\n"
+        "        actions,\n"
+        "        historySpotlight,\n"
+        "        historyIsToday: !!data.history_is_today,\n"
+        "        realMaradmins: mapTicker(data.maradmin_ticker),\n",
+    ),
+    (
+        "vals: format the history spotlight from workspace data",
+        "const historySpotlight = this.state.historySpotlight;",  # stable marker
+        "    const onOpenReceiptsFolder = activeWorkflowDoc ? this.openFileLocation(activeWorkflowDoc.receiptsFolder) : () => {};\n\n"
+        "    return {\n",
+        "    const onOpenReceiptsFolder = activeWorkflowDoc ? this.openFileLocation(activeWorkflowDoc.receiptsFolder) : () => {};\n"
+        "    const historySpotlight = this.state.historySpotlight;\n"
+        "    const historyMonths = [\"JAN\", \"FEB\", \"MAR\", \"APR\", \"MAY\", \"JUN\", \"JUL\", \"AUG\", \"SEP\", \"OCT\", \"NOV\", \"DEC\"];\n"
+        "    const historyReference = historySpotlight && historySpotlight.references && historySpotlight.references[0] || \"\";\n"
+        "    const historySourceIsLink = /^https?:\\/\\//i.test(historyReference);\n"
+        "    const historyHeadline = historySpotlight\n"
+        "      ? String(historySpotlight.day).padStart(2, \"0\") + \" \" + (historyMonths[historySpotlight.month - 1] || \"\") + \" \" + historySpotlight.year_label + \" — \" + historySpotlight.title\n"
+        "      : \"\";\n\n"
+        "    return {\n",
+    ),
+    (
+        "vals: expose history spotlight bindings",
+        "historyLabel: this.state.historyIsToday ? \"Today in history\" : \"History spotlight\",",  # stable marker
+        "      quote: this.state.quote,\n"
+        "      goWatch: this.go(\"watch\"),\n",
+        "      quote: this.state.quote,\n"
+        "      historyVisible: !!historySpotlight,\n"
+        "      historyLabel: this.state.historyIsToday ? \"Today in history\" : \"History spotlight\",\n"
+        "      historyHeadline,\n"
+        "      historyDetails: historySpotlight ? historySpotlight.summary : \"\",\n"
+        "      historySourceIsLink,\n"
+        "      historySourceIsText: !!historyReference && !historySourceIsLink,\n"
+        "      historySourceUrl: historySourceIsLink ? historyReference : \"\",\n"
+        "      historySourceLabel: historySourceIsLink ? \"View official source ↗\" : historyReference,\n"
+        "      goWatch: this.go(\"watch\"),\n",
+    ),
+    (
+        "overview: render history spotlight from real workspace data",
+        "{{ historyHeadline }}",  # stable marker
+        '      <!-- Today in history (expandable) -->\n'
+        '      <details style="border:1px solid #313844;border-radius:8px;background:#0f1318;">\n'
+        '        <summary style="cursor:pointer;list-style:none;padding:16px 18px;display:flex;gap:14px;align-items:center;">\n'
+        '          <span style="flex:0 0 auto;font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8a94a0;padding:4px 8px;border:1px solid #313844;border-radius:4px;">Today in history</span>\n'
+        '          <p style="margin:0;font-size:0.88rem;color:#c7cfd8;line-height:1.5;flex:1;">11 JUL 1798 — The U.S. Marine Corps was re-established by an Act of Congress, formally creating the Corps as a standing military force.</p>\n'
+        '          <span style="color:#5a6572;font-size:0.8rem;">Details ▾</span>\n'
+        '        </summary>\n'
+        '        <div style="padding:0 18px 16px;display:grid;gap:8px;border-top:1px solid #1a2027;margin-top:2px;padding-top:12px;">\n'
+        '          <p style="margin:0;color:#aab4bf;font-size:0.84rem;line-height:1.5;">The original Continental Marines, formed in 1775, were disbanded after the Revolutionary War. On 11 July 1798, Congress passed "An Act for Establishing and Organizing a Marine Corps," creating the modern Marine Corps as a permanent service under the Department of the Navy — the date the Corps now marks as its founding.</p>\n'
+        '          <a href="https://www.usmcu.edu/Research/Marine-Corps-History-Division/" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:600;">Source: Marine Corps History Division ↗</a>\n'
+        '        </div>\n'
+        '      </details>\n',
+        '      <!-- Today in history / history spotlight (expandable) -->\n'
+        '      <sc-if value="{{ historyVisible }}" hint-placeholder-val="{{ false }}">\n'
+        '      <details style="border:1px solid #313844;border-radius:8px;background:#0f1318;">\n'
+        '        <summary style="cursor:pointer;list-style:none;padding:16px 18px;display:flex;gap:14px;align-items:center;">\n'
+        '          <span style="flex:0 0 auto;font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8a94a0;padding:4px 8px;border:1px solid #313844;border-radius:4px;">{{ historyLabel }}</span>\n'
+        '          <p style="margin:0;font-size:0.88rem;color:#c7cfd8;line-height:1.5;flex:1;">{{ historyHeadline }}</p>\n'
+        '          <span style="color:#5a6572;font-size:0.8rem;">Details ▾</span>\n'
+        '        </summary>\n'
+        '        <div style="padding:0 18px 16px;display:grid;gap:8px;border-top:1px solid #1a2027;margin-top:2px;padding-top:12px;">\n'
+        '          <p style="margin:0;color:#aab4bf;font-size:0.84rem;line-height:1.5;">{{ historyDetails }}</p>\n'
+        '          <sc-if value="{{ historySourceIsLink }}" hint-placeholder-val="{{ false }}"><a href="{{ historySourceUrl }}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:600;">{{ historySourceLabel }}</a></sc-if>\n'
+        '          <sc-if value="{{ historySourceIsText }}" hint-placeholder-val="{{ false }}"><p style="margin:0;color:#8a94a0;font-size:0.78rem;">Source: {{ historySourceLabel }}</p></sc-if>\n'
+        '        </div>\n'
+        '      </details>\n'
+        '      </sc-if>\n',
+    ),
+    (
+        "history source: avoid claiming every imported URL is official",
+        'historySourceLabel: historySourceIsLink ? "View source ↗" : historyReference,',
+        '      historySourceLabel: historySourceIsLink ? "View official source ↗" : historyReference,\n',
+        '      historySourceLabel: historySourceIsLink ? "View source ↗" : historyReference,\n',
+    ),
 ]
 
 

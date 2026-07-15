@@ -186,6 +186,17 @@ items:
       - "Useful for connecting tactical fighting to airpower, logistics, and theater reach."
     references:
       - "https://www.usmcu.edu/Portals/218/A%20Chronology%20Of%20The%20United%20States%20Marine%20Corps%201935-1946%20%20PCN%2019000317800.pdf"
+  - slug: "uss-iwo-jima-decommissioned"
+    title: "USS Iwo Jima decommissioned"
+    month: 7
+    day: 14
+    year_label: "1993"
+    summary: "USS Iwo Jima was decommissioned after more than 30 years of service. The ship was the first designed as an amphibious assault ship from the keel up."
+    significance:
+      - "Connects Marine Corps history to the evolution of purpose-built amphibious shipping."
+      - "Useful PME hook for naval integration, amphibious capability, and how platforms shape expeditionary options."
+    references:
+      - "https://www.marines.mil/News/Audio-Marine-Minute/?audioid=48618&dvpTag=Service&dvpmoduleid=514"
   - slug: "guam-liberation-landing"
     title: "Guam liberation landings begin"
     month: 7

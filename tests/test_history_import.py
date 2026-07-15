@@ -56,6 +56,16 @@ def test_dashboard_history_service_merges_seed_and_local_items(tmp_path: Path) -
     assert {item.slug for item in items} == {"seed-item", "local-item"}
 
 
+def test_seed_history_includes_july_14_event() -> None:
+    service = TodayInMarineHistoryService.from_yaml(
+        Path("data/seed/usmc_history_on_this_day.example.yaml")
+    )
+
+    items = service.get_for_date(date(2026, 7, 14))
+
+    assert any(item.slug == "uss-iwo-jima-decommissioned" for item in items)
+
+
 def test_history_import_route_saves_local_history(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     markdown_path = tmp_path / "history.md"
     markdown_path.write_text(

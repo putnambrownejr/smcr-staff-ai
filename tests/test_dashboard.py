@@ -99,6 +99,18 @@ def test_dashboard_bundle_is_wired_to_real_actions_api() -> None:
     assert "dueMatch" in component_source
 
 
+def test_dashboard_bundle_renders_history_from_workspace_data() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "data.today_in_history" in component_source
+    assert "data.history_is_today" in component_source
+    assert "historySpotlight" in component_source
+    assert "{{ historyLabel }}" in component_source
+    assert "{{ historyHeadline }}" in component_source
+    assert "{{ historyDetails }}" in component_source
+    assert "11 JUL 1798 — The U.S. Marine Corps was re-established" not in component_source
+
+
 def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:
     """Same guard as the actions test above, for the feeds/links/profile wiring
     added in the same remediation pass (step 2, items 2-4)."""
@@ -388,6 +400,7 @@ def test_demo_dashboard_data_route_returns_workspace_payload() -> None:
     assert payload["daily_ops_brief"]["executive_snapshot"]
     assert payload["analyst_brief"]["kpi_summary"]
     assert "history_library" in payload
+    assert isinstance(payload["history_is_today"], bool)
     assert "reference_library" in payload
     assert any(item["official_links"] for item in payload["reference_library"])
     assert "tracked_opportunities" in payload

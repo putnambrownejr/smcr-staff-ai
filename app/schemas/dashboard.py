@@ -136,6 +136,7 @@ class DashboardWorkspaceResponse(BaseModel):
     dod_ticker: list[DashboardTickerItem] = Field(default_factory=list)
     custom_watch_feeds: list[DashboardCustomWatchFeed] = Field(default_factory=list)
     today_in_history: list[TodayInMarineHistoryItem] = Field(default_factory=list)
+    history_is_today: bool = False
     history_library: list[TodayInMarineHistoryItem] = Field(default_factory=list)
     reference_library: list[DashboardReferenceEntry] = Field(default_factory=list)
     reading_books: list[DashboardReadingBook] = Field(default_factory=list)
