@@ -35,7 +35,7 @@ The request adds `operating_context` with exactly two values:
 - `domestic_support`: a domestic emergency-management, DSCA, or interagency exercise frame.
 - `overseas_partner`: an overseas, coalition, host-nation, humanitarian, or partner-exercise frame.
 
-The client must select a context. No default is inferred. Existing `partner_types`, `civil_considerations`, and `constraints` remain supported for backward compatibility.
+New UI/API submissions must select a context. To preserve the existing minimal API contract, legacy callers may omit it; their response uses a generic civil-military frame and explicitly identifies operating context as an information gap. Existing `partner_types`, `civil_considerations`, and `constraints` remain supported for backward compatibility.
 
 ### Public source items
 
@@ -107,7 +107,7 @@ No new dependencies, migrations, stores, background jobs, external fetches, or a
 
 ## Error and Empty States
 
-- A missing operating context produces a validation error; the application does not guess domestic versus overseas use.
+- A new-client submission missing operating context shows validation guidance; legacy API calls that omit it remain valid, receive generic framing, and flag operating context as an information gap. The application does not guess domestic versus overseas use.
 - With no source items, the package says that no source-backed observations were supplied and produces a research/validation plan rather than factual claims.
 - With no infrastructure or cultural items, the relevant section returns a minimum planning checklist and information gaps rather than a fabricated assessment.
 - A source item missing optional provenance is retained but marked as needing source/date review.
