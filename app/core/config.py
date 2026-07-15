@@ -44,6 +44,10 @@ def default_fitrep_dir() -> Path:
     return default_local_context_dir() / "fitreps"
 
 
+def default_cadence_dir() -> Path:
+    return default_local_context_dir() / "cadences"
+
+
 def default_battle_rhythm_dir() -> Path:
     return default_local_context_dir() / "battle_rhythm"
 
@@ -167,6 +171,7 @@ class Settings(BaseSettings):
     product_template_storage_dir: str = str(default_product_template_dir())
     travel_case_storage_dir: str = str(default_travel_case_dir())
     fitrep_storage_dir: str = str(default_fitrep_dir())
+    cadence_storage_dir: str = str(default_cadence_dir())
     battle_rhythm_storage_dir: str = str(default_battle_rhythm_dir())
     reading_state_storage_dir: str = str(default_reading_state_dir())
     reading_catalog_storage_dir: str = str(default_reading_catalog_dir())
@@ -212,6 +217,7 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.product_template_storage_dir),
         Path(settings.travel_case_storage_dir),
         Path(settings.fitrep_storage_dir),
+        Path(settings.cadence_storage_dir),
         Path(settings.battle_rhythm_storage_dir),
         Path(settings.reading_state_storage_dir),
         Path(settings.reading_catalog_storage_dir),

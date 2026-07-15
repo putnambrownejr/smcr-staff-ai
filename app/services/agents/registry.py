@@ -20,6 +20,12 @@ from app.services.agents.orm_agent import build_orm_agent
 from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.pki_agent import build_pki_troubleshooter_agent
 from app.services.agents.planning_advisor_agent import build_planning_advisor_agent
+from app.services.agents.readiness_development_agents import (
+    build_financial_readiness_agent,
+    build_fitness_planning_agent,
+    build_gtcc_advisor_agent,
+    build_warrior_monk_agent,
+)
 from app.services.agents.red_team_agent import build_red_team_agent
 from app.services.agents.staff_advisor_agent import build_staff_advisor_agents
 from app.services.agents.staff_products_agent import build_staff_products_agent
@@ -34,6 +40,7 @@ from app.services.agents.writing_briefing_agent import build_writing_briefing_ag
 _AGENT_CATEGORY_BY_ID: dict[str, str] = {
     "chief-of-staff": "Command & Leadership",
     "leadership-advisor": "Command & Leadership",
+    "warrior-monk": "Command & Leadership",
     "drill-prep-calendar": "Command & Leadership",
     "unit-checkin": "Command & Leadership",
     "planning-advisor": "Planning & Decision",
@@ -52,6 +59,9 @@ _AGENT_CATEGORY_BY_ID: dict[str, str] = {
     "uniform-advisor": "Reserve Admin & Readiness",
     "installation-practical-advisor": "Reserve Admin & Readiness",
     "orm-risk-management": "Reserve Admin & Readiness",
+    "gtcc-advisor": "Reserve Admin & Readiness",
+    "financial-readiness-advisor": "Reserve Admin & Readiness",
+    "fitness-planning-advisor": "Reserve Admin & Readiness",
 }
 _STAFF_COUNCIL_CATEGORY = "Virtual Staff Council"
 # Order categories intentionally so the page leads with the most-used groups.
@@ -122,6 +132,10 @@ def default_agents() -> list[Agent]:
         build_artillery_08xx_agent(),
         build_pki_troubleshooter_agent(),
         build_leadership_agent(),
+        build_warrior_monk_agent(),
+        build_gtcc_advisor_agent(),
+        build_financial_readiness_agent(),
+        build_fitness_planning_agent(),
         build_osint_agent(),
         build_map_agent(),
         build_checkin_agent(),
