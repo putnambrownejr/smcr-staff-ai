@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import threading
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -185,11 +186,13 @@ def _generated(answer: str, scenario_output: dict[str, object]) -> ScenarioGener
 
 
 @patch("app.services.llm_client.generate_scenario_response")
-def test_roundtable_cross_review_passes_assessments_between_agents(mock_generate) -> None:
+def test_roundtable_cross_review_passes_assessments_between_agents(mock_generate: MagicMock) -> None:
     recorded_templates: list[str] = []
     record_lock = threading.Lock()
 
-    def fake_generate(system_prompt: str, template: str, user_input: str, **kwargs: object):
+    def fake_generate(
+        system_prompt: str, template: str, user_input: str, **kwargs: object
+    ) -> ScenarioGenerationResult:
         with record_lock:
             recorded_templates.append(template)
         if "CIVIL ESTIMATE" in template:
@@ -247,7 +250,7 @@ def test_roundtable_cross_review_passes_assessments_between_agents(mock_generate
 
 
 @pytest.fixture
-def external_llm_env(monkeypatch: pytest.MonkeyPatch):
+def external_llm_env(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
     from app.services import llm_client
 
     monkeypatch.setenv("LLM_API_KEY", "sk-test")
@@ -259,7 +262,7 @@ def external_llm_env(monkeypatch: pytest.MonkeyPatch):
     llm_client._llm_settings.cache_clear()
 
 
-def test_roundtable_requires_approval_when_external_configured(external_llm_env) -> None:
+def test_roundtable_requires_approval_when_external_configured(external_llm_env: None) -> None:
     response = TestClient(app).post(
         "/agents/roundtable",
         json={

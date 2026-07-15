@@ -37,7 +37,9 @@ def test_store_round_trips_and_cleans_lists(setup_dir: Path) -> None:
     # Blank and duplicate list items are dropped.
     assert setup.priorities == ["Close RQS gaps", "FitReps by 31 AUG"]
     assert setup.watch_items == []
-    assert store.get("user-a").unit == "4th CAG"
+    loaded = store.get("user-a")
+    assert loaded is not None
+    assert loaded.unit == "4th CAG"
 
 
 def test_is_configured_flips_on_meaningful_content(setup_dir: Path) -> None:

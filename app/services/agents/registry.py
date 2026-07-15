@@ -26,7 +26,6 @@ from app.services.agents.staff_products_agent import build_staff_products_agent
 from app.services.agents.uniform_agent import build_uniform_agent
 from app.services.agents.writing_briefing_agent import build_writing_briefing_agent
 
-
 # Curated, human-facing groups for the dashboard AI page. Each agent's own
 # `domain` stays its fine-grained self-description; this buckets the 30+ agents
 # into a handful of categories (several agents each) so the page reads cleanly.
