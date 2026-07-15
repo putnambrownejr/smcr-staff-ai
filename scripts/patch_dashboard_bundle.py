@@ -40,7 +40,11 @@ def load_bundle(path: Path) -> tuple[str, int, int, str]:
     if start == -1:
         raise SystemExit(f"Could not find {TEMPLATE_OPEN!r} in {path}")
     json_start = start + len(TEMPLATE_OPEN)
-    json_end = html.find(TEMPLATE_CLOSE, json_start)
+    # Use the final closing tag. A previous serializer may have left literal
+    # "</script>" text inside the JSON string instead of escaping it as
+    # "<\u002Fscript>"; rfind lets us decode and repair that bundle without
+    # discarding its decoded component changes.
+    json_end = html.rfind(TEMPLATE_CLOSE)
     if json_end == -1:
         raise SystemExit("Could not find the closing </script> for __bundler/template")
     inner = json.loads(html[json_start:json_end].strip())
@@ -55,7 +59,9 @@ def apply_patches(inner_html: str, patches: list[tuple[str, ...]]) -> str:
     # design-tool re-export (nothing applied yet) and against the current
     # committed bundle (some/all already applied).
     #
-    # Each entry is (label, old, new) or (label, marker, old, new). The
+    # Each entry is (label, old, new) or (label, marker, old, new). `old` may
+    # be a tuple of exact alternatives when a migration must accept both a
+    # fresh design export and an already-patched legacy bundle. The
     # marker -- not `new` -- is what's checked for "already applied". Plain
     # 3-tuples use `new` as their own marker, which is correct UNLESS this
     # patch inserts a multi-method block immediately before a stable anchor
@@ -73,21 +79,29 @@ def apply_patches(inner_html: str, patches: list[tuple[str, ...]]) -> str:
         else:
             label, old, new = entry
             marker = new
-        if inner_html.count(marker) >= 1:
+        marker_options = (marker,) if isinstance(marker, str) else marker
+        if any(inner_html.count(candidate) >= 1 for candidate in marker_options):
             print(f"already applied, skipping: {label}")
             continue
-        old_count = inner_html.count(old)
-        if old_count == 0:
+        old_options = (old,) if isinstance(old, str) else old
+        matches = [
+            (candidate, inner_html.count(candidate))
+            for candidate in old_options
+            if inner_html.count(candidate)
+        ]
+        total_matches = sum(count for _, count in matches)
+        if total_matches == 0:
             raise SystemExit(
                 f"Patch {label!r} target text not found -- the bundle was likely "
                 "re-exported and this patch needs updating. Aborting without writing."
             )
-        if old_count > 1:
+        if total_matches > 1:
             raise SystemExit(
-                f"Patch {label!r} target text matched {old_count} times (expected 1) -- "
-                "make the search text more specific. Aborting without writing."
+                f"Patch {label!r} alternatives matched {total_matches} times "
+                "(expected exactly 1). Aborting without writing."
             )
-        inner_html = inner_html.replace(old, new, 1)
+        matched_old = matches[0][0]
+        inner_html = inner_html.replace(matched_old, new, 1)
         print(f"applied: {label}")
     return inner_html
 
@@ -104,6 +118,159 @@ def write_bundle(path: Path, html: str, json_start: int, json_end: int, new_inne
     new_html = html[:json_start] + new_json + html[json_end:]
     path.write_text(new_html, encoding="utf-8", newline="\n")
 
+
+# ---------------------------------------------------------------------------
+# Dual-history patch variants
+# ---------------------------------------------------------------------------
+
+_HISTORY_FRESH_LOAD = (
+    "      const actions = (data.tracked_actions || []).map((a) => this._mapRealAction(a));\n"
+    "      // Ticker items and personal documents ride along on the same payload.\n"
+)
+_HISTORY_LEGACY_LOAD = (
+    "      const actions = (data.tracked_actions || []).map((a) => this._mapRealAction(a));\n"
+    "      const historySpotlight = (data.today_in_history || [])[0] || null;\n"
+    "      // Ticker items and personal documents ride along on the same payload.\n"
+)
+_HISTORY_DUAL_LOAD = (
+    "      const actions = (data.tracked_actions || []).map((a) => this._mapRealAction(a));\n"
+    "      const usmcHistorySelection = data.usmc_history || null;\n"
+    "      const usMilitaryHistorySelection = data.us_military_history || null;\n"
+    "      // Ticker items and personal documents ride along on the same payload.\n"
+)
+
+_HISTORY_FRESH_STATE = (
+    "      this.setState((s) => ({\n        actions,\n        realMaradmins: mapTicker(data.maradmin_ticker),\n"
+)
+_HISTORY_LEGACY_STATE = (
+    "      this.setState((s) => ({\n"
+    "        actions,\n"
+    "        historySpotlight,\n"
+    "        historyIsToday: !!data.history_is_today,\n"
+    "        realMaradmins: mapTicker(data.maradmin_ticker),\n"
+)
+_HISTORY_DUAL_STATE = (
+    "      this.setState((s) => ({\n"
+    "        actions,\n"
+    "        usmcHistorySelection,\n"
+    "        usMilitaryHistorySelection,\n"
+    "        realMaradmins: mapTicker(data.maradmin_ticker),\n"
+)
+
+_HISTORY_FRESH_FORMAT = (
+    "    const onOpenReceiptsFolder = activeWorkflowDoc ? this.openFileLocation(activeWorkflowDoc.receiptsFolder) : () => {};\n\n"
+    "    return {\n"
+)
+_HISTORY_LEGACY_FORMAT = (
+    "    const onOpenReceiptsFolder = activeWorkflowDoc ? this.openFileLocation(activeWorkflowDoc.receiptsFolder) : () => {};\n"
+    "    const historySpotlight = this.state.historySpotlight;\n"
+    '    const historyMonths = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];\n'
+    '    const historyReference = historySpotlight && historySpotlight.references && historySpotlight.references[0] || "";\n'
+    "    const historySourceIsLink = /^https?:\\/\\//i.test(historyReference);\n"
+    "    const historyHeadline = historySpotlight\n"
+    '      ? String(historySpotlight.day).padStart(2, "0") + " " + (historyMonths[historySpotlight.month - 1] || "") + " " + historySpotlight.year_label + " — " + historySpotlight.title\n'
+    '      : "";\n\n'
+    "    return {\n"
+)
+_HISTORY_DUAL_FORMAT = (
+    "    const onOpenReceiptsFolder = activeWorkflowDoc ? this.openFileLocation(activeWorkflowDoc.receiptsFolder) : () => {};\n"
+    '    const historyMonths = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];\n'
+    "    const mapHistorySelection = (selection, exactLabel, fallbackLabel) => {\n"
+    "      if (!selection || !selection.item) return null;\n"
+    "      const item = selection.item;\n"
+    '      const reference = item.references && item.references[0] || "";\n'
+    "      const sourceIsLink = /^https?:\\/\\//i.test(reference);\n"
+    "      return {\n"
+    "        label: selection.is_exact ? exactLabel : fallbackLabel,\n"
+    '        headline: String(item.day).padStart(2, "0") + " " + (historyMonths[item.month - 1] || "") + " " + item.year_label + " — " + item.title,\n'
+    '        details: item.summary || "",\n'
+    "        sourceIsLink,\n"
+    "        sourceIsText: !!reference && !sourceIsLink,\n"
+    '        sourceUrl: sourceIsLink ? reference : "",\n'
+    '        sourceLabel: sourceIsLink ? "View source ↗" : reference,\n'
+    "      };\n"
+    "    };\n"
+    "    const usmcHistoryEntry = mapHistorySelection(\n"
+    "      this.state.usmcHistorySelection,\n"
+    '      "Marine Corps — Today",\n'
+    '      "Closest Marine Corps event"\n'
+    "    );\n"
+    "    const usMilitaryHistoryEntry = mapHistorySelection(\n"
+    "      this.state.usMilitaryHistorySelection,\n"
+    '      "U.S. Military — Today",\n'
+    '      "Closest U.S. military event"\n'
+    "    );\n"
+    "    const historyEntries = [usmcHistoryEntry, usMilitaryHistoryEntry].filter(Boolean);\n"
+    "    const historyMissingLabel = !usmcHistoryEntry && usMilitaryHistoryEntry\n"
+    '      ? "Marine Corps history unavailable."\n'
+    '      : (usmcHistoryEntry && !usMilitaryHistoryEntry ? "U.S. military history unavailable." : "");\n\n'
+    "    return {\n"
+)
+
+_HISTORY_FRESH_BINDINGS = '      quote: this.state.quote,\n      goWatch: this.go("watch"),\n'
+_HISTORY_LEGACY_BINDINGS = (
+    "      quote: this.state.quote,\n"
+    "      historyVisible: !!historySpotlight,\n"
+    '      historyLabel: this.state.historyIsToday ? "Today in history" : "History spotlight",\n'
+    "      historyHeadline,\n"
+    '      historyDetails: historySpotlight ? historySpotlight.summary : "",\n'
+    "      historySourceIsLink,\n"
+    "      historySourceIsText: !!historyReference && !historySourceIsLink,\n"
+    '      historySourceUrl: historySourceIsLink ? historyReference : "",\n'
+    '      historySourceLabel: historySourceIsLink ? "View source ↗" : historyReference,\n'
+    '      goWatch: this.go("watch"),\n'
+)
+_HISTORY_DUAL_BINDINGS = (
+    "      quote: this.state.quote,\n"
+    "      historyVisible: historyEntries.length > 0,\n"
+    "      historyEntries,\n"
+    "      historyHasMissingScope: !!historyMissingLabel,\n"
+    "      historyMissingLabel,\n"
+    '      goWatch: this.go("watch"),\n'
+)
+
+_HISTORY_LEGACY_CARD = (
+    "      <!-- Today in history / history spotlight (expandable) -->\n"
+    '      <sc-if value="{{ historyVisible }}" hint-placeholder-val="{{ false }}">\n'
+    '      <details style="border:1px solid #313844;border-radius:8px;background:#0f1318;">\n'
+    '        <summary style="cursor:pointer;list-style:none;padding:16px 18px;display:flex;gap:14px;align-items:center;">\n'
+    '          <span style="flex:0 0 auto;font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8a94a0;padding:4px 8px;border:1px solid #313844;border-radius:4px;">{{ historyLabel }}</span>\n'
+    '          <p style="margin:0;font-size:0.88rem;color:#c7cfd8;line-height:1.5;flex:1;">{{ historyHeadline }}</p>\n'
+    '          <span style="color:#5a6572;font-size:0.8rem;">Details ▾</span>\n'
+    "        </summary>\n"
+    '        <div style="padding:0 18px 16px;display:grid;gap:8px;border-top:1px solid #1a2027;margin-top:2px;padding-top:12px;">\n'
+    '          <p style="margin:0;color:#aab4bf;font-size:0.84rem;line-height:1.5;">{{ historyDetails }}</p>\n'
+    '          <sc-if value="{{ historySourceIsLink }}" hint-placeholder-val="{{ false }}"><a href="{{ historySourceUrl }}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:600;">{{ historySourceLabel }}</a></sc-if>\n'
+    '          <sc-if value="{{ historySourceIsText }}" hint-placeholder-val="{{ false }}"><p style="margin:0;color:#8a94a0;font-size:0.78rem;">Source: {{ historySourceLabel }}</p></sc-if>\n'
+    "        </div>\n"
+    "      </details>\n"
+    "      </sc-if>\n"
+)
+_HISTORY_DUAL_CARD = (
+    "      <!-- Today in history: Marine Corps and U.S. military (expandable) -->\n"
+    '      <sc-if value="{{ historyVisible }}" hint-placeholder-val="{{ false }}">\n'
+    '      <details style="border:1px solid #313844;border-radius:8px;background:#0f1318;">\n'
+    '        <summary style="cursor:pointer;list-style:none;padding:16px 18px;display:flex;gap:14px;align-items:center;">\n'
+    '          <span style="flex:0 0 auto;font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8a94a0;padding:4px 8px;border:1px solid #313844;border-radius:4px;">Today in history</span>\n'
+    '          <p style="margin:0;font-size:0.88rem;color:#c7cfd8;line-height:1.5;flex:1;">Marine Corps and U.S. military heritage</p>\n'
+    '          <span style="color:#5a6572;font-size:0.8rem;">Details ▾</span>\n'
+    "        </summary>\n"
+    '        <div style="padding:12px 18px 16px;display:grid;gap:12px;border-top:1px solid #1a2027;">\n'
+    '          <sc-for list="{{ historyEntries }}" as="entry" hint-placeholder-count="2">\n'
+    '            <article style="display:grid;gap:7px;padding-bottom:12px;border-bottom:1px solid #1a2027;">\n'
+    '              <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#d6bd7a;">{{ entry.label }}</span>\n'
+    '              <strong style="font-size:0.88rem;color:#c7cfd8;line-height:1.45;">{{ entry.headline }}</strong>\n'
+    '              <p style="margin:0;color:#aab4bf;font-size:0.84rem;line-height:1.5;">{{ entry.details }}</p>\n'
+    '              <sc-if value="{{ entry.sourceIsLink }}" hint-placeholder-val="{{ false }}"><a href="{{ entry.sourceUrl }}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:600;">{{ entry.sourceLabel }}</a></sc-if>\n'
+    '              <sc-if value="{{ entry.sourceIsText }}" hint-placeholder-val="{{ false }}"><p style="margin:0;color:#8a94a0;font-size:0.78rem;">Source: {{ entry.sourceLabel }}</p></sc-if>\n'
+    "            </article>\n"
+    "          </sc-for>\n"
+    '          <sc-if value="{{ historyHasMissingScope }}" hint-placeholder-val="{{ false }}"><p style="margin:0;color:#8a94a0;font-size:0.78rem;">{{ historyMissingLabel }}</p></sc-if>\n'
+    '          <p style="margin:0;color:#6f7a86;font-size:0.7rem;">DRAFT — Verify all references against current official sources before acting.</p>\n'
+    "        </div>\n"
+    "      </details>\n"
+    "      </sc-if>\n"
+)
 
 # ---------------------------------------------------------------------------
 # Patches
@@ -2198,7 +2365,10 @@ PATCHES: list[tuple[str, ...]] = [
     # ------------------------------------------------------------------
     (
         "workspace load: map history spotlight and exact-date flag",
-        "const historySpotlight = (data.today_in_history || [])[0] || null;",  # stable marker
+        (
+            "const historySpotlight = (data.today_in_history || [])[0] || null;",
+            "const usmcHistorySelection = data.usmc_history || null;",
+        ),
         "      const actions = (data.tracked_actions || []).map((a) => this._mapRealAction(a));\n"
         "      // Ticker items and personal documents ride along on the same payload.\n",
         "      const actions = (data.tracked_actions || []).map((a) => this._mapRealAction(a));\n"
@@ -2207,7 +2377,10 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "workspace load: store history spotlight and exact-date flag",
-        "historyIsToday: !!data.history_is_today,",  # stable marker
+        (
+            "historyIsToday: !!data.history_is_today,",
+            "usMilitaryHistorySelection,",
+        ),
         "      this.setState((s) => ({\n        actions,\n        realMaradmins: mapTicker(data.maradmin_ticker),\n",
         "      this.setState((s) => ({\n"
         "        actions,\n"
@@ -2217,7 +2390,10 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "vals: format the history spotlight from workspace data",
-        "const historySpotlight = this.state.historySpotlight;",  # stable marker
+        (
+            "const historySpotlight = this.state.historySpotlight;",
+            "const mapHistorySelection = (selection, exactLabel, fallbackLabel) => {",
+        ),
         "    const onOpenReceiptsFolder = activeWorkflowDoc ? this.openFileLocation(activeWorkflowDoc.receiptsFolder) : () => {};\n\n"
         "    return {\n",
         "    const onOpenReceiptsFolder = activeWorkflowDoc ? this.openFileLocation(activeWorkflowDoc.receiptsFolder) : () => {};\n"
@@ -2232,7 +2408,10 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "vals: expose history spotlight bindings",
-        'historyLabel: this.state.historyIsToday ? "Today in history" : "History spotlight",',  # stable marker
+        (
+            'historyLabel: this.state.historyIsToday ? "Today in history" : "History spotlight",',
+            "historyEntries,",
+        ),
         '      quote: this.state.quote,\n      goWatch: this.go("watch"),\n',
         "      quote: this.state.quote,\n"
         "      historyVisible: !!historySpotlight,\n"
@@ -2247,7 +2426,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "overview: render history spotlight from real workspace data",
-        "{{ historyHeadline }}",  # stable marker
+        ("{{ historyHeadline }}", "{{ entry.headline }}"),
         "      <!-- Today in history (expandable) -->\n"
         '      <details style="border:1px solid #313844;border-radius:8px;background:#0f1318;">\n'
         '        <summary style="cursor:pointer;list-style:none;padding:16px 18px;display:flex;gap:14px;align-items:center;">\n'
@@ -2278,9 +2457,42 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "history source: avoid claiming every imported URL is official",
-        'historySourceLabel: historySourceIsLink ? "View source ↗" : historyReference,',
+        (
+            'historySourceLabel: historySourceIsLink ? "View source ↗" : historyReference,',
+            'sourceLabel: sourceIsLink ? "View source ↗" : reference,',
+        ),
         '      historySourceLabel: historySourceIsLink ? "View official source ↗" : historyReference,\n',
         '      historySourceLabel: historySourceIsLink ? "View source ↗" : historyReference,\n',
+    ),
+    (
+        "history: migrate workspace mapping to dual selections",
+        "const usmcHistorySelection = data.usmc_history || null;",
+        _HISTORY_LEGACY_LOAD,
+        _HISTORY_DUAL_LOAD,
+    ),
+    (
+        "history: migrate workspace state to dual selections",
+        "usMilitaryHistorySelection,",
+        _HISTORY_LEGACY_STATE,
+        _HISTORY_DUAL_STATE,
+    ),
+    (
+        "history: migrate formatting to dual selections",
+        "const mapHistorySelection = (selection, exactLabel, fallbackLabel) => {",
+        _HISTORY_LEGACY_FORMAT,
+        _HISTORY_DUAL_FORMAT,
+    ),
+    (
+        "history: migrate bindings to dual selections",
+        "historyEntries,",
+        _HISTORY_LEGACY_BINDINGS,
+        _HISTORY_DUAL_BINDINGS,
+    ),
+    (
+        "history: render Marine Corps and US military entries",
+        "{{ entry.headline }}",
+        _HISTORY_LEGACY_CARD,
+        _HISTORY_DUAL_CARD,
     ),
     # ------------------------------------------------------------------
     # Feed refresh (2026-07-14): the design export's button only changed the
@@ -2394,6 +2606,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "workspace: retain dates, source updates, custom previews, and template paths",
+        "      const templateItems = (data.template_library || []).filter((item) => item.source_path).map((item) => ({",
         "      // Ticker items and personal documents ride along on the same payload.\n"
         '      const mapTicker = (items) => (items || []).map((t) => ({ id: t.summary || "", title: t.title, url: t.source_url || "" }));\n'
         "      const personalItems = (data.document_details || []).map((doc) => ({\n"

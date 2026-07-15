@@ -29,8 +29,8 @@ from app.schemas.actions import ActionItemRequest  # noqa: E402
 from app.schemas.battle_rhythm import BattleRhythmBoardUpsertRequest, BattleRhythmEntryInput  # noqa: E402
 from app.schemas.calendar import DrillPrepPlanResponse, PrepTask  # noqa: E402
 from app.schemas.custom_watch_feeds import CreateCustomWatchFeedRequest  # noqa: E402
-from app.schemas.ingestion import MessageRecord  # noqa: E402
 from app.schemas.history import HistoryScope  # noqa: E402
+from app.schemas.ingestion import MessageRecord  # noqa: E402
 from app.schemas.opportunities import ManualOpportunityRequest  # noqa: E402
 from app.schemas.section_memory import SectionMemoryEntry, SectionMemoryProfileUpsertRequest  # noqa: E402
 from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff  # noqa: E402
@@ -73,7 +73,7 @@ def _decoded_dashboard_component_source() -> str:
     bundle_html = dashboard_routes._DASHBOARD_HTML.read_text(encoding="utf-8")
     template_open = '<script type="__bundler/template">'
     json_start = bundle_html.index(template_open) + len(template_open)
-    json_end = bundle_html.index("</script>", json_start)
+    json_end = bundle_html.rindex("</script>")
     decoded = json.loads(bundle_html[json_start:json_end].strip())
     assert isinstance(decoded, str)
     return decoded
@@ -101,16 +101,37 @@ def test_dashboard_bundle_is_wired_to_real_actions_api() -> None:
     assert "dueMatch" in component_source
 
 
-def test_dashboard_bundle_renders_history_from_workspace_data() -> None:
+def test_dashboard_bundle_renders_dual_history_from_workspace_data() -> None:
     component_source = _decoded_dashboard_component_source()
 
-    assert "data.today_in_history" in component_source
-    assert "data.history_is_today" in component_source
-    assert "historySpotlight" in component_source
-    assert "{{ historyLabel }}" in component_source
-    assert "{{ historyHeadline }}" in component_source
-    assert "{{ historyDetails }}" in component_source
+    assert "data.usmc_history" in component_source
+    assert "data.us_military_history" in component_source
+    assert "historyEntries" in component_source
+    assert '"Marine Corps — Today"' in component_source
+    assert '"Closest Marine Corps event"' in component_source
+    assert '"U.S. Military — Today"' in component_source
+    assert '"Closest U.S. military event"' in component_source
+    assert "{{ entry.headline }}" in component_source
+    assert "{{ entry.details }}" in component_source
+    assert "DRAFT — Verify all references against current official sources before acting." in component_source
     assert "11 JUL 1798 — The U.S. Marine Corps was re-established" not in component_source
+
+
+def test_dashboard_patcher_accepts_fresh_or_legacy_source_text() -> None:
+    helpers = run_path(str(Path("scripts/patch_dashboard_bundle.py").resolve()))
+    apply_patches = helpers["apply_patches"]
+    patches = [
+        (
+            "dual source migration",
+            "const dualHistory = true;",
+            ("const freshExport = true;", "const legacyHistory = true;"),
+            "const dualHistory = true;",
+        )
+    ]
+
+    assert apply_patches("const freshExport = true;", patches) == "const dualHistory = true;"
+    assert apply_patches("const legacyHistory = true;", patches) == "const dualHistory = true;"
+    assert apply_patches("const dualHistory = true;", patches) == "const dualHistory = true;"
 
 
 def test_dashboard_bundle_refreshes_real_feed_endpoints() -> None:
