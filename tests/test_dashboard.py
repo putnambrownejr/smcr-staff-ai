@@ -497,6 +497,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
                 matched_terms=["fitrep"],
                 change_signals=["update to"],
                 detected_at=datetime(2026, 5, 1, tzinfo=UTC),
+                source_published_at=datetime(2026, 4, 30, 14, 0, tzinfo=UTC),
             )
         ]
     )
@@ -517,6 +518,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
                 canonical_url="https://example.test/navadmin-001",
                 summary="Sample NAVADMIN summary.",
                 source_family="NAVADMIN",
+                published_at=datetime(2026, 4, 29, 13, 30, tzinfo=UTC),
             )
         ]
     )
@@ -659,6 +661,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["document_summary"]["total_documents"] == 2
         assert payload["tracked_opportunities"][0]["title"] == "ADOS Planner"
         assert payload["documentation_updates"][0]["tracked_title"] == "MCO 1610.7"
+        assert payload["documentation_updates"][0]["source_published_at"] == "2026-04-30T14:00:00Z"
         assert payload["custom_watch_feeds"][0]["name"] == "Unit updates"
         assert payload["battle_rhythm"]["board_title"] == "June drill board"
         assert payload["section_memory_profile"]["entries"][0]["section"] == "S-6"
@@ -670,6 +673,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert suggested["suggested_document_type"] == "doctrine"
         assert suggested["suggestion_reason"]
         assert payload["navadmin_ticker"][0]["status"] == "NAVADMIN"
+        assert payload["navadmin_ticker"][0]["published_at"] == "2026-04-29T13:30:00+00:00"
         assert payload["alnav_ticker"][0]["status"] == "ALNAV"
         assert payload["dod_ticker"][0]["status"] == "DoD"
     finally:

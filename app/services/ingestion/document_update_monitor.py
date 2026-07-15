@@ -60,6 +60,7 @@ class DocumentUpdateMonitor:
                         trigger_type="maradmin",
                         trigger_source_id=record.source_id,
                         trigger_url=record.canonical_url,
+                        source_published_at=record.published_at,
                         matched_terms=matched_terms,
                         change_signals=change_signals,
                         confidence=_confidence(change_signals, matched_terms),

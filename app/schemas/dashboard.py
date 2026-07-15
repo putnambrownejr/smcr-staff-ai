@@ -85,6 +85,7 @@ class DashboardTickerItem(BaseModel):
     status: str
     summary: str
     source_url: str | None = None
+    published_at: str | None = None
 
 
 class DashboardCustomWatchFeed(BaseModel):

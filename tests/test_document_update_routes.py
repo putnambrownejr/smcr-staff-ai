@@ -90,6 +90,7 @@ def test_document_update_check_route_returns_candidates() -> None:
                 "summary": "This message announces an update to FitRep/PES policy published on MCPEL.",
                 "tags": ["DocumentUpdate"],
                 "source_hash": "abc123",
+                "published_at": "2026-04-30T14:00:00Z",
             }
         ],
     )
@@ -98,6 +99,7 @@ def test_document_update_check_route_returns_candidates() -> None:
     payload = response.json()
     assert payload["candidates"]
     assert payload["candidates"][0]["human_review_required"] is True
+    assert payload["candidates"][0]["source_published_at"] == "2026-04-30T14:00:00Z"
 
 
 def test_document_update_routes_persist_and_update_status(tmp_path: Path) -> None:

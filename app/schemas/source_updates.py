@@ -39,6 +39,7 @@ class DocumentationUpdateCandidate(BaseModel):
     trigger_source_id: str | None = None
     trigger_url: str | None = None
     detected_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    source_published_at: datetime | None = None
     matched_terms: list[str] = Field(default_factory=list)
     change_signals: list[str] = Field(default_factory=list)
     old_version: str | None = None

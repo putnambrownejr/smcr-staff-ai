@@ -723,6 +723,7 @@ def _maradmin_ticker(records: list[MessageRecord]) -> list[DashboardTickerItem]:
                 or "Live MARADMIN feed item."
             )[:220],
             source_url=item.canonical_url,
+            published_at=item.published_at.isoformat() if item.published_at else None,
         )
         for item in records[:8]
     ]
@@ -739,6 +740,7 @@ def _message_watch_ticker(records: list[MessageRecord]) -> list[DashboardTickerI
             status=item.source_family,
             summary=(item.summary or ", ".join(item.tags[:3]) or "Second-tier message-watch item.")[:220],
             source_url=item.canonical_url,
+            published_at=item.published_at.isoformat() if item.published_at else None,
         )
         for item in records[:8]
     ]
@@ -752,6 +754,7 @@ def _custom_watch_feed_summary(feed: CustomWatchFeed, store: CustomWatchFeedStor
             status=item.status,
             summary=(item.summary or ", ".join(item.tags[:3]) or "Custom watch item.")[:220],
             source_url=item.canonical_url,
+            published_at=item.published_at.isoformat() if item.published_at else None,
         )
         for item in item_store.list(limit=3)
     ]
