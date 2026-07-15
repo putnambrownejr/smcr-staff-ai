@@ -163,14 +163,25 @@ def test_save_to_project_rejects_path_traversal(user_docs_client: TestClient) ->
     assert response.json()["path"].startswith("etc/")
 
 
-def test_list_projects_returns_existing_project_folder_names(user_docs_client: TestClient, tmp_path: Path) -> None:
+def test_list_projects_returns_explicit_demo_metadata(user_docs_client: TestClient, tmp_path: Path) -> None:
     (tmp_path / "projects" / "ven-fhadr-jun26").mkdir(parents=True)
-    (tmp_path / "projects" / "cuba-sitrep").mkdir(parents=True)
+    demo = tmp_path / "projects" / "repo-maintenance"
+    demo.mkdir(parents=True)
+    (demo / ".smcr-project.json").write_text(
+        '{"name":"repo-maintenance","is_demo":true}', encoding="utf-8"
+    )
+    malformed = tmp_path / "projects" / "cuba-sitrep"
+    malformed.mkdir(parents=True)
+    (malformed / ".smcr-project.json").write_text("not-json", encoding="utf-8")
 
     response = user_docs_client.get("/user-docs/projects", headers=_headers())
 
     assert response.status_code == 200
-    assert set(response.json()) == {"ven-fhadr-jun26", "cuba-sitrep"}
+    assert response.json() == [
+        {"name": "cuba-sitrep", "is_demo": False},
+        {"name": "repo-maintenance", "is_demo": True},
+        {"name": "ven-fhadr-jun26", "is_demo": False},
+    ]
 
 
 def test_notebook_and_fitreps_are_stored_in_separate_category_folders(tmp_path: Path) -> None:

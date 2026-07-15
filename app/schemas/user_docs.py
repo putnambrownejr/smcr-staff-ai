@@ -42,3 +42,8 @@ class SaveToProjectRequest(BaseModel):
 class SaveToProjectResponse(BaseModel):
     path: str
     message: str
+
+
+class ProjectDescriptor(BaseModel):
+    name: str
+    is_demo: bool = False

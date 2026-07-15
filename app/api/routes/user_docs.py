@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.user_docs import (
+    ProjectDescriptor,
     SaveToProjectRequest,
     SaveToProjectResponse,
     UserDocCategory,
@@ -25,8 +26,8 @@ def get_user_docs_store() -> Iterator[UserDocsStore]:
     yield UserDocsStore(settings.user_docs_dir, settings.projects_dir)
 
 
-@router.get("/projects", response_model=list[str])
-def list_projects(store: Annotated[UserDocsStore, Depends(get_user_docs_store)]) -> list[str]:
+@router.get("/projects", response_model=list[ProjectDescriptor])
+def list_projects(store: Annotated[UserDocsStore, Depends(get_user_docs_store)]) -> list[ProjectDescriptor]:
     return store.list_projects()
 
 

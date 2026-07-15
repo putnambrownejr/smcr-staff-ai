@@ -10,6 +10,7 @@ from pathlib import Path
 import yaml
 
 from app.schemas.user_docs import (
+    ProjectDescriptor,
     UserDocCategory,
     UserDocCreateRequest,
     UserDocEntry,
@@ -115,10 +116,24 @@ class UserDocsStore:
         path.unlink()
         return True
 
-    def list_projects(self) -> list[str]:
+    def list_projects(self) -> list[ProjectDescriptor]:
         if not self.projects_dir.exists():
             return []
-        return sorted(p.name for p in self.projects_dir.iterdir() if p.is_dir())
+        projects: list[ProjectDescriptor] = []
+        for path in sorted((p for p in self.projects_dir.iterdir() if p.is_dir()), key=lambda p: p.name):
+            descriptor = ProjectDescriptor(name=path.name)
+            metadata_path = path / ".smcr-project.json"
+            if metadata_path.exists():
+                try:
+                    candidate = ProjectDescriptor.model_validate_json(metadata_path.read_text(encoding="utf-8"))
+                    if candidate.name == path.name:
+                        descriptor = candidate
+                    else:
+                        logger.warning("Ignoring mismatched project metadata: %s", metadata_path)
+                except (OSError, ValueError):
+                    logger.warning("Ignoring invalid project metadata: %s", metadata_path)
+            projects.append(descriptor)
+        return projects
 
     def save_to_project(
         self,
