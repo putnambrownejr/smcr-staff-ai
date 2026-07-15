@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.battle_rhythm import BattleRhythmBoardResponse, BattleRhythmHealthSummary
 from app.schemas.calendar import DrillPrepPlanResponse
+from app.schemas.chief_capabilities import ChiefDomainSummary
 from app.schemas.ingestion import MessageRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.session import UserSessionHandoff
@@ -98,6 +99,7 @@ class ChiefBriefResponse(BaseModel):
     document_summary: PersonalDocumentSummary | None = None
     drill_plans: list[DrillPrepPlanResponse] = Field(default_factory=list)
     travel_cases: list[TravelCaseRecord] = Field(default_factory=list)
+    capability_summary: ChiefDomainSummary | None = None
     documentation_updates: list[DocumentationUpdateCandidate] = Field(default_factory=list)
     reading_recommendations: list[str] = Field(default_factory=list)
     recommended_courses: list[str] = Field(default_factory=list)

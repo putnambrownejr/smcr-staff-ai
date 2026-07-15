@@ -48,6 +48,10 @@ def default_cadence_dir() -> Path:
     return default_local_context_dir() / "cadences"
 
 
+def default_chief_capability_audit_dir() -> Path:
+    return default_local_context_dir() / "chief_capability_audits"
+
+
 def default_battle_rhythm_dir() -> Path:
     return default_local_context_dir() / "battle_rhythm"
 
@@ -172,6 +176,7 @@ class Settings(BaseSettings):
     travel_case_storage_dir: str = str(default_travel_case_dir())
     fitrep_storage_dir: str = str(default_fitrep_dir())
     cadence_storage_dir: str = str(default_cadence_dir())
+    chief_capability_audit_storage_dir: str = str(default_chief_capability_audit_dir())
     battle_rhythm_storage_dir: str = str(default_battle_rhythm_dir())
     reading_state_storage_dir: str = str(default_reading_state_dir())
     reading_catalog_storage_dir: str = str(default_reading_catalog_dir())
@@ -218,6 +223,7 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.travel_case_storage_dir),
         Path(settings.fitrep_storage_dir),
         Path(settings.cadence_storage_dir),
+        Path(settings.chief_capability_audit_storage_dir),
         Path(settings.battle_rhythm_storage_dir),
         Path(settings.reading_state_storage_dir),
         Path(settings.reading_catalog_storage_dir),

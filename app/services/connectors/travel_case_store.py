@@ -37,7 +37,7 @@ class TravelCaseStore:
         ]
         return sorted(
             items,
-            key=lambda item: (item.last_message_at or item.updated_at),
+            key=lambda item: item.last_message_at or item.updated_at,
             reverse=True,
         )
 
@@ -106,6 +106,13 @@ class TravelCaseStore:
         self._write(updated)
         return updated
 
+    def try_remove_ledger_entry(self, user_key: str, trip_id: str, entry_id: str) -> bool:
+        try:
+            self.remove_ledger_entry(user_key=user_key, trip_id=trip_id, entry_id=entry_id)
+        except ValueError:
+            return False
+        return True
+
     def record_gtcc_check(
         self,
         *,
@@ -126,6 +133,17 @@ class TravelCaseStore:
         updated = record.model_copy(update={"gtcc_checks": [*record.gtcc_checks, check], "updated_at": now})
         self._write(updated)
         return updated
+
+    def remove_gtcc_check(self, user_key: str, trip_id: str, check_id: str) -> bool:
+        try:
+            record = self._require_case(user_key, trip_id)
+        except ValueError:
+            return False
+        checks = [item for item in record.gtcc_checks if item.check_id != check_id]
+        if len(checks) == len(record.gtcc_checks):
+            return False
+        self._write(record.model_copy(update={"gtcc_checks": checks, "updated_at": datetime.now(UTC)}))
+        return True
 
     def delete_case(self, user_key: str, trip_id: str) -> bool:
         if not is_valid_user_key(user_key):
@@ -186,9 +204,7 @@ class TravelCaseStore:
                         [*existing.attachment_follow_up_prompts, *case.attachment_follow_up_prompts]
                     ),
                     "source_subjects": _dedupe([*existing.source_subjects, case.source_subject]),
-                    "source_senders": _dedupe(
-                        [*existing.source_senders, *([case.sender] if case.sender else [])]
-                    ),
+                    "source_senders": _dedupe([*existing.source_senders, *([case.sender] if case.sender else [])]),
                     "last_message_at": _latest(existing.last_message_at, case.message_received_at),
                     "updated_at": now,
                     "confidence_notes": _dedupe([*existing.confidence_notes, *case.confidence_notes]),

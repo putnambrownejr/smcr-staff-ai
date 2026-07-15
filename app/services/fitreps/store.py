@@ -33,9 +33,7 @@ class FitrepStore:
     def add_report(self, request: FitrepReportCreateRequest) -> FitrepReport:
         workspace = self._require_workspace(request.user_key)
         now = datetime.now(UTC)
-        report = FitrepReport(
-            **request.model_dump(), report_id=secrets.token_hex(8), created_at=now, updated_at=now
-        )
+        report = FitrepReport(**request.model_dump(), report_id=secrets.token_hex(8), created_at=now, updated_at=now)
         self._write(workspace.model_copy(update={"reports": [*workspace.reports, report], "updated_at": now}))
         return report
 
@@ -85,6 +83,14 @@ class FitrepStore:
         )
         return snapshot
 
+    def delete_rs_snapshot(self, user_key: str, snapshot_id: str) -> bool:
+        workspace = self.get(user_key)
+        snapshots = [item for item in workspace.rs_profiles if item.snapshot_id != snapshot_id]
+        if len(snapshots) == len(workspace.rs_profiles):
+            return False
+        self._write(workspace.model_copy(update={"rs_profiles": snapshots, "updated_at": datetime.now(UTC)}))
+        return True
+
     def upsert_goal(self, request: FitrepImprovementGoalRequest) -> FitrepImprovementGoal:
         workspace = self._require_workspace(request.user_key)
         now = datetime.now(UTC)
@@ -101,6 +107,14 @@ class FitrepStore:
             goals.append(goal)
         self._write(workspace.model_copy(update={"goals": goals, "updated_at": now}))
         return goal
+
+    def delete_goal(self, user_key: str, goal_id: str) -> bool:
+        workspace = self.get(user_key)
+        goals = [item for item in workspace.goals if item.goal_id != goal_id]
+        if len(goals) == len(workspace.goals):
+            return False
+        self._write(workspace.model_copy(update={"goals": goals, "updated_at": datetime.now(UTC)}))
+        return True
 
     def _require_workspace(self, user_key: str) -> FitrepWorkspace:
         if not is_valid_user_key(user_key):

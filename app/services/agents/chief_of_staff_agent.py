@@ -98,7 +98,15 @@ class ChiefOfStaffAideAgent(Agent):
             "Connector status:\n"
             "- Email: provider interface exists; live access is not enabled.\n"
             "- Calendar: local ICS exists; Microsoft Graph and Google Calendar remain stubs.\n"
-            "- Session handoff: local JSON persistence exists for minimum necessary user context."
+            "- Session handoff: local JSON persistence exists for minimum necessary user context.\n\n"
+            "Bounded application capabilities:\n"
+            "- Read summaries from Travel/GTCC, FitReps, and the cadence library.\n"
+            "- Search readable repository source files inside the repo root; private projects and tool caches are "
+            "excluded.\n"
+            "- Append an explicit travel entry, GTCC check, FitRep/profile record, goal, or private cadence only after "
+            "the user asks for that change. Every append returns a local audit-backed Undo token.\n"
+            "- Treat inferred document imports as proposals that require review/confirmation.\n"
+            "- Never use an unrestricted filesystem writer, shell capability, credential, or silent replace/delete."
         )
 
         return self._response(
@@ -107,7 +115,6 @@ class ChiefOfStaffAideAgent(Agent):
             follow_up_questions=_follow_up_questions(handoff),
             confidence=_confidence(handoff),
         )
-
 
     def _scenario_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
         from app.services.agents.staff_advisor_agent import (
@@ -183,12 +190,14 @@ def _confidence(handoff: dict) -> Confidence:  # type: ignore[type-arg]
     """Confidence scales with how much handoff data is present."""
     if not handoff:
         return Confidence.low
-    populated = sum([
-        bool(handoff.get("pme")),
-        bool(handoff.get("fitreps")),
-        bool(handoff.get("drill_dates")),
-        bool(handoff.get("admin_watch_items")),
-    ])
+    populated = sum(
+        [
+            bool(handoff.get("pme")),
+            bool(handoff.get("fitreps")),
+            bool(handoff.get("drill_dates")),
+            bool(handoff.get("admin_watch_items")),
+        ]
+    )
     if populated >= 3:
         return Confidence.medium
     return Confidence.low

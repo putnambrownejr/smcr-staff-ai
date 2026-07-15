@@ -29,6 +29,14 @@ The orchestration brief combines session handoff data, local personal documents,
 
 The connector digest planner is the next bridge step before live integration. It accepts consent state plus summarized calendar/email metadata and returns a consent-safe digest plan, suggested read scope, staged follow-up actions, and warnings without performing any external read or write.
 
+### Bounded capabilities
+
+The Chief may read application-domain summaries, search readable repository source files inside the repository root, and perform closed, typed append operations for Travel/GTCC, FitReps, and the private cadence library. It has no generic shell or unrestricted filesystem writer. Repository search excludes private project work and tool/cache directories.
+
+Every explicit append creates a local audit record and returns a single-use Undo token. Inferred document imports remain reviewable proposals; replacement, deletion, external processing, and other consequential operations require separate confirmation through their owning workflow.
+
+DRAFT — Verify all references against current official sources before acting.
+
 ## AdminO / S-1 Support
 
 The AdminO / S-1 support layer is intended to reduce reserve administration drift between drills.
