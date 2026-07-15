@@ -14,6 +14,7 @@ from app.api.routes import (
     battle_rhythm,
     bench_sections,
     billets,
+    cadences,
     calendar,
     career,
     chief,
@@ -25,6 +26,8 @@ from app.api.routes import (
     dashboard,
     demo,
     documents,
+    fitness,
+    fitreps,
     git_ops,
     handoffs,
     health,
@@ -90,8 +93,11 @@ def create_app() -> FastAPI:
     app.include_router(demo.router)
     app.include_router(connectors.router)
     app.include_router(documents.router)
+    app.include_router(fitreps.router)
+    app.include_router(fitness.router)
     app.include_router(handoffs.router)
     app.include_router(calendar.router)
+    app.include_router(cadences.router)
     app.include_router(chief.router)
     app.include_router(chief_setup.router)
     app.include_router(dashboard.router)

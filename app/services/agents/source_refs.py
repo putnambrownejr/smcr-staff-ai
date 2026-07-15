@@ -136,8 +136,7 @@ S2_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.cia.gov/the-world-factbook/",
         publisher="Central Intelligence Agency",
         notes=(
-            "Useful public baseline source for country context, demographics, geography, "
-            "economy, and infrastructure."
+            "Useful public baseline source for country context, demographics, geography, economy, and infrastructure."
         ),
     ),
     SourceRef(
@@ -551,8 +550,7 @@ MOS_7200_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcwp-3-25/",
         publisher="United States Marine Corps",
         notes=(
-            "MACCS operations doctrine covering TACC, DASC, MASS, TAOC employment "
-            "and command relationships for ACE C2."
+            "MACCS operations doctrine covering TACC, DASC, MASS, TAOC employment and command relationships for ACE C2."
         ),
     ),
 )
@@ -956,9 +954,7 @@ INFANTRY_REFERENCES: tuple[SourceRef, ...] = (
         title="School of Infantry-East Combat Instructor School Mission",
         url="https://www.tecom.marines.mil/soieast/Units/CombatInstructorSchool.aspx",
         publisher="United States Marine Corps",
-        notes=(
-            "Useful source for the teach-mentor-lead model behind entry-level and advanced infantry training."
-        ),
+        notes=("Useful source for the teach-mentor-lead model behind entry-level and advanced infantry training."),
     ),
     SourceRef(
         title="School of Infantry-East Infantry Training Battalion MOS Description",
@@ -1007,8 +1003,7 @@ STAFF_PROCESS_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
         publisher="United States Marine Corps",
         notes=(
-            "Staff-action and command-post rhythm reference for running estimates, "
-            "battle rhythm, and follow-through."
+            "Staff-action and command-post rhythm reference for running estimates, battle rhythm, and follow-through."
         ),
     ),
     SourceRef(
@@ -1046,8 +1041,7 @@ WRITING_REFERENCES: tuple[SourceRef, ...] = (
         url="https://www.usmcu.edu/Colleges-and-Schools/Command-and-Staff-College/",
         publisher="Marine Corps University",
         notes=(
-            "Useful PME reference for the level of briefing, writing, and oral defense "
-            "expected of field-grade staff."
+            "Useful PME reference for the level of briefing, writing, and oral defense expected of field-grade staff."
         ),
     ),
 )
@@ -1245,9 +1239,7 @@ LEGAL_REFERENCES: tuple[SourceRef, ...] = (
         title="Joint Service Committee Sources of Military Law",
         url="https://jsc.defense.gov/Military-Law/Sources-of-Military-Law/",
         publisher="Joint Service Committee on Military Justice",
-        notes=(
-            "Useful public source map tying the UCMJ, presidential authority, and the MCM together."
-        ),
+        notes=("Useful public source map tying the UCMJ, presidential authority, and the MCM together."),
     ),
     SourceRef(
         title="JAGINST 5800.7G CH-2 - JAGMAN 2023",
@@ -1487,6 +1479,103 @@ ARTILLERY_REFERENCES: tuple[SourceRef, ...] = (
             "Call-for-fire format, observer procedures, adjustment techniques, and fire support "
             "coordination measures reference for FOs and supporting arms coordinators."
         ),
+    ),
+)
+
+
+FITNESS_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="USMC Human Performance Branch",
+        url="https://www.fitness.marines.mil/",
+        publisher="United States Marine Corps",
+        notes="Current public hub for physical fitness, PFT/CFT, FFI, and body-composition resources.",
+    ),
+    SourceRef(
+        title="MCO 6100.14 Marine Corps Physical Fitness Program",
+        url="https://www.fitness.marines.mil/Portals/211/Docs/MCO%206100.14.pdf",
+        publisher="United States Marine Corps",
+        notes="Physical fitness program, unit fitness, injury prevention, and recovery framework.",
+    ),
+    SourceRef(
+        title="MCO 1500.62 Force Fitness Instructor Program",
+        url="https://www.fitness.marines.mil/Portals/211/Docs/MCO%201500.62.pdf",
+        publisher="United States Marine Corps",
+        notes="FFI scope and unit human-performance program reference.",
+    ),
+    SourceRef(
+        title="MCO 6110.3A W/ADMIN CH-4 Marine Corps Body Composition and Military Appearance Program",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2863863/mco-61103a-wadmin-ch-4/",
+        publisher="United States Marine Corps",
+        notes="Current MCPEL body-composition and military-appearance policy landing page.",
+    ),
+    SourceRef(
+        title="Marine Leader Development",
+        url="https://www.usmcu.edu/Academic-Programs/Lejeune-Leadership-Institute/Marine-Leader-Development/-Resources/Leadership-Tools-Copy/",
+        publisher="Marine Corps University",
+        notes="Official six-functional-area leader-development framework.",
+    ),
+)
+
+GTCC_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="Government Travel Charge Card Program",
+        url="https://www.travel.dod.mil/Programs/Government-Travel-Charge-Card/",
+        publisher="Department of Defense",
+        notes="Official GTCC program resources and policy landing page.",
+    ),
+    SourceRef(
+        title="CitiManager Commercial Cards Login",
+        url="https://home.cards.citidirect.com/CommercialCard/login",
+        publisher="Citibank",
+        notes="Cardholder account-access destination linked by the official DoD travel program.",
+    ),
+)
+
+FINANCIAL_READINESS_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="DoD Financial Readiness",
+        url="https://finred.usalearning.gov/",
+        publisher="Department of Defense",
+        notes="Official service-member financial education, tools, and counseling resources.",
+    ),
+    SourceRef(
+        title="Military OneSource Financial Counseling",
+        url="https://www.militaryonesource.mil/benefits/financial-counseling/",
+        publisher="Department of Defense",
+        notes="No-cost financial counseling and referrals for eligible service members and families.",
+    ),
+    SourceRef(
+        title="DFAS Leave and Earnings Statement Guide",
+        url="https://www.dfas.mil/militarymembers/payentitlements/les/",
+        publisher="Defense Finance and Accounting Service",
+        notes="Official LES overview and links to pay guidance and myPay.",
+    ),
+    SourceRef(
+        title="Thrift Savings Plan",
+        url="https://www.tsp.gov/",
+        publisher="Federal Retirement Thrift Investment Board",
+        notes="Official federal retirement-plan information and account access.",
+    ),
+)
+
+WARRIOR_MONK_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCDP 1 Warfighting",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899837/mcdp-1/",
+        publisher="United States Marine Corps",
+        notes="Foundational Marine Corps warfighting philosophy.",
+    ),
+    SourceRef(
+        title="MCWP 6-10 Leading Marines",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899578/mcwp-6-10/",
+        publisher="United States Marine Corps",
+        notes="Leadership foundations, ethos, and professional reflection.",
+    ),
+    SourceRef(
+        title="Marine Leader Development",
+        url="https://www.usmcu.edu/Academic-Programs/Lejeune-Leadership-Institute/Marine-Leader-Development/-Resources/Leadership-Tools-Copy/",
+        publisher="Marine Corps University",
+        notes="Official six-functional-area framework and leadership-development resources.",
     ),
 )
 

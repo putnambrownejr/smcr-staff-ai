@@ -600,6 +600,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "componentDidMount: also load real notebook, fitreps, generations, and project list",
+        "    this._loadRealGenerations();",
         "  componentDidMount() {\n"
         "    this._t = setInterval(() => this.setState({ now: new Date() }), 1000 * 30);\n"
         "    this._loadRealWorkspace();\n"
@@ -1225,6 +1226,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "componentDidMount: also load the real agent/skill catalog, prompt packs, and agent notes",
+        "    this._loadRealAgents();",
         "    this._loadRealNotes();\n"
         "    this._loadRealFitreps();\n"
         "    this._loadRealGenerations();\n"
@@ -2870,6 +2872,489 @@ PATCHES: list[tuple[str, ...]] = [
         '        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">\n',
         '        <p style="margin:16px 0 0;padding-top:12px;border-top:1px solid #313844;color:#8a94a0;font-size:0.72rem;line-height:1.45;">DRAFT — Verify all references against current official sources before acting.</p>\n'
         '        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">\n',
+    ),
+    # ------------------------------------------------------------------
+    # Travel / GTCC workspace (2026-07-15): user-driven trips, expense
+    # ledger, receipt uploads, and monthly balance checks.
+    # ------------------------------------------------------------------
+    (
+        "travel workspace: add persistent component state",
+        '    travelCases: [],\n'
+        '    activeTravelTripId: null,\n'
+        '    travelLoadStatus: "",\n'
+        '    travelDraftTitle: "",\n'
+        '    travelDraftDestination: "",\n'
+        '    travelLedgerDate: "",\n'
+        '    travelLedgerDescription: "",\n'
+        '    travelLedgerAmount: "",\n'
+        '    travelLedgerCategory: "other",\n'
+        '    gtccBalance: "",\n'
+        '    gtccPayment: "",\n'
+        '    gtccPaidInFull: false,\n'
+        '    gtccCheckNotes: "",\n',
+        '    dtsFlightBooked: false,\n'
+        '    benchCards: [\n',
+        '    dtsFlightBooked: false,\n'
+        '    travelCases: [],\n'
+        '    activeTravelTripId: null,\n'
+        '    travelLoadStatus: "",\n'
+        '    travelDraftTitle: "",\n'
+        '    travelDraftDestination: "",\n'
+        '    travelLedgerDate: "",\n'
+        '    travelLedgerDescription: "",\n'
+        '    travelLedgerAmount: "",\n'
+        '    travelLedgerCategory: "other",\n'
+        '    gtccBalance: "",\n'
+        '    gtccPayment: "",\n'
+        '    gtccPaidInFull: false,\n'
+        '    gtccCheckNotes: "",\n'
+        '    benchCards: [\n',
+    ),
+    (
+        "travel workspace: load cases during mount",
+        '    this._loadTravelCases();\n',
+        '    this._loadRealHandoff();\n'
+        '    this._loadRealNotes();\n',
+        '    this._loadRealHandoff();\n'
+        '    this._loadTravelCases();\n'
+        '    this._loadRealNotes();\n',
+    ),
+    (
+        "travel workspace: add API helpers and view bindings",
+        '  async _loadTravelCases() {',
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+        '  async _loadTravelCases() {\n'
+        '    if (!this.userKey) this.userKey = this._resolveUserKey();\n'
+        '    this.setState({ travelLoadStatus: "Loading travel…" });\n'
+        '    try {\n'
+        '      const res = await fetch("/travel-cases/" + encodeURIComponent(this.userKey), { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("travel fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      const travelCases = data.records || [];\n'
+        '      this.setState((s) => ({\n'
+        '        travelCases,\n'
+        '        activeTravelTripId: travelCases.some((item) => item.trip_id === s.activeTravelTripId)\n'
+        '          ? s.activeTravelTripId : (travelCases[0] ? travelCases[0].trip_id : null),\n'
+        '        travelLoadStatus: "",\n'
+        '      }));\n'
+        '    } catch (err) { this.setState({ travelLoadStatus: "Travel data could not be loaded." }); }\n'
+        '  }\n'
+        '  _replaceTravelCase(updated) {\n'
+        '    this.setState((s) => ({\n'
+        '      travelCases: s.travelCases.some((item) => item.trip_id === updated.trip_id)\n'
+        '        ? s.travelCases.map((item) => item.trip_id === updated.trip_id ? updated : item)\n'
+        '        : [updated, ...s.travelCases],\n'
+        '      activeTravelTripId: updated.trip_id,\n'
+        '      travelLoadStatus: "Saved locally.",\n'
+        '    }));\n'
+        '  }\n'
+        '  _travelJson(url, body) {\n'
+        '    return fetch(url, { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify(body) })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok) throw new Error((data && data.detail) || "Travel save failed."); this._replaceTravelCase(data); return data; });\n'
+        '  }\n'
+        '  createTravelCase(e) {\n'
+        '    e.preventDefault();\n'
+        '    const title = (this.state.travelDraftTitle || "").trim();\n'
+        '    if (!title) return;\n'
+        '    this.setState({ travelLoadStatus: "Saving trip…" });\n'
+        '    this._travelJson("/travel-cases/" + encodeURIComponent(this.userKey), {\n'
+        '      user_key: this.userKey, title, destination: (this.state.travelDraftDestination || "").trim(),\n'
+        '    }).then(() => this.setState({ travelDraftTitle: "", travelDraftDestination: "" }))\n'
+        '      .catch(() => this.setState({ travelLoadStatus: "Trip could not be saved." }));\n'
+        '  }\n'
+        '  addTravelLedgerEntry(e) {\n'
+        '    e.preventDefault();\n'
+        '    const tripId = this.state.activeTravelTripId;\n'
+        '    const description = (this.state.travelLedgerDescription || "").trim();\n'
+        '    const amount = (this.state.travelLedgerAmount || "").trim();\n'
+        '    if (!tripId || !description || !amount) return;\n'
+        '    this.setState({ travelLoadStatus: "Saving expense…" });\n'
+        '    this._travelJson("/travel-cases/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(tripId) + "/ledger", {\n'
+        '      user_key: this.userKey, transaction_date: this.state.travelLedgerDate || new Date().toISOString().slice(0, 10),\n'
+        '      description, amount, category: this.state.travelLedgerCategory || "other", payment_responsibility: "gtcc",\n'
+        '    }).then(() => this.setState({ travelLedgerDescription: "", travelLedgerAmount: "" }))\n'
+        '      .catch(() => this.setState({ travelLoadStatus: "Expense could not be saved." }));\n'
+        '  }\n'
+        '  recordGtccCheck(e) {\n'
+        '    e.preventDefault();\n'
+        '    const tripId = this.state.activeTravelTripId;\n'
+        '    if (!tripId) return;\n'
+        '    const body = { user_key: this.userKey, paid_in_full: !!this.state.gtccPaidInFull, notes: this.state.gtccCheckNotes || "" };\n'
+        '    if ((this.state.gtccBalance || "").trim()) body.statement_balance = this.state.gtccBalance.trim();\n'
+        '    if ((this.state.gtccPayment || "").trim()) body.payment_amount = this.state.gtccPayment.trim();\n'
+        '    this.setState({ travelLoadStatus: "Recording check…" });\n'
+        '    this._travelJson("/travel-cases/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(tripId) + "/gtcc-checks", body)\n'
+        '      .then(() => this.setState({ gtccBalance: "", gtccPayment: "", gtccPaidInFull: false, gtccCheckNotes: "" }))\n'
+        '      .catch(() => this.setState({ travelLoadStatus: "GTCC check could not be saved." }));\n'
+        '  }\n'
+        '  uploadTravelReceipt(e) {\n'
+        '    const file = e.target.files && e.target.files[0];\n'
+        '    const tripId = this.state.activeTravelTripId;\n'
+        '    if (!file || !tripId) return;\n'
+        '    const form = new FormData(); form.append("file", file); form.append("document_type", "travel_receipt"); form.append("tags", "travel,receipt");\n'
+        '    this.setState({ travelLoadStatus: "Uploading receipt…" });\n'
+        '    fetch("/context/upload", { method: "POST", headers: this._apiHeaders(), body: form })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok || !data.item) throw new Error("upload failed"); return this._travelJson("/travel-cases/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(tripId) + "/link-receipt", { user_key: this.userKey, context_id: data.item.context_id }); })\n'
+        '      .catch(() => this.setState({ travelLoadStatus: "Receipt could not be linked." }));\n'
+        '    e.target.value = "";\n'
+        '  }\n'
+        '  travelWorkspaceVals() {\n'
+        '    const active = this.state.travelCases.find((item) => item.trip_id === this.state.activeTravelTripId) || null;\n'
+        '    const trips = this.state.travelCases.map((item) => ({\n'
+        '      id: item.trip_id, title: item.title, meta: [item.destination, item.travel_start].filter(Boolean).join(" · ") || "No dates set",\n'
+        '      onClick: () => this.setState({ activeTravelTripId: item.trip_id }),\n'
+        '      style: "width:100%;text-align:left;padding:9px 10px;border:1px solid " + (active && active.trip_id === item.trip_id ? "#b21f2d" : "#313844") + ";border-radius:6px;background:#0d1014;color:#eef2f6;font:inherit;cursor:pointer;",\n'
+        '    }));\n'
+        '    const ledger = active ? (active.ledger_entries || []).map((item) => ({ id: item.entry_id, title: item.description, meta: item.transaction_date + " · $" + item.amount + " · " + item.category })) : [];\n'
+        '    const latest = active && active.latest_gtcc_check ? active.latest_gtcc_check : null;\n'
+        '    return {\n'
+        '      travelTrips: trips, travelTripsEmpty: trips.length === 0, activeTravelExists: !!active,\n'
+        '      activeTravelTitle: active ? active.title : "Choose or create a trip", activeTravelUpdated: active ? new Date(active.updated_at).toLocaleString() : "",\n'
+        '      activeTravelTotal: active ? active.estimated_spend_total : "0.00", travelLedger: ledger, travelLedgerEmpty: ledger.length === 0,\n'
+        '      travelReceipts: active ? (active.attachment_names || []).map((name) => ({ name })) : [], travelReceiptsEmpty: !active || !(active.attachment_names || []).length,\n'
+        '      gtccLatestLabel: latest ? ("Last checked " + new Date(latest.checked_at).toLocaleDateString() + (latest.paid_in_full ? " · marked paid in full" : "")) : "No GTCC check recorded yet.",\n'
+        '      travelLoadStatus: this.state.travelLoadStatus, travelDraftTitle: this.state.travelDraftTitle, travelDraftDestination: this.state.travelDraftDestination,\n'
+        '      travelLedgerDate: this.state.travelLedgerDate, travelLedgerDescription: this.state.travelLedgerDescription, travelLedgerAmount: this.state.travelLedgerAmount, travelLedgerCategory: this.state.travelLedgerCategory,\n'
+        '      gtccBalance: this.state.gtccBalance, gtccPayment: this.state.gtccPayment, gtccPaidInFull: this.state.gtccPaidInFull, gtccCheckNotes: this.state.gtccCheckNotes,\n'
+        '      onTravelTitle: (e) => this.setState({ travelDraftTitle: e.target.value }), onTravelDestination: (e) => this.setState({ travelDraftDestination: e.target.value }), onCreateTravel: (e) => this.createTravelCase(e),\n'
+        '      onTravelLedgerDate: (e) => this.setState({ travelLedgerDate: e.target.value }), onTravelLedgerDescription: (e) => this.setState({ travelLedgerDescription: e.target.value }), onTravelLedgerAmount: (e) => this.setState({ travelLedgerAmount: e.target.value }), onTravelLedgerCategory: (e) => this.setState({ travelLedgerCategory: e.target.value }), onAddTravelLedger: (e) => this.addTravelLedgerEntry(e),\n'
+        '      onGtccBalance: (e) => this.setState({ gtccBalance: e.target.value }), onGtccPayment: (e) => this.setState({ gtccPayment: e.target.value }), onGtccPaid: (e) => this.setState({ gtccPaidInFull: e.target.checked }), onGtccNotes: (e) => this.setState({ gtccCheckNotes: e.target.value }), onRecordGtccCheck: (e) => this.recordGtccCheck(e),\n'
+        '      onTravelReceiptFile: (e) => this.uploadTravelReceipt(e),\n'
+        '    };\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+    ),
+    (
+        "travel workspace: expose view bindings",
+        '      ...this.travelWorkspaceVals(),\n',
+        '      ...this.fitrepVals(),\n'
+        '      quote: this.state.quote,\n',
+        '      ...this.fitrepVals(),\n'
+        '      ...this.travelWorkspaceVals(),\n'
+        '      quote: this.state.quote,\n',
+    ),
+    (
+        "travel workspace: render third workspace panel",
+        '<h3 style="margin:0 0 4px;font-size:1.02rem;font-weight:700;">Travel &amp; GTCC</h3>',
+        '        </section>\n\n'
+        '        </sc-if>\n'
+        '        <sc-if value="{{ isFitreps }}" hint-placeholder-val="{{ false }}">\n',
+        '        </section>\n'
+        '        <section style="border:1px solid #313844;border-radius:8px;background:#12161b;padding:18px;display:grid;gap:14px;">\n'
+        '          <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">\n'
+        '            <div><h3 style="margin:0 0 4px;font-size:1.02rem;font-weight:700;">Travel &amp; GTCC</h3><p style="margin:0;color:#8a94a0;font-size:0.82rem;line-height:1.45;">Trips, receipts, expenses, and monthly card checks. Stored values are user-entered and may be stale; this does not connect to Citi.</p></div>\n'
+        '            <a href="https://home.cards.citidirect.com/CommercialCard/login" target="_blank" rel="noopener" style="height:34px;display:inline-flex;align-items:center;padding:0 14px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font-size:0.8rem;font-weight:700;">Open CitiManager ↗</a>\n'
+        '          </div>\n'
+        '          <p aria-live="polite" style="margin:0;color:#8a94a0;font-size:0.76rem;">{{ travelLoadStatus }}</p>\n'
+        '          <div style="display:grid;grid-template-columns:minmax(220px,280px) 1fr;gap:16px;">\n'
+        '            <div style="display:grid;gap:8px;align-content:start;">\n'
+        '              <sc-for list="{{ travelTrips }}" as="trip" hint-placeholder-count="2"><button type="button" sc-camel-on-click="{{ trip.onClick }}" style="{{ trip.style }}"><strong style="display:block;font-size:0.84rem;">{{ trip.title }}</strong><span style="display:block;margin-top:3px;color:#8a94a0;font-size:0.74rem;">{{ trip.meta }}</span></button></sc-for>\n'
+        '              <sc-if value="{{ travelTripsEmpty }}" hint-placeholder-val="{{ true }}"><p style="margin:0;color:#8a94a0;font-size:0.8rem;">No trips yet. Create one below.</p></sc-if>\n'
+        '              <form sc-camel-on-submit="{{ onCreateTravel }}" style="display:grid;gap:7px;padding-top:8px;border-top:1px solid #313844;">\n'
+        '                <input value="{{ travelDraftTitle }}" sc-camel-on-change="{{ onTravelTitle }}" placeholder="Trip title" aria-label="Trip title" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '                <input value="{{ travelDraftDestination }}" sc-camel-on-change="{{ onTravelDestination }}" placeholder="Destination (optional)" aria-label="Trip destination" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '                <button type="submit" style="height:32px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">+ Create travel folder</button>\n'
+        '              </form>\n'
+        '            </div>\n'
+        '            <sc-if value="{{ activeTravelExists }}" hint-placeholder-val="{{ false }}">\n'
+        '            <div style="display:grid;gap:14px;align-content:start;">\n'
+        '              <div><strong style="font-size:0.9rem;">{{ activeTravelTitle }}</strong><span style="display:block;margin-top:2px;color:#8a94a0;font-size:0.74rem;">Updated {{ activeTravelUpdated }} · logged spend ${{ activeTravelTotal }}</span></div>\n'
+        '              <div style="display:grid;gap:6px;"><strong style="font-size:0.8rem;">Expense log</strong><sc-for list="{{ travelLedger }}" as="entry" hint-placeholder-count="2"><div style="padding:8px 10px;border:1px solid #313844;border-radius:6px;background:#0d1014;"><span style="font-size:0.8rem;font-weight:600;">{{ entry.title }}</span><span style="display:block;color:#8a94a0;font-size:0.72rem;margin-top:2px;">{{ entry.meta }}</span></div></sc-for><sc-if value="{{ travelLedgerEmpty }}" hint-placeholder-val="{{ true }}"><p style="margin:0;color:#8a94a0;font-size:0.76rem;">No expenses logged.</p></sc-if></div>\n'
+        '              <form sc-camel-on-submit="{{ onAddTravelLedger }}" style="display:grid;grid-template-columns:140px 1fr 120px 140px auto;gap:7px;">\n'
+        '                <input type="date" value="{{ travelLedgerDate }}" sc-camel-on-change="{{ onTravelLedgerDate }}" aria-label="Transaction date" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '                <input value="{{ travelLedgerDescription }}" sc-camel-on-change="{{ onTravelLedgerDescription }}" placeholder="Description" aria-label="Expense description" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '                <input type="number" step="0.01" value="{{ travelLedgerAmount }}" sc-camel-on-change="{{ onTravelLedgerAmount }}" placeholder="Amount" aria-label="Expense amount" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '                <sc-raw-select value="{{ travelLedgerCategory }}" sc-camel-on-change="{{ onTravelLedgerCategory }}" aria-label="Expense category" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><option value="other">Other</option><option value="lodging">Lodging</option><option value="transportation">Transportation</option><option value="meals">Meals</option><option value="fees">Fees</option></sc-raw-select>\n'
+        '                <button type="submit" style="height:34px;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">Add</button>\n'
+        '              </form>\n'
+        '              <div style="display:grid;gap:6px;"><strong style="font-size:0.8rem;">Receipts</strong><sc-for list="{{ travelReceipts }}" as="receipt" hint-placeholder-count="1"><span style="font-size:0.76rem;color:#c7cfd8;">{{ receipt.name }}</span></sc-for><sc-if value="{{ travelReceiptsEmpty }}" hint-placeholder-val="{{ true }}"><span style="font-size:0.76rem;color:#8a94a0;">No receipts linked.</span></sc-if><label style="justify-self:start;height:30px;display:inline-flex;align-items:center;padding:0 10px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font-size:0.76rem;font-weight:600;cursor:pointer;">Upload receipt<input type="file" sc-camel-on-change="{{ onTravelReceiptFile }}" style="display:none"></label></div>\n'
+        '              <form sc-camel-on-submit="{{ onRecordGtccCheck }}" style="display:grid;gap:8px;padding:12px;border:1px solid #2a3c4a;border-radius:6px;background:#0f1620;">\n'
+        '                <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;"><strong style="font-size:0.82rem;">Monthly GTCC check</strong><span style="color:#8a94a0;font-size:0.74rem;">{{ gtccLatestLabel }}</span></div>\n'
+        '                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;"><input type="number" step="0.01" value="{{ gtccBalance }}" sc-camel-on-change="{{ onGtccBalance }}" placeholder="Statement balance (optional)" aria-label="GTCC statement balance" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input type="number" step="0.01" value="{{ gtccPayment }}" sc-camel-on-change="{{ onGtccPayment }}" placeholder="Payment (optional)" aria-label="GTCC payment amount" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ gtccCheckNotes }}" sc-camel-on-change="{{ onGtccNotes }}" placeholder="Notes" aria-label="GTCC check notes" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"></div>\n'
+        '                <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;"><label style="display:flex;gap:7px;align-items:center;color:#c7cfd8;font-size:0.78rem;"><input type="checkbox" checked="{{ gtccPaidInFull }}" sc-camel-on-change="{{ onGtccPaid }}"> Paid in full</label><button type="submit" style="height:32px;padding:0 14px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font:inherit;font-weight:700;cursor:pointer;">Mark checked</button></div>\n'
+        '              </form>\n'
+        '            </div>\n'
+        '            </sc-if>\n'
+        '          </div>\n'
+        '        </section>\n\n'
+        '        </sc-if>\n'
+        '        <sc-if value="{{ isFitreps }}" hint-placeholder-val="{{ false }}">\n',
+    ),
+    # ------------------------------------------------------------------
+    # Personal FitRep profile analytics (2026-07-15): reviewed imports,
+    # manual entries, RS snapshots, improvement goals, and exact-value charts.
+    # ------------------------------------------------------------------
+    (
+        "fitrep analytics: add component state",
+        '    fitrepAnalyticsWorkspace: { reports: [], rs_profiles: [], goals: [] },\n'
+        '    fitrepAnalytics: { sample_size: 0, relative_value_trend: [], by_reporting_senior: [], trait_trends: {}, data_quality_warnings: [] },\n'
+        '    fitrepImportProposal: null,\n'
+        '    fitrepProfileStatus: "",\n'
+        '    fitrepManualPeriod: "",\n'
+        '    fitrepManualRs: "",\n'
+        '    fitrepManualRv: "",\n'
+        '    fitrepManualGrade: "",\n'
+        '    fitrepGoalTitle: "",\n'
+        '    fitrepGoalRs: "",\n',
+        '    fitrepPeriodFilter: "",\n'
+        '    profilePasskey: "",\n',
+        '    fitrepPeriodFilter: "",\n'
+        '    fitrepAnalyticsWorkspace: { reports: [], rs_profiles: [], goals: [] },\n'
+        '    fitrepAnalytics: { sample_size: 0, relative_value_trend: [], by_reporting_senior: [], trait_trends: {}, data_quality_warnings: [] },\n'
+        '    fitrepImportProposal: null,\n'
+        '    fitrepProfileStatus: "",\n'
+        '    fitrepManualPeriod: "",\n'
+        '    fitrepManualRs: "",\n'
+        '    fitrepManualRv: "",\n'
+        '    fitrepManualGrade: "",\n'
+        '    fitrepGoalTitle: "",\n'
+        '    fitrepGoalRs: "",\n'
+        '    profilePasskey: "",\n',
+    ),
+    (
+        "fitrep analytics: load profile during mount",
+        '    this._loadFitrepAnalytics();\n',
+        '    this._loadTravelCases();\n'
+        '    this._loadRealNotes();\n'
+        '    this._loadRealFitreps();\n',
+        '    this._loadTravelCases();\n'
+        '    this._loadRealNotes();\n'
+        '    this._loadRealFitreps();\n'
+        '    this._loadFitrepAnalytics();\n'
+    ),
+    (
+        "fitrep and travel: reload profile domains on demo switch",
+        '    this._loadTravelCases();\n'
+        '    this._loadFitrepAnalytics();\n'
+        '    this._loadRealGenerations();\n'
+        '    this._loadRealAgentNotes();\n',
+        '    this._loadRealWorkspace();\n'
+        '    this._loadRealProjects(on);\n'
+        '    this._loadRealNotes();\n'
+        '    this._loadRealFitreps();\n'
+        '    this._loadRealGenerations();\n'
+        '    this._loadRealAgentNotes();\n',
+        '    this._loadRealWorkspace();\n'
+        '    this._loadRealProjects(on);\n'
+        '    this._loadRealNotes();\n'
+        '    this._loadRealFitreps();\n'
+        '    this._loadTravelCases();\n'
+        '    this._loadFitrepAnalytics();\n'
+        '    this._loadRealGenerations();\n'
+        '    this._loadRealAgentNotes();\n',
+    ),
+    (
+        "fitrep analytics: add API helpers and bindings",
+        '  async _loadFitrepAnalytics() {',
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+        '  async _loadFitrepAnalytics() {\n'
+        '    if (!this.userKey) this.userKey = this._resolveUserKey();\n'
+        '    try {\n'
+        '      const base = "/fitreps/" + encodeURIComponent(this.userKey);\n'
+        '      const responses = await Promise.all([fetch(base, { headers: this._apiHeaders() }), fetch(base + "/analytics", { headers: this._apiHeaders() })]);\n'
+        '      if (!responses[0].ok || !responses[1].ok) throw new Error("fitrep profile load failed");\n'
+        '      const values = await Promise.all(responses.map((res) => res.json()));\n'
+        '      this.setState({ fitrepAnalyticsWorkspace: values[0], fitrepAnalytics: values[1], fitrepProfileStatus: "" });\n'
+        '    } catch (err) { this.setState({ fitrepProfileStatus: "Profile analytics could not be loaded." }); }\n'
+        '  }\n'
+        '  uploadFitrepProfile(e, kind) {\n'
+        '    const file = e.target.files && e.target.files[0]; if (!file) return;\n'
+        '    const form = new FormData(); form.append("file", file); form.append("document_type", "fitrep"); form.append("tags", kind === "rs_profile" ? "fitrep,rs-profile" : "fitrep,my-record");\n'
+        '    this.setState({ fitrepProfileStatus: "Reading local document…", fitrepImportProposal: null });\n'
+        '    fetch("/context/upload", { method: "POST", headers: this._apiHeaders(), body: form })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok || !data.item) throw new Error("upload failed"); return fetch("/fitreps/" + encodeURIComponent(this.userKey) + "/imports/preview", { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ user_key: this.userKey, context_id: data.item.context_id, kind }) }); })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok) throw new Error("preview failed"); this.setState({ fitrepImportProposal: data, fitrepProfileStatus: "Review the proposal before saving." }); })\n'
+        '      .catch(() => this.setState({ fitrepProfileStatus: "The document could not be proposed for import." }));\n'
+        '    e.target.value = "";\n'
+        '  }\n'
+        '  confirmFitrepImport() {\n'
+        '    const proposal = this.state.fitrepImportProposal; if (!proposal) return;\n'
+        '    this.setState({ fitrepProfileStatus: "Saving confirmed import…" });\n'
+        '    fetch("/fitreps/" + encodeURIComponent(this.userKey) + "/imports/confirm", { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ user_key: this.userKey, kind: proposal.kind, proposal }) })\n'
+        '      .then((res) => { if (!res.ok) throw new Error("confirm failed"); this.setState({ fitrepImportProposal: null, fitrepProfileStatus: "Import saved locally." }); return this._loadFitrepAnalytics(); })\n'
+        '      .catch(() => this.setState({ fitrepProfileStatus: "The proposed import was not saved." }));\n'
+        '  }\n'
+        '  addManualFitrepProfile(e) {\n'
+        '    e.preventDefault();\n'
+        '    const rv = (this.state.fitrepManualRv || "").trim();\n'
+        '    if (!rv && !(this.state.fitrepManualRs || "").trim() && !(this.state.fitrepManualPeriod || "").trim()) return;\n'
+        '    const body = { user_key: this.userKey, period_end: this.state.fitrepManualPeriod || null, rs_label: this.state.fitrepManualRs || "", grade: this.state.fitrepManualGrade || "" }; if (rv) body.relative_value = rv;\n'
+        '    fetch("/fitreps/" + encodeURIComponent(this.userKey) + "/reports", { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify(body) })\n'
+        '      .then((res) => { if (!res.ok) throw new Error("manual save failed"); this.setState({ fitrepManualPeriod: "", fitrepManualRs: "", fitrepManualRv: "", fitrepManualGrade: "", fitrepProfileStatus: "Manual profile entry saved." }); return this._loadFitrepAnalytics(); })\n'
+        '      .catch(() => this.setState({ fitrepProfileStatus: "Manual profile entry was not saved." }));\n'
+        '  }\n'
+        '  addFitrepGoal(e) {\n'
+        '    e.preventDefault(); const title = (this.state.fitrepGoalTitle || "").trim(); if (!title) return;\n'
+        '    fetch("/fitreps/" + encodeURIComponent(this.userKey) + "/goals", { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ user_key: this.userKey, title, rs_label: (this.state.fitrepGoalRs || "").trim() || "Unspecified RS" }) })\n'
+        '      .then((res) => { if (!res.ok) throw new Error("goal save failed"); this.setState({ fitrepGoalTitle: "", fitrepGoalRs: "", fitrepProfileStatus: "Improvement goal saved." }); return this._loadFitrepAnalytics(); })\n'
+        '      .catch(() => this.setState({ fitrepProfileStatus: "Improvement goal was not saved." }));\n'
+        '  }\n'
+        '  fitrepProfileVals() {\n'
+        '    const workspace = this.state.fitrepAnalyticsWorkspace || { reports: [], rs_profiles: [], goals: [] }; const analytics = this.state.fitrepAnalytics || {}; const proposal = this.state.fitrepImportProposal;\n'
+        '    const trend = (analytics.relative_value_trend || []).map((point) => ({ label: point.label, value: point.value, width: "width:" + Math.max(2, Math.min(100, Number(point.value) || 0)) + "%;height:8px;border-radius:999px;background:#5a9fd4;" }));\n'
+        '    const rs = (analytics.by_reporting_senior || []).map((item) => ({ label: item.rs_label, meta: item.report_count + " report(s) · average RV " + (item.average_relative_value == null ? "not supplied" : item.average_relative_value) }));\n'
+        '    const goals = (workspace.goals || []).map((item) => ({ title: item.title, meta: item.rs_label + " · " + item.status }));\n'
+        '    let proposalSummary = ""; if (proposal && proposal.report) proposalSummary = [proposal.report.period_end, proposal.report.grade, proposal.report.rs_label, proposal.report.relative_value == null ? "RV not found" : "RV " + proposal.report.relative_value].filter(Boolean).join(" · "); else if (proposal && proposal.rs_profile) proposalSummary = [proposal.rs_profile.rs_label || "RS not found", proposal.rs_profile.as_of_date, proposal.rs_profile.report_count == null ? "Report count not found" : proposal.rs_profile.report_count + " reports"].filter(Boolean).join(" · ");\n'
+        '    return {\n'
+        '      fitrepProfileStatus: this.state.fitrepProfileStatus, fitrepImportProposalVisible: !!proposal, fitrepImportProposalSummary: proposalSummary, fitrepImportWarnings: proposal ? (proposal.warnings || []).map((text) => ({ text })) : [],\n'
+        '      fitrepProfileSample: analytics.sample_size || 0, fitrepRvTrend: trend, fitrepRvTrendEmpty: trend.length === 0, fitrepRsSummaries: rs, fitrepRsSummariesEmpty: rs.length === 0, fitrepProfileGoals: goals, fitrepProfileGoalsEmpty: goals.length === 0,\n'
+        '      fitrepProfileWarnings: (analytics.data_quality_warnings || []).map((text) => ({ text })),\n'
+        '      fitrepManualPeriod: this.state.fitrepManualPeriod, fitrepManualRs: this.state.fitrepManualRs, fitrepManualRv: this.state.fitrepManualRv, fitrepManualGrade: this.state.fitrepManualGrade, fitrepGoalTitle: this.state.fitrepGoalTitle, fitrepGoalRs: this.state.fitrepGoalRs,\n'
+        '      onMyRecordFile: (e) => this.uploadFitrepProfile(e, "my_record"), onRsProfileFile: (e) => this.uploadFitrepProfile(e, "rs_profile"), onConfirmFitrepImport: () => this.confirmFitrepImport(), onCancelFitrepImport: () => this.setState({ fitrepImportProposal: null, fitrepProfileStatus: "Import proposal discarded; the local source file remains available." }),\n'
+        '      onFitrepManualPeriod: (e) => this.setState({ fitrepManualPeriod: e.target.value }), onFitrepManualRs: (e) => this.setState({ fitrepManualRs: e.target.value }), onFitrepManualRv: (e) => this.setState({ fitrepManualRv: e.target.value }), onFitrepManualGrade: (e) => this.setState({ fitrepManualGrade: e.target.value }), onAddManualFitrepProfile: (e) => this.addManualFitrepProfile(e),\n'
+        '      onFitrepGoalTitle: (e) => this.setState({ fitrepGoalTitle: e.target.value }), onFitrepGoalRs: (e) => this.setState({ fitrepGoalRs: e.target.value }), onAddFitrepGoal: (e) => this.addFitrepGoal(e),\n'
+        '    };\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+    ),
+    (
+        "fitrep analytics: expose view bindings",
+        '      ...this.fitrepProfileVals(),\n',
+        '      ...this.fitrepVals(),\n'
+        '      ...this.travelWorkspaceVals(),\n',
+        '      ...this.fitrepVals(),\n'
+        '      ...this.fitrepProfileVals(),\n'
+        '      ...this.travelWorkspaceVals(),\n',
+    ),
+    (
+        "fitrep analytics: render profile import and trends panel",
+        '<h3 style="margin:0;font-size:1.02rem;font-weight:700;">My profile analytics</h3>',
+        '        </section>\n'
+        '        </sc-if><!-- dedicated FitReps lane ends -->\n',
+        '        </section>\n'
+        '        <section style="border:1px solid #313844;border-radius:8px;background:#12161b;padding:18px;display:grid;gap:14px;">\n'
+        '          <div><h3 style="margin:0;font-size:1.02rem;font-weight:700;">My profile analytics</h3><p style="margin:5px 0 0;color:#8a94a0;font-size:0.8rem;line-height:1.5;">Track your own confirmed report history, Reporting Senior context, and improvement goals. This descriptive view does not predict promotion, selection, or future marks.</p></div>\n'
+        '          <div style="display:flex;gap:8px;flex-wrap:wrap;"><label style="height:32px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font-size:0.78rem;font-weight:700;cursor:pointer;">Upload My Record<input type="file" sc-camel-on-change="{{ onMyRecordFile }}" style="display:none"></label><label style="height:32px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font-size:0.78rem;font-weight:700;cursor:pointer;">Upload RS Profile<input type="file" sc-camel-on-change="{{ onRsProfileFile }}" style="display:none"></label><span aria-live="polite" style="align-self:center;color:#8a94a0;font-size:0.76rem;">{{ fitrepProfileStatus }}</span></div>\n'
+        '          <sc-if value="{{ fitrepImportProposalVisible }}" hint-placeholder-val="{{ false }}"><div style="padding:12px;border:1px solid #5a4b2a;border-radius:6px;background:#1c1810;display:grid;gap:7px;"><strong style="font-size:0.82rem;color:#e0c77a;">Review proposed import</strong><span style="font-size:0.78rem;color:#c7cfd8;">{{ fitrepImportProposalSummary }}</span><sc-for list="{{ fitrepImportWarnings }}" as="warning" hint-placeholder-count="1"><span style="font-size:0.74rem;color:#d6bd7a;">{{ warning.text }}</span></sc-for><div style="display:flex;gap:8px;"><button type="button" sc-camel-on-click="{{ onConfirmFitrepImport }}" style="height:30px;padding:0 12px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font:inherit;font-size:0.76rem;font-weight:700;cursor:pointer;">Confirm import</button><button type="button" sc-camel-on-click="{{ onCancelFitrepImport }}" style="height:30px;padding:0 12px;border:1px solid #313844;border-radius:6px;background:transparent;color:#c7cfd8;font:inherit;font-size:0.76rem;cursor:pointer;">Discard proposal</button></div></div></sc-if>\n'
+        '          <details><summary style="cursor:pointer;font-size:0.8rem;font-weight:700;color:#c7cfd8;">Manual profile entry</summary><form sc-camel-on-submit="{{ onAddManualFitrepProfile }}" style="display:grid;grid-template-columns:140px 100px 1fr 120px auto;gap:7px;margin-top:10px;"><input type="date" value="{{ fitrepManualPeriod }}" sc-camel-on-change="{{ onFitrepManualPeriod }}" aria-label="Reporting period end" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitrepManualGrade }}" sc-camel-on-change="{{ onFitrepManualGrade }}" placeholder="Grade" aria-label="Grade" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitrepManualRs }}" sc-camel-on-change="{{ onFitrepManualRs }}" placeholder="Reporting Senior label" aria-label="Reporting Senior label" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input type="number" step="0.01" value="{{ fitrepManualRv }}" sc-camel-on-change="{{ onFitrepManualRv }}" placeholder="Relative value" aria-label="Relative value" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><button type="submit" style="height:34px;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">Add</button></form></details>\n'
+        '          <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:14px;">\n'
+        '            <div style="padding:12px;border:1px solid #313844;border-radius:6px;background:#0d1014;display:grid;gap:8px;"><div style="display:flex;justify-content:space-between;gap:10px;"><strong style="font-size:0.82rem;">Relative-value trend</strong><span style="color:#8a94a0;font-size:0.72rem;">{{ fitrepProfileSample }} confirmed reports · Exact values</span></div><sc-for list="{{ fitrepRvTrend }}" as="point" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:100px 1fr 50px;gap:8px;align-items:center;"><span style="font-size:0.72rem;color:#8a94a0;">{{ point.label }}</span><div style="height:8px;background:#1a2027;border-radius:999px;overflow:hidden;"><div style="{{ point.width }}"></div></div><strong style="font-size:0.72rem;text-align:right;">{{ point.value }}</strong></div></sc-for><sc-if value="{{ fitrepRvTrendEmpty }}" hint-placeholder-val="{{ true }}"><span style="color:#8a94a0;font-size:0.76rem;">Add confirmed relative values to build the chart.</span></sc-if></div>\n'
+        '            <div style="padding:12px;border:1px solid #313844;border-radius:6px;background:#0d1014;display:grid;gap:7px;align-content:start;"><strong style="font-size:0.82rem;">Reporting Senior comparison</strong><sc-for list="{{ fitrepRsSummaries }}" as="rs" hint-placeholder-count="2"><div style="padding:7px 0;border-bottom:1px solid #242b33;"><span style="font-size:0.76rem;font-weight:600;">{{ rs.label }}</span><span style="display:block;color:#8a94a0;font-size:0.7rem;margin-top:2px;">{{ rs.meta }}</span></div></sc-for><sc-if value="{{ fitrepRsSummariesEmpty }}" hint-placeholder-val="{{ true }}"><span style="color:#8a94a0;font-size:0.76rem;">No RS groupings yet.</span></sc-if></div>\n'
+        '          </div>\n'
+        '          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"><div style="display:grid;gap:7px;"><strong style="font-size:0.8rem;">Improvement under one RS</strong><sc-for list="{{ fitrepProfileGoals }}" as="goal" hint-placeholder-count="1"><div style="padding:8px 10px;border:1px solid #313844;border-radius:6px;background:#0d1014;"><span style="font-size:0.76rem;font-weight:600;">{{ goal.title }}</span><span style="display:block;color:#8a94a0;font-size:0.7rem;margin-top:2px;">{{ goal.meta }}</span></div></sc-for><sc-if value="{{ fitrepProfileGoalsEmpty }}" hint-placeholder-val="{{ true }}"><span style="color:#8a94a0;font-size:0.74rem;">No improvement goals saved.</span></sc-if></div><form sc-camel-on-submit="{{ onAddFitrepGoal }}" style="display:grid;gap:7px;align-content:start;"><input value="{{ fitrepGoalTitle }}" sc-camel-on-change="{{ onFitrepGoalTitle }}" placeholder="Observable improvement goal" aria-label="FitRep improvement goal" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitrepGoalRs }}" sc-camel-on-change="{{ onFitrepGoalRs }}" placeholder="Reporting Senior label" aria-label="Goal Reporting Senior" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><button type="submit" style="height:32px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">Save goal</button></form></div>\n'
+        '          <sc-for list="{{ fitrepProfileWarnings }}" as="warning" hint-placeholder-count="1"><p style="margin:0;color:#d6bd7a;font-size:0.72rem;">{{ warning.text }}</p></sc-for>\n'
+        '        </section>\n'
+        '        </sc-if><!-- dedicated FitReps lane ends -->\n',
+    ),
+    # Unit fitness and cadence workspace (2026-07-15): a low-friction entry
+    # point for the typed 5-50 Marine planner and private cadence library.
+    (
+        "fitness workspace: add component state",
+        '    fitnessParticipantCount: "20",\n',
+        '    fitrepGoalRs: "",\n'
+        '    profilePasskey: "",\n',
+        '    fitrepGoalRs: "",\n'
+        '    fitnessParticipantCount: "20",\n'
+        '    fitnessObjective: "general fitness",\n'
+        '    fitnessDuration: "60",\n'
+        '    fitnessLocation: "unit training area",\n'
+        '    fitnessEquipment: "",\n'
+        '    fitnessAbilityNotes: "mixed ability",\n'
+        '    fitnessWeatherNotes: "check current conditions",\n'
+        '    fitnessCadencePreference: "",\n'
+        '    fitnessIncludeCadence: true,\n'
+        '    fitnessPlan: null,\n'
+        '    fitnessStatus: "",\n'
+        '    cadenceRecords: [],\n'
+        '    cadenceIncludeAdult: false,\n'
+        '    cadenceTitle: "",\n'
+        '    cadenceText: "",\n'
+        '    cadenceAdult: false,\n'
+        '    cadenceStatus: "",\n'
+        '    profilePasskey: "",\n',
+    ),
+    (
+        "fitness workspace: load cadence library on mount",
+        '    this._loadCadences();\n',
+        '    this._loadRealFitreps();\n'
+        '    this._loadFitrepAnalytics();\n'
+        '    this._loadRealGenerations();\n',
+        '    this._loadRealFitreps();\n'
+        '    this._loadFitrepAnalytics();\n'
+        '    this._loadCadences();\n'
+        '    this._loadRealGenerations();\n',
+    ),
+    (
+        "fitness workspace: add API helpers and bindings",
+        '  async _loadCadences(includeAdult) {',
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+        '  async _loadCadences(includeAdult) {\n'
+        '    if (!this.userKey) this.userKey = this._resolveUserKey();\n'
+        '    const adult = includeAdult == null ? !!this.state.cadenceIncludeAdult : !!includeAdult;\n'
+        '    try {\n'
+        '      const res = await fetch("/cadences/" + encodeURIComponent(this.userKey) + "?include_adult=" + adult, { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("cadence load failed");\n'
+        '      const data = await res.json(); this.setState({ cadenceRecords: data.records || [], cadenceStatus: "" });\n'
+        '    } catch (err) { this.setState({ cadenceStatus: "Cadence library could not be loaded." }); }\n'
+        '  }\n'
+        '  buildUnitPt(e) {\n'
+        '    e.preventDefault();\n'
+        '    const equipment = (this.state.fitnessEquipment || "").split(",").map((item) => item.trim()).filter(Boolean);\n'
+        '    const body = { participant_count: Number(this.state.fitnessParticipantCount), objective: this.state.fitnessObjective, duration_minutes: Number(this.state.fitnessDuration), location: this.state.fitnessLocation || "unit training area", equipment, ability_notes: this.state.fitnessAbilityNotes || "mixed ability", weather_notes: this.state.fitnessWeatherNotes || "check current conditions", include_cadence: !!this.state.fitnessIncludeCadence, cadence_preference: (this.state.fitnessCadencePreference || "").trim() || null };\n'
+        '    this.setState({ fitnessStatus: "Building staff-reviewed plan…" });\n'
+        '    fetch("/fitness/unit-pt/plan", { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify(body) })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok) throw new Error("plan failed"); this.setState({ fitnessPlan: data, fitnessStatus: "Plan built. Review conditions and route residual-risk acceptance." }); })\n'
+        '      .catch(() => this.setState({ fitnessStatus: "Plan could not be built. Participant count must be 5–50." }));\n'
+        '  }\n'
+        '  addPrivateCadence(e) {\n'
+        '    e.preventDefault(); const title = (this.state.cadenceTitle || "").trim(); const text = (this.state.cadenceText || "").trim(); if (!title || !text) return;\n'
+        '    this.setState({ cadenceStatus: "Saving cadence locally…" });\n'
+        '    fetch("/cadences/" + encodeURIComponent(this.userKey), { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ user_key: this.userKey, title, text, rating: this.state.cadenceAdult ? "adult" : "clean" }) })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok) throw new Error((data && data.detail) || "save failed"); this.setState({ cadenceTitle: "", cadenceText: "", cadenceAdult: false, cadenceStatus: "Cadence saved locally." }); return this._loadCadences(); })\n'
+        '      .catch((err) => this.setState({ cadenceStatus: String((err && err.message) || "Cadence was not saved.") }));\n'
+        '  }\n'
+        '  fitnessWorkspaceVals() {\n'
+        '    const plan = this.state.fitnessPlan; const cadences = (this.state.cadenceRecords || []).map((item) => ({ title: item.title, meta: (item.built_in ? "Built in" : "Private") + " · " + item.rating + " · " + item.use, text: item.text }));\n'
+        '    return {\n'
+        '      fitnessParticipantCount: this.state.fitnessParticipantCount, fitnessObjective: this.state.fitnessObjective, fitnessDuration: this.state.fitnessDuration, fitnessLocation: this.state.fitnessLocation, fitnessEquipment: this.state.fitnessEquipment, fitnessAbilityNotes: this.state.fitnessAbilityNotes, fitnessWeatherNotes: this.state.fitnessWeatherNotes, fitnessCadencePreference: this.state.fitnessCadencePreference, fitnessIncludeCadence: this.state.fitnessIncludeCadence, fitnessStatus: this.state.fitnessStatus, fitnessPlanVisible: !!plan,\n'
+        '      fitnessPlanBand: plan ? plan.scaling_band : "", fitnessPlanBlocks: plan ? (plan.blocks || []).map((item) => ({ title: item.name + " · " + item.minutes + " min", text: (item.instructions || []).join(" ") })) : [], fitnessStaffReviews: plan ? (plan.staff_reviews || []).map((item) => ({ title: item.role, text: [...(item.findings || []), ...(item.actions || [])].join(" ") })) : [], fitnessOrmHazards: plan ? ((plan.orm && plan.orm.hazards) || []).map((item) => ({ title: item.hazard + " · residual " + item.residual_risk, text: (item.controls || []).join("; ") + ". Stop: " + item.stop_trigger })) : [], fitnessWarnings: plan ? (plan.warnings || []).map((text) => ({ text })) : [],\n'
+        '      cadenceRecords: cadences, cadenceRecordsEmpty: cadences.length === 0, cadenceIncludeAdult: this.state.cadenceIncludeAdult, cadenceTitle: this.state.cadenceTitle, cadenceText: this.state.cadenceText, cadenceAdult: this.state.cadenceAdult, cadenceStatus: this.state.cadenceStatus,\n'
+        '      onFitnessCount: (e) => this.setState({ fitnessParticipantCount: e.target.value }), onFitnessObjective: (e) => this.setState({ fitnessObjective: e.target.value }), onFitnessDuration: (e) => this.setState({ fitnessDuration: e.target.value }), onFitnessLocation: (e) => this.setState({ fitnessLocation: e.target.value }), onFitnessEquipment: (e) => this.setState({ fitnessEquipment: e.target.value }), onFitnessAbility: (e) => this.setState({ fitnessAbilityNotes: e.target.value }), onFitnessWeather: (e) => this.setState({ fitnessWeatherNotes: e.target.value }), onFitnessCadencePreference: (e) => this.setState({ fitnessCadencePreference: e.target.value }), onFitnessIncludeCadence: (e) => this.setState({ fitnessIncludeCadence: e.target.checked }), onBuildUnitPt: (e) => this.buildUnitPt(e),\n'
+        '      onCadenceAdultFilter: (e) => { const value = e.target.checked; this.setState({ cadenceIncludeAdult: value }); this._loadCadences(value); }, onCadenceTitle: (e) => this.setState({ cadenceTitle: e.target.value }), onCadenceText: (e) => this.setState({ cadenceText: e.target.value }), onCadenceAdult: (e) => this.setState({ cadenceAdult: e.target.checked }), onAddPrivateCadence: (e) => this.addPrivateCadence(e),\n'
+        '    };\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+    ),
+    (
+        "fitness workspace: expose view bindings",
+        '      ...this.fitnessWorkspaceVals(),\n',
+        '      ...this.fitrepProfileVals(),\n'
+        '      ...this.travelWorkspaceVals(),\n',
+        '      ...this.fitrepProfileVals(),\n'
+        '      ...this.travelWorkspaceVals(),\n'
+        '      ...this.fitnessWorkspaceVals(),\n',
+    ),
+    (
+        "fitness workspace: render unit PT and cadence panel",
+        '<h3 style="margin:0;font-size:1.02rem;font-weight:700;">Unit PT Planner &amp; Cadences</h3>',
+        '        </section>\n\n'
+        '        </sc-if>\n'
+        '        <sc-if value="{{ isFitreps }}" hint-placeholder-val="{{ false }}">\n',
+        '        </section>\n'
+        '        <section style="border:1px solid #313844;border-radius:8px;background:#12161b;padding:18px;display:grid;gap:14px;">\n'
+        '          <div><h3 style="margin:0;font-size:1.02rem;font-weight:700;">Unit PT Planner &amp; Cadences</h3><p style="margin:5px 0 0;color:#8a94a0;font-size:0.8rem;line-height:1.5;">Build a scalable draft for 5–50 Marines with S-3, S-4, SgtMaj/SEL, Fitness, and ORM review. This is not FFI, CPTR, medical, or official risk-acceptance authority.</p></div>\n'
+        '          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">\n'
+        '            <form sc-camel-on-submit="{{ onBuildUnitPt }}" style="display:grid;gap:8px;align-content:start;">\n'
+        '              <strong style="font-size:0.82rem;">Plan a unit PT event</strong>\n'
+        '              <div style="display:grid;grid-template-columns:100px 1fr 100px;gap:7px;"><input type="number" min="5" max="50" value="{{ fitnessParticipantCount }}" sc-camel-on-change="{{ onFitnessCount }}" aria-label="Participant count" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><sc-raw-select value="{{ fitnessObjective }}" sc-camel-on-change="{{ onFitnessObjective }}" aria-label="Fitness objective" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><option value="general fitness">General fitness</option><option value="PFT preparation">PFT preparation</option><option value="CFT preparation">CFT preparation</option><option value="strength">Strength</option><option value="endurance">Endurance</option><option value="mobility/recovery">Mobility / recovery</option></sc-raw-select><input type="number" min="20" max="120" value="{{ fitnessDuration }}" sc-camel-on-change="{{ onFitnessDuration }}" aria-label="Duration in minutes" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"></div>\n'
+        '              <input value="{{ fitnessLocation }}" sc-camel-on-change="{{ onFitnessLocation }}" placeholder="Location" aria-label="PT location" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitnessEquipment }}" sc-camel-on-change="{{ onFitnessEquipment }}" placeholder="Equipment, comma-separated" aria-label="Available equipment" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitnessAbilityNotes }}" sc-camel-on-change="{{ onFitnessAbility }}" placeholder="Ability and limitation notes" aria-label="Ability and limitation notes" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitnessWeatherNotes }}" sc-camel-on-change="{{ onFitnessWeather }}" placeholder="Current weather and site conditions" aria-label="Weather and site conditions" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitnessCadencePreference }}" sc-camel-on-change="{{ onFitnessCadencePreference }}" placeholder="Cadence preference (optional)" aria-label="Cadence preference" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '              <label style="display:flex;gap:7px;align-items:center;color:#c7cfd8;font-size:0.78rem;"><input type="checkbox" checked="{{ fitnessIncludeCadence }}" sc-camel-on-change="{{ onFitnessIncludeCadence }}"> Ask about and include cadence</label><button type="submit" style="height:34px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font:inherit;font-weight:700;cursor:pointer;">Build staff-reviewed plan</button><span aria-live="polite" style="color:#8a94a0;font-size:0.74rem;">{{ fitnessStatus }}</span>\n'
+        '            </form>\n'
+        '            <div style="display:grid;gap:8px;align-content:start;"><strong style="font-size:0.82rem;">Plan output <span style="color:#8a94a0;font-weight:400;">{{ fitnessPlanBand }}</span></strong><sc-if value="{{ fitnessPlanVisible }}" hint-placeholder-val="{{ false }}"><sc-for list="{{ fitnessPlanBlocks }}" as="item" hint-placeholder-count="3"><div style="padding:8px;border:1px solid #313844;border-radius:6px;background:#0d1014;"><strong style="font-size:0.76rem;">{{ item.title }}</strong><span style="display:block;color:#8a94a0;font-size:0.7rem;margin-top:3px;">{{ item.text }}</span></div></sc-for><details><summary style="cursor:pointer;font-size:0.76rem;font-weight:700;">Staff reviews and ORM</summary><div style="display:grid;gap:6px;margin-top:7px;"><sc-for list="{{ fitnessStaffReviews }}" as="item" hint-placeholder-count="4"><div><strong style="font-size:0.72rem;">{{ item.title }}</strong><span style="display:block;color:#8a94a0;font-size:0.68rem;">{{ item.text }}</span></div></sc-for><sc-for list="{{ fitnessOrmHazards }}" as="item" hint-placeholder-count="3"><div><strong style="font-size:0.72rem;color:#d6bd7a;">{{ item.title }}</strong><span style="display:block;color:#8a94a0;font-size:0.68rem;">{{ item.text }}</span></div></sc-for></div></details><sc-for list="{{ fitnessWarnings }}" as="warning" hint-placeholder-count="1"><span style="color:#d6bd7a;font-size:0.68rem;">{{ warning.text }}</span></sc-for></sc-if></div>\n'
+        '          </div>\n'
+        '          <details><summary style="cursor:pointer;font-size:0.82rem;font-weight:700;">Cadence library and private cadences</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;"><div style="display:grid;gap:7px;align-content:start;"><label style="display:flex;gap:7px;align-items:center;color:#c7cfd8;font-size:0.76rem;"><input type="checkbox" checked="{{ cadenceIncludeAdult }}" sc-camel-on-change="{{ onCadenceAdultFilter }}"> Show my adult-labeled cadences</label><sc-for list="{{ cadenceRecords }}" as="item" hint-placeholder-count="3"><details style="padding:8px;border:1px solid #313844;border-radius:6px;background:#0d1014;"><summary style="cursor:pointer;font-size:0.76rem;font-weight:600;">{{ item.title }} <span style="color:#8a94a0;font-weight:400;">{{ item.meta }}</span></summary><pre style="white-space:pre-wrap;margin:7px 0 0;color:#c7cfd8;font:inherit;font-size:0.7rem;">{{ item.text }}</pre></details></sc-for><sc-if value="{{ cadenceRecordsEmpty }}" hint-placeholder-val="{{ false }}"><span style="color:#8a94a0;font-size:0.74rem;">No cadences available.</span></sc-if></div><form sc-camel-on-submit="{{ onAddPrivateCadence }}" style="display:grid;gap:7px;align-content:start;"><input value="{{ cadenceTitle }}" sc-camel-on-change="{{ onCadenceTitle }}" placeholder="Cadence title" aria-label="Cadence title" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><textarea value="{{ cadenceText }}" sc-camel-on-change="{{ onCadenceText }}" placeholder="Call and response" aria-label="Cadence text" style="min-height:100px;border:1px solid #313844;border-radius:6px;padding:8px;background:#0d1014;color:#eef2f6;font:inherit;"></textarea><label style="display:flex;gap:7px;align-items:center;color:#c7cfd8;font-size:0.76rem;"><input type="checkbox" checked="{{ cadenceAdult }}" sc-camel-on-change="{{ onCadenceAdult }}"> Label adult (still excludes slurs, harassment, hazing, sexual violence, and targeted degradation)</label><button type="submit" style="height:32px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">Save private cadence</button><span aria-live="polite" style="color:#8a94a0;font-size:0.72rem;">{{ cadenceStatus }}</span></form></div></details>\n'
+        '        </section>\n\n'
+        '        </sc-if>\n'
+        '        <sc-if value="{{ isFitreps }}" hint-placeholder-val="{{ false }}">\n',
     ),
     (
         "browser identity: keep CRT EGA metadata in the rendered document head",

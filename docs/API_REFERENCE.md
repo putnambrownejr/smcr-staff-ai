@@ -158,6 +158,66 @@ curl -X POST http://127.0.0.1:8000/training/orm `
   -d "{\"title\":\"Range day ORM\",\"activity\":\"Live-fire rifle qualification\",\"hazards\":[\"Negligent discharge\",\"Heat injury\"],\"controls\":[\"Safety brief\",\"RSO oversight\",\"Hydration plan\"]}"
 ```
 
+## Unit PT and Cadence Library
+
+The unit-PT planner accepts 5–50 participants and returns deterministic training blocks, S-3/S-4/SgtMaj/Fitness reviews, an editable ORM matrix, warnings, and official-source labels. It does not replace an FFI, CPTR, medical provider, official PFT/CFT monitor, or command risk acceptance.
+
+```powershell
+curl -X POST http://127.0.0.1:8000/fitness/unit-pt/plan `
+  -H "Content-Type: application/json" `
+  -d '{"participant_count":30,"objective":"CFT preparation","duration_minutes":60,"location":"unit training area","include_cadence":true}'
+
+curl "http://127.0.0.1:8000/cadences/capt-example?include_adult=false"
+
+curl -X POST http://127.0.0.1:8000/cadences/capt-example `
+  -H "Content-Type: application/json" `
+  -d '{"user_key":"capt-example","title":"My cadence","text":"Move with purpose.","rating":"clean"}'
+```
+
+Adult-labeled cadences are opt-in. The service rejects slurs, targeted harassment, hazing, sexual violence, and targeted degradation regardless of label.
+
+## FitRep Profile Analytics
+
+```powershell
+curl http://127.0.0.1:8000/fitreps/capt-example
+curl http://127.0.0.1:8000/fitreps/capt-example/analytics
+
+curl -X POST http://127.0.0.1:8000/fitreps/capt-example/reports `
+  -H "Content-Type: application/json" `
+  -d '{"user_key":"capt-example","period_end":"2026-06-30","grade":"Capt","rs_label":"RS-A","relative_value":92.4}'
+```
+
+Document uploads use `/fitreps/{user_key}/imports/preview` followed by `/fitreps/{user_key}/imports/confirm`. The preview is intentionally conservative and does not invent missing dates, marks, or profile values. Analytics are descriptive and do not predict promotion or selection.
+
+## Travel / GTCC Workspace
+
+```powershell
+curl http://127.0.0.1:8000/travel-cases/capt-example
+curl -X POST http://127.0.0.1:8000/travel-cases/capt-example `
+  -H "Content-Type: application/json" `
+  -d '{"user_key":"capt-example","title":"Annual Training travel","destination":"Quantico"}'
+```
+
+Travel expenses, payments, and balance checks are user-entered and may be stale. The application does not connect to Citi or request card credentials. Every “check your GTCC” flow links to the CitiManager cardholder login.
+
+## Chief of Staff Capability Gateway
+
+The Chief has a closed set of typed operations. It can read domain summaries, search readable repository source files within the repository root, and explicitly append Travel/GTCC, FitRep, RS-profile, goal, or cadence records. It has no generic shell or unrestricted filesystem writer. Private projects and tool/cache directories are excluded from search. Each append returns a single-use Undo token.
+
+```powershell
+curl http://127.0.0.1:8000/chief/capabilities/capt-example/summary
+
+curl -X POST http://127.0.0.1:8000/chief/capabilities `
+  -H "Content-Type: application/json" `
+  -d '{"user_key":"capt-example","operation":"append_cadence","payload":{"title":"New cadence","text":"Move with purpose."}}'
+
+curl -X POST http://127.0.0.1:8000/chief/capabilities/undo `
+  -H "Content-Type: application/json" `
+  -d '{"user_key":"capt-example","undo_token":"TOKEN_FROM_APPEND"}'
+```
+
+DRAFT — Verify all references against current official sources before acting.
+
 ## PKI / CAC Troubleshooting
 
 ```powershell

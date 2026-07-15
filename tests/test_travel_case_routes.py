@@ -58,3 +58,54 @@ def test_travel_case_route_links_local_receipt_context(tmp_path: Path) -> None:
     finally:
         app.dependency_overrides.clear()
 
+
+def test_manual_travel_case_ledger_and_gtcc_routes(tmp_path: Path) -> None:
+    store = TravelCaseStore(tmp_path / "travel-cases")
+    app.dependency_overrides[get_travel_case_store] = lambda: store
+    client = TestClient(app)
+    try:
+        created_response = client.post(
+            "/travel-cases/capt-travel",
+            json={"user_key": "capt-travel", "title": "AT travel", "destination": "Camp Example"},
+        )
+        assert created_response.status_code == 201
+        trip_id = created_response.json()["trip_id"]
+
+        ledger_response = client.post(
+            f"/travel-cases/capt-travel/{trip_id}/ledger",
+            json={
+                "user_key": "capt-travel",
+                "transaction_date": "2026-08-02",
+                "description": "Lodging",
+                "amount": "120.50",
+                "category": "lodging",
+            },
+        )
+        assert ledger_response.status_code == 200
+        assert ledger_response.json()["estimated_spend_total"] == "120.50"
+
+        check_response = client.post(
+            f"/travel-cases/capt-travel/{trip_id}/gtcc-checks",
+            json={
+                "user_key": "capt-travel",
+                "statement_balance": "120.50",
+                "payment_amount": "0",
+                "paid_in_full": False,
+                "notes": "Voucher pending",
+            },
+        )
+        assert check_response.status_code == 200
+        assert check_response.json()["latest_gtcc_check"]["source"] == "user_entered"
+
+        mismatch = client.post(
+            f"/travel-cases/capt-travel/{trip_id}/ledger",
+            json={
+                "user_key": "different-user",
+                "transaction_date": "2026-08-02",
+                "description": "Fuel",
+                "amount": "10",
+            },
+        )
+        assert mismatch.status_code == 400
+    finally:
+        app.dependency_overrides.clear()

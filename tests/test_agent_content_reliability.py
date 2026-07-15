@@ -7,6 +7,10 @@ DEFAULT_PROMPTS: dict[str, str] = {
     # Standalone utility agents
     "chief-of-staff": "Help me triage a reserve drill weekend and upcoming admin suspense.",
     "leadership-advisor": "Help me frame a PME on standards and command climate.",
+    "warrior-monk": "Help me reflect on duty and moral courage.",
+    "gtcc-advisor": "Help me reconcile a user-entered GTCC trip log.",
+    "financial-readiness-advisor": "Help me understand what to review on my LES.",
+    "fitness-planning-advisor": "Help me plan PT for 30 Marines with an ORM matrix.",
     "planning-advisor": "Help me conduct deliberate MCPP for a new reserve planning problem.",
     "red-team-assumptions-challenge": "Pressure-test this plan before we brief it to the commander.",
     "assessment-learning-advisor": "Help me connect this AAR to the next drill's actual fixes.",

@@ -184,6 +184,47 @@ def test_dashboard_bundle_builds_and_links_initial_counselings() -> None:
     assert "DRAFT — Verify all references against current official sources before acting." in component_source
 
 
+def test_dashboard_bundle_has_user_driven_travel_and_gtcc_workspace() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "this._loadTravelCases();" in component_source
+    assert 'fetch("/travel-cases/" + encodeURIComponent(this.userKey)' in component_source
+    assert "Travel &amp; GTCC" in component_source
+    assert "Open CitiManager" in component_source
+    assert "https://home.cards.citidirect.com/CommercialCard/login" in component_source
+    assert "Mark checked" in component_source
+    assert "Stored values are user-entered" in component_source
+    assert "onTravelReceiptFile" in component_source
+
+
+def test_dashboard_bundle_has_fitrep_profile_imports_manual_entry_and_analytics() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "this._loadFitrepAnalytics();" in component_source
+    assert 'fetch(base + "/analytics"' in component_source
+    assert "Upload My Record" in component_source
+    assert "Upload RS Profile" in component_source
+    assert "Review proposed import" in component_source
+    assert "Confirm import" in component_source
+    assert "Manual profile entry" in component_source
+    assert "Relative-value trend" in component_source
+    assert "Exact values" in component_source
+    assert "does not predict promotion" in component_source
+
+
+def test_dashboard_bundle_has_unit_pt_planner_and_private_cadence_library() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "this._loadCadences();" in component_source
+    assert 'fetch("/fitness/unit-pt/plan"' in component_source
+    assert 'fetch("/cadences/" + encodeURIComponent(this.userKey)' in component_source
+    assert "Unit PT Planner &amp; Cadences" in component_source
+    assert "5–50 Marines" in component_source
+    assert "S-3, S-4, SgtMaj/SEL, Fitness, and ORM review" in component_source
+    assert "Show my adult-labeled cadences" in component_source
+    assert "still excludes slurs, harassment, hazing, sexual violence" in component_source
+
+
 def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:
     """Same guard as the actions test above, for the feeds/links/profile wiring
     added in the same remediation pass (step 2, items 2-4)."""

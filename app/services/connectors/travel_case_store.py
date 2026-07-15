@@ -1,12 +1,20 @@
 from __future__ import annotations
 
 import hashlib
+import secrets
 from datetime import UTC, datetime
 from pathlib import Path
 
 from app.schemas.connector_digest import TravelEmailCaseSummary
 from app.schemas.context import LocalContextMetadata
-from app.schemas.travel_cases import TravelCaseRecord
+from app.schemas.travel_cases import (
+    GtccCheckRecord,
+    GtccCheckRequest,
+    TravelCaseCreateRequest,
+    TravelCaseRecord,
+    TravelLedgerEntry,
+    TravelLedgerEntryRequest,
+)
 from app.services.connectors.travel_email_interpreter import (
     build_attachment_follow_up_prompts,
     infer_attachment_receipt_categories,
@@ -29,7 +37,7 @@ class TravelCaseStore:
         ]
         return sorted(
             items,
-            key=lambda item: (item.last_message_at or item.updated_at),
+            key=lambda item: item.last_message_at or item.updated_at,
             reverse=True,
         )
 
@@ -43,6 +51,108 @@ class TravelCaseStore:
             records = [item for item in records if item.trip_id != merged.trip_id] + [merged]
             saved.append(merged)
         return saved
+
+    def create_case(self, request: TravelCaseCreateRequest) -> TravelCaseRecord:
+        if not is_valid_user_key(request.user_key):
+            raise ValueError("Invalid user_key.")
+        now = datetime.now(UTC)
+        record = TravelCaseRecord(
+            trip_id=secrets.token_hex(10),
+            user_key=request.user_key,
+            title=request.title.strip(),
+            purpose=request.purpose.strip(),
+            destination=request.destination.strip(),
+            travel_status=request.travel_status.strip() or "watch",
+            travel_start=request.travel_start,
+            travel_end=request.travel_end,
+            dts_authorization_ref=request.dts_authorization_ref.strip(),
+            dts_voucher_ref=request.dts_voucher_ref.strip(),
+            created_at=now,
+            updated_at=now,
+        )
+        self._write(record)
+        return record
+
+    def add_ledger_entry(
+        self,
+        *,
+        user_key: str,
+        trip_id: str,
+        request: TravelLedgerEntryRequest,
+    ) -> TravelCaseRecord:
+        record = self._require_case(user_key, trip_id)
+        now = datetime.now(UTC)
+        entry = TravelLedgerEntry(
+            entry_id=secrets.token_hex(8),
+            transaction_date=request.transaction_date,
+            description=request.description.strip(),
+            amount=request.amount,
+            category=request.category.strip() or "other",
+            payment_responsibility=request.payment_responsibility,
+            notes=request.notes.strip(),
+            receipt_context_id=request.receipt_context_id,
+            created_at=now,
+        )
+        updated = record.model_copy(update={"ledger_entries": [*record.ledger_entries, entry], "updated_at": now})
+        self._write(updated)
+        return updated
+
+    def remove_ledger_entry(self, *, user_key: str, trip_id: str, entry_id: str) -> TravelCaseRecord:
+        record = self._require_case(user_key, trip_id)
+        entries = [item for item in record.ledger_entries if item.entry_id != entry_id]
+        if len(entries) == len(record.ledger_entries):
+            raise ValueError(f"Unknown travel ledger entry: {entry_id}")
+        updated = record.model_copy(update={"ledger_entries": entries, "updated_at": datetime.now(UTC)})
+        self._write(updated)
+        return updated
+
+    def try_remove_ledger_entry(self, user_key: str, trip_id: str, entry_id: str) -> bool:
+        try:
+            self.remove_ledger_entry(user_key=user_key, trip_id=trip_id, entry_id=entry_id)
+        except ValueError:
+            return False
+        return True
+
+    def record_gtcc_check(
+        self,
+        *,
+        user_key: str,
+        trip_id: str,
+        request: GtccCheckRequest,
+    ) -> TravelCaseRecord:
+        record = self._require_case(user_key, trip_id)
+        now = datetime.now(UTC)
+        check = GtccCheckRecord(
+            check_id=secrets.token_hex(8),
+            checked_at=request.checked_at or now,
+            statement_balance=request.statement_balance,
+            payment_amount=request.payment_amount,
+            paid_in_full=request.paid_in_full,
+            notes=request.notes.strip(),
+        )
+        updated = record.model_copy(update={"gtcc_checks": [*record.gtcc_checks, check], "updated_at": now})
+        self._write(updated)
+        return updated
+
+    def remove_gtcc_check(self, user_key: str, trip_id: str, check_id: str) -> bool:
+        try:
+            record = self._require_case(user_key, trip_id)
+        except ValueError:
+            return False
+        checks = [item for item in record.gtcc_checks if item.check_id != check_id]
+        if len(checks) == len(record.gtcc_checks):
+            return False
+        self._write(record.model_copy(update={"gtcc_checks": checks, "updated_at": datetime.now(UTC)}))
+        return True
+
+    def delete_case(self, user_key: str, trip_id: str) -> bool:
+        if not is_valid_user_key(user_key):
+            return False
+        path = self._path(trip_id, user_key)
+        if not path.exists():
+            return False
+        path.unlink()
+        return True
 
     def _merge_one(
         self,
@@ -71,37 +181,37 @@ class TravelCaseStore:
                 source_subjects=_dedupe([case.source_subject]),
                 source_senders=_dedupe([case.sender] if case.sender else []),
                 last_message_at=case.message_received_at,
+                created_at=now,
                 updated_at=now,
                 confidence_notes=_dedupe(case.confidence_notes),
                 recommendations=_dedupe(case.recommendations),
             )
         else:
-            record = TravelCaseRecord(
-                trip_id=existing.trip_id,
-                user_key=user_key,
-                title=_prefer_title(existing.title, case.title),
-                travel_status=_merge_status(existing.travel_status, case.travel_status),
-                travel_start=case.travel_start or existing.travel_start,
-                travel_end=case.travel_end or existing.travel_end,
-                voucher_due_date=case.voucher_due_date or existing.voucher_due_date,
-                rental_car_expected=existing.rental_car_expected or case.rental_car_expected,
-                receipts_to_collect=_dedupe([*existing.receipts_to_collect, *case.receipts_to_collect]),
-                attached_receipt_categories=_dedupe(
-                    [*existing.attached_receipt_categories, *case.attached_receipt_categories]
-                ),
-                attachment_names=_dedupe([*existing.attachment_names, *case.attachment_names]),
-                attachment_follow_up_prompts=_dedupe(
-                    [*existing.attachment_follow_up_prompts, *case.attachment_follow_up_prompts]
-                ),
-                linked_receipt_context_ids=existing.linked_receipt_context_ids,
-                source_subjects=_dedupe([*existing.source_subjects, case.source_subject]),
-                source_senders=_dedupe([*existing.source_senders, *([case.sender] if case.sender else [])]),
-                last_message_at=_latest(existing.last_message_at, case.message_received_at),
-                updated_at=now,
-                confidence_notes=_dedupe([*existing.confidence_notes, *case.confidence_notes]),
-                recommendations=_dedupe([*existing.recommendations, *case.recommendations]),
+            record = existing.model_copy(
+                update={
+                    "title": _prefer_title(existing.title, case.title),
+                    "travel_status": _merge_status(existing.travel_status, case.travel_status),
+                    "travel_start": case.travel_start or existing.travel_start,
+                    "travel_end": case.travel_end or existing.travel_end,
+                    "voucher_due_date": case.voucher_due_date or existing.voucher_due_date,
+                    "rental_car_expected": existing.rental_car_expected or case.rental_car_expected,
+                    "receipts_to_collect": _dedupe([*existing.receipts_to_collect, *case.receipts_to_collect]),
+                    "attached_receipt_categories": _dedupe(
+                        [*existing.attached_receipt_categories, *case.attached_receipt_categories]
+                    ),
+                    "attachment_names": _dedupe([*existing.attachment_names, *case.attachment_names]),
+                    "attachment_follow_up_prompts": _dedupe(
+                        [*existing.attachment_follow_up_prompts, *case.attachment_follow_up_prompts]
+                    ),
+                    "source_subjects": _dedupe([*existing.source_subjects, case.source_subject]),
+                    "source_senders": _dedupe([*existing.source_senders, *([case.sender] if case.sender else [])]),
+                    "last_message_at": _latest(existing.last_message_at, case.message_received_at),
+                    "updated_at": now,
+                    "confidence_notes": _dedupe([*existing.confidence_notes, *case.confidence_notes]),
+                    "recommendations": _dedupe([*existing.recommendations, *case.recommendations]),
+                }
             )
-        self._path(record.trip_id, user_key).write_text(record.model_dump_json(indent=2), encoding="utf-8")
+        self._write(record)
         return record
 
     def get_case(self, user_key: str, trip_id: str) -> TravelCaseRecord | None:
@@ -146,8 +256,20 @@ class TravelCaseStore:
             updated_at=datetime.now(UTC),
         )
         updated = TravelCaseRecord(**updated_payload)
-        self._path(updated.trip_id, user_key).write_text(updated.model_dump_json(indent=2), encoding="utf-8")
+        self._write(updated)
         return updated
+
+    def _require_case(self, user_key: str, trip_id: str) -> TravelCaseRecord:
+        record = self.get_case(user_key, trip_id)
+        if record is None:
+            raise ValueError(f"Unknown travel case: {trip_id}")
+        return record
+
+    def _write(self, record: TravelCaseRecord) -> None:
+        self._path(record.trip_id, record.user_key).write_text(
+            record.model_dump_json(indent=2, exclude_computed_fields=True),
+            encoding="utf-8",
+        )
 
     def _path(self, trip_id: str, user_key: str) -> Path:
         return self.root_dir / f"{_user_digest(user_key)}-{trip_id}.json"

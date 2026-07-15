@@ -43,3 +43,5 @@ When real ingestion is added, fetch from the official URL, calculate source hash
 - [Staff Function Training References](staff_function_training.md)
 - [Staff Development And PME Grounding](staff_development.md)
 - [SEL, Ceremony, And Marine Corps Process Grounding](sel_ceremony_procedure.md)
+- [Marine Corps Creeds and Oaths](marine_corps_creeds_and_oaths.md)
+- [Marine Corps Cadence Library](marine_corps_cadences.md)

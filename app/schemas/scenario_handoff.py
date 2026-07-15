@@ -65,6 +65,7 @@ class G9ScenarioOutput(StrictScenarioModel):
 # S-2 Intelligence Estimate
 # ---------------------------------------------------------------------------
 
+
 class ThreatAssessment(StrictScenarioModel):
     threat_actors: list[str] = Field(default_factory=list)
     disposition_and_capabilities: str = ""
@@ -95,6 +96,7 @@ class S2ScenarioOutput(StrictScenarioModel):
 # S-4 Logistics Estimate
 # ---------------------------------------------------------------------------
 
+
 class SupportRequirements(StrictScenarioModel):
     class_i_rations: str = ""
     class_iii_fuel: str = ""
@@ -117,6 +119,7 @@ class S4ScenarioOutput(StrictScenarioModel):
 # S-6 Communications Assessment
 # ---------------------------------------------------------------------------
 
+
 class PacePlan(StrictScenarioModel):
     primary: str = ""
     alternate: str = ""
@@ -136,6 +139,7 @@ class S6ScenarioOutput(StrictScenarioModel):
 # ---------------------------------------------------------------------------
 # Planning Advisor — Mission Analysis Shell
 # ---------------------------------------------------------------------------
+
 
 class MissionAnalysis(StrictScenarioModel):
     higher_intent: str = ""
@@ -169,6 +173,7 @@ class PlanningScenarioOutput(StrictScenarioModel):
 # Chief of Staff — Commander's Watch List
 # ---------------------------------------------------------------------------
 
+
 class StaffTasking(StrictScenarioModel):
     s2: str = ""
     s3: str = ""
@@ -189,6 +194,40 @@ class CoSScenarioOutput(StrictScenarioModel):
 
 
 # ---------------------------------------------------------------------------
+# Unit PT planning staff handoffs
+# ---------------------------------------------------------------------------
+
+
+class FitnessScenarioOutput(StrictScenarioModel):
+    role: str = "fitness"
+    objective: str = ""
+    participant_count: int = 0
+    organization: list[str] = Field(default_factory=list)
+    training_blocks: list[str] = Field(default_factory=list)
+    safety_warnings: list[str] = Field(default_factory=list)
+
+
+class OpsPtScenarioOutput(StrictScenarioModel):
+    role: str = "opso"
+    schedule_actions: list[str] = Field(default_factory=list)
+    training_standard: str = ""
+    cancellation_criteria: list[str] = Field(default_factory=list)
+
+
+class SelPtScenarioOutput(StrictScenarioModel):
+    role: str = "sel"
+    accountability_actions: list[str] = Field(default_factory=list)
+    standards_and_scaling: list[str] = Field(default_factory=list)
+
+
+class OrmPtScenarioOutput(StrictScenarioModel):
+    role: str = "orm"
+    hazards: list[str] = Field(default_factory=list)
+    controls: list[str] = Field(default_factory=list)
+    residual_risk_note: str = ""
+
+
+# ---------------------------------------------------------------------------
 # Union type and chain request
 # ---------------------------------------------------------------------------
 
@@ -199,6 +238,10 @@ ScenarioOutput = (
     | S6ScenarioOutput
     | PlanningScenarioOutput
     | CoSScenarioOutput
+    | FitnessScenarioOutput
+    | OpsPtScenarioOutput
+    | SelPtScenarioOutput
+    | OrmPtScenarioOutput
 )
 
 SCENARIO_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
@@ -208,6 +251,10 @@ SCENARIO_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
     "s6": S6ScenarioOutput,
     "planning": PlanningScenarioOutput,
     "cos": CoSScenarioOutput,
+    "fitness": FitnessScenarioOutput,
+    "opso": OpsPtScenarioOutput,
+    "sel": SelPtScenarioOutput,
+    "orm": OrmPtScenarioOutput,
 }
 
 

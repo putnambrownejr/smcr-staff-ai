@@ -19,6 +19,7 @@ from app.schemas.source_updates import DocumentationUpdateCandidate
 from app.schemas.travel_cases import TravelCaseRecord
 from app.schemas.user_context import ActiveUserContext
 from app.services.calendar.plan_store import DrillPrepPlanStore
+from app.services.chief.capability_gateway import ChiefCapabilityGateway
 from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
 from app.services.ingestion.document_update_monitor import DocumentUpdateMonitor
@@ -28,6 +29,8 @@ from app.services.reading.catalog import ReadingListCatalogService
 from app.services.session.active_context_store import ActiveUserContextStore
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.staff.battle_rhythm_store import BattleRhythmStore
+
+CITIMANAGER_LOGIN_URL = "https://home.cards.citidirect.com/CommercialCard/login"
 
 
 class ChiefAideOrchestrator:
@@ -42,6 +45,7 @@ class ChiefAideOrchestrator:
         travel_case_store: TravelCaseStore,
         battle_rhythm_store: BattleRhythmStore,
         active_context_store: ActiveUserContextStore | None = None,
+        capability_gateway: ChiefCapabilityGateway | None = None,
     ) -> None:
         self.handoff_store = handoff_store
         self.document_organizer = document_organizer
@@ -52,12 +56,15 @@ class ChiefAideOrchestrator:
         self.active_context_store = active_context_store
         self.travel_case_store = travel_case_store
         self.battle_rhythm_store = battle_rhythm_store
+        self.capability_gateway = capability_gateway
 
     def build_brief(self, request: ChiefBriefRequest) -> ChiefBriefResponse:
         handoff = self.handoff_store.get(request.user_key) if request.user_key else None
-        active_user_context = self.active_context_store.get(request.user_key) if (
-            request.user_key and self.active_context_store is not None
-        ) else None
+        active_user_context = (
+            self.active_context_store.get(request.user_key)
+            if (request.user_key and self.active_context_store is not None)
+            else None
+        )
         handoff_is_stale = _handoff_is_stale(handoff)
         document_summary = self.document_organizer.list_documents() if request.include_personal_documents else None
         drill_plans = self.drill_plan_store.list() if request.include_drill_plans else []
@@ -70,14 +77,14 @@ class ChiefAideOrchestrator:
             updates = self.document_update_store.save_many(scanned_updates)
         action_items = _dedupe_actions(
             [
-            *_handoff_actions(handoff),
-            *_personal_rhythm_actions(handoff, drill_plans),
-            *_document_actions(document_summary, handoff),
-            *_travel_case_actions(travel_cases),
-            *_opportunity_actions(opportunities, handoff),
-            *_career_actions(handoff),
-            *_drill_actions(drill_plans),
-            *_update_actions(updates),
+                *_handoff_actions(handoff),
+                *_personal_rhythm_actions(handoff, drill_plans),
+                *_document_actions(document_summary, handoff),
+                *_travel_case_actions(travel_cases),
+                *_opportunity_actions(opportunities, handoff),
+                *_career_actions(handoff),
+                *_drill_actions(drill_plans),
+                *_update_actions(updates),
             ]
         )
         sorted_actions = _sort_actions(action_items)
@@ -134,16 +141,21 @@ class ChiefAideOrchestrator:
                 handoff_is_stale=handoff_is_stale,
                 actions=sorted_actions,
                 updates=updates,
-            drill_plans=drill_plans,
-            travel_cases=travel_cases,
-            document_summary=document_summary,
-            next_drill_readiness=next_drill_readiness,
-        ),
+                drill_plans=drill_plans,
+                travel_cases=travel_cases,
+                document_summary=document_summary,
+                next_drill_readiness=next_drill_readiness,
+            ),
             action_items=sorted_actions,
             top_priority_items=_top_priority_items(sorted_actions),
             document_summary=document_summary,
             drill_plans=drill_plans,
             travel_cases=travel_cases,
+            capability_summary=(
+                self.capability_gateway.summary(request.user_key)
+                if request.user_key and self.capability_gateway is not None
+                else None
+            ),
             documentation_updates=updates,
             reading_recommendations=_reading_recommendations(self.reading_catalog),
             recommended_courses=_recommended_courses(handoff),
@@ -343,6 +355,25 @@ def _drill_actions(drill_plans: list[DrillPrepPlanResponse]) -> list[ChiefAction
 
 def _travel_case_actions(travel_cases: list[TravelCaseRecord]) -> list[ChiefActionItem]:
     items: list[ChiefActionItem] = []
+    current_month = datetime.now(UTC).date().replace(day=1)
+    latest_check = max(
+        (check for case in travel_cases for check in case.gtcc_checks),
+        key=lambda check: check.checked_at,
+        default=None,
+    )
+    if latest_check is None or latest_check.checked_at.date() < current_month:
+        items.append(
+            ChiefActionItem(
+                title="Check your GTCC balance this month",
+                category="travel",
+                priority="medium",
+                source=CITIMANAGER_LOGIN_URL,
+                recommendation=(
+                    "Open CitiManager, then open Workspace > Travel and record a user-entered check. "
+                    "The dashboard does not connect to Citi or know the account balance automatically."
+                ),
+            )
+        )
     for case in travel_cases[:6]:
         if case.voucher_due_date is not None:
             items.append(
@@ -380,6 +411,25 @@ def _travel_case_actions(travel_cases: list[TravelCaseRecord]) -> list[ChiefActi
                     recommendation=(
                         "Review the stored travel case for itinerary, rental-car, and receipt expectations "
                         "before movement."
+                    ),
+                )
+            )
+        latest_case_check = case.latest_gtcc_check
+        if (
+            latest_case_check is not None
+            and not latest_case_check.paid_in_full
+            and latest_case_check.statement_balance is not None
+            and latest_case_check.statement_balance > (latest_case_check.payment_amount or 0)
+        ):
+            items.append(
+                ChiefActionItem(
+                    title=f"User-entered GTCC balance needs follow-up for {case.title}",
+                    category="travel",
+                    priority="medium",
+                    source=CITIMANAGER_LOGIN_URL,
+                    recommendation=(
+                        "Verify the current balance in CitiManager and update the Travel tracker after payment or "
+                        "voucher disbursement. Stored values are user-entered and may be stale."
                     ),
                 )
             )
@@ -561,9 +611,7 @@ def _next_drill_readiness(
 ) -> NextDrillReadiness:
     anchor = _next_drill_anchor(handoff.drill_dates if handoff is not None else [], drill_plans)
     must_do = [
-        item
-        for item in actions
-        if item.priority == "high" or item.category in {"drill", "drill_rhythm", "travel"}
+        item for item in actions if item.priority == "high" or item.category in {"drill", "drill_rhythm", "travel"}
     ][:6]
 
     likely_friction_points: list[str] = []
@@ -683,11 +731,13 @@ def _thin_staff_assist(
     actions: list[ChiefActionItem],
 ) -> ThinStaffAssist:
     active_bits = [
-        item for item in [
+        item
+        for item in [
             active_user_context.unit_name if active_user_context else None,
             active_user_context.billet_override if active_user_context else None,
             active_user_context.mos_override if active_user_context else None,
-        ] if item
+        ]
+        if item
     ]
     summary = [
         "Use this when you are covering thin staff or walking back into the problem after time away.",
@@ -729,11 +779,7 @@ def _thin_staff_assist(
             "Planning cell package",
             "Persistent battle rhythm board",
             "Staff update cycle (running estimate -> CUB -> decision brief)",
-            *(
-                ["FRAGO to CONOP package"]
-                if next_drill_readiness.anchor_drill_date is not None or drill_plans
-                else []
-            ),
+            *(["FRAGO to CONOP package"] if next_drill_readiness.anchor_drill_date is not None or drill_plans else []),
             *(
                 ["Admin readiness review"]
                 if any(item.category in {"admin", "travel", "fitrep"} for item in actions)
@@ -767,12 +813,8 @@ def _thin_staff_assist(
                     if update.review_status == "new"
                 ][:3]
             ),
-            *(
-                [f"Travel case in play: {case.title or case.trip_id}" for case in travel_cases[:2]]
-            ),
-            *(
-                [f"New immediate action: {item.title}" for item in actions if item.priority == "high"][:3]
-            ),
+            *([f"Travel case in play: {case.title or case.trip_id}" for case in travel_cases[:2]]),
+            *([f"New immediate action: {item.title}" for item in actions if item.priority == "high"][:3]),
             *(
                 [f"Battle rhythm board updated: {battle_rhythm.updated_at.date().isoformat()}"]
                 if battle_rhythm is not None
@@ -828,8 +870,7 @@ def _walk_in_brief_pack(
             f"Readiness posture: {next_drill_readiness.readiness_posture}",
             *(
                 [f"Active context: {active_user_context.unit_name or active_user_context.unit_type}"]
-                if active_user_context is not None
-                and (active_user_context.unit_name or active_user_context.unit_type)
+                if active_user_context is not None and (active_user_context.unit_name or active_user_context.unit_type)
                 else []
             ),
             *(
@@ -856,11 +897,9 @@ def _walk_in_brief_pack(
                 for item in actions
                 if item.priority == "high"
             ][:3],
-            *[
-                f"New source-watch review item: {item.tracked_title}"
-                for item in updates
-                if item.review_status == "new"
-            ][:3],
+            *[f"New source-watch review item: {item.tracked_title}" for item in updates if item.review_status == "new"][
+                :3
+            ],
             *[f"Travel/admin item in play: {case.title or case.trip_id}" for case in travel_cases[:2]],
         ]
     )
@@ -876,11 +915,7 @@ def _walk_in_brief_pack(
                 if battle_rhythm is not None
                 else []
             ),
-            *(
-                [f"Handoff updated: {handoff.updated_at.date().isoformat()}"]
-                if handoff is not None
-                else []
-            ),
+            *([f"Handoff updated: {handoff.updated_at.date().isoformat()}"] if handoff is not None else []),
             "Continuity may be stale because the handoff is older than the current drill rhythm."
             if handoff_is_stale
             else "",
@@ -906,9 +941,7 @@ def _walk_in_brief_pack(
             "Battle rhythm assumptions may be stale because the board has not been refreshed recently."
             if battle_rhythm is not None and _board_is_stale(battle_rhythm, today)
             else "",
-            "Session handoff assumptions may be stale because the handoff is not current."
-            if handoff_is_stale
-            else "",
+            "Session handoff assumptions may be stale because the handoff is not current." if handoff_is_stale else "",
             "No persistent assumptions are stored yet; the plan may be cleaner on paper than it is in reality."
             if battle_rhythm is None
             else "",
@@ -921,9 +954,7 @@ def _walk_in_brief_pack(
                 for item in updates
                 if item.review_status != "ignored"
             ][:4],
-            "No current source-watch hits are stored."
-            if not updates
-            else "",
+            "No current source-watch hits are stored." if not updates else "",
         ]
     )
     before_you_walk_in = _dedupe_strings(
@@ -1007,9 +1038,7 @@ def _battle_rhythm_health(
     stale_assumptions = [
         entry for entry in battle_rhythm.assumption_log if _entry_is_open(entry) and _entry_age_days(entry, today) > 14
     ]
-    unresolved_decisions = [
-        entry for entry in battle_rhythm.commander_decision_log if _entry_is_open(entry)
-    ]
+    unresolved_decisions = [entry for entry in battle_rhythm.commander_decision_log if _entry_is_open(entry)]
     aging_decisions = [entry for entry in unresolved_decisions if _entry_age_days(entry, today) > 7]
     overdue_due_outs = [
         entry for entry in battle_rhythm.due_out_board if _entry_is_open(entry) and _entry_is_overdue(entry, today)
@@ -1036,9 +1065,7 @@ def _battle_rhythm_health(
             f"{len(stale_assumptions)} assumption(s) are aging past the last honest refresh point.",
             f"{len(unresolved_decisions)} commander decision item(s) remain unresolved.",
             f"{len(overdue_due_outs)} due-out(s) are overdue.",
-            f"{len(aging_due_outs)} due-out(s) are approaching the suspense window."
-            if aging_due_outs
-            else "",
+            f"{len(aging_due_outs)} due-out(s) are approaching the suspense window." if aging_due_outs else "",
             "Drill week is close, so stale continuity is more dangerous than usual." if drill_week else "",
         ]
     )
@@ -1345,6 +1372,5 @@ def _recurring_recommendation(check: RecurringCheck) -> str:
     if check.category == "medical":
         return "Verify this recurring medical/readiness requirement against current local status before relying on it."
     return (
-        "Keep this recurring check visible and attach it to a real cadence instead of letting it live as a vague "
-        "note."
+        "Keep this recurring check visible and attach it to a real cadence instead of letting it live as a vague note."
     )
