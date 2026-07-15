@@ -115,6 +115,38 @@ def test_unknown_doc_returns_404(user_docs_client: TestClient) -> None:
     assert delete_response.status_code == 404
 
 
+def test_initial_counseling_preserves_optional_fitrep_link(user_docs_client: TestClient) -> None:
+    created = user_docs_client.post(
+        f"/user-docs/generations/{VALID_USER_KEY}",
+        headers=_headers(),
+        json={
+            "title": "Initial Counseling",
+            "fields": {
+                "templateType": "counseling",
+                "kind": "Staff product",
+                "data": {
+                    "linkedFitrepId": "abc123def456",
+                    "marineName": "Diaz, M.",
+                    "rank": "Cpl",
+                    "unit": "Supply Co",
+                    "duties": "Maintain accountable records.",
+                },
+            },
+        },
+    )
+    assert created.status_code == 201
+    doc_id = created.json()["id"]
+
+    fetched = user_docs_client.get(
+        f"/user-docs/generations/{VALID_USER_KEY}/{doc_id}", headers=_headers()
+    )
+    assert fetched.status_code == 200
+    fields = fetched.json()["fields"]
+    assert fields["templateType"] == "counseling"
+    assert fields["data"]["linkedFitrepId"] == "abc123def456"
+    assert fields["data"]["marineName"] == "Diaz, M."
+
+
 def test_save_to_project_creates_project_and_removes_the_draft(
     user_docs_client: TestClient, tmp_path: Path
 ) -> None:

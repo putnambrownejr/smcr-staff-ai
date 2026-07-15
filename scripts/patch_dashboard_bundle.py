@@ -2671,7 +2671,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "fitreps: close Workspace content and open dedicated page",
-        '{{ fitrepsPageIntro }}',
+        '<h2 style="margin:0;font-size:1.16rem;font-weight:700;">FitReps</h2>',
         '        <section style="border:1px solid #313844;border-radius:8px;background:#12161b;padding:18px;">\n'
         '          <h3 style="margin:0 0 4px;font-size:1.02rem;font-weight:700;">FitRep Tracker</h3>\n',
         '        </sc-if>\n'
@@ -2712,6 +2712,164 @@ PATCHES: list[tuple[str, ...]] = [
         '                  <p style="margin:8px 0 0;color:#c7cfd8;font-size:0.84rem;line-height:1.5;">{{ a.description }}</p>\n',
         '                  <p style="margin:6px 0 0;color:#8a94a0;font-size:0.76rem;font-family:\'IBM Plex Mono\',monospace;"><strong style="color:#aab4bf;">Agent ID:</strong> {{ a.id }}</p>\n'
         '                  <p style="margin:8px 0 0;color:#c7cfd8;font-size:0.84rem;line-height:1.5;">{{ a.description }}</p>\n',
+    ),
+    # ------------------------------------------------------------------
+    # Initial counseling (2026-07-14): a persistent staff-product workflow
+    # with an optional, explicit FitRep relationship in Generation fields.
+    # ------------------------------------------------------------------
+    (
+        "workflows: add the Initial Counseling scaffold",
+        "    counseling: {\n",
+        "    awards: {\n",
+        "    counseling: {\n"
+        "      fields: [\n"
+        "        { key: \"marineName\", label: \"Marine\", placeholder: \"Last name, first name / initials…\", rows: 1 },\n"
+        "        { key: \"rank\", label: \"Rank\", placeholder: \"Rank…\", rows: 1 },\n"
+        "        { key: \"unit\", label: \"Unit / section\", placeholder: \"Unit and staff section…\", rows: 1 },\n"
+        "        { key: \"billet\", label: \"Billet / job title\", placeholder: \"The Marine's assigned billet…\", rows: 1 },\n"
+        "        { key: \"purpose\", label: \"Purpose of counseling\", placeholder: \"Why this initial counseling is being conducted and what good looks like…\", rows: 2 },\n"
+        "        { key: \"duties\", label: \"Duties and responsibilities\", placeholder: \"Core job description, recurring tasks, supported relationships, and decision authority…\", rows: 5 },\n"
+        "        { key: \"performanceExpectations\", label: \"Performance expectations\", placeholder: \"Expected results, quality, timeliness, initiative, judgment, and follow-through…\", rows: 4 },\n"
+        "        { key: \"standards\", label: \"Professional standards\", placeholder: \"Leadership, accountability, communication, conduct, readiness, and team standards…\", rows: 4 },\n"
+        "        { key: \"priorities\", label: \"Current priorities\", placeholder: \"Near-term priorities and where the Marine should focus first…\", rows: 3 },\n"
+        "        { key: \"communication\", label: \"Communication and reporting\", placeholder: \"Battle rhythm, update format, when to elevate issues, and preferred communication…\", rows: 3 },\n"
+        "        { key: \"developmentGoals\", label: \"Development goals\", placeholder: \"Skills, PME, leadership opportunities, and measurable growth goals…\", rows: 3 },\n"
+        "        { key: \"leaderCommitments\", label: \"Leader commitments\", placeholder: \"Coaching, access, resources, advocacy, and feedback the leader will provide…\", rows: 3 },\n"
+        "        { key: \"followUp\", label: \"Follow-up plan\", placeholder: \"Next counseling date, interim check-ins, and how progress will be reviewed…\", rows: 2 },\n"
+        "        { key: \"acknowledgment\", label: \"Marine comments / acknowledgment\", placeholder: \"Questions, concerns, agreed adjustments, and acknowledgment notes…\", rows: 3 },\n"
+        "      ],\n"
+        "      doctrine: [\n"
+        "        { title: \"MCO 1610.7B Performance Evaluation System — verify current version\", url: \"https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1513503/mco-16107b/\" },\n"
+        "      ],\n"
+        "      prompts: [\n"
+        "        { title: \"Review this counseling draft\", text: \"Review this initial counseling for clear duties, observable expectations, fair standards, two-way communication, and useful follow-up. Flag vague or unsupported language. DRAFT — verify all references against current official sources before acting.\", agentIds: [\"leadership-advisor\", \"writing-briefing-coach\"] },\n"
+        "      ],\n"
+        "      agents: [\n"
+        "        { id: \"leadership-advisor\", name: \"Leadership Advisor\", description: \"Helps shape clear, fair leader expectations and development goals.\" },\n"
+        "        { id: \"writing-briefing-coach\", name: \"Writing / Briefing Coach\", description: \"Tightens language so expectations are specific and understandable.\" },\n"
+        "      ],\n"
+        "    },\n"
+        "    awards: {\n",
+    ),
+    (
+        "workflows: add Initial Counseling tile under staff products",
+        '{ kind: "Staff product", title: "Initial Counseling",',
+        '      { kind: "Staff product", title: "AAR", desc: "After-action scaffold with sustain / improve framing and follow-up owners.", output: "Markdown + .docx", templateType: "aar" },\n',
+        '      { kind: "Staff product", title: "AAR", desc: "After-action scaffold with sustain / improve framing and follow-up owners.", output: "Markdown + .docx", templateType: "aar" },\n'
+        '      { kind: "Staff product", title: "Initial Counseling", desc: "Job description, leader expectations, development goals, and follow-up for a Marine you supervise — optionally linked to a FitRep record.", output: "Counseling draft", templateType: "counseling" },\n',
+    ),
+    (
+        "counseling: seed linked Marine fields only after explicit FitRep choice",
+        '      if (w.templateType === "counseling" && w.linkedFitrep) {',
+        '      if (w.templateType === "awards") data.awardType = Component.AWARD_TYPES[0].value;\n',
+        '      if (w.templateType === "awards") data.awardType = Component.AWARD_TYPES[0].value;\n'
+        '      if (w.templateType === "counseling" && w.linkedFitrep) {\n'
+        '        data.linkedFitrepId = String(w.linkedFitrep.id);\n'
+        '        data.marineName = w.linkedFitrep.name || "";\n'
+        '        data.rank = w.linkedFitrep.rank || "";\n'
+        '        data.unit = w.linkedFitrep.unit || "";\n'
+        '      }\n',
+    ),
+    (
+        "counseling: add FitRep link and reciprocal navigation helpers",
+        "  linkCounselingToFitrep(docId) {",
+        "  openWorkflowDoc(id) {\n",
+        "  linkCounselingToFitrep(docId) {\n"
+        "    return (e) => {\n"
+        "      const linkedFitrepId = e.target.value || \"\";\n"
+        "      const fitrep = this.state.fitreps.find((item) => String(item.id) === linkedFitrepId);\n"
+        "      this.setState((s) => ({ workflowDocs: s.workflowDocs.map((doc) => {\n"
+        "        if (doc.id !== docId) return doc;\n"
+        "        const data = { ...doc.data, linkedFitrepId };\n"
+        "        if (fitrep) { data.marineName = fitrep.name || \"\"; data.rank = fitrep.rank || \"\"; data.unit = fitrep.unit || \"\"; }\n"
+        "        return { ...doc, data };\n"
+        "      }) }));\n"
+        "      this._scheduleGenerationSave(docId);\n"
+        "    };\n"
+        "  }\n"
+        "  openLinkedFitrep(fitrepId) {\n"
+        "    return () => {\n"
+        "      const fitrep = this.state.fitreps.find((item) => String(item.id) === String(fitrepId));\n"
+        "      if (!fitrep) { window.alert(\"That linked FitRep record no longer exists. You can leave this counseling unlinked or choose another Marine.\"); return; }\n"
+        "      this.setState({ lane: \"fitreps\", activeFitrepId: fitrep.id, workflowEditorId: null });\n"
+        "    };\n"
+        "  }\n"
+        "  openCounselingFromFitrep(docId) {\n"
+        "    return () => this.setState({ lane: \"bench\", workflowEditorId: docId });\n"
+        "  }\n"
+        "  startCounselingForFitrep() {\n"
+        "    const linkedFitrep = this.state.fitreps.find((item) => item.id === this.state.activeFitrepId);\n"
+        "    if (!linkedFitrep) return () => {};\n"
+        "    return this.createWorkflowDoc({ kind: \"Staff product\", title: \"Initial Counseling\", templateType: \"counseling\", linkedFitrep });\n"
+        "  }\n"
+        "  openWorkflowDoc(id) {\n",
+    ),
+    (
+        "counseling: compute editor FitRep options and safe missing-link state",
+        "    const isCounselingDoc = !!activeWorkflowDoc && activeWorkflowDoc.templateType === \"counseling\";",
+        '    const isAwardsDoc = !!activeWorkflowDoc && activeWorkflowDoc.templateType === "awards";\n',
+        '    const isAwardsDoc = !!activeWorkflowDoc && activeWorkflowDoc.templateType === "awards";\n'
+        '    const isCounselingDoc = !!activeWorkflowDoc && activeWorkflowDoc.templateType === "counseling";\n'
+        '    const counselingLinkedFitrepId = isCounselingDoc ? (activeWorkflowDoc.data.linkedFitrepId || "") : "";\n'
+        '    const counselingFitrepOptions = [{ value: "", label: "No FitRep link" }].concat(this.state.fitreps.map((fitrep) => ({ value: String(fitrep.id), label: [fitrep.rank, fitrep.name, fitrep.unit].filter(Boolean).join(" · ") })));\n'
+        '    const counselingLinkedFitrep = counselingLinkedFitrepId ? this.state.fitreps.find((fitrep) => String(fitrep.id) === String(counselingLinkedFitrepId)) : null;\n'
+        '    const counselingLinkMissing = !!counselingLinkedFitrepId && !counselingLinkedFitrep;\n'
+        '    const onCounselingFitrepChange = activeWorkflowDoc ? this.linkCounselingToFitrep(activeWorkflowDoc.id) : () => {};\n'
+        '    const openCounselingFitrep = counselingLinkedFitrep ? this.openLinkedFitrep(counselingLinkedFitrep.id) : () => {};\n',
+    ),
+    (
+        "counseling: expose editor link bindings",
+        "      isCounselingDoc, counselingFitrepOptions, counselingLinkedFitrepId,",
+        '      isAwardsDoc, isNotAwardsDoc: !isAwardsDoc,\n',
+        '      isAwardsDoc, isNotAwardsDoc: !isAwardsDoc,\n'
+        '      isCounselingDoc, counselingFitrepOptions, counselingLinkedFitrepId,\n'
+        '      counselingHasLinkedFitrep: !!counselingLinkedFitrep, counselingLinkMissing,\n'
+        '      onCounselingFitrepChange, openCounselingFitrep,\n',
+    ),
+    (
+        "counseling: render optional FitRep link in the workflow editor",
+        "{{ counselingFitrepOptions }}",
+        '        <sc-if value="{{ isAwardsDoc }}" hint-placeholder-val="{{ false }}">\n',
+        '        <sc-if value="{{ isCounselingDoc }}" hint-placeholder-val="{{ false }}">\n'
+        '          <div style="margin-bottom:16px;padding:12px;border:1px solid #2a3c4a;border-radius:6px;background:#0f1620;display:grid;gap:8px;">\n'
+        '            <label style="display:grid;gap:6px;font-size:0.82rem;font-weight:600;color:#c7cfd8;"><span>Optional FitRep link</span><sc-raw-select value="{{ counselingLinkedFitrepId }}" sc-camel-on-change="{{ onCounselingFitrepChange }}" style="height:38px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;"><sc-for list="{{ counselingFitrepOptions }}" as="fo" hint-placeholder-count="3"><option value="{{ fo.value }}">{{ fo.label }}</option></sc-for></sc-raw-select></label>\n'
+        '            <p style="margin:0;color:#8a94a0;font-size:0.78rem;line-height:1.45;">Linking is optional. Choosing a Marine pre-fills only name, rank, and unit; the counseling remains a separate draft.</p>\n'
+        '            <sc-if value="{{ counselingHasLinkedFitrep }}" hint-placeholder-val="{{ false }}"><button type="button" sc-camel-on-click="{{ openCounselingFitrep }}" style="justify-self:start;height:28px;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;font-size:0.76rem;cursor:pointer;">Open linked FitRep</button></sc-if>\n'
+        '            <sc-if value="{{ counselingLinkMissing }}" hint-placeholder-val="{{ false }}"><p style="margin:0;color:#d8a0a5;font-size:0.78rem;line-height:1.45;">The linked FitRep was removed. This counseling is still safe; choose another Marine or select No FitRep link.</p></sc-if>\n'
+        '          </div>\n'
+        '        </sc-if>\n\n'
+        '        <sc-if value="{{ isAwardsDoc }}" hint-placeholder-val="{{ false }}">\n',
+    ),
+    (
+        "counseling: show linked drafts on the active FitRep",
+        "    const linkedCounselings = active ? this.state.workflowDocs.filter((doc) =>",
+        "    return {\n"
+        "      fitrepList,\n",
+        "    const linkedCounselings = active ? this.state.workflowDocs.filter((doc) => doc.templateType === \"counseling\" && String(doc.data.linkedFitrepId || \"\") === String(active.id)).map((doc) => ({ id: doc.id, title: doc.title, onOpen: this.openCounselingFromFitrep(doc.id) })) : [];\n\n"
+        "    return {\n"
+        "      fitrepList,\n"
+        "      linkedCounselings, linkedCounselingsEmpty: linkedCounselings.length === 0,\n"
+        "      startInitialCounseling: this.startCounselingForFitrep(),\n",
+    ),
+    (
+        "counseling: render reciprocal controls in FitReps",
+        "{{ linkedCounselings }}",
+        '              <label style="display:grid;gap:6px;font-size:0.82rem;font-weight:600;color:#c7cfd8;"><span>Additional notes</span><textarea rows="2" value="{{ frNotes }}" sc-camel-on-change="{{ onFrNotes }}" placeholder="Private notes — not part of the report itself…" style="border:1px solid #313844;border-radius:6px;padding:10px 12px;background:#12161b;color:#eef2f6;font:inherit;resize:vertical;"></textarea></label>\n\n'
+        '              <div style="display:flex;gap:10px;flex-wrap:wrap;">\n',
+        '              <label style="display:grid;gap:6px;font-size:0.82rem;font-weight:600;color:#c7cfd8;"><span>Additional notes</span><textarea rows="2" value="{{ frNotes }}" sc-camel-on-change="{{ onFrNotes }}" placeholder="Private notes — not part of the report itself…" style="border:1px solid #313844;border-radius:6px;padding:10px 12px;background:#12161b;color:#eef2f6;font:inherit;resize:vertical;"></textarea></label>\n'
+        '              <div style="padding:10px 12px;border:1px solid #2a3c4a;border-radius:6px;background:#0f1620;display:grid;gap:8px;">\n'
+        '                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;"><span style="font-size:0.8rem;font-weight:700;color:#c7cfd8;">Initial counseling</span><button type="button" sc-camel-on-click="{{ startInitialCounseling }}" style="height:28px;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;font-size:0.76rem;cursor:pointer;">+ Start linked counseling</button></div>\n'
+        '                <sc-for list="{{ linkedCounselings }}" as="lc" hint-placeholder-count="1"><button type="button" sc-camel-on-click="{{ lc.onOpen }}" style="width:100%;text-align:left;padding:8px 10px;border:1px solid #313844;border-radius:5px;background:#12161b;color:#eef2f6;font:inherit;font-size:0.8rem;cursor:pointer;">Open {{ lc.title }}</button></sc-for>\n'
+        '                <sc-if value="{{ linkedCounselingsEmpty }}" hint-placeholder-val="{{ true }}"><p style="margin:0;color:#8a94a0;font-size:0.76rem;">No counseling draft is linked to this FitRep yet.</p></sc-if>\n'
+        '              </div>\n\n'
+        '              <div style="display:flex;gap:10px;flex-wrap:wrap;">\n',
+    ),
+    (
+        "counseling: label every editor draft as advisory",
+        '<p style="margin:16px 0 0;padding-top:12px;border-top:1px solid #313844;color:#8a94a0;font-size:0.72rem;line-height:1.45;">DRAFT — Verify all references against current official sources before acting.</p>',
+        '        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">\n',
+        '        <p style="margin:16px 0 0;padding-top:12px;border-top:1px solid #313844;color:#8a94a0;font-size:0.72rem;line-height:1.45;">DRAFT — Verify all references against current official sources before acting.</p>\n'
+        '        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">\n',
     ),
 ]
 

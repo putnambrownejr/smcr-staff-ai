@@ -164,6 +164,25 @@ def test_dashboard_bundle_has_dedicated_fitreps_lane_and_agent_ids() -> None:
     assert '<strong style="color:#aab4bf;">Agent ID:</strong> {{ a.id }}' in component_source
 
 
+def test_dashboard_bundle_builds_and_links_initial_counselings() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert 'title: "Initial Counseling"' in component_source
+    assert 'templateType: "counseling"' in component_source
+    assert 'key: "duties"' in component_source
+    assert 'key: "performanceExpectations"' in component_source
+    assert 'key: "leaderCommitments"' in component_source
+    assert "linkCounselingToFitrep(docId)" in component_source
+    assert "data.linkedFitrepId = String(w.linkedFitrep.id)" in component_source
+    assert "data.marineName = w.linkedFitrep.name" in component_source
+    assert "data.rank = w.linkedFitrep.rank" in component_source
+    assert "data.unit = w.linkedFitrep.unit" in component_source
+    assert "openLinkedFitrep(fitrepId)" in component_source
+    assert "openCounselingFromFitrep(docId)" in component_source
+    assert "The linked FitRep was removed" in component_source
+    assert "DRAFT — Verify all references against current official sources before acting." in component_source
+
+
 def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:
     """Same guard as the actions test above, for the feeds/links/profile wiring
     added in the same remediation pass (step 2, items 2-4)."""
