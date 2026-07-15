@@ -78,17 +78,21 @@ def test_ai_agent_cards_show_stable_agent_ids(browser_page: Any) -> None:
 
 
 @pytest.mark.e2e
-def test_demo_mode_hides_demo_project_but_keeps_personal_files_card(browser_page: Any) -> None:
+def test_demo_mode_hides_demo_project_but_keeps_personal_files_card(
+    browser_page: Any,
+    demo_project_name: str,
+) -> None:
     page = browser_page
+    project_button_name = f"{demo_project_name} project folder"
     _open_lane(page, "Bench / Files")
-    _expect(page.get_by_role("button", name="repo-maintenance project folder", exact=True)).to_be_visible()
+    _expect(page.get_by_role("button", name=project_button_name, exact=True)).to_be_visible()
 
     page.get_by_role("button", name="Profile & preferences", exact=True).click()
     page.get_by_role("checkbox", name="Demo mode On", exact=True).click(force=True)
     _expect(page.get_by_role("checkbox", name="Demo mode Off", exact=True)).to_be_visible()
 
     _expect(page.get_by_role("heading", name="Personal files", level=3)).to_be_visible()
-    _expect(page.get_by_role("button", name="repo-maintenance project folder", exact=True)).to_have_count(0)
+    _expect(page.get_by_role("button", name=project_button_name, exact=True)).to_have_count(0)
 
 
 @pytest.mark.e2e
