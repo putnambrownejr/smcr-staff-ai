@@ -1,14 +1,13 @@
 """Generate the SMCR Staff AI app icons -- pure Python, no image-library dependency.
 
 The identity artwork is scripts/assets/crt-icon-source.png (a 512x512 render of
-a retro CRT monitor displaying a matrix-rain emblem, supplied by the project
-owner). CRT detail does not survive taskbar/favicon sizes, so this emits
-different artwork per size -- the standard multi-resolution icon approach:
+a retro CRT monitor displaying a phosphor-green Eagle, Globe, and Anchor,
+supplied by the project owner). This emits different crops per size -- the
+standard multi-resolution icon approach:
 
 - 512/256/192 px: the CRT art as-is (PWA install icon, Explorer large icons)
-- 48 px:         the CRT art cropped to just the screen (bezel dropped)
-- 32/16 px:      a procedural phosphor-green chevron mark in the CRT art's own
-                 sampled palette (taskbar, favicon, Explorer small icons)
+- 48/32/16 px:   the CRT art cropped to the screen and contrast-enhanced so the
+                 EGA remains recognizable (taskbar, favicon, small icons)
 
 Run once to (re)generate the checked-in assets:
     uv run python scripts/generate_app_icon.py
@@ -149,6 +148,19 @@ def gain(pixels: Pixels, factor: float) -> Pixels:
     return [tuple(min(255, round(c * factor)) for c in p[:3]) + (255,) for p in pixels]  # type: ignore[misc]
 
 
+def enhance_phosphor(pixels: Pixels, factor: float, black_point: int = 8) -> Pixels:
+    """Lift the phosphor while keeping the CRT background near black.
+
+    At favicon sizes, a straight box-filter makes the thin EGA lines average
+    into the screen. Applying a small black point before gain preserves the
+    silhouette without replacing the identity artwork with a different mark.
+    """
+    return [
+        tuple(min(255, max(0, round((c - black_point) * factor))) for c in p[:3]) + (255,)
+        for p in pixels
+    ]  # type: ignore[misc]
+
+
 def crop(pixels: Pixels, src_w: int, box: tuple[int, int, int, int]) -> tuple[int, int, Pixels]:
     x0, y0, x1, y1 = box
     out: Pixels = []
@@ -199,41 +211,6 @@ def sample_palette(pixels: Pixels) -> tuple[tuple[int, int, int, int], tuple[int
 
 
 # ---------------------------------------------------------------------------
-# Procedural small-size mark (phosphor chevron in the sampled CRT palette)
-# ---------------------------------------------------------------------------
-
-def render_mark(size: int, dark: tuple[int, int, int, int], green: tuple[int, int, int, int]) -> Pixels:
-    dim_green = tuple(c // 3 for c in green[:3]) + (255,)
-    px: Pixels = [dark] * (size * size)
-    border_px = max(1, round(size * 0.06))
-
-    cx = size / 2
-    apex_y = size * 0.20
-    base_y = size * 0.62
-    half_span = size * 0.30
-    thickness = max(1.4, size * 0.12)
-    stripe_top = size * 0.76
-    stripe_bottom = size * 0.88
-
-    for y in range(size):
-        on_border_row = y < border_px or y >= size - border_px
-        for x in range(size):
-            if on_border_row or x < border_px or x >= size - border_px:
-                px[y * size + x] = dim_green
-                continue
-            color = dark
-            if apex_y <= y <= base_y:
-                t = (y - apex_y) / (base_y - apex_y)
-                arm = t * half_span
-                if abs(x - (cx - arm)) <= thickness / 2 or abs(x - (cx + arm)) <= thickness / 2:
-                    color = green
-            if color == dark and stripe_top <= y <= stripe_bottom:
-                color = dim_green
-            px[y * size + x] = color
-    return px
-
-
-# ---------------------------------------------------------------------------
 # PNG / ICO encoding (unchanged approach: stdlib only, deterministic)
 # ---------------------------------------------------------------------------
 
@@ -275,7 +252,6 @@ def main() -> None:
     if not SOURCE_PNG.exists():
         raise SystemExit(f"Missing source artwork: {SOURCE_PNG}")
     src_w, src_h, src = decode_png(SOURCE_PNG)
-    dark, green = sample_palette(src)
     screen_w, screen_h, screen = crop(src, src_w, detect_screen_box(src, src_w, src_h))
 
     PNG_DIR.mkdir(parents=True, exist_ok=True)
@@ -284,8 +260,8 @@ def main() -> None:
     outputs: dict[str, tuple[int, Pixels]] = {
         "icon-512.png": (512, resample(src, src_w, src_h, 512, 512)),
         "icon-192.png": (192, resample(src, src_w, src_h, 192, 192)),
-        "icon-32.png": (32, render_mark(32, dark, green)),
-        "icon-16.png": (16, render_mark(16, dark, green)),
+        "icon-32.png": (32, enhance_phosphor(resample(screen, screen_w, screen_h, 32, 32), 3.0)),
+        "icon-16.png": (16, enhance_phosphor(resample(screen, screen_w, screen_h, 16, 16), 3.4)),
     }
     for name, (size, pixels) in outputs.items():
         out = PNG_DIR / name
@@ -293,9 +269,9 @@ def main() -> None:
         print(f"wrote {out}")
 
     ico_variants: list[tuple[int, Pixels]] = [
-        (16, render_mark(16, dark, green)),
-        (32, render_mark(32, dark, green)),
-        (48, gain(resample(screen, screen_w, screen_h, 48, 48), 2.8)),
+        (16, enhance_phosphor(resample(screen, screen_w, screen_h, 16, 16), 3.4)),
+        (32, enhance_phosphor(resample(screen, screen_w, screen_h, 32, 32), 3.0)),
+        (48, enhance_phosphor(resample(screen, screen_w, screen_h, 48, 48), 2.8)),
         (256, resample(src, src_w, src_h, 256, 256)),
     ]
     ico_bytes = encode_ico(

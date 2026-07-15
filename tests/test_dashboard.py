@@ -3,6 +3,7 @@ from datetime import UTC, date, datetime, timedelta
 _FUTURE_DRILL = date.today() + timedelta(days=21)
 import json  # noqa: E402
 from pathlib import Path  # noqa: E402
+from runpy import run_path  # noqa: E402
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -217,7 +218,8 @@ def test_dashboard_route_injects_pwa_metadata() -> None:
     response = client.get("/dashboard")
 
     assert '<link rel="manifest" href="/static/dashboard/manifest.webmanifest">' in response.text
-    assert '<link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png">' in response.text
+    assert '<link rel="icon" type="image/png" sizes="16x16" href="/static/dashboard/icons/icon-16.png?v=crt-ega-2">' in response.text
+    assert '<link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png?v=crt-ega-2">' in response.text
     assert '<link rel="apple-touch-icon" href="/static/dashboard/icons/icon-192.png">' in response.text
     assert '<meta name="theme-color" content="#0d1014">' in response.text
 
@@ -284,6 +286,18 @@ def test_pwa_manifest_and_icons_are_served() -> None:
         assert icon_response.status_code == 200
         assert icon_response.headers["content-type"] == "image/png"
         assert icon_response.content[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+def test_small_icons_use_detailed_crt_ega_crop() -> None:
+    icon_dir = dashboard_routes._DASHBOARD_HTML.parent / "icons"
+    icon_helpers = run_path(str(Path("scripts/generate_app_icon.py").resolve()))
+    decode_png = icon_helpers["decode_png"]
+    for size in (16, 32):
+        width, height, pixels = decode_png(icon_dir / f"icon-{size}.png")
+        assert (width, height) == (size, size)
+        # The old procedural chevron contained only three flat colors. The
+        # cropped CRT EGA retains antialiased phosphor and screen detail.
+        assert len(set(pixels)) > 20
 
 
 def test_reveal_is_open_when_no_local_api_key_is_configured() -> None:

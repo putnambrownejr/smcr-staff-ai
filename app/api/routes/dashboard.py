@@ -96,7 +96,8 @@ def get_dashboard() -> HTMLResponse:
     # desktop-shortcut launcher (see scripts/launch_dashboard.pyw).
     pwa_tags = (
         '<link rel="manifest" href="/static/dashboard/manifest.webmanifest">'
-        '<link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png">'
+        '<link rel="icon" type="image/png" sizes="16x16" href="/static/dashboard/icons/icon-16.png?v=crt-ega-2">'
+        '<link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png?v=crt-ega-2">'
         '<link rel="apple-touch-icon" href="/static/dashboard/icons/icon-192.png">'
         '<meta name="theme-color" content="#0d1014">'
     )
