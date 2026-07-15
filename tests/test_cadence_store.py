@@ -1,10 +1,12 @@
+from pathlib import Path
+
 import pytest
 
 from app.schemas.cadences import CadenceCreateRequest, CadenceRating
 from app.services.fitness.cadence_store import CadenceStore
 
 
-def test_cadence_store_isolates_users_and_requires_adult_opt_in(tmp_path) -> None:
+def test_cadence_store_isolates_users_and_requires_adult_opt_in(tmp_path: Path) -> None:
     store = CadenceStore(tmp_path)
     created = store.create(
         CadenceCreateRequest(
@@ -21,7 +23,7 @@ def test_cadence_store_isolates_users_and_requires_adult_opt_in(tmp_path) -> Non
     assert store.delete("alpha", created.cadence_id) is True
 
 
-def test_cadence_store_rejects_hazing_even_when_adult(tmp_path) -> None:
+def test_cadence_store_rejects_hazing_even_when_adult(tmp_path: Path) -> None:
     store = CadenceStore(tmp_path)
     with pytest.raises(ValueError, match="hazing"):
         store.create(
@@ -34,7 +36,7 @@ def test_cadence_store_rejects_hazing_even_when_adult(tmp_path) -> None:
         )
 
 
-def test_built_ins_cannot_be_deleted(tmp_path) -> None:
+def test_built_ins_cannot_be_deleted(tmp_path: Path) -> None:
     store = CadenceStore(tmp_path)
     assert store.list_records("alpha")
     assert store.delete("alpha", "builtin-set-the-pace") is False
