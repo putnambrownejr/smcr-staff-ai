@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 
 from app.schemas.billets import BilletRecommendation, BilletUserProfile, SmcrBillet
@@ -37,7 +38,13 @@ class OpportunityTracker:
         ]
         if opportunity_type is not None:
             records = [record for record in records if record.opportunity_type == opportunity_type]
-        return sorted(records, key=lambda record: (record.due_date or record.tracked_at.date(), record.title))
+        return sorted(
+            records,
+            key=lambda record: (
+                record.due_date or (record.tracked_at or record.detected_at).date(),
+                record.title,
+            ),
+        )
 
     def recommend(
         self,
@@ -64,6 +71,8 @@ class OpportunityTracker:
             description=opportunity.description,
             notes=opportunity.notes,
             due_date=opportunity.due_date,
+            tracked=True,
+            tracked_at=datetime.now(UTC),
             warnings=DEFAULT_OPPORTUNITY_WARNINGS,
         )
 
@@ -103,7 +112,7 @@ def _as_billet(opportunity: ManualOpportunityRequest) -> SmcrBillet:
 
 def _from_billet_recommendation(recommendation: BilletRecommendation) -> OpportunityRecommendation:
     billet = recommendation.billet
-    opportunity_type = OpportunityType.ados if (billet.component or "").upper() == "ADOS" else OpportunityType.smcr_bic
+    opportunity_type = OpportunityType.ados if (billet.component or "").upper() == "ADOS" else OpportunityType.smcr
     return OpportunityRecommendation(
         opportunity=OpportunityRecord(
             opportunity_id=hashlib.sha256(

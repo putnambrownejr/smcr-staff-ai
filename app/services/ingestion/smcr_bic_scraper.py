@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, Tag
 
 from app.schemas.billets import BilletSourceInfo, SmcrBillet
 
-MARFORRES_BILLETS_URL = "https://www.marforres.marines.mil/Billets/"
+MARFORRES_BILLETS_URL = "https://www.marforres.marines.mil/About/Reserve-Billets/"
 DAP_URL = (
     "https://www.manpower.marines.mil/Divisions/Manpower-Management/Enlisted-Assignments/"
     "Stay-Marine/Direct-Affiliation-Program/"

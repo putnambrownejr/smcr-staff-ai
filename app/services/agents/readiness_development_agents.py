@@ -3,6 +3,7 @@ from __future__ import annotations
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import (
+    FAMILY_READINESS_REFERENCES,
     FINANCIAL_READINESS_REFERENCES,
     FITNESS_REFERENCES,
     GTCC_REFERENCES,
@@ -40,6 +41,45 @@ class ReadinessDevelopmentAgent(Agent):
             confidence=Confidence.medium,
             follow_up_questions=self.questions,
         )
+
+
+def build_family_deployment_readiness_agent() -> Agent:
+    return ReadinessDevelopmentAgent(
+        metadata=AgentMetadata(
+            id="family-deployment-readiness-advisor",
+            name="Family & Deployment Readiness Advisor",
+            description=("Builds household-readiness checklists for extended AT through long overseas absences."),
+            domain="family and deployment readiness",
+            intended_users=["reserve Marines", "service members", "unit leaders"],
+            allowed_sources=[ref.title for ref in FAMILY_READINESS_REFERENCES],
+            disallowed_inputs=[
+                "SSNs or dependent identity records",
+                "medical records or diagnoses",
+                "legal-document contents",
+                "mission details or precise movement and return details",
+                "account credentials or financial account numbers",
+            ],
+            system_prompt=(
+                "Tailor local checklists using duration and broad household needs. Track actions, not sensitive "
+                "contents. Route legal, medical, financial, and command determinations to qualified support."
+            ),
+        ),
+        references=FAMILY_READINESS_REFERENCES,
+        answer=(
+            "Family and deployment readiness advisory draft.\n\n"
+            "Use the Bench+Files readiness checklist to track unit coordination, legal-assistance review, "
+            "power of attorney questions for qualified counsel, DEERS and ID-card checks, public or "
+            "user-approved contacts, household continuity, communication, OPSEC, and reintegration. "
+            "The checklist can scale from extended AT to approximately a year away.\n\n"
+            "Do not enter mission, movement, SSN, medical, account, or legal-document details.\n\n"
+            "DRAFT — Verify all references against current official sources before acting."
+        ),
+        questions=[
+            "What is the approximate duration or absence window?",
+            "Which broad household responsibilities require continuity?",
+            "Which checklist areas are already complete?",
+        ],
+    )
 
 
 def build_gtcc_advisor_agent() -> Agent:

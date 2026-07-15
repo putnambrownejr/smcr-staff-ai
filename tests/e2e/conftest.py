@@ -38,9 +38,7 @@ def browser_page(e2e_base_url: str, demo_project_name: str) -> Generator[Any, No
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page()
         user_key = f"e2e-{uuid.uuid4().hex}"
-        page.add_init_script(
-            f"window.localStorage.setItem('smcr_user_key', '{user_key}')"
-        )
+        page.add_init_script(f"window.localStorage.setItem('smcr_user_key', '{user_key}')")
         seed_response = page.request.post(f"{e2e_base_url}/demo/workspace/seed")
         assert seed_response.ok
         page.goto(f"{e2e_base_url}/dashboard", wait_until="domcontentloaded")
@@ -48,5 +46,9 @@ def browser_page(e2e_base_url: str, demo_project_name: str) -> Generator[Any, No
         try:
             yield page
         finally:
+            family_response = page.request.get(f"{e2e_base_url}/family-readiness/{user_key}")
+            if family_response.ok:
+                for record in family_response.json().get("records", []):
+                    page.request.delete(f"{e2e_base_url}/family-readiness/{user_key}/{record['event_id']}")
             page.request.delete(f"{e2e_base_url}/demo/workspace")
             browser.close()

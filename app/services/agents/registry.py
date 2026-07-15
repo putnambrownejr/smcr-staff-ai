@@ -21,6 +21,7 @@ from app.services.agents.osint_agent import build_osint_agent
 from app.services.agents.pki_agent import build_pki_troubleshooter_agent
 from app.services.agents.planning_advisor_agent import build_planning_advisor_agent
 from app.services.agents.readiness_development_agents import (
+    build_family_deployment_readiness_agent,
     build_financial_readiness_agent,
     build_fitness_planning_agent,
     build_gtcc_advisor_agent,
@@ -62,6 +63,7 @@ _AGENT_CATEGORY_BY_ID: dict[str, str] = {
     "gtcc-advisor": "Reserve Admin & Readiness",
     "financial-readiness-advisor": "Reserve Admin & Readiness",
     "fitness-planning-advisor": "Reserve Admin & Readiness",
+    "family-deployment-readiness-advisor": "Reserve Admin & Readiness",
 }
 _STAFF_COUNCIL_CATEGORY = "Virtual Staff Council"
 # Order categories intentionally so the page leads with the most-used groups.
@@ -136,6 +138,7 @@ def default_agents() -> list[Agent]:
         build_gtcc_advisor_agent(),
         build_financial_readiness_agent(),
         build_fitness_planning_agent(),
+        build_family_deployment_readiness_agent(),
         build_osint_agent(),
         build_map_agent(),
         build_checkin_agent(),

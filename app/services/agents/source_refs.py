@@ -1531,6 +1531,48 @@ GTCC_REFERENCES: tuple[SourceRef, ...] = (
     ),
 )
 
+FAMILY_READINESS_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="Military OneSource Preparing for Military Deployment",
+        url="https://planmydeployment.militaryonesource.mil/pre-deployment",
+        publisher="Department of Defense Military OneSource",
+        notes="Official preparation checklists and family-readiness planning; verified 2026-07-15.",
+    ),
+    SourceRef(
+        title="Military OneSource Legal Matters Before Deployment",
+        url=(
+            "https://planmydeployment.militaryonesource.mil/pre-deployment/service-members/"
+            "legal-matters-steps-to-take-before-deployment/"
+        ),
+        publisher="Department of Defense Military OneSource",
+        notes="Official legal-readiness overview that directs users to qualified legal assistance; verified 2026-07-15.",
+    ),
+    SourceRef(
+        title="TRICARE Defense Enrollment Eligibility Reporting System",
+        url="https://www.tricare.mil/DEERS",
+        publisher="Defense Health Agency",
+        notes="Official DEERS maintenance and support guidance; verified 2026-07-15.",
+    ),
+    SourceRef(
+        title="TRICARE milConnect",
+        url="https://www.tricare.mil/Plans/Eligibility/DEERS/milConnect",
+        publisher="Defense Health Agency",
+        notes="Official description of milConnect DEERS-related capabilities; verified 2026-07-15.",
+    ),
+    SourceRef(
+        title="DoD ID Card Office Online and RAPIDS Locator",
+        url="https://idco.dmdc.osd.mil/idco/",
+        publisher="Defense Manpower Data Center",
+        notes="Official ID-card office locator and family ID-card service gateway; verified 2026-07-15.",
+    ),
+    SourceRef(
+        title="Military OneSource Common Military Acronyms",
+        url=("https://www.militaryonesource.mil/military-basics/extended-family-friend/common-military-acronyms/"),
+        publisher="Department of Defense Military OneSource",
+        notes="Official plain-language military acronym resource; verified 2026-07-15.",
+    ),
+)
+
 FINANCIAL_READINESS_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="DoD Financial Readiness",

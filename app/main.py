@@ -17,6 +17,7 @@ from app.api.routes import (
     cadences,
     calendar,
     career,
+    career_opportunities,
     chief,
     chief_setup,
     connectors,
@@ -26,6 +27,7 @@ from app.api.routes import (
     dashboard,
     demo,
     documents,
+    family_readiness,
     fitness,
     fitreps,
     git_ops,
@@ -87,6 +89,7 @@ def create_app() -> FastAPI:
     app.include_router(battle_rhythm.router)
     app.include_router(billets.router)
     app.include_router(career.router)
+    app.include_router(career_opportunities.router)
     app.include_router(context.router)
     app.include_router(custom_mos_recipes.router)
     app.include_router(custom_watch_feeds.router)
@@ -95,6 +98,7 @@ def create_app() -> FastAPI:
     app.include_router(documents.router)
     app.include_router(fitreps.router)
     app.include_router(fitness.router)
+    app.include_router(family_readiness.router)
     app.include_router(handoffs.router)
     app.include_router(calendar.router)
     app.include_router(cadences.router)

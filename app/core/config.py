@@ -40,6 +40,14 @@ def default_travel_case_dir() -> Path:
     return default_local_context_dir() / "travel_cases"
 
 
+def default_family_readiness_dir() -> Path:
+    return default_local_context_dir() / "family_readiness"
+
+
+def default_career_opportunities_dir() -> Path:
+    return default_local_context_dir() / "career_opportunities"
+
+
 def default_fitrep_dir() -> Path:
     return default_local_context_dir() / "fitreps"
 
@@ -174,6 +182,8 @@ class Settings(BaseSettings):
     session_handoff_storage_dir: str = str(default_session_handoff_dir())
     product_template_storage_dir: str = str(default_product_template_dir())
     travel_case_storage_dir: str = str(default_travel_case_dir())
+    family_readiness_storage_dir: str = str(default_family_readiness_dir())
+    career_opportunities_storage_dir: str = str(default_career_opportunities_dir())
     fitrep_storage_dir: str = str(default_fitrep_dir())
     cadence_storage_dir: str = str(default_cadence_dir())
     chief_capability_audit_storage_dir: str = str(default_chief_capability_audit_dir())
@@ -221,6 +231,8 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.session_handoff_storage_dir),
         Path(settings.product_template_storage_dir),
         Path(settings.travel_case_storage_dir),
+        Path(settings.family_readiness_storage_dir),
+        Path(settings.career_opportunities_storage_dir),
         Path(settings.fitrep_storage_dir),
         Path(settings.cadence_storage_dir),
         Path(settings.chief_capability_audit_storage_dir),

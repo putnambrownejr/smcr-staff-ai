@@ -91,8 +91,8 @@ def test_dashboard_bundle_is_wired_to_real_actions_api() -> None:
     assert "this._loadRealWorkspace();" in component_source
     assert "_resolveUserKey()" in component_source
     assert '"smcr_user_key"' in component_source
-    assert "fetch(\"/dashboard/data/\"" in component_source
-    assert "fetch(\"/actions/track\"" in component_source
+    assert 'fetch("/dashboard/data/"' in component_source
+    assert 'fetch("/actions/track"' in component_source
     assert 'method: "PATCH"' in component_source
     assert 'fetch("/actions/" + encodeURIComponent(id), { method: "DELETE"' in component_source
     # Round-trips the free-text "due" stashed in notes back into the due field.
@@ -143,6 +143,31 @@ def test_dashboard_bundle_uses_independent_feed_actions_and_real_source_updates(
     assert "MCO 1001R.1 possible change" not in component_source
 
 
+def test_dashboard_bundle_has_sortable_career_opportunities_watch_widget() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "this._loadCareerOpportunities();" in component_source
+    assert 'fetch("/career-opportunities?" + params.toString()' in component_source
+    assert 'fetch("/career-opportunities/refresh"' in component_source
+    assert '"/career-opportunities/sources/" + encodeURIComponent(sourceKey) + "/refresh"' in component_source
+    assert "Career Opportunities" in component_source
+    assert "SMCR / IMA / ADOS" in component_source
+    assert "Sort by" in component_source
+    assert "Title" in component_source
+    assert "Component" in component_source
+    assert "Rank" in component_source
+    assert "MOS" in component_source
+    assert "Unit" in component_source
+    assert "Location" in component_source
+    assert "Duration" in component_source
+    assert "Publication date" in component_source
+    assert "Application / due date" in component_source
+    assert "Clear filters" in component_source
+    assert "Open official listing" in component_source
+    assert "Showing cached results" in component_source
+    assert "Availability and eligibility require verification at the official source" in component_source
+
+
 def test_dashboard_bundle_clears_demo_files_and_filters_demo_projects() -> None:
     component_source = _decoded_dashboard_component_source()
 
@@ -182,6 +207,23 @@ def test_dashboard_bundle_builds_and_links_initial_counselings() -> None:
     assert "openCounselingFromFitrep(docId)" in component_source
     assert "The linked FitRep was removed" in component_source
     assert "DRAFT — Verify all references against current official sources before acting." in component_source
+
+
+def test_dashboard_bundle_has_family_deployment_readiness_builder() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "this._loadFamilyReadiness();" in component_source
+    assert 'fetch("/family-readiness/" + encodeURIComponent(this.userKey)' in component_source
+    assert 'title: "Family & Deployment Readiness"' in component_source
+    assert "Family &amp; Deployment Readiness" in component_source
+    assert "Saved per named event" in component_source
+    assert "Open DEERS / TRICARE" in component_source
+    assert "Open milConnect" in component_source
+    assert "Find a RAPIDS office" in component_source
+    assert "Download generic calendar" in component_source
+    assert "Generate spouse-friendly summary" in component_source
+    assert "family-deployment-readiness-advisor" in component_source
+    assert "does not create legal documents" in component_source
 
 
 def test_dashboard_bundle_has_user_driven_travel_and_gtcc_workspace() -> None:
@@ -259,16 +301,28 @@ def test_dashboard_route_injects_pwa_metadata() -> None:
     response = client.get("/dashboard")
 
     assert '<link rel="manifest" href="/static/dashboard/manifest.webmanifest">' in response.text
-    assert '<link rel="icon" type="image/png" sizes="16x16" href="/static/dashboard/icons/icon-16.png?v=crt-ega-2">' in response.text
-    assert '<link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png?v=crt-ega-2">' in response.text
+    assert (
+        '<link rel="icon" type="image/png" sizes="16x16" href="/static/dashboard/icons/icon-16.png?v=crt-ega-2">'
+        in response.text
+    )
+    assert (
+        '<link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png?v=crt-ega-2">'
+        in response.text
+    )
     assert '<link rel="apple-touch-icon" href="/static/dashboard/icons/icon-192.png">' in response.text
     assert '<meta name="theme-color" content="#0d1014">' in response.text
 
     component_source = _decoded_dashboard_component_source()
     assert "<!-- Browser identity metadata -->" in component_source
     assert "<title>SMCR Staff AI</title>" in component_source
-    assert '<link rel="icon" type="image/png" sizes="16x16" href="/static/dashboard/icons/icon-16.png?v=crt-ega-2">' in component_source
-    assert '<link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png?v=crt-ega-2">' in component_source
+    assert (
+        '<link rel="icon" type="image/png" sizes="16x16" href="/static/dashboard/icons/icon-16.png?v=crt-ega-2">'
+        in component_source
+    )
+    assert (
+        '<link rel="icon" type="image/png" sizes="32x32" href="/static/dashboard/icons/icon-32.png?v=crt-ega-2">'
+        in component_source
+    )
 
 
 def test_shutdown_route_schedules_termination(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -364,7 +418,7 @@ def test_dashboard_shell_injects_configured_api_key_for_the_shim(monkeypatch: py
 
     response = client.get("/dashboard")
 
-    assert "window.__SMCR_API_KEY__ = \"reveal-secret\"" in response.text
+    assert 'window.__SMCR_API_KEY__ = "reveal-secret"' in response.text
     get_settings.cache_clear()
 
 
@@ -517,8 +571,6 @@ def test_reveal_falls_back_to_nearest_existing_ancestor(monkeypatch: pytest.Monk
     assert body["status"] == "opened_fallback"
     assert len(opened) == 1
     assert opened[0] == dashboard_routes.REPO_ROOT.resolve()
-
-
 
 
 def test_demo_dashboard_data_route_returns_workspace_payload() -> None:
