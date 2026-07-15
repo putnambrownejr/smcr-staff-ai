@@ -61,15 +61,6 @@ class TodayInMarineHistoryService:
             if item.month == target_date.month and item.day == target_date.day
         ]
 
-    def get_or_random(self, target_date: date) -> list[TodayInMarineHistoryItem]:
-        items_for_date = self.get_for_date(target_date)
-        if items_for_date:
-            return items_for_date
-        if not self.items:
-            return []
-        index = (target_date.month * 31 + target_date.day) % len(self.items)
-        return [self.items[index]]
-
     def select_for_date(
         self,
         target_date: date,

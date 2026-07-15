@@ -6,7 +6,7 @@ from app.schemas.battle_rhythm import BattleRhythmBoardResponse
 from app.schemas.career import CareerWatchResponse
 from app.schemas.chief import ChiefBriefResponse
 from app.schemas.custom_watch_feeds import CustomWatchFeedTrustLevel
-from app.schemas.history import TodayInMarineHistoryItem
+from app.schemas.history import HistorySelection, TodayInMarineHistoryItem
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
 from app.schemas.reading_state import ReadingProgressRecord
@@ -137,6 +137,8 @@ class DashboardWorkspaceResponse(BaseModel):
     alnav_ticker: list[DashboardTickerItem] = Field(default_factory=list)
     dod_ticker: list[DashboardTickerItem] = Field(default_factory=list)
     custom_watch_feeds: list[DashboardCustomWatchFeed] = Field(default_factory=list)
+    usmc_history: HistorySelection | None = None
+    us_military_history: HistorySelection | None = None
     today_in_history: list[TodayInMarineHistoryItem] = Field(default_factory=list)
     history_is_today: bool = False
     history_library: list[TodayInMarineHistoryItem] = Field(default_factory=list)

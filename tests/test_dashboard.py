@@ -30,6 +30,7 @@ from app.schemas.battle_rhythm import BattleRhythmBoardUpsertRequest, BattleRhyt
 from app.schemas.calendar import DrillPrepPlanResponse, PrepTask  # noqa: E402
 from app.schemas.custom_watch_feeds import CreateCustomWatchFeedRequest  # noqa: E402
 from app.schemas.ingestion import MessageRecord  # noqa: E402
+from app.schemas.history import HistoryScope  # noqa: E402
 from app.schemas.opportunities import ManualOpportunityRequest  # noqa: E402
 from app.schemas.section_memory import SectionMemoryEntry, SectionMemoryProfileUpsertRequest  # noqa: E402
 from app.schemas.session import FitrepReminder, PmeStatus, UserSessionHandoff  # noqa: E402
@@ -586,6 +587,10 @@ def test_demo_dashboard_data_route_returns_workspace_payload() -> None:
     assert payload["analyst_brief"]["kpi_summary"]
     assert "history_library" in payload
     assert isinstance(payload["history_is_today"], bool)
+    assert payload["usmc_history"]["item"]["scope"] == HistoryScope.usmc
+    assert payload["us_military_history"]["item"]["scope"] == HistoryScope.us_military
+    assert isinstance(payload["usmc_history"]["is_exact"], bool)
+    assert isinstance(payload["us_military_history"]["distance_days"], int)
     assert "reference_library" in payload
     assert any(item["official_links"] for item in payload["reference_library"])
     assert "tracked_opportunities" in payload
@@ -838,6 +843,10 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["section_memory_profile"]["entries"][0]["section"] == "S-6"
         assert payload["chief_brief"]["battle_rhythm_summary"]
         assert "history_library" in payload
+        assert payload["usmc_history"]["item"]["scope"] == HistoryScope.usmc
+        assert payload["us_military_history"]["item"]["scope"] == HistoryScope.us_military
+        assert isinstance(payload["usmc_history"]["is_exact"], bool)
+        assert isinstance(payload["us_military_history"]["distance_days"], int)
         assert payload["reference_library"]
         assert any(item["official_links"] for item in payload["reference_library"])
         suggested = next(item for item in payload["document_details"] if item["filename"] == "MCWP_5-10_MCPP.txt")

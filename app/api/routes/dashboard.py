@@ -34,7 +34,7 @@ from app.schemas.dashboard import (
     DashboardTickerItem,
     DashboardWorkspaceResponse,
 )
-from app.schemas.history import TodayInMarineHistoryItem
+from app.schemas.history import HistoryScope, HistorySelection, TodayInMarineHistoryItem
 from app.schemas.ingestion import MessageRecord
 from app.schemas.opportunities import OpportunityRecord
 from app.schemas.personal_documents import PersonalDocumentSummary
@@ -49,6 +49,7 @@ from app.services.chief.orchestrator import ChiefAideOrchestrator
 from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.demo.scenarios import DEMO_USER_KEY, build_demo_career_watch, build_demo_chief_brief
 from app.services.documents.personal_document_organizer import PersonalDocumentOrganizer
+from app.services.history.catalog import BUNDLED_HISTORY_PATHS
 from app.services.history.today_in_history import TodayInMarineHistoryService
 from app.services.ingestion.custom_watch_feed_store import CustomWatchFeedStore
 from app.services.ingestion.document_update_store import DocumentUpdateStore
@@ -418,12 +419,7 @@ def get_dod_watch_store() -> Iterator[MessageRecordStore]:
 def get_history_service() -> TodayInMarineHistoryService:
     settings = get_settings()
     local_history_path = Path(settings.history_storage_dir) / "today_in_history.yaml"
-    return TodayInMarineHistoryService.from_paths(
-        [
-            SEED_DIR / "usmc_history_on_this_day.example.yaml",
-            local_history_path,
-        ]
-    )
+    return TodayInMarineHistoryService.from_paths([*BUNDLED_HISTORY_PATHS, local_history_path])
 
 
 def get_custom_watch_feed_store() -> Iterator[CustomWatchFeedStore]:
@@ -475,6 +471,11 @@ def get_dashboard_data(
     reading_progress = {item.slug: item for item in reading_state_store.list(user_key).records}
     history_library = history_service.list_items()
     history_date = date.today()
+    usmc_history = history_service.select_for_date(history_date, HistoryScope.usmc)
+    us_military_history = history_service.select_for_date(
+        history_date,
+        HistoryScope.us_military,
+    )
     return _workspace_response(
         mode="personal",
         user_key=user_key,
@@ -497,8 +498,8 @@ def get_dashboard_data(
         alnav_ticker=_message_watch_ticker(alnav_store.list(limit=8)),
         dod_ticker=_message_watch_ticker(dod_watch_store.list(limit=8)),
         custom_watch_feeds=custom_watch_feeds,
-        today_in_history=history_service.get_or_random(history_date),
-        history_is_today=bool(history_service.get_for_date(history_date)),
+        usmc_history=usmc_history,
+        us_military_history=us_military_history,
         history_library=history_library,
         reference_library=_reference_library(),
         reading_books=_reading_books(
@@ -532,6 +533,11 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
     )
     demo_battle_rhythm = _demo_battle_rhythm(chief_brief)
     history_date = date.today()
+    usmc_history = history_service.select_for_date(history_date, HistoryScope.usmc)
+    us_military_history = history_service.select_for_date(
+        history_date,
+        HistoryScope.us_military,
+    )
     return _workspace_response(
         mode="demo",
         user_key=DEMO_USER_KEY,
@@ -554,8 +560,8 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
         alnav_ticker=_message_watch_ticker(alnav_feed),
         dod_ticker=_message_watch_ticker(dod_feed),
         custom_watch_feeds=custom_watch_feeds,
-        today_in_history=history_service.get_or_random(history_date),
-        history_is_today=bool(history_service.get_for_date(history_date)),
+        usmc_history=usmc_history,
+        us_military_history=us_military_history,
         history_library=history_service.list_items(),
         reference_library=_reference_library(),
         reading_books=_reading_books(
@@ -585,8 +591,8 @@ def _workspace_response(
     alnav_ticker: list[DashboardTickerItem],
     dod_ticker: list[DashboardTickerItem],
     custom_watch_feeds: list[DashboardCustomWatchFeed],
-    today_in_history: list[TodayInMarineHistoryItem],
-    history_is_today: bool,
+    usmc_history: HistorySelection | None,
+    us_military_history: HistorySelection | None,
     history_library: list[TodayInMarineHistoryItem],
     reference_library: list[DashboardReferenceEntry],
     reading_books: list[DashboardReadingBook],
@@ -639,8 +645,10 @@ def _workspace_response(
         alnav_ticker=alnav_ticker,
         dod_ticker=dod_ticker,
         custom_watch_feeds=custom_watch_feeds,
-        today_in_history=today_in_history,
-        history_is_today=history_is_today,
+        usmc_history=usmc_history,
+        us_military_history=us_military_history,
+        today_in_history=[usmc_history.item] if usmc_history else [],
+        history_is_today=bool(usmc_history and usmc_history.is_exact),
         history_library=history_library,
         reference_library=reference_library,
         reading_books=reading_books,
