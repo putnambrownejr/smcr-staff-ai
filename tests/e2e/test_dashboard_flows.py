@@ -68,6 +68,17 @@ def test_fitreps_are_a_first_class_lane_with_counseling_link(browser_page: Any) 
 
 
 @pytest.mark.e2e
+def test_workspace_exposes_unit_pt_and_gtcc_tools(browser_page: Any) -> None:
+    page = browser_page
+    _open_lane(page, "Workspace")
+
+    _expect(page.get_by_role("heading", name="Travel & GTCC", level=3)).to_be_visible()
+    _expect(page.get_by_role("link", name=re.compile("Open CitiManager"))).to_be_visible()
+    _expect(page.get_by_role("heading", name="Unit PT Planner & Cadences", level=3)).to_be_visible()
+    _expect(page.get_by_role("button", name="Build staff-reviewed plan", exact=True)).to_be_visible()
+
+
+@pytest.mark.e2e
 def test_ai_agent_cards_show_stable_agent_ids(browser_page: Any) -> None:
     page = browser_page
     _open_lane(page, "AI")

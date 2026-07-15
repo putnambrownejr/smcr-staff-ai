@@ -3242,6 +3242,120 @@ PATCHES: list[tuple[str, ...]] = [
         '        </section>\n'
         '        </sc-if><!-- dedicated FitReps lane ends -->\n',
     ),
+    # Unit fitness and cadence workspace (2026-07-15): a low-friction entry
+    # point for the typed 5-50 Marine planner and private cadence library.
+    (
+        "fitness workspace: add component state",
+        '    fitnessParticipantCount: "20",\n',
+        '    fitrepGoalRs: "",\n'
+        '    profilePasskey: "",\n',
+        '    fitrepGoalRs: "",\n'
+        '    fitnessParticipantCount: "20",\n'
+        '    fitnessObjective: "general fitness",\n'
+        '    fitnessDuration: "60",\n'
+        '    fitnessLocation: "unit training area",\n'
+        '    fitnessEquipment: "",\n'
+        '    fitnessAbilityNotes: "mixed ability",\n'
+        '    fitnessWeatherNotes: "check current conditions",\n'
+        '    fitnessCadencePreference: "",\n'
+        '    fitnessIncludeCadence: true,\n'
+        '    fitnessPlan: null,\n'
+        '    fitnessStatus: "",\n'
+        '    cadenceRecords: [],\n'
+        '    cadenceIncludeAdult: false,\n'
+        '    cadenceTitle: "",\n'
+        '    cadenceText: "",\n'
+        '    cadenceAdult: false,\n'
+        '    cadenceStatus: "",\n'
+        '    profilePasskey: "",\n',
+    ),
+    (
+        "fitness workspace: load cadence library on mount",
+        '    this._loadCadences();\n',
+        '    this._loadRealFitreps();\n'
+        '    this._loadFitrepAnalytics();\n'
+        '    this._loadRealGenerations();\n',
+        '    this._loadRealFitreps();\n'
+        '    this._loadFitrepAnalytics();\n'
+        '    this._loadCadences();\n'
+        '    this._loadRealGenerations();\n',
+    ),
+    (
+        "fitness workspace: add API helpers and bindings",
+        '  async _loadCadences(includeAdult) {',
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+        '  async _loadCadences(includeAdult) {\n'
+        '    if (!this.userKey) this.userKey = this._resolveUserKey();\n'
+        '    const adult = includeAdult == null ? !!this.state.cadenceIncludeAdult : !!includeAdult;\n'
+        '    try {\n'
+        '      const res = await fetch("/cadences/" + encodeURIComponent(this.userKey) + "?include_adult=" + adult, { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("cadence load failed");\n'
+        '      const data = await res.json(); this.setState({ cadenceRecords: data.records || [], cadenceStatus: "" });\n'
+        '    } catch (err) { this.setState({ cadenceStatus: "Cadence library could not be loaded." }); }\n'
+        '  }\n'
+        '  buildUnitPt(e) {\n'
+        '    e.preventDefault();\n'
+        '    const equipment = (this.state.fitnessEquipment || "").split(",").map((item) => item.trim()).filter(Boolean);\n'
+        '    const body = { participant_count: Number(this.state.fitnessParticipantCount), objective: this.state.fitnessObjective, duration_minutes: Number(this.state.fitnessDuration), location: this.state.fitnessLocation || "unit training area", equipment, ability_notes: this.state.fitnessAbilityNotes || "mixed ability", weather_notes: this.state.fitnessWeatherNotes || "check current conditions", include_cadence: !!this.state.fitnessIncludeCadence, cadence_preference: (this.state.fitnessCadencePreference || "").trim() || null };\n'
+        '    this.setState({ fitnessStatus: "Building staff-reviewed plan…" });\n'
+        '    fetch("/fitness/unit-pt/plan", { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify(body) })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok) throw new Error("plan failed"); this.setState({ fitnessPlan: data, fitnessStatus: "Plan built. Review conditions and route residual-risk acceptance." }); })\n'
+        '      .catch(() => this.setState({ fitnessStatus: "Plan could not be built. Participant count must be 5–50." }));\n'
+        '  }\n'
+        '  addPrivateCadence(e) {\n'
+        '    e.preventDefault(); const title = (this.state.cadenceTitle || "").trim(); const text = (this.state.cadenceText || "").trim(); if (!title || !text) return;\n'
+        '    this.setState({ cadenceStatus: "Saving cadence locally…" });\n'
+        '    fetch("/cadences/" + encodeURIComponent(this.userKey), { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ user_key: this.userKey, title, text, rating: this.state.cadenceAdult ? "adult" : "clean" }) })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok) throw new Error((data && data.detail) || "save failed"); this.setState({ cadenceTitle: "", cadenceText: "", cadenceAdult: false, cadenceStatus: "Cadence saved locally." }); return this._loadCadences(); })\n'
+        '      .catch((err) => this.setState({ cadenceStatus: String((err && err.message) || "Cadence was not saved.") }));\n'
+        '  }\n'
+        '  fitnessWorkspaceVals() {\n'
+        '    const plan = this.state.fitnessPlan; const cadences = (this.state.cadenceRecords || []).map((item) => ({ title: item.title, meta: (item.built_in ? "Built in" : "Private") + " · " + item.rating + " · " + item.use, text: item.text }));\n'
+        '    return {\n'
+        '      fitnessParticipantCount: this.state.fitnessParticipantCount, fitnessObjective: this.state.fitnessObjective, fitnessDuration: this.state.fitnessDuration, fitnessLocation: this.state.fitnessLocation, fitnessEquipment: this.state.fitnessEquipment, fitnessAbilityNotes: this.state.fitnessAbilityNotes, fitnessWeatherNotes: this.state.fitnessWeatherNotes, fitnessCadencePreference: this.state.fitnessCadencePreference, fitnessIncludeCadence: this.state.fitnessIncludeCadence, fitnessStatus: this.state.fitnessStatus, fitnessPlanVisible: !!plan,\n'
+        '      fitnessPlanBand: plan ? plan.scaling_band : "", fitnessPlanBlocks: plan ? (plan.blocks || []).map((item) => ({ title: item.name + " · " + item.minutes + " min", text: (item.instructions || []).join(" ") })) : [], fitnessStaffReviews: plan ? (plan.staff_reviews || []).map((item) => ({ title: item.role, text: [...(item.findings || []), ...(item.actions || [])].join(" ") })) : [], fitnessOrmHazards: plan ? ((plan.orm && plan.orm.hazards) || []).map((item) => ({ title: item.hazard + " · residual " + item.residual_risk, text: (item.controls || []).join("; ") + ". Stop: " + item.stop_trigger })) : [], fitnessWarnings: plan ? (plan.warnings || []).map((text) => ({ text })) : [],\n'
+        '      cadenceRecords: cadences, cadenceRecordsEmpty: cadences.length === 0, cadenceIncludeAdult: this.state.cadenceIncludeAdult, cadenceTitle: this.state.cadenceTitle, cadenceText: this.state.cadenceText, cadenceAdult: this.state.cadenceAdult, cadenceStatus: this.state.cadenceStatus,\n'
+        '      onFitnessCount: (e) => this.setState({ fitnessParticipantCount: e.target.value }), onFitnessObjective: (e) => this.setState({ fitnessObjective: e.target.value }), onFitnessDuration: (e) => this.setState({ fitnessDuration: e.target.value }), onFitnessLocation: (e) => this.setState({ fitnessLocation: e.target.value }), onFitnessEquipment: (e) => this.setState({ fitnessEquipment: e.target.value }), onFitnessAbility: (e) => this.setState({ fitnessAbilityNotes: e.target.value }), onFitnessWeather: (e) => this.setState({ fitnessWeatherNotes: e.target.value }), onFitnessCadencePreference: (e) => this.setState({ fitnessCadencePreference: e.target.value }), onFitnessIncludeCadence: (e) => this.setState({ fitnessIncludeCadence: e.target.checked }), onBuildUnitPt: (e) => this.buildUnitPt(e),\n'
+        '      onCadenceAdultFilter: (e) => { const value = e.target.checked; this.setState({ cadenceIncludeAdult: value }); this._loadCadences(value); }, onCadenceTitle: (e) => this.setState({ cadenceTitle: e.target.value }), onCadenceText: (e) => this.setState({ cadenceText: e.target.value }), onCadenceAdult: (e) => this.setState({ cadenceAdult: e.target.checked }), onAddPrivateCadence: (e) => this.addPrivateCadence(e),\n'
+        '    };\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+    ),
+    (
+        "fitness workspace: expose view bindings",
+        '      ...this.fitnessWorkspaceVals(),\n',
+        '      ...this.fitrepProfileVals(),\n'
+        '      ...this.travelWorkspaceVals(),\n',
+        '      ...this.fitrepProfileVals(),\n'
+        '      ...this.travelWorkspaceVals(),\n'
+        '      ...this.fitnessWorkspaceVals(),\n',
+    ),
+    (
+        "fitness workspace: render unit PT and cadence panel",
+        '<h3 style="margin:0;font-size:1.02rem;font-weight:700;">Unit PT Planner &amp; Cadences</h3>',
+        '        </section>\n\n'
+        '        </sc-if>\n'
+        '        <sc-if value="{{ isFitreps }}" hint-placeholder-val="{{ false }}">\n',
+        '        </section>\n'
+        '        <section style="border:1px solid #313844;border-radius:8px;background:#12161b;padding:18px;display:grid;gap:14px;">\n'
+        '          <div><h3 style="margin:0;font-size:1.02rem;font-weight:700;">Unit PT Planner &amp; Cadences</h3><p style="margin:5px 0 0;color:#8a94a0;font-size:0.8rem;line-height:1.5;">Build a scalable draft for 5–50 Marines with S-3, S-4, SgtMaj/SEL, Fitness, and ORM review. This is not FFI, CPTR, medical, or official risk-acceptance authority.</p></div>\n'
+        '          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">\n'
+        '            <form sc-camel-on-submit="{{ onBuildUnitPt }}" style="display:grid;gap:8px;align-content:start;">\n'
+        '              <strong style="font-size:0.82rem;">Plan a unit PT event</strong>\n'
+        '              <div style="display:grid;grid-template-columns:100px 1fr 100px;gap:7px;"><input type="number" min="5" max="50" value="{{ fitnessParticipantCount }}" sc-camel-on-change="{{ onFitnessCount }}" aria-label="Participant count" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><sc-raw-select value="{{ fitnessObjective }}" sc-camel-on-change="{{ onFitnessObjective }}" aria-label="Fitness objective" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><option value="general fitness">General fitness</option><option value="PFT preparation">PFT preparation</option><option value="CFT preparation">CFT preparation</option><option value="strength">Strength</option><option value="endurance">Endurance</option><option value="mobility/recovery">Mobility / recovery</option></sc-raw-select><input type="number" min="20" max="120" value="{{ fitnessDuration }}" sc-camel-on-change="{{ onFitnessDuration }}" aria-label="Duration in minutes" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"></div>\n'
+        '              <input value="{{ fitnessLocation }}" sc-camel-on-change="{{ onFitnessLocation }}" placeholder="Location" aria-label="PT location" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitnessEquipment }}" sc-camel-on-change="{{ onFitnessEquipment }}" placeholder="Equipment, comma-separated" aria-label="Available equipment" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitnessAbilityNotes }}" sc-camel-on-change="{{ onFitnessAbility }}" placeholder="Ability and limitation notes" aria-label="Ability and limitation notes" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitnessWeatherNotes }}" sc-camel-on-change="{{ onFitnessWeather }}" placeholder="Current weather and site conditions" aria-label="Weather and site conditions" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ fitnessCadencePreference }}" sc-camel-on-change="{{ onFitnessCadencePreference }}" placeholder="Cadence preference (optional)" aria-label="Cadence preference" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '              <label style="display:flex;gap:7px;align-items:center;color:#c7cfd8;font-size:0.78rem;"><input type="checkbox" checked="{{ fitnessIncludeCadence }}" sc-camel-on-change="{{ onFitnessIncludeCadence }}"> Ask about and include cadence</label><button type="submit" style="height:34px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font:inherit;font-weight:700;cursor:pointer;">Build staff-reviewed plan</button><span aria-live="polite" style="color:#8a94a0;font-size:0.74rem;">{{ fitnessStatus }}</span>\n'
+        '            </form>\n'
+        '            <div style="display:grid;gap:8px;align-content:start;"><strong style="font-size:0.82rem;">Plan output <span style="color:#8a94a0;font-weight:400;">{{ fitnessPlanBand }}</span></strong><sc-if value="{{ fitnessPlanVisible }}" hint-placeholder-val="{{ false }}"><sc-for list="{{ fitnessPlanBlocks }}" as="item" hint-placeholder-count="3"><div style="padding:8px;border:1px solid #313844;border-radius:6px;background:#0d1014;"><strong style="font-size:0.76rem;">{{ item.title }}</strong><span style="display:block;color:#8a94a0;font-size:0.7rem;margin-top:3px;">{{ item.text }}</span></div></sc-for><details><summary style="cursor:pointer;font-size:0.76rem;font-weight:700;">Staff reviews and ORM</summary><div style="display:grid;gap:6px;margin-top:7px;"><sc-for list="{{ fitnessStaffReviews }}" as="item" hint-placeholder-count="4"><div><strong style="font-size:0.72rem;">{{ item.title }}</strong><span style="display:block;color:#8a94a0;font-size:0.68rem;">{{ item.text }}</span></div></sc-for><sc-for list="{{ fitnessOrmHazards }}" as="item" hint-placeholder-count="3"><div><strong style="font-size:0.72rem;color:#d6bd7a;">{{ item.title }}</strong><span style="display:block;color:#8a94a0;font-size:0.68rem;">{{ item.text }}</span></div></sc-for></div></details><sc-for list="{{ fitnessWarnings }}" as="warning" hint-placeholder-count="1"><span style="color:#d6bd7a;font-size:0.68rem;">{{ warning.text }}</span></sc-for></sc-if></div>\n'
+        '          </div>\n'
+        '          <details><summary style="cursor:pointer;font-size:0.82rem;font-weight:700;">Cadence library and private cadences</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;"><div style="display:grid;gap:7px;align-content:start;"><label style="display:flex;gap:7px;align-items:center;color:#c7cfd8;font-size:0.76rem;"><input type="checkbox" checked="{{ cadenceIncludeAdult }}" sc-camel-on-change="{{ onCadenceAdultFilter }}"> Show my adult-labeled cadences</label><sc-for list="{{ cadenceRecords }}" as="item" hint-placeholder-count="3"><details style="padding:8px;border:1px solid #313844;border-radius:6px;background:#0d1014;"><summary style="cursor:pointer;font-size:0.76rem;font-weight:600;">{{ item.title }} <span style="color:#8a94a0;font-weight:400;">{{ item.meta }}</span></summary><pre style="white-space:pre-wrap;margin:7px 0 0;color:#c7cfd8;font:inherit;font-size:0.7rem;">{{ item.text }}</pre></details></sc-for><sc-if value="{{ cadenceRecordsEmpty }}" hint-placeholder-val="{{ false }}"><span style="color:#8a94a0;font-size:0.74rem;">No cadences available.</span></sc-if></div><form sc-camel-on-submit="{{ onAddPrivateCadence }}" style="display:grid;gap:7px;align-content:start;"><input value="{{ cadenceTitle }}" sc-camel-on-change="{{ onCadenceTitle }}" placeholder="Cadence title" aria-label="Cadence title" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><textarea value="{{ cadenceText }}" sc-camel-on-change="{{ onCadenceText }}" placeholder="Call and response" aria-label="Cadence text" style="min-height:100px;border:1px solid #313844;border-radius:6px;padding:8px;background:#0d1014;color:#eef2f6;font:inherit;"></textarea><label style="display:flex;gap:7px;align-items:center;color:#c7cfd8;font-size:0.76rem;"><input type="checkbox" checked="{{ cadenceAdult }}" sc-camel-on-change="{{ onCadenceAdult }}"> Label adult (still excludes slurs, harassment, hazing, sexual violence, and targeted degradation)</label><button type="submit" style="height:32px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">Save private cadence</button><span aria-live="polite" style="color:#8a94a0;font-size:0.72rem;">{{ cadenceStatus }}</span></form></div></details>\n'
+        '        </section>\n\n'
+        '        </sc-if>\n'
+        '        <sc-if value="{{ isFitreps }}" hint-placeholder-val="{{ false }}">\n',
+    ),
     (
         "browser identity: keep CRT EGA metadata in the rendered document head",
         "<!-- Browser identity metadata -->",
