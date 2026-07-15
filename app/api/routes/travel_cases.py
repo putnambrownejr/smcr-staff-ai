@@ -5,7 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
-from app.schemas.travel_cases import LinkTravelReceiptRequest, TravelCaseListResponse, TravelCaseRecord
+from app.schemas.travel_cases import (
+    GtccCheckRequest,
+    LinkTravelReceiptRequest,
+    TravelCaseCreateRequest,
+    TravelCaseListResponse,
+    TravelCaseRecord,
+    TravelLedgerEntryRequest,
+)
 from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.storage.local_context_store import LocalContextStore
 
@@ -28,6 +35,19 @@ def list_travel_cases(
 ) -> TravelCaseListResponse:
     records = store.list_cases(user_key)
     return TravelCaseListResponse(total_cases=len(records), records=records)
+
+
+@router.post("/{user_key}", response_model=TravelCaseRecord, status_code=201)
+def create_travel_case(
+    user_key: str,
+    request: TravelCaseCreateRequest,
+    store: Annotated[TravelCaseStore, Depends(get_travel_case_store)],
+) -> TravelCaseRecord:
+    _require_matching_user_key(user_key, request.user_key)
+    try:
+        return store.create_case(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/{user_key}/{trip_id}", response_model=TravelCaseRecord)
@@ -72,3 +92,58 @@ def link_travel_receipt(
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
+
+@router.post("/{user_key}/{trip_id}/ledger", response_model=TravelCaseRecord)
+def add_travel_ledger_entry(
+    user_key: str,
+    trip_id: str,
+    request: TravelLedgerEntryRequest,
+    store: Annotated[TravelCaseStore, Depends(get_travel_case_store)],
+) -> TravelCaseRecord:
+    _require_matching_user_key(user_key, request.user_key)
+    try:
+        return store.add_ledger_entry(user_key=user_key, trip_id=trip_id, request=request)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.delete("/{user_key}/{trip_id}/ledger/{entry_id}", response_model=TravelCaseRecord)
+def delete_travel_ledger_entry(
+    user_key: str,
+    trip_id: str,
+    entry_id: str,
+    store: Annotated[TravelCaseStore, Depends(get_travel_case_store)],
+) -> TravelCaseRecord:
+    try:
+        return store.remove_ledger_entry(user_key=user_key, trip_id=trip_id, entry_id=entry_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/{user_key}/{trip_id}/gtcc-checks", response_model=TravelCaseRecord)
+def record_gtcc_check(
+    user_key: str,
+    trip_id: str,
+    request: GtccCheckRequest,
+    store: Annotated[TravelCaseStore, Depends(get_travel_case_store)],
+) -> TravelCaseRecord:
+    _require_matching_user_key(user_key, request.user_key)
+    try:
+        return store.record_gtcc_check(user_key=user_key, trip_id=trip_id, request=request)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.delete("/{user_key}/{trip_id}", status_code=204)
+def delete_travel_case(
+    user_key: str,
+    trip_id: str,
+    store: Annotated[TravelCaseStore, Depends(get_travel_case_store)],
+) -> None:
+    if not store.delete_case(user_key, trip_id):
+        raise HTTPException(status_code=404, detail=f"Unknown travel case: {trip_id}")
+
+
+def _require_matching_user_key(path_user_key: str, body_user_key: str) -> None:
+    if path_user_key != body_user_key:
+        raise HTTPException(status_code=400, detail="user_key in path and body must match.")

@@ -184,6 +184,19 @@ def test_dashboard_bundle_builds_and_links_initial_counselings() -> None:
     assert "DRAFT — Verify all references against current official sources before acting." in component_source
 
 
+def test_dashboard_bundle_has_user_driven_travel_and_gtcc_workspace() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "this._loadTravelCases();" in component_source
+    assert 'fetch("/travel-cases/" + encodeURIComponent(this.userKey)' in component_source
+    assert "Travel &amp; GTCC" in component_source
+    assert "Open CitiManager" in component_source
+    assert "https://home.cards.citidirect.com/CommercialCard/login" in component_source
+    assert "Mark checked" in component_source
+    assert "Stored values are user-entered" in component_source
+    assert "onTravelReceiptFile" in component_source
+
+
 def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:
     """Same guard as the actions test above, for the feeds/links/profile wiring
     added in the same remediation pass (step 2, items 2-4)."""

@@ -600,6 +600,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "componentDidMount: also load real notebook, fitreps, generations, and project list",
+        "    this._loadRealGenerations();",
         "  componentDidMount() {\n"
         "    this._t = setInterval(() => this.setState({ now: new Date() }), 1000 * 30);\n"
         "    this._loadRealWorkspace();\n"
@@ -2870,6 +2871,216 @@ PATCHES: list[tuple[str, ...]] = [
         '        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">\n',
         '        <p style="margin:16px 0 0;padding-top:12px;border-top:1px solid #313844;color:#8a94a0;font-size:0.72rem;line-height:1.45;">DRAFT — Verify all references against current official sources before acting.</p>\n'
         '        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">\n',
+    ),
+    # ------------------------------------------------------------------
+    # Travel / GTCC workspace (2026-07-15): user-driven trips, expense
+    # ledger, receipt uploads, and monthly balance checks.
+    # ------------------------------------------------------------------
+    (
+        "travel workspace: add persistent component state",
+        '    travelCases: [],\n'
+        '    activeTravelTripId: null,\n'
+        '    travelLoadStatus: "",\n'
+        '    travelDraftTitle: "",\n'
+        '    travelDraftDestination: "",\n'
+        '    travelLedgerDate: "",\n'
+        '    travelLedgerDescription: "",\n'
+        '    travelLedgerAmount: "",\n'
+        '    travelLedgerCategory: "other",\n'
+        '    gtccBalance: "",\n'
+        '    gtccPayment: "",\n'
+        '    gtccPaidInFull: false,\n'
+        '    gtccCheckNotes: "",\n',
+        '    dtsFlightBooked: false,\n'
+        '    benchCards: [\n',
+        '    dtsFlightBooked: false,\n'
+        '    travelCases: [],\n'
+        '    activeTravelTripId: null,\n'
+        '    travelLoadStatus: "",\n'
+        '    travelDraftTitle: "",\n'
+        '    travelDraftDestination: "",\n'
+        '    travelLedgerDate: "",\n'
+        '    travelLedgerDescription: "",\n'
+        '    travelLedgerAmount: "",\n'
+        '    travelLedgerCategory: "other",\n'
+        '    gtccBalance: "",\n'
+        '    gtccPayment: "",\n'
+        '    gtccPaidInFull: false,\n'
+        '    gtccCheckNotes: "",\n'
+        '    benchCards: [\n',
+    ),
+    (
+        "travel workspace: load cases during mount",
+        '    this._loadTravelCases();\n',
+        '    this._loadRealHandoff();\n'
+        '    this._loadRealNotes();\n',
+        '    this._loadRealHandoff();\n'
+        '    this._loadTravelCases();\n'
+        '    this._loadRealNotes();\n',
+    ),
+    (
+        "travel workspace: add API helpers and view bindings",
+        '  async _loadTravelCases() {',
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+        '  async _loadTravelCases() {\n'
+        '    if (!this.userKey) this.userKey = this._resolveUserKey();\n'
+        '    this.setState({ travelLoadStatus: "Loading travel…" });\n'
+        '    try {\n'
+        '      const res = await fetch("/travel-cases/" + encodeURIComponent(this.userKey), { headers: this._apiHeaders() });\n'
+        '      if (!res.ok) throw new Error("travel fetch failed: " + res.status);\n'
+        '      const data = await res.json();\n'
+        '      const travelCases = data.records || [];\n'
+        '      this.setState((s) => ({\n'
+        '        travelCases,\n'
+        '        activeTravelTripId: travelCases.some((item) => item.trip_id === s.activeTravelTripId)\n'
+        '          ? s.activeTravelTripId : (travelCases[0] ? travelCases[0].trip_id : null),\n'
+        '        travelLoadStatus: "",\n'
+        '      }));\n'
+        '    } catch (err) { this.setState({ travelLoadStatus: "Travel data could not be loaded." }); }\n'
+        '  }\n'
+        '  _replaceTravelCase(updated) {\n'
+        '    this.setState((s) => ({\n'
+        '      travelCases: s.travelCases.some((item) => item.trip_id === updated.trip_id)\n'
+        '        ? s.travelCases.map((item) => item.trip_id === updated.trip_id ? updated : item)\n'
+        '        : [updated, ...s.travelCases],\n'
+        '      activeTravelTripId: updated.trip_id,\n'
+        '      travelLoadStatus: "Saved locally.",\n'
+        '    }));\n'
+        '  }\n'
+        '  _travelJson(url, body) {\n'
+        '    return fetch(url, { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify(body) })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok) throw new Error((data && data.detail) || "Travel save failed."); this._replaceTravelCase(data); return data; });\n'
+        '  }\n'
+        '  createTravelCase(e) {\n'
+        '    e.preventDefault();\n'
+        '    const title = (this.state.travelDraftTitle || "").trim();\n'
+        '    if (!title) return;\n'
+        '    this.setState({ travelLoadStatus: "Saving trip…" });\n'
+        '    this._travelJson("/travel-cases/" + encodeURIComponent(this.userKey), {\n'
+        '      user_key: this.userKey, title, destination: (this.state.travelDraftDestination || "").trim(),\n'
+        '    }).then(() => this.setState({ travelDraftTitle: "", travelDraftDestination: "" }))\n'
+        '      .catch(() => this.setState({ travelLoadStatus: "Trip could not be saved." }));\n'
+        '  }\n'
+        '  addTravelLedgerEntry(e) {\n'
+        '    e.preventDefault();\n'
+        '    const tripId = this.state.activeTravelTripId;\n'
+        '    const description = (this.state.travelLedgerDescription || "").trim();\n'
+        '    const amount = (this.state.travelLedgerAmount || "").trim();\n'
+        '    if (!tripId || !description || !amount) return;\n'
+        '    this.setState({ travelLoadStatus: "Saving expense…" });\n'
+        '    this._travelJson("/travel-cases/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(tripId) + "/ledger", {\n'
+        '      user_key: this.userKey, transaction_date: this.state.travelLedgerDate || new Date().toISOString().slice(0, 10),\n'
+        '      description, amount, category: this.state.travelLedgerCategory || "other", payment_responsibility: "gtcc",\n'
+        '    }).then(() => this.setState({ travelLedgerDescription: "", travelLedgerAmount: "" }))\n'
+        '      .catch(() => this.setState({ travelLoadStatus: "Expense could not be saved." }));\n'
+        '  }\n'
+        '  recordGtccCheck(e) {\n'
+        '    e.preventDefault();\n'
+        '    const tripId = this.state.activeTravelTripId;\n'
+        '    if (!tripId) return;\n'
+        '    const body = { user_key: this.userKey, paid_in_full: !!this.state.gtccPaidInFull, notes: this.state.gtccCheckNotes || "" };\n'
+        '    if ((this.state.gtccBalance || "").trim()) body.statement_balance = this.state.gtccBalance.trim();\n'
+        '    if ((this.state.gtccPayment || "").trim()) body.payment_amount = this.state.gtccPayment.trim();\n'
+        '    this.setState({ travelLoadStatus: "Recording check…" });\n'
+        '    this._travelJson("/travel-cases/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(tripId) + "/gtcc-checks", body)\n'
+        '      .then(() => this.setState({ gtccBalance: "", gtccPayment: "", gtccPaidInFull: false, gtccCheckNotes: "" }))\n'
+        '      .catch(() => this.setState({ travelLoadStatus: "GTCC check could not be saved." }));\n'
+        '  }\n'
+        '  uploadTravelReceipt(e) {\n'
+        '    const file = e.target.files && e.target.files[0];\n'
+        '    const tripId = this.state.activeTravelTripId;\n'
+        '    if (!file || !tripId) return;\n'
+        '    const form = new FormData(); form.append("file", file); form.append("document_type", "travel_receipt"); form.append("tags", "travel,receipt");\n'
+        '    this.setState({ travelLoadStatus: "Uploading receipt…" });\n'
+        '    fetch("/context/upload", { method: "POST", headers: this._apiHeaders(), body: form })\n'
+        '      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))\n'
+        '      .then(({ ok, data }) => { if (!ok || !data.item) throw new Error("upload failed"); return this._travelJson("/travel-cases/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(tripId) + "/link-receipt", { user_key: this.userKey, context_id: data.item.context_id }); })\n'
+        '      .catch(() => this.setState({ travelLoadStatus: "Receipt could not be linked." }));\n'
+        '    e.target.value = "";\n'
+        '  }\n'
+        '  travelWorkspaceVals() {\n'
+        '    const active = this.state.travelCases.find((item) => item.trip_id === this.state.activeTravelTripId) || null;\n'
+        '    const trips = this.state.travelCases.map((item) => ({\n'
+        '      id: item.trip_id, title: item.title, meta: [item.destination, item.travel_start].filter(Boolean).join(" · ") || "No dates set",\n'
+        '      onClick: () => this.setState({ activeTravelTripId: item.trip_id }),\n'
+        '      style: "width:100%;text-align:left;padding:9px 10px;border:1px solid " + (active && active.trip_id === item.trip_id ? "#b21f2d" : "#313844") + ";border-radius:6px;background:#0d1014;color:#eef2f6;font:inherit;cursor:pointer;",\n'
+        '    }));\n'
+        '    const ledger = active ? (active.ledger_entries || []).map((item) => ({ id: item.entry_id, title: item.description, meta: item.transaction_date + " · $" + item.amount + " · " + item.category })) : [];\n'
+        '    const latest = active && active.latest_gtcc_check ? active.latest_gtcc_check : null;\n'
+        '    return {\n'
+        '      travelTrips: trips, travelTripsEmpty: trips.length === 0, activeTravelExists: !!active,\n'
+        '      activeTravelTitle: active ? active.title : "Choose or create a trip", activeTravelUpdated: active ? new Date(active.updated_at).toLocaleString() : "",\n'
+        '      activeTravelTotal: active ? active.estimated_spend_total : "0.00", travelLedger: ledger, travelLedgerEmpty: ledger.length === 0,\n'
+        '      travelReceipts: active ? (active.attachment_names || []).map((name) => ({ name })) : [], travelReceiptsEmpty: !active || !(active.attachment_names || []).length,\n'
+        '      gtccLatestLabel: latest ? ("Last checked " + new Date(latest.checked_at).toLocaleDateString() + (latest.paid_in_full ? " · marked paid in full" : "")) : "No GTCC check recorded yet.",\n'
+        '      travelLoadStatus: this.state.travelLoadStatus, travelDraftTitle: this.state.travelDraftTitle, travelDraftDestination: this.state.travelDraftDestination,\n'
+        '      travelLedgerDate: this.state.travelLedgerDate, travelLedgerDescription: this.state.travelLedgerDescription, travelLedgerAmount: this.state.travelLedgerAmount, travelLedgerCategory: this.state.travelLedgerCategory,\n'
+        '      gtccBalance: this.state.gtccBalance, gtccPayment: this.state.gtccPayment, gtccPaidInFull: this.state.gtccPaidInFull, gtccCheckNotes: this.state.gtccCheckNotes,\n'
+        '      onTravelTitle: (e) => this.setState({ travelDraftTitle: e.target.value }), onTravelDestination: (e) => this.setState({ travelDraftDestination: e.target.value }), onCreateTravel: (e) => this.createTravelCase(e),\n'
+        '      onTravelLedgerDate: (e) => this.setState({ travelLedgerDate: e.target.value }), onTravelLedgerDescription: (e) => this.setState({ travelLedgerDescription: e.target.value }), onTravelLedgerAmount: (e) => this.setState({ travelLedgerAmount: e.target.value }), onTravelLedgerCategory: (e) => this.setState({ travelLedgerCategory: e.target.value }), onAddTravelLedger: (e) => this.addTravelLedgerEntry(e),\n'
+        '      onGtccBalance: (e) => this.setState({ gtccBalance: e.target.value }), onGtccPayment: (e) => this.setState({ gtccPayment: e.target.value }), onGtccPaid: (e) => this.setState({ gtccPaidInFull: e.target.checked }), onGtccNotes: (e) => this.setState({ gtccCheckNotes: e.target.value }), onRecordGtccCheck: (e) => this.recordGtccCheck(e),\n'
+        '      onTravelReceiptFile: (e) => this.uploadTravelReceipt(e),\n'
+        '    };\n'
+        '  }\n'
+        '\n'
+        '  go(lane) { return () => this.setState({ lane, benchModal: null, profileOpen: false }); }\n',
+    ),
+    (
+        "travel workspace: expose view bindings",
+        '      ...this.travelWorkspaceVals(),\n',
+        '      ...this.fitrepVals(),\n'
+        '      quote: this.state.quote,\n',
+        '      ...this.fitrepVals(),\n'
+        '      ...this.travelWorkspaceVals(),\n'
+        '      quote: this.state.quote,\n',
+    ),
+    (
+        "travel workspace: render third workspace panel",
+        '<h3 style="margin:0 0 4px;font-size:1.02rem;font-weight:700;">Travel &amp; GTCC</h3>',
+        '        </section>\n\n'
+        '        </sc-if>\n'
+        '        <sc-if value="{{ isFitreps }}" hint-placeholder-val="{{ false }}">\n',
+        '        </section>\n'
+        '        <section style="border:1px solid #313844;border-radius:8px;background:#12161b;padding:18px;display:grid;gap:14px;">\n'
+        '          <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">\n'
+        '            <div><h3 style="margin:0 0 4px;font-size:1.02rem;font-weight:700;">Travel &amp; GTCC</h3><p style="margin:0;color:#8a94a0;font-size:0.82rem;line-height:1.45;">Trips, receipts, expenses, and monthly card checks. Stored values are user-entered and may be stale; this does not connect to Citi.</p></div>\n'
+        '            <a href="https://home.cards.citidirect.com/CommercialCard/login" target="_blank" rel="noopener" style="height:34px;display:inline-flex;align-items:center;padding:0 14px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font-size:0.8rem;font-weight:700;">Open CitiManager ↗</a>\n'
+        '          </div>\n'
+        '          <p aria-live="polite" style="margin:0;color:#8a94a0;font-size:0.76rem;">{{ travelLoadStatus }}</p>\n'
+        '          <div style="display:grid;grid-template-columns:minmax(220px,280px) 1fr;gap:16px;">\n'
+        '            <div style="display:grid;gap:8px;align-content:start;">\n'
+        '              <sc-for list="{{ travelTrips }}" as="trip" hint-placeholder-count="2"><button type="button" sc-camel-on-click="{{ trip.onClick }}" style="{{ trip.style }}"><strong style="display:block;font-size:0.84rem;">{{ trip.title }}</strong><span style="display:block;margin-top:3px;color:#8a94a0;font-size:0.74rem;">{{ trip.meta }}</span></button></sc-for>\n'
+        '              <sc-if value="{{ travelTripsEmpty }}" hint-placeholder-val="{{ true }}"><p style="margin:0;color:#8a94a0;font-size:0.8rem;">No trips yet. Create one below.</p></sc-if>\n'
+        '              <form sc-camel-on-submit="{{ onCreateTravel }}" style="display:grid;gap:7px;padding-top:8px;border-top:1px solid #313844;">\n'
+        '                <input value="{{ travelDraftTitle }}" sc-camel-on-change="{{ onTravelTitle }}" placeholder="Trip title" aria-label="Trip title" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '                <input value="{{ travelDraftDestination }}" sc-camel-on-change="{{ onTravelDestination }}" placeholder="Destination (optional)" aria-label="Trip destination" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '                <button type="submit" style="height:32px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">+ Create travel folder</button>\n'
+        '              </form>\n'
+        '            </div>\n'
+        '            <sc-if value="{{ activeTravelExists }}" hint-placeholder-val="{{ false }}">\n'
+        '            <div style="display:grid;gap:14px;align-content:start;">\n'
+        '              <div><strong style="font-size:0.9rem;">{{ activeTravelTitle }}</strong><span style="display:block;margin-top:2px;color:#8a94a0;font-size:0.74rem;">Updated {{ activeTravelUpdated }} · logged spend ${{ activeTravelTotal }}</span></div>\n'
+        '              <div style="display:grid;gap:6px;"><strong style="font-size:0.8rem;">Expense log</strong><sc-for list="{{ travelLedger }}" as="entry" hint-placeholder-count="2"><div style="padding:8px 10px;border:1px solid #313844;border-radius:6px;background:#0d1014;"><span style="font-size:0.8rem;font-weight:600;">{{ entry.title }}</span><span style="display:block;color:#8a94a0;font-size:0.72rem;margin-top:2px;">{{ entry.meta }}</span></div></sc-for><sc-if value="{{ travelLedgerEmpty }}" hint-placeholder-val="{{ true }}"><p style="margin:0;color:#8a94a0;font-size:0.76rem;">No expenses logged.</p></sc-if></div>\n'
+        '              <form sc-camel-on-submit="{{ onAddTravelLedger }}" style="display:grid;grid-template-columns:140px 1fr 120px 140px auto;gap:7px;">\n'
+        '                <input type="date" value="{{ travelLedgerDate }}" sc-camel-on-change="{{ onTravelLedgerDate }}" aria-label="Transaction date" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '                <input value="{{ travelLedgerDescription }}" sc-camel-on-change="{{ onTravelLedgerDescription }}" placeholder="Description" aria-label="Expense description" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '                <input type="number" step="0.01" value="{{ travelLedgerAmount }}" sc-camel-on-change="{{ onTravelLedgerAmount }}" placeholder="Amount" aria-label="Expense amount" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '                <sc-raw-select value="{{ travelLedgerCategory }}" sc-camel-on-change="{{ onTravelLedgerCategory }}" aria-label="Expense category" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><option value="other">Other</option><option value="lodging">Lodging</option><option value="transportation">Transportation</option><option value="meals">Meals</option><option value="fees">Fees</option></sc-raw-select>\n'
+        '                <button type="submit" style="height:34px;padding:0 12px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">Add</button>\n'
+        '              </form>\n'
+        '              <div style="display:grid;gap:6px;"><strong style="font-size:0.8rem;">Receipts</strong><sc-for list="{{ travelReceipts }}" as="receipt" hint-placeholder-count="1"><span style="font-size:0.76rem;color:#c7cfd8;">{{ receipt.name }}</span></sc-for><sc-if value="{{ travelReceiptsEmpty }}" hint-placeholder-val="{{ true }}"><span style="font-size:0.76rem;color:#8a94a0;">No receipts linked.</span></sc-if><label style="justify-self:start;height:30px;display:inline-flex;align-items:center;padding:0 10px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font-size:0.76rem;font-weight:600;cursor:pointer;">Upload receipt<input type="file" sc-camel-on-change="{{ onTravelReceiptFile }}" style="display:none"></label></div>\n'
+        '              <form sc-camel-on-submit="{{ onRecordGtccCheck }}" style="display:grid;gap:8px;padding:12px;border:1px solid #2a3c4a;border-radius:6px;background:#0f1620;">\n'
+        '                <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;"><strong style="font-size:0.82rem;">Monthly GTCC check</strong><span style="color:#8a94a0;font-size:0.74rem;">{{ gtccLatestLabel }}</span></div>\n'
+        '                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;"><input type="number" step="0.01" value="{{ gtccBalance }}" sc-camel-on-change="{{ onGtccBalance }}" placeholder="Statement balance (optional)" aria-label="GTCC statement balance" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input type="number" step="0.01" value="{{ gtccPayment }}" sc-camel-on-change="{{ onGtccPayment }}" placeholder="Payment (optional)" aria-label="GTCC payment amount" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ gtccCheckNotes }}" sc-camel-on-change="{{ onGtccNotes }}" placeholder="Notes" aria-label="GTCC check notes" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 8px;background:#0d1014;color:#eef2f6;font:inherit;"></div>\n'
+        '                <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;"><label style="display:flex;gap:7px;align-items:center;color:#c7cfd8;font-size:0.78rem;"><input type="checkbox" checked="{{ gtccPaidInFull }}" sc-camel-on-change="{{ onGtccPaid }}"> Paid in full</label><button type="submit" style="height:32px;padding:0 14px;border:1px solid #b21f2d;border-radius:6px;background:#b21f2d;color:#f5ebe9;font:inherit;font-weight:700;cursor:pointer;">Mark checked</button></div>\n'
+        '              </form>\n'
+        '            </div>\n'
+        '            </sc-if>\n'
+        '          </div>\n'
+        '        </section>\n\n'
+        '        </sc-if>\n'
+        '        <sc-if value="{{ isFitreps }}" hint-placeholder-val="{{ false }}">\n',
     ),
     (
         "browser identity: keep CRT EGA metadata in the rendered document head",

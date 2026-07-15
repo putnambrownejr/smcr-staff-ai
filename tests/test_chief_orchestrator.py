@@ -18,6 +18,7 @@ from app.schemas.session import (  # noqa: E402
     UserSessionHandoff,
 )
 from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateReviewStatus  # noqa: E402
+from app.schemas.travel_cases import GtccCheckRequest, TravelCaseCreateRequest  # noqa: E402
 from app.services.calendar.plan_store import DrillPrepPlanStore  # noqa: E402
 from app.services.chief.orchestrator import ChiefAideOrchestrator  # noqa: E402
 from app.services.connectors.travel_case_store import TravelCaseStore  # noqa: E402
@@ -395,3 +396,38 @@ def test_chief_brief_reads_stored_travel_cases(tmp_path: Path) -> None:
     assert any(item.category == "travel" for item in brief.action_items)
     assert any("attachments" in item.title.lower() for item in brief.action_items)
     assert any("stored travel case" in line.lower() for line in brief.summary_lines)
+
+
+def test_chief_brief_surfaces_monthly_gtcc_check_with_direct_link(tmp_path: Path) -> None:
+    handoff_store = SessionHandoffStore(tmp_path / "handoffs")
+    handoff_store.upsert(UserSessionHandoff(user_key="capt-gtcc"))
+    travel_case_store = TravelCaseStore(tmp_path / "travel-cases")
+    travel_case_store.create_case(
+        TravelCaseCreateRequest(user_key="capt-gtcc", title="Current travel tracker")
+    )
+    orchestrator = ChiefAideOrchestrator(
+        handoff_store=handoff_store,
+        document_organizer=PersonalDocumentOrganizer(LocalContextStore(tmp_path / "context")),
+        drill_plan_store=DrillPrepPlanStore(tmp_path / "plans"),
+        reading_catalog=ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml")),
+        document_update_store=DocumentUpdateStore(tmp_path / "updates"),
+        opportunity_tracker=OpportunityTracker(tmp_path / "opportunities"),
+        travel_case_store=travel_case_store,
+        battle_rhythm_store=BattleRhythmStore(tmp_path / "battle-rhythm"),
+    )
+
+    brief = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-gtcc"))
+
+    reminder = next(item for item in brief.action_items if item.title == "Check your GTCC balance this month")
+    assert reminder.source == "https://home.cards.citidirect.com/CommercialCard/login"
+    assert "user-entered" in reminder.recommendation
+    assert "live balance" not in reminder.recommendation.lower()
+
+    trip = travel_case_store.list_cases("capt-gtcc")[0]
+    travel_case_store.record_gtcc_check(
+        user_key="capt-gtcc",
+        trip_id=trip.trip_id,
+        request=GtccCheckRequest(user_key="capt-gtcc", checked_at=datetime.now(UTC)),
+    )
+    refreshed = orchestrator.build_brief(ChiefBriefRequest(user_key="capt-gtcc"))
+    assert all(item.title != "Check your GTCC balance this month" for item in refreshed.action_items)

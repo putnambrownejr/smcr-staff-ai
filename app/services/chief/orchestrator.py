@@ -29,6 +29,8 @@ from app.services.session.active_context_store import ActiveUserContextStore
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.staff.battle_rhythm_store import BattleRhythmStore
 
+CITIMANAGER_LOGIN_URL = "https://home.cards.citidirect.com/CommercialCard/login"
+
 
 class ChiefAideOrchestrator:
     def __init__(
@@ -343,6 +345,25 @@ def _drill_actions(drill_plans: list[DrillPrepPlanResponse]) -> list[ChiefAction
 
 def _travel_case_actions(travel_cases: list[TravelCaseRecord]) -> list[ChiefActionItem]:
     items: list[ChiefActionItem] = []
+    current_month = datetime.now(UTC).date().replace(day=1)
+    latest_check = max(
+        (check for case in travel_cases for check in case.gtcc_checks),
+        key=lambda check: check.checked_at,
+        default=None,
+    )
+    if latest_check is None or latest_check.checked_at.date() < current_month:
+        items.append(
+            ChiefActionItem(
+                title="Check your GTCC balance this month",
+                category="travel",
+                priority="medium",
+                source=CITIMANAGER_LOGIN_URL,
+                recommendation=(
+                    "Open CitiManager, then open Workspace > Travel and record a user-entered check. "
+                    "The dashboard does not connect to Citi or know the account balance automatically."
+                ),
+            )
+        )
     for case in travel_cases[:6]:
         if case.voucher_due_date is not None:
             items.append(
@@ -380,6 +401,25 @@ def _travel_case_actions(travel_cases: list[TravelCaseRecord]) -> list[ChiefActi
                     recommendation=(
                         "Review the stored travel case for itinerary, rental-car, and receipt expectations "
                         "before movement."
+                    ),
+                )
+            )
+        latest_case_check = case.latest_gtcc_check
+        if (
+            latest_case_check is not None
+            and not latest_case_check.paid_in_full
+            and latest_case_check.statement_balance is not None
+            and latest_case_check.statement_balance > (latest_case_check.payment_amount or 0)
+        ):
+            items.append(
+                ChiefActionItem(
+                    title=f"User-entered GTCC balance needs follow-up for {case.title}",
+                    category="travel",
+                    priority="medium",
+                    source=CITIMANAGER_LOGIN_URL,
+                    recommendation=(
+                        "Verify the current balance in CitiManager and update the Travel tracker after payment or "
+                        "voucher disbursement. Stored values are user-entered and may be stale."
                     ),
                 )
             )
