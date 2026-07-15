@@ -125,6 +125,32 @@ def test_dashboard_bundle_refreshes_real_feed_endpoints() -> None:
     assert 'refreshFeeds: () => this.setState({ feedUpdated: "just now" })' not in component_source
 
 
+def test_dashboard_bundle_uses_independent_feed_actions_and_real_source_updates() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "async _runFeedAction(id)" in component_source
+    assert "feedRowStatus" in component_source
+    assert 'window.open(feed.url, "_blank", "noopener")' in component_source
+    assert 'actionLabel = isManual ? "Manual"' in component_source
+    assert 'isOpenSource ? "Open source"' in component_source
+    assert "data.documentation_updates || []" in component_source
+    assert "item.source_published_at" in component_source
+    assert '"Published " + published' in component_source
+    assert '"Detected " + detected' in component_source
+    assert "data.template_library || []" in component_source
+    assert "item.source_path" in component_source
+    assert "MCO 1001R.1 possible change" not in component_source
+
+
+def test_dashboard_bundle_clears_demo_files_and_filters_demo_projects() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "async _loadRealProjects(showDemo)" in component_source
+    assert "includeDemo || !project.is_demo" in component_source
+    assert 'c.title === "Personal files" || c.title === "Project files"' in component_source
+    assert "this._loadRealProjects(on);" in component_source
+
+
 def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:
     """Same guard as the actions test above, for the feeds/links/profile wiring
     added in the same remediation pass (step 2, items 2-4)."""

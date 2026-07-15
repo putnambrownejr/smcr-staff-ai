@@ -2397,6 +2397,247 @@ PATCHES: list[tuple[str, ...]] = [
         "    await Promise.all([this._loadRealWorkspace(), this._loadRealFeeds()]);\n"
         "    const failureNote = failedLabels.length ? \" · \" + failedLabels.join(\", \") + \" failed\" : \"\";\n",
     ),
+    # ------------------------------------------------------------------
+    # Watch integrity (2026-07-14): real source-update candidates, RSS
+    # publication dates, independent row refresh/open-source actions, and
+    # real template paths from the dashboard payload.
+    # ------------------------------------------------------------------
+    (
+        "watch: initialize independent row and payload state",
+        "    feedUpdated: \"2 min ago\",\n",
+        "    feedUpdated: \"2 min ago\",\n"
+        "    feedRefreshRunning: false,\n"
+        "    feedRowStatus: {},\n"
+        "    customFeedItemsById: {},\n"
+        "    realSourceUpdates: [],\n",
+    ),
+    (
+        "workspace: retain dates, source updates, custom previews, and template paths",
+        "      // Ticker items and personal documents ride along on the same payload.\n"
+        "      const mapTicker = (items) => (items || []).map((t) => ({ id: t.summary || \"\", title: t.title, url: t.source_url || \"\" }));\n"
+        "      const personalItems = (data.document_details || []).map((doc) => ({\n"
+        "        name: doc.filename,\n"
+        "        meta: doc.document_type || \"file\",\n"
+        "        path: \"local_context/files/\" + doc.context_id + \"-\" + doc.filename,\n"
+        "      }));\n"
+        "      this.setState((s) => ({\n"
+        "        actions,\n"
+        "        historySpotlight,\n"
+        "        historyIsToday: !!data.history_is_today,\n"
+        "        realMaradmins: mapTicker(data.maradmin_ticker),\n"
+        "        realNavadmins: mapTicker(data.navadmin_ticker),\n"
+        "        benchCards: s.benchCards.map((c) => (c.title !== \"Personal files\" ? c : { ...c, items: personalItems })),\n",
+        "      // Ticker items and personal documents ride along on the same payload.\n"
+        "      const mapTicker = (items) => (items || []).map((t) => ({ id: t.summary || \"\", title: t.title, url: t.source_url || \"\", publishedAt: t.published_at || \"\" }));\n"
+        "      const personalItems = (data.document_details || []).map((doc) => ({\n"
+        "        name: doc.filename,\n"
+        "        meta: doc.document_type || \"file\",\n"
+        "        path: \"local_context/files/\" + doc.context_id + \"-\" + doc.filename,\n"
+        "      }));\n"
+        "      const templateItems = (data.template_library || []).filter((item) => item.source_path).map((item) => ({\n"
+        "        name: item.template_name,\n"
+        "        meta: item.template_source === \"system\" ? \"system\" : \"saved\",\n"
+        "        path: item.source_path,\n"
+        "      }));\n"
+        "      const customFeedItemsById = {};\n"
+        "      (data.custom_watch_feeds || []).forEach((feed) => { customFeedItemsById[feed.feed_id] = mapTicker(feed.preview_items); });\n"
+        "      this.setState((s) => ({\n"
+        "        actions,\n"
+        "        historySpotlight,\n"
+        "        historyIsToday: !!data.history_is_today,\n"
+        "        realMaradmins: mapTicker(data.maradmin_ticker),\n"
+        "        realNavadmins: mapTicker(data.navadmin_ticker),\n"
+        "        realSourceUpdates: data.documentation_updates || [],\n"
+        "        customFeedItemsById,\n"
+        "        benchCards: s.benchCards.map((c) => c.title === \"Personal files\" ? { ...c, items: personalItems } : (c.title === \"Template library\" ? { ...c, items: templateItems } : c)),\n",
+    ),
+    (
+        "feeds: add independent refresh and open-source action",
+        "  async _runFeedAction(id) {",
+        "  async _refreshFeeds() {\n",
+        "  async _runFeedAction(id) {\n"
+        "    const feed = (this.state.feeds || []).find((item) => item.id === id);\n"
+        "    if (!feed || feed.type === \"manual\") return;\n"
+        "    if (feed.staticItems === \"gazette\" || (!feed.isReal && feed.type === \"url\")) {\n"
+        "      if (feed.url) window.open(feed.url, \"_blank\", \"noopener\");\n"
+        "      return;\n"
+        "    }\n"
+        "    let url = \"\";\n"
+        "    if (feed.staticItems === \"maradmin\") url = \"/maradmins/refresh\";\n"
+        "    else if (feed.staticItems === \"navadmin\") url = \"/message-watch/navadmins/refresh\";\n"
+        "    else if (feed.isReal) url = \"/custom-watch-feeds/\" + encodeURIComponent(feed.id) + \"/refresh\";\n"
+        "    if (!url) return;\n"
+        "    this.setState((s) => ({ feedRowStatus: { ...(s.feedRowStatus || {}), [id]: \"Refreshing…\" } }));\n"
+        "    try {\n"
+        "      const res = await fetch(url, { method: \"POST\", headers: this._apiHeaders() });\n"
+        "      let payload = null;\n"
+        "      try { payload = await res.json(); } catch (err) {}\n"
+        "      const warnings = payload && Array.isArray(payload.warnings) ? payload.warnings : [];\n"
+        "      if (!res.ok || warnings.length) throw new Error(\"refresh failed\");\n"
+        "      await Promise.all([this._loadRealWorkspace(), this._loadRealFeeds()]);\n"
+        "      this.setState((s) => ({ feedRowStatus: { ...(s.feedRowStatus || {}), [id]: \"Updated\" } }));\n"
+        "    } catch (err) {\n"
+        "      this.setState((s) => ({ feedRowStatus: { ...(s.feedRowStatus || {}), [id]: \"Failed\" } }));\n"
+        "    }\n"
+        "  }\n\n"
+        "  async _refreshFeeds() {\n",
+    ),
+    (
+        "projects: hide explicitly demo folders outside demo mode",
+        "  async _loadRealProjects(showDemo) {",
+        "  async _loadRealProjects() {\n"
+        "    try {\n"
+        "      const res = await fetch(\"/user-docs/projects\", { headers: this._apiHeaders() });\n"
+        "      if (!res.ok) throw new Error(\"projects fetch failed: \" + res.status);\n"
+        "      this._realProjectNames = await res.json();\n"
+        "      // The Project files bench card starts empty; fill it with the real\n"
+        "      // folders under projects/ so no phantom demo folders are shown.\n"
+        "      const items = (this._realProjectNames || []).map((n) => ({ name: n, meta: \"project folder\", path: \"projects/\" + n + \"/\" }));\n"
+        "      this.setState((s) => ({ benchCards: s.benchCards.map((c) => (c.title !== \"Project files\" ? c : { ...c, items })) }));\n"
+        "    } catch (err) {\n"
+        "      this._realProjectNames = [];\n"
+        "    }\n"
+        "  }\n",
+        "  async _loadRealProjects(showDemo) {\n"
+        "    try {\n"
+        "      const res = await fetch(\"/user-docs/projects\", { headers: this._apiHeaders() });\n"
+        "      if (!res.ok) throw new Error(\"projects fetch failed: \" + res.status);\n"
+        "      const descriptors = await res.json();\n"
+        "      const includeDemo = typeof showDemo === \"boolean\" ? showDemo : !!this.state.demoMode;\n"
+        "      const visible = (descriptors || []).filter((project) => includeDemo || !project.is_demo);\n"
+        "      this._realProjectNames = visible.map((project) => project.name);\n"
+        "      const items = visible.map((project) => ({ name: project.name, meta: \"project folder\", path: \"projects/\" + project.name + \"/\" }));\n"
+        "      this.setState((s) => ({ benchCards: s.benchCards.map((c) => (c.title !== \"Project files\" ? c : { ...c, items })) }));\n"
+        "    } catch (err) {\n"
+        "      this._realProjectNames = [];\n"
+        "    }\n"
+        "  }\n",
+    ),
+    (
+        "demo mode: clear personal and project demo files immediately",
+        "c.title === \"Personal files\" || c.title === \"Project files\"",
+        "      this.setState({ profileRank: \"\", profileLastName: \"\", profileBillet: \"\", profileUnit: \"\" });\n"
+        "      this._loadRealHandoff();\n"
+        "    }\n"
+        "    this._loadRealWorkspace();\n",
+        "      this.setState((s) => ({\n"
+        "        profileRank: \"\", profileLastName: \"\", profileBillet: \"\", profileUnit: \"\",\n"
+        "        realSourceUpdates: [],\n"
+        "        benchCards: s.benchCards.map((c) => (c.title === \"Personal files\" || c.title === \"Project files\") ? { ...c, items: [] } : c),\n"
+        "      }));\n"
+        "      this._loadRealHandoff();\n"
+        "    }\n"
+        "    this._loadRealWorkspace();\n"
+        "    this._loadRealProjects(on);\n",
+    ),
+    (
+        "watch: map publication dates and per-row actions",
+        "      const formatFeedDate = (value) => {",
+        "    const tickerFeedItem = (m) => ({ text: (m.id ? m.id + \" — \" : \"\") + m.title, url: m.url });\n",
+        "    const formatFeedDate = (value) => {\n"
+        "      if (!value) return \"\";\n"
+        "      const parsed = new Date(value);\n"
+        "      if (Number.isNaN(parsed.getTime())) return \"\";\n"
+        "      return parsed.toLocaleDateString(\"en-US\", { day: \"2-digit\", month: \"short\", year: \"numeric\" }).toUpperCase();\n"
+        "    };\n"
+        "    const tickerFeedItem = (m) => ({ text: (m.id ? m.id + \" — \" : \"\") + m.title, url: m.url, dateLabel: formatFeedDate(m.publishedAt) });\n",
+    ),
+    (
+        "watch: use custom RSS previews and expose row action state",
+        "      const rawItems = f.staticItems\n"
+        "        ? staticFeedItems[f.staticItems]\n"
+        "        : (f.url ? [{ text: `Source: ${f.url}`, url: f.url }, { text: \"No updates pulled yet — this feed populates once it's next checked\", url: \"\" }] : [{ text: \"No updates yet — recently added\", url: \"\" }]);\n"
+        "      const items = rawItems.map((it) => ({ text: it.text, url: it.url, noUrl: !it.url }));\n"
+        "      return {\n",
+        "      const previewItems = f.isReal ? (this.state.customFeedItemsById[f.id] || []).map(tickerFeedItem) : [];\n"
+        "      const rawItems = f.staticItems\n"
+        "        ? staticFeedItems[f.staticItems]\n"
+        "        : (previewItems.length ? previewItems : (f.url ? [{ text: `Source: ${f.url}`, url: f.url }, { text: \"No updates pulled yet — this feed populates once it's next checked\", url: \"\" }] : [{ text: \"No updates yet — recently added\", url: \"\" }]));\n"
+        "      const items = rawItems.map((it) => ({ text: it.text, url: it.url, noUrl: !it.url, dateLabel: it.dateLabel || \"\", hasDate: !!it.dateLabel }));\n"
+        "      const rowStatus = (this.state.feedRowStatus || {})[f.id] || \"\";\n"
+        "      const isManual = f.type === \"manual\";\n"
+        "      const isOpenSource = f.staticItems === \"gazette\" || (!f.isReal && f.type === \"url\");\n"
+        "      const actionLabel = isManual ? \"Manual\" : (isOpenSource ? \"Open source\" : (rowStatus === \"Refreshing…\" ? rowStatus : \"Refresh\"));\n"
+        "      return {\n"
+        "        actionLabel, actionDisabled: isManual || rowStatus === \"Refreshing…\",\n"
+        "        actionStatus: rowStatus === \"Updated\" || rowStatus === \"Failed\" ? rowStatus : \"\",\n"
+        "        hasActionStatus: rowStatus === \"Updated\" || rowStatus === \"Failed\",\n"
+        "        onAction: () => this._runFeedAction(f.id),\n",
+    ),
+    (
+        "watch: render per-feed action control",
+        "{{ f.actionLabel }}",
+        "                <span style=\"{{ f.trustStyle }}\">{{ f.trust }}</span>\n"
+        "                <button type=\"button\" sc-camel-on-click=\"{{ f.onToggleEdit }}\" style=\"flex:0 0 auto;height:26px;padding:0 10px;border:1px solid #313844;border-radius:5px;background:#1a2027;color:#aab4bf;font:inherit;font-size:0.74rem;font-weight:600;cursor:pointer;\">{{ f.editToggleLabel }}</button>\n",
+        "                <span style=\"{{ f.trustStyle }}\">{{ f.trust }}</span>\n"
+        "                <sc-if value=\"{{ f.hasActionStatus }}\" hint-placeholder-val=\"{{ false }}\"><span style=\"font-size:0.72rem;color:#8a94a0;\">{{ f.actionStatus }}</span></sc-if>\n"
+        "                <button type=\"button\" disabled=\"{{ f.actionDisabled }}\" sc-camel-on-click=\"{{ f.onAction }}\" style=\"flex:0 0 auto;height:26px;padding:0 10px;border:1px solid #313844;border-radius:5px;background:#1a2027;color:#c7cfd8;font:inherit;font-size:0.74rem;font-weight:600;cursor:pointer;\">{{ f.actionLabel }}</button>\n"
+        "                <button type=\"button\" sc-camel-on-click=\"{{ f.onToggleEdit }}\" style=\"flex:0 0 auto;height:26px;padding:0 10px;border:1px solid #313844;border-radius:5px;background:#1a2027;color:#aab4bf;font:inherit;font-size:0.74rem;font-weight:600;cursor:pointer;\">{{ f.editToggleLabel }}</button>\n",
+    ),
+    (
+        "watch: render feed item dates when supplied",
+        "{{ it.dateLabel }}",
+        "                      <a href=\"{{ it.url }}\" target=\"_blank\" rel=\"noopener\" style=\"display:block;padding:9px 11px;border:1px solid #1a2027;border-radius:5px;background:#12161b;font-size:0.82rem;color:#c7cfd8;line-height:1.4;\">{{ it.text }}</a>\n"
+        "                    </sc-if>\n"
+        "                    <sc-if value=\"{{ it.noUrl }}\" hint-placeholder-val=\"{{ true }}\">\n"
+        "                      <div style=\"padding:9px 11px;border:1px solid #1a2027;border-radius:5px;background:#12161b;font-size:0.82rem;color:#c7cfd8;line-height:1.4;\">{{ it.text }}</div>\n",
+        "                      <a href=\"{{ it.url }}\" target=\"_blank\" rel=\"noopener\" style=\"display:block;padding:9px 11px;border:1px solid #1a2027;border-radius:5px;background:#12161b;font-size:0.82rem;color:#c7cfd8;line-height:1.4;\"><span>{{ it.text }}</span><sc-if value=\"{{ it.hasDate }}\" hint-placeholder-val=\"{{ false }}\"><span style=\"display:block;margin-top:4px;color:#8a94a0;font-size:0.7rem;\">{{ it.dateLabel }}</span></sc-if></a>\n"
+        "                    </sc-if>\n"
+        "                    <sc-if value=\"{{ it.noUrl }}\" hint-placeholder-val=\"{{ true }}\">\n"
+        "                      <div style=\"padding:9px 11px;border:1px solid #1a2027;border-radius:5px;background:#12161b;font-size:0.82rem;color:#c7cfd8;line-height:1.4;\"><span>{{ it.text }}</span><sc-if value=\"{{ it.hasDate }}\" hint-placeholder-val=\"{{ false }}\"><span style=\"display:block;margin-top:4px;color:#8a94a0;font-size:0.7rem;\">{{ it.dateLabel }}</span></sc-if></div>\n",
+    ),
+    (
+        "source updates: replace hardcoded demo entries with backend candidates",
+        "    const srcUpdates = (this.state.realSourceUpdates || []).map((item) => {",
+        "    const srcUpdates = [\n"
+        "      { title: \"MCO 1001R.1 possible change\", detail: \"AT budget language differs from your saved reference note — verify before citing.\", sourceLabel: \"Check MCO 1001R.1 on MCPEL\", sourceUrl: \"https://www.marines.mil/News/Publications/MCPEL/Search/1001R.1/\" },\n"
+        "      { title: \"FitRep reporting occasions\", detail: \"MARADMIN 305/26 may supersede your current worksheet template.\", sourceLabel: \"Check MARADMIN 305/26\", sourceUrl: \"https://www.marines.mil/News/Messages/MARADMINS/\" },\n"
+        "    ];\n",
+        "    const srcUpdates = (this.state.realSourceUpdates || []).map((item) => {\n"
+        "      const published = formatFeedDate(item.source_published_at);\n"
+        "      const detected = formatFeedDate(item.detected_at);\n"
+        "      const signals = (item.change_signals || []).concat(item.matched_terms || []);\n"
+        "      return {\n"
+        "        title: item.tracked_title + \" possible change\",\n"
+        "        detail: signals.join(\" · \") || \"A possible source change needs human review.\",\n"
+        "        dateLabel: published ? \"Published \" + published : (detected ? \"Detected \" + detected : \"\"),\n"
+        "        hasDate: !!(published || detected),\n"
+        "        sourceLabel: item.source_record_title || \"Open source\",\n"
+        "        sourceUrl: item.source_url || \"\",\n"
+        "        hasSource: !!item.source_url,\n"
+        "      };\n"
+        "    });\n"
+        "    const srcUpdatesEmpty = srcUpdates.length === 0;\n",
+    ),
+    (
+        "source updates: render dates, optional source links, and empty state",
+        "{{ srcUpdatesEmpty }}",
+        "          <div style=\"display:grid;gap:10px;\">\n"
+        "            <sc-for list=\"{{ srcUpdates }}\" as=\"u\" hint-placeholder-count=\"2\">\n"
+        "              <div style=\"padding:12px 14px;border:1px solid #313844;border-radius:6px;background:#0d1014;\">\n"
+        "                <div style=\"font-size:0.88rem;font-weight:600;\">{{ u.title }}</div>\n"
+        "                <div style=\"margin-top:4px;font-size:0.8rem;color:#aab4bf;line-height:1.45;\">{{ u.detail }}</div>\n"
+        "                <a href=\"{{ u.sourceUrl }}\" target=\"_blank\" rel=\"noopener\" style=\"margin-top:8px;display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:600;color:#7db2e0;\">{{ u.sourceLabel }} <span style=\"opacity:0.7;\">↗</span></a>\n"
+        "              </div>\n"
+        "            </sc-for>\n"
+        "          </div>\n",
+        "          <div style=\"display:grid;gap:10px;\">\n"
+        "            <sc-if value=\"{{ srcUpdatesEmpty }}\" hint-placeholder-val=\"{{ false }}\"><div style=\"padding:12px 14px;border:1px dashed #313844;border-radius:6px;color:#8a94a0;font-size:0.82rem;\">No source changes are awaiting review.</div></sc-if>\n"
+        "            <sc-for list=\"{{ srcUpdates }}\" as=\"u\" hint-placeholder-count=\"2\">\n"
+        "              <div style=\"padding:12px 14px;border:1px solid #313844;border-radius:6px;background:#0d1014;\">\n"
+        "                <div style=\"font-size:0.88rem;font-weight:600;\">{{ u.title }}</div>\n"
+        "                <sc-if value=\"{{ u.hasDate }}\" hint-placeholder-val=\"{{ false }}\"><div style=\"margin-top:3px;font-size:0.7rem;color:#8a94a0;\">{{ u.dateLabel }}</div></sc-if>\n"
+        "                <div style=\"margin-top:4px;font-size:0.8rem;color:#aab4bf;line-height:1.45;\">{{ u.detail }}</div>\n"
+        "                <sc-if value=\"{{ u.hasSource }}\" hint-placeholder-val=\"{{ false }}\"><a href=\"{{ u.sourceUrl }}\" target=\"_blank\" rel=\"noopener\" style=\"margin-top:8px;display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:600;color:#7db2e0;\">{{ u.sourceLabel }} <span style=\"opacity:0.7;\">↗</span></a></sc-if>\n"
+        "              </div>\n"
+        "            </sc-for>\n"
+        "          </div>\n",
+    ),
+    (
+        "vals: expose source update empty state",
+        "      actNow, maradmins, navadmins, feeds, actions, srcUpdates,\n",
+        "      actNow, maradmins, navadmins, feeds, actions, srcUpdates, srcUpdatesEmpty,\n",
+    ),
 ]
 
 
