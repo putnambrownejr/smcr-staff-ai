@@ -178,6 +178,34 @@ Regenerate all checked-in icon assets from
 favicon URLs so Chrome and Firefox do not keep displaying a cached chevron. The
 PWA manifest and desktop ICO continue to reference the same identity family.
 
+## 7. Initial Counseling Builder and FitRep Link
+
+Add an **Initial Counseling** tile to Bench / Files under “Draft a staff
+product.” It creates a normal persistent Generation document using the existing
+User Docs storage flow. The structured editor captures:
+
+- Marine name, rank, unit, and billet;
+- counseling date and next review date;
+- job description and primary duties;
+- performance and conduct expectations;
+- communication and battle-rhythm expectations;
+- development goals, leader support, and follow-up notes.
+
+The counseling may optionally store `linkedFitrepId`, an explicit reference to
+an existing FitRep User Doc ID. Selecting a FitRep pre-fills only shared identity
+fields (name, rank, and unit); it does not copy trait scores, comments, or
+performance language into the counseling.
+
+The counseling editor shows **Open linked FitRep** when its link resolves. The
+FitReps page shows linked Initial Counseling records for the selected Marine and
+can open a counseling directly. If either record is deleted, the remaining
+record stays intact: a counseling with a missing FitRep shows an unavailable
+link and can be relinked.
+
+Users may create counseling without a FitRep and link it later. The builder must
+not automatically create a FitRep, match records by Marine name, or silently
+copy counseling text into FitRep evaluation fields.
+
 ## Architecture and Change Boundaries
 
 Follow the existing compiled-dashboard workflow: durable dashboard changes are
@@ -209,6 +237,8 @@ Automated coverage will include:
 - FitReps tab navigation, Workspace removal, and existing FitRep CRUD behavior;
 - visible agent IDs for every rendered agent;
 - served favicon/PWA assets and deterministic icon regeneration.
+- Initial Counseling creation, persistence, optional explicit FitRep linking,
+  reciprocal navigation, and missing-link behavior.
 
 Run the dashboard-focused tests first, then the complete test suite, Ruff, and
 MyPy. Finally, open the local dashboard in a browser and verify Watch, Demo mode,
@@ -228,3 +258,5 @@ The user approved all of the following on 2026-07-14:
 6. Promote FitReps to a top-level tab beside Workspace.
 7. Show stable agent IDs, not source filenames.
 8. Use the cropped CRT EGA for browser and other small icon variants.
+9. Add an Initial Counseling builder with an optional explicit FitRep link;
+   unlinked counseling is allowed and FitReps are never auto-created.
