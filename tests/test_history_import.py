@@ -1,12 +1,35 @@
 from datetime import date
 from pathlib import Path
 
+import yaml
 from _pytest.monkeypatch import MonkeyPatch
 from fastapi.testclient import TestClient
 
 from app.api.routes.dashboard import get_history_service
 from app.main import app
+from app.schemas.history import HistoryScope, TodayInMarineHistoryItem
+from app.services.history.local_history_store import LocalHistoryStore
 from app.services.history.today_in_history import TodayInMarineHistoryService, extract_history_items_from_markdown
+
+
+def _history_item(
+    slug: str,
+    month: int,
+    day: int,
+    scope: HistoryScope,
+    *,
+    year_label: str = "2000",
+) -> TodayInMarineHistoryItem:
+    return TodayInMarineHistoryItem(
+        slug=slug,
+        title=slug.replace("-", " ").title(),
+        month=month,
+        day=day,
+        year_label=year_label,
+        summary=f"Summary for {slug}.",
+        scope=scope,
+        references=["https://example.mil/history"],
+    )
 
 
 def test_extract_history_items_from_markdown_parses_dated_entries() -> None:
@@ -54,6 +77,126 @@ def test_dashboard_history_service_merges_seed_and_local_items(tmp_path: Path) -
 
     items = service.get_for_date(date(2026, 1, 1))
     assert {item.slug for item in items} == {"seed-item", "local-item"}
+
+
+def test_history_selector_prefers_exact_event_within_scope() -> None:
+    service = TodayInMarineHistoryService(
+        [
+            _history_item("near-usmc", 7, 14, HistoryScope.usmc),
+            _history_item("exact-usmc", 7, 15, HistoryScope.usmc),
+            _history_item("exact-military", 7, 15, HistoryScope.us_military),
+        ]
+    )
+
+    marine = service.select_for_date(date(2026, 7, 15), HistoryScope.usmc)
+    military = service.select_for_date(date(2026, 7, 15), HistoryScope.us_military)
+
+    assert marine is not None and marine.item.slug == "exact-usmc"
+    assert marine.is_exact is True and marine.distance_days == 0
+    assert military is not None and military.item.slug == "exact-military"
+
+
+def test_history_selector_uses_previous_event_for_equal_distance_tie() -> None:
+    service = TodayInMarineHistoryService(
+        [
+            _history_item("previous", 7, 14, HistoryScope.usmc),
+            _history_item("following", 7, 16, HistoryScope.usmc),
+        ]
+    )
+
+    selected = service.select_for_date(date(2026, 7, 15), HistoryScope.usmc)
+
+    assert selected is not None and selected.item.slug == "previous"
+    assert selected.is_exact is False and selected.distance_days == 1
+
+
+def test_history_selector_wraps_across_year_boundary() -> None:
+    service = TodayInMarineHistoryService(
+        [
+            _history_item("new-years-day", 1, 1, HistoryScope.us_military),
+            _history_item("farther", 12, 20, HistoryScope.us_military),
+        ]
+    )
+
+    selected = service.select_for_date(date(2026, 12, 31), HistoryScope.us_military)
+
+    assert selected is not None and selected.item.slug == "new-years-day"
+    assert selected.distance_days == 1
+
+
+def test_history_selector_returns_none_for_empty_scope() -> None:
+    service = TodayInMarineHistoryService(
+        [_history_item("marine-only", 7, 15, HistoryScope.usmc)]
+    )
+
+    assert service.select_for_date(date(2026, 7, 15), HistoryScope.us_military) is None
+
+
+def test_history_selector_returns_none_when_both_scopes_are_empty() -> None:
+    service = TodayInMarineHistoryService([])
+
+    assert service.select_for_date(date(2026, 7, 15), HistoryScope.usmc) is None
+    assert service.select_for_date(date(2026, 7, 15), HistoryScope.us_military) is None
+
+
+def test_history_selector_breaks_same_date_ties_by_year_then_slug() -> None:
+    service = TodayInMarineHistoryService(
+        [
+            _history_item("zulu", 7, 15, HistoryScope.usmc, year_label="1918"),
+            _history_item("alpha", 7, 15, HistoryScope.usmc, year_label="1918"),
+            _history_item("older", 7, 15, HistoryScope.usmc, year_label="1775"),
+        ]
+    )
+
+    selected = service.select_for_date(date(2026, 7, 15), HistoryScope.usmc)
+
+    assert selected is not None and selected.item.slug == "older"
+
+
+def test_legacy_history_record_defaults_to_usmc_scope() -> None:
+    item = TodayInMarineHistoryItem.model_validate(
+        {
+            "slug": "legacy",
+            "title": "Legacy Marine event",
+            "month": 1,
+            "day": 1,
+            "year_label": "1900",
+            "summary": "Stored before scope metadata existed.",
+            "references": ["local-history"],
+        }
+    )
+
+    assert item.scope is HistoryScope.usmc
+
+
+def test_history_store_round_trips_scope_as_yaml_string(tmp_path: Path) -> None:
+    store = LocalHistoryStore(tmp_path / "history")
+
+    store.replace([_history_item("army", 6, 14, HistoryScope.us_military)])
+
+    raw = yaml.safe_load(store.path.read_text(encoding="utf-8"))
+    assert raw["items"][0]["scope"] == "us_military"
+    assert store.list_items()[0].scope is HistoryScope.us_military
+
+
+def test_history_service_skips_malformed_local_catalog(tmp_path: Path) -> None:
+    valid_path = tmp_path / "valid.yaml"
+    invalid_path = tmp_path / "invalid.yaml"
+    valid_path.write_text(
+        yaml.safe_dump(
+            {
+                "items": [
+                    _history_item("valid", 1, 1, HistoryScope.usmc).model_dump(mode="json")
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    invalid_path.write_text("items: [not: valid: yaml", encoding="utf-8")
+
+    service = TodayInMarineHistoryService.from_paths([valid_path, invalid_path])
+
+    assert [item.slug for item in service.list_items()] == ["valid"]
 
 
 def test_seed_history_includes_july_14_event() -> None:

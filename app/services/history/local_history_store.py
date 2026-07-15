@@ -31,7 +31,7 @@ class LocalHistoryStore:
         return merged
 
     def _write(self, items: list[TodayInMarineHistoryItem]) -> None:
-        payload = {"items": [item.model_dump() for item in items]}
+        payload = {"items": [item.model_dump(mode="json") for item in items]}
         with open(self.path, "w", encoding="utf-8") as handle:
             yaml.safe_dump(payload, handle, sort_keys=False, allow_unicode=False)
 

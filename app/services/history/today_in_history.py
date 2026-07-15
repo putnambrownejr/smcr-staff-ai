@@ -5,8 +5,16 @@ from datetime import date
 from pathlib import Path
 
 import yaml
+from pydantic import ValidationError
 
-from app.schemas.history import TodayInMarineHistoryItem
+from app.schemas.history import HistoryScope, HistorySelection, TodayInMarineHistoryItem
+
+_REFERENCE_YEAR = 2000
+_DAYS_IN_REFERENCE_YEAR = 366
+
+
+def _calendar_index(month: int, day: int) -> int:
+    return date(_REFERENCE_YEAR, month, day).timetuple().tm_yday - 1
 
 
 class TodayInMarineHistoryService:
@@ -28,10 +36,18 @@ class TodayInMarineHistoryService:
             path = Path(raw_path)
             if not path.exists():
                 continue
-            with open(path, encoding="utf-8") as handle:
-                payload = yaml.safe_load(handle) or {}
+            try:
+                with open(path, encoding="utf-8") as handle:
+                    payload = yaml.safe_load(handle) or {}
+            except (OSError, yaml.YAMLError):
+                continue
+            if not isinstance(payload, dict):
+                continue
             for item_payload in payload.get("items", []):
-                item = TodayInMarineHistoryItem.model_validate(item_payload)
+                try:
+                    item = TodayInMarineHistoryItem.model_validate(item_payload)
+                except ValidationError:
+                    continue
                 if item.slug in seen:
                     continue
                 seen.add(item.slug)
@@ -53,6 +69,34 @@ class TodayInMarineHistoryService:
             return []
         index = (target_date.month * 31 + target_date.day) % len(self.items)
         return [self.items[index]]
+
+    def select_for_date(
+        self,
+        target_date: date,
+        scope: HistoryScope,
+    ) -> HistorySelection | None:
+        candidates = [item for item in self.items if item.scope is scope]
+        if not candidates:
+            return None
+        target_index = _calendar_index(target_date.month, target_date.day)
+
+        def selection_key(item: TodayInMarineHistoryItem) -> tuple[int, bool, str, str]:
+            item_index = _calendar_index(item.month, item.day)
+            backward = (target_index - item_index) % _DAYS_IN_REFERENCE_YEAR
+            forward = (item_index - target_index) % _DAYS_IN_REFERENCE_YEAR
+            distance = min(backward, forward)
+            # False sorts before True, so equal-distance ties prefer the
+            # preceding occurrence rather than a future occurrence.
+            is_following = forward < backward
+            return distance, is_following, item.year_label, item.slug
+
+        selected = min(candidates, key=selection_key)
+        distance_days = selection_key(selected)[0]
+        return HistorySelection(
+            item=selected,
+            is_exact=distance_days == 0,
+            distance_days=distance_days,
+        )
 
     def list_items(self) -> list[TodayInMarineHistoryItem]:
         return sorted(
@@ -96,7 +140,11 @@ _ALT_DATE_PATTERN = re.compile(
 )
 
 
-def extract_history_items_from_markdown(markdown: str, source_label: str) -> list[TodayInMarineHistoryItem]:
+def extract_history_items_from_markdown(
+    markdown: str,
+    source_label: str,
+    scope: HistoryScope = HistoryScope.usmc,
+) -> list[TodayInMarineHistoryItem]:
     items: list[TodayInMarineHistoryItem] = []
     lines = markdown.splitlines()
     for index, line in enumerate(lines):
@@ -121,6 +169,7 @@ def extract_history_items_from_markdown(markdown: str, source_label: str) -> lis
                 day=day,
                 year_label=year,
                 summary=summary,
+                scope=scope,
                 significance=[],
                 references=[source_label],
             )
