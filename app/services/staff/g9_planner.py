@@ -1,6 +1,13 @@
 import json
 
 from app.core.security import DEFAULT_WARNINGS, detect_sensitive_input
+from app.schemas.civil_network import (
+    CivilEvidenceKind,
+    CivilNetworkNode,
+    CivilNetworkRelationship,
+    CivilNetworkSnapshot,
+)
+from app.schemas.source_state import VerifiedSourceStatus
 from app.schemas.staff import (
     G9CulturalContextItem,
     G9EvidenceAssessment,
@@ -29,9 +36,7 @@ class G9Planner:
         ]
         if request.audience:
             civil_situation_frame.append(f"Supported audience / formation: {request.audience}")
-        civil_situation_frame.extend(
-            f"Civil consideration to frame: {item}" for item in request.civil_considerations
-        )
+        civil_situation_frame.extend(f"Civil consideration to frame: {item}" for item in request.civil_considerations)
 
         partner_coordination = [
             "Identify which relationships require coordination before the event, during execution, "
@@ -64,6 +69,12 @@ class G9Planner:
             "Separate enduring relationships from one-off event support tasks.",
             "Record follow-up owners before the team disperses.",
         ]
+        civil_network_assessment, network_evidence, network_warnings = _civil_network_assessment(
+            request.civil_network_snapshot
+        )
+        civil_situation_frame.extend(_civil_situation_projection(request.civil_network_snapshot))
+        partner_coordination.extend(_partner_coordination_projection(request.civil_network_snapshot))
+        engagement_considerations.extend(_engagement_projection(request.civil_network_snapshot))
 
         return G9PlanningResponse(
             title=f"G-9 planning support: {request.title}",
@@ -78,15 +89,15 @@ class G9Planner:
                     "G-9 planning support is advisory only and should be reconciled with current command guidance, "
                     "civil-affairs authorities, and approved coordination channels."
                 ),
+                *network_warnings,
                 _DRAFT_FOOTER,
             ],
             operating_context_frame=_operating_context_frame(request.operating_context),
-            infrastructure_dependency_assessment=_infrastructure_assessment(
-                request.infrastructure_systems
-            ),
+            infrastructure_dependency_assessment=_infrastructure_assessment(request.infrastructure_systems),
             cultural_context_assessment=_cultural_context_assessment(request.cultural_context_items),
-            evidence_and_assumptions=_evidence_assessments(request.source_items),
+            evidence_and_assumptions=[*_evidence_assessments(request.source_items), *network_evidence],
             civil_estimate_outline=_civil_estimate_outline(),
+            civil_network_assessment=civil_network_assessment,
         )
 
 
@@ -111,9 +122,7 @@ def _safe_response(boundary_warnings: list[str]) -> G9PlanningResponse:
         engagement_considerations=[
             "Use lawful, professional, command-approved engagement procedures and avoid sensitive details."
         ],
-        continuity_and_transition=[
-            "Keep only non-sensitive, approved continuity notes for the next planning session."
-        ],
+        continuity_and_transition=["Keep only non-sensitive, approved continuity notes for the next planning session."],
         warnings=[*DEFAULT_WARNINGS, *boundary_warnings, _DRAFT_FOOTER],
         operating_context_frame=[
             "Confirm the operating context through approved channels using non-sensitive information only."
@@ -121,14 +130,110 @@ def _safe_response(boundary_warnings: list[str]) -> G9PlanningResponse:
         infrastructure_dependency_assessment=[
             "Use a generic review of essential civil systems; do not record sensitive vulnerabilities or locations."
         ],
-        cultural_context_assessment=[
-            "Use public, sourced context and avoid profiling or unsupported generalizations."
-        ],
+        cultural_context_assessment=["Use public, sourced context and avoid profiling or unsupported generalizations."],
         evidence_and_assumptions=[],
         civil_estimate_outline=[
             "Use a generic civil-estimate outline after the request is restated with non-sensitive context."
         ],
+        civil_network_assessment=[],
     )
+
+
+def _civil_network_assessment(
+    snapshot: CivilNetworkSnapshot | None,
+) -> tuple[list[str], list[G9EvidenceAssessment], list[str]]:
+    if snapshot is None:
+        return ([], [], [])
+    assessment = [f"Civil-network snapshot (read-only): {snapshot.label} for event {snapshot.network.event_id}."]
+    evidence_assessments: list[G9EvidenceAssessment] = []
+    warnings: list[str] = []
+    for node in snapshot.network.nodes:
+        _append_network_record_assessment(node, node.display_name, assessment, evidence_assessments, warnings)
+    for relationship in snapshot.network.relationships:
+        _append_network_record_assessment(
+            relationship, relationship.description, assessment, evidence_assessments, warnings
+        )
+    return (assessment, evidence_assessments, warnings)
+
+
+def _append_network_record_assessment(
+    record: CivilNetworkNode | CivilNetworkRelationship,
+    label: str,
+    assessment: list[str],
+    evidence_assessments: list[G9EvidenceAssessment],
+    warnings: list[str],
+) -> None:
+    kind = _network_evidence_kind(record.evidence_kind)
+    assessment.append(f"{_network_label(record.evidence_kind)}: {label}")
+    if not record.evidence:
+        assessment.append(f"Evidence gap: {label} has no cited evidence.")
+    for item in record.evidence:
+        evidence_assessments.append(
+            G9EvidenceAssessment(
+                kind=kind,
+                statement=label,
+                source_label=item.title,
+                source_date=item.retrieved_at.isoformat(),
+                confidence=item.confidence.value,
+                verification_note=(
+                    f"Provenance retained: {item.url or item.bibliographic_note or 'citation note missing'}; "
+                    f"trust status={item.trust_status.value}."
+                ),
+            )
+        )
+        if item.trust_status is not VerifiedSourceStatus.current:
+            warnings.append(
+                f"Civil-network source '{item.title}' is {item.trust_status.value}; confirm before relying on it."
+            )
+
+
+def _network_evidence_kind(kind: CivilEvidenceKind) -> G9EvidenceKind:
+    if kind is CivilEvidenceKind.sourced_observation:
+        return G9EvidenceKind.reported_fact
+    if kind is CivilEvidenceKind.analytic_inference:
+        return G9EvidenceKind.analytic_inference
+    return G9EvidenceKind.planning_assumption
+
+
+def _network_label(kind: CivilEvidenceKind) -> str:
+    return {
+        CivilEvidenceKind.sourced_observation: "Sourced observation",
+        CivilEvidenceKind.analytic_inference: "Analytic inference",
+        CivilEvidenceKind.planning_hypothesis: "Planning hypothesis",
+    }[kind]
+
+
+def _civil_situation_projection(snapshot: CivilNetworkSnapshot | None) -> list[str]:
+    if snapshot is None:
+        return []
+    return [
+        f"Civil-network {node.kind.value}: {node.display_name} ({_network_label(node.evidence_kind).lower()})."
+        for node in snapshot.network.nodes
+        if node.kind.value in {"organization", "service", "forum", "broad_group"}
+    ]
+
+
+def _partner_coordination_projection(snapshot: CivilNetworkSnapshot | None) -> list[str]:
+    if snapshot is None:
+        return []
+    return [
+        f"Read-only civil-network relationship: {edge.kind.value} — {edge.description} "
+        f"({_network_label(edge.evidence_kind).lower()})."
+        for edge in snapshot.network.relationships
+        if edge.kind.value
+        in {"coordination", "dependency", "authority_approval", "resource_support", "information_flow"}
+    ]
+
+
+def _engagement_projection(snapshot: CivilNetworkSnapshot | None) -> list[str]:
+    if snapshot is None:
+        return []
+    return [
+        f"Role-bound public engagement consideration: {node.public_role}, {node.organization}; "
+        f"event relevance: {node.event_relevance}. Preserve cited role context and confirm currency before contact."
+        for node in snapshot.network.nodes
+        if node.kind.value == "public_role_holder"
+    ]
 
 
 def _operating_context_frame(context: G9OperatingContext | None) -> list[str]:

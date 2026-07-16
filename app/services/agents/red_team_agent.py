@@ -1,8 +1,14 @@
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
+from app.schemas.civil_network import CivilNetworkSnapshot
 from app.schemas.source_state import SourceTrustMarker
 from app.schemas.strategic_lens import StrategicLensMode, StrategicLensOutput, StrategicLensRequest
 from app.schemas.training import ScenarioArchetype
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.civil_network_context import (
+    civil_network_sections,
+    civil_network_snapshot,
+    civil_network_source_trust,
+)
 from app.services.agents.source_refs import (
     S2_REFERENCES,
     S3_REFERENCES,
@@ -47,13 +53,25 @@ class RedTeamAssumptionsAgent(Agent):
         )
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        snapshot = civil_network_snapshot(context)
         mode = _mode(context)
         strategic_lens = _strategic_lens(context)
         if mode == "evidence":
-            return self._evidence_response(input_text, context, strategic_lens)
+            return self._with_civil_network(self._evidence_response(input_text, context, strategic_lens), snapshot)
         if mode == "hypotheses":
-            return self._hypotheses_response(input_text, context, strategic_lens)
-        return self._assumptions_response(input_text, context, strategic_lens)
+            return self._with_civil_network(self._hypotheses_response(input_text, context, strategic_lens), snapshot)
+        return self._with_civil_network(self._assumptions_response(input_text, context, strategic_lens), snapshot)
+
+    def _with_civil_network(
+        self, response: AgentRunResponse, snapshot: CivilNetworkSnapshot | None
+    ) -> AgentRunResponse:
+        if snapshot is None:
+            return response
+        response.answer = (
+            response.answer.removesuffix(_DRAFT_WARNING) + civil_network_sections(snapshot) + _DRAFT_WARNING
+        )
+        response.source_trust.extend(civil_network_source_trust(snapshot))
+        return response
 
     def _assumptions_response(
         self, input_text: str, context: AgentContext, strategic_lens: StrategicLensOutput | None
@@ -162,9 +180,18 @@ class RedTeamAssumptionsAgent(Agent):
         return self._response(
             answer=answer,
             input_text=input_text,
-            citations=[*citation_titles((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *[citation.title for citation in local_citations]],
-            structured_citations=[*structured_citations((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *local_citations],
-            source_trust=[*source_trust_markers((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *_local_source_trust(context)],
+            citations=[
+                *citation_titles((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)),
+                *[citation.title for citation in local_citations],
+            ],
+            structured_citations=[
+                *structured_citations((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)),
+                *local_citations,
+            ],
+            source_trust=[
+                *source_trust_markers((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)),
+                *_local_source_trust(context),
+            ],
             confidence=Confidence.low,
             follow_up_questions=[
                 "Which claim has enough current, corroborated evidence to retain?",
@@ -200,9 +227,18 @@ class RedTeamAssumptionsAgent(Agent):
         return self._response(
             answer=answer,
             input_text=input_text,
-            citations=[*citation_titles((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *[citation.title for citation in local_citations]],
-            structured_citations=[*structured_citations((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *local_citations],
-            source_trust=[*source_trust_markers((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *_local_source_trust(context)],
+            citations=[
+                *citation_titles((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)),
+                *[citation.title for citation in local_citations],
+            ],
+            structured_citations=[
+                *structured_citations((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)),
+                *local_citations,
+            ],
+            source_trust=[
+                *source_trust_markers((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)),
+                *_local_source_trust(context),
+            ],
             confidence=Confidence.low,
             follow_up_questions=[
                 "Which discriminator can the staff validate before the next decision?",
@@ -231,7 +267,11 @@ def _source_evidence(context: AgentContext) -> list[dict[str, str]]:
     raw = context.extra.get("source_evidence")
     if not isinstance(raw, list):
         return []
-    return [{str(key): str(value) for key, value in item.items() if value is not None} for item in raw if isinstance(item, dict)]
+    return [
+        {str(key): str(value) for key, value in item.items() if value is not None}
+        for item in raw
+        if isinstance(item, dict)
+    ]
 
 
 def _strategic_lens(context: AgentContext) -> StrategicLensOutput | None:

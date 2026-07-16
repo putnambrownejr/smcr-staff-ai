@@ -3,6 +3,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.schemas.civil_network import CivilNetworkSnapshot
+
 
 class StaffEchelon(StrEnum):
     platoon = "platoon"
@@ -320,6 +322,7 @@ class G9PlanningRequest(BaseModel):
     source_items: list[G9SourceItem] = Field(default_factory=list)
     infrastructure_systems: list[G9InfrastructureSystem] = Field(default_factory=list)
     cultural_context_items: list[G9CulturalContextItem] = Field(default_factory=list)
+    civil_network_snapshot: CivilNetworkSnapshot | None = None
 
 
 class G9PlanningResponse(BaseModel):
@@ -335,6 +338,7 @@ class G9PlanningResponse(BaseModel):
     cultural_context_assessment: list[str] = Field(default_factory=list)
     evidence_and_assumptions: list[G9EvidenceAssessment] = Field(default_factory=list)
     civil_estimate_outline: list[str] = Field(default_factory=list)
+    civil_network_assessment: list[str] = Field(default_factory=list)
 
 
 class MedicalPlanningRequest(BaseModel):

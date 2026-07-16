@@ -6,6 +6,11 @@ from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, Scen
 from app.schemas.scenario_handoff import AreaStudyScenarioOutput, AscopeEntry
 from app.schemas.source_state import SourceTrustMarker
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.civil_network_context import (
+    civil_network_sections,
+    civil_network_snapshot,
+    civil_network_source_trust,
+)
 from app.services.agents.source_refs import (
     G9_REFERENCES,
     S2_REFERENCES,
@@ -54,6 +59,7 @@ class AreaStudyBuilderAgent(Agent):
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
         evidence = _source_evidence(context)
+        snapshot = civil_network_snapshot(context)
         pmesii: dict[str, list[str]] = {domain: [] for domain in _PMESII_DOMAINS}
         observations: list[str] = []
         for item in evidence:
@@ -81,14 +87,22 @@ class AreaStudyBuilderAgent(Agent):
             evidence_gaps=gaps,
         )
 
-        answer = _render_answer(output, evidence)
+        answer = (
+            _render_answer(output, evidence).removesuffix(_DRAFT_WARNING)
+            + civil_network_sections(snapshot)
+            + _DRAFT_WARNING
+        )
         local_citations = _local_citations(evidence)
         return self._response(
             answer=answer,
             input_text=input_text,
             citations=[*citation_titles(_AREA_STUDY_REFERENCES), *[citation.title for citation in local_citations]],
             structured_citations=[*structured_citations(_AREA_STUDY_REFERENCES), *local_citations],
-            source_trust=[*source_trust_markers(_AREA_STUDY_REFERENCES), *_local_source_trust(context)],
+            source_trust=[
+                *source_trust_markers(_AREA_STUDY_REFERENCES),
+                *_local_source_trust(context),
+                *civil_network_source_trust(snapshot),
+            ],
             confidence=Confidence.low,
             follow_up_questions=[
                 "What approved public or exercise source defines the operational area and time window?",
@@ -174,6 +188,5 @@ def _render_answer(output: AreaStudyScenarioOutput, evidence: list[dict[str, str
         + "\n".join(f"- {item}" for item in output.infrastructure_and_culture)
         + f"\n\nEvidence gaps:\n{gap_lines}\n\n"
         "Handoff note: downstream actor-network, information-requirements, and IPB work should treat every "
-        "unsupplied field as a collection need.\n\n"
-        + _DRAFT_WARNING
+        "unsupplied field as a collection need.\n\n" + _DRAFT_WARNING
     )

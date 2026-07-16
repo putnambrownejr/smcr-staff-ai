@@ -6,6 +6,11 @@ from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, Scen
 from app.schemas.scenario_handoff import IpbScenarioOutput
 from app.schemas.source_state import SourceTrustMarker
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.civil_network_context import (
+    civil_network_sections,
+    civil_network_snapshot,
+    civil_network_source_trust,
+)
 from app.services.agents.source_refs import S2_REFERENCES, citation_titles, source_trust_markers, structured_citations
 
 _DRAFT_WARNING = "DRAFT — Verify all references against current official sources before acting."
@@ -24,8 +29,17 @@ class IpbAssistantAgent(Agent):
             ),
             domain="intelligence preparation of the battlespace",
             intended_users=["S-2/G-2", "planners", "S-3", "G-9/civil affairs", "exercise designers"],
-            allowed_sources=["user-selected saved local public sources", "public doctrine", "training or fictional scenario material"],
-            disallowed_inputs=["classified or controlled information", "real-world sensitive movements", "COMSEC or frequencies", "individual targeting"],
+            allowed_sources=[
+                "user-selected saved local public sources",
+                "public doctrine",
+                "training or fictional scenario material",
+            ],
+            disallowed_inputs=[
+                "classified or controlled information",
+                "real-world sensitive movements",
+                "COMSEC or frequencies",
+                "individual targeting",
+            ],
             system_prompt=(
                 "Create an advisory IPB scaffold only. Use supplied evidence verbatim or as attributed observations; "
                 "label all unvalidated inferences as assumptions or hypotheses and all unknowns as collection gaps."
@@ -34,17 +48,26 @@ class IpbAssistantAgent(Agent):
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
         evidence = _source_evidence(context)
+        snapshot = civil_network_snapshot(context)
         area_study = _assessment(context, "area_study")
         actor_network = _assessment(context, "actor_network")
         information_requirements = _assessment(context, "information_requirements")
         output = _build_output(area_study, actor_network, information_requirements, evidence)
         local_citations = _local_citations(evidence)
         return self._response(
-            answer=_render_answer(output, evidence, area_study, actor_network, information_requirements),
+            answer=_render_answer(output, evidence, area_study, actor_network, information_requirements).removesuffix(
+                _DRAFT_WARNING
+            )
+            + civil_network_sections(snapshot)
+            + _DRAFT_WARNING,
             input_text=input_text,
             citations=[*citation_titles(S2_REFERENCES), *[citation.title for citation in local_citations]],
             structured_citations=[*structured_citations(S2_REFERENCES), *local_citations],
-            source_trust=[*source_trust_markers(S2_REFERENCES), *_local_source_trust(context)],
+            source_trust=[
+                *source_trust_markers(S2_REFERENCES),
+                *_local_source_trust(context),
+                *civil_network_source_trust(snapshot),
+            ],
             confidence=Confidence.low,
             follow_up_questions=[
                 "Which approved source or scenario-control input validates each environmental factor?",
@@ -69,7 +92,11 @@ def _source_evidence(context: AgentContext) -> list[dict[str, str]]:
     raw = context.extra.get("source_evidence")
     if not isinstance(raw, list):
         return []
-    return [{str(key): str(value) for key, value in item.items() if value is not None} for item in raw if isinstance(item, dict)]
+    return [
+        {str(key): str(value) for key, value in item.items() if value is not None}
+        for item in raw
+        if isinstance(item, dict)
+    ]
 
 
 def _build_output(
@@ -82,12 +109,20 @@ def _build_output(
         "Define the operational environment from approved area-study evidence; no independently validated baseline was supplied."
     ]
     if area_study:
-        environment = [f"Upstream area-study framing: {area_study.get('operational_area', 'operational area not specified.')}."]
+        environment = [
+            f"Upstream area-study framing: {area_study.get('operational_area', 'operational area not specified.')}."
+        ]
     effects = ["Environmental effects on friendly or adversary options are not established by supplied evidence."]
-    patterns = ["Broad hazard or actor patterns require approved public or scenario evidence; no intent or capability is inferred."]
+    patterns = [
+        "Broad hazard or actor patterns require approved public or scenario evidence; no intent or capability is inferred."
+    ]
     if actor_network:
-        patterns = ["Upstream actor-network output is a planning hypothesis; validate organization-level relationships before use."]
-    indicators = ["Event template: validate the decision-linked PIR, FFIR, and CIR indicators before treating a pattern as confirmed."]
+        patterns = [
+            "Upstream actor-network output is a planning hypothesis; validate organization-level relationships before use."
+        ]
+    indicators = [
+        "Event template: validate the decision-linked PIR, FFIR, and CIR indicators before treating a pattern as confirmed."
+    ]
     if information_requirements:
         requirements = information_requirements.get("requirements")
         if isinstance(requirements, list):
@@ -97,7 +132,11 @@ def _build_output(
                 if isinstance(item, dict)
             ] or indicators
     gaps = ["No supplied evidence confirms terrain, weather, actor intent, capability, disposition, or event timing."]
-    for assessment, label in ((area_study, "area-study"), (actor_network, "actor-network"), (information_requirements, "information-requirements")):
+    for assessment, label in (
+        (area_study, "area-study"),
+        (actor_network, "actor-network"),
+        (information_requirements, "information-requirements"),
+    ):
         if not assessment:
             gaps.append(f"No upstream {label} handoff supplied.")
     if not evidence:
@@ -114,10 +153,14 @@ def _build_output(
 def _local_citations(evidence: list[dict[str, str]]) -> list[StructuredCitation]:
     return [
         StructuredCitation(
-            title=item.get("title", "Saved local source"), url=item.get("url") or None,
-            publisher=item.get("publisher") or None, retrieved_at=item.get("retrieved_at") or None,
-            source_hash=item.get("source_hash") or None, chunk_id=item.get("chunk_id") or None,
-            confidence=Confidence.low, notes=f"Local source evidence; trust_status={item.get('trust_status', 'unknown')}.",
+            title=item.get("title", "Saved local source"),
+            url=item.get("url") or None,
+            publisher=item.get("publisher") or None,
+            retrieved_at=item.get("retrieved_at") or None,
+            source_hash=item.get("source_hash") or None,
+            chunk_id=item.get("chunk_id") or None,
+            confidence=Confidence.low,
+            notes=f"Local source evidence; trust_status={item.get('trust_status', 'unknown')}.",
         )
         for item in evidence
     ]
@@ -140,13 +183,22 @@ def _render_list(items: list[str]) -> str:
 
 
 def _render_answer(
-    output: IpbScenarioOutput, evidence: list[dict[str, str]], area_study: dict[str, object],
-    actor_network: dict[str, object], information_requirements: dict[str, object],
+    output: IpbScenarioOutput,
+    evidence: list[dict[str, str]],
+    area_study: dict[str, object],
+    actor_network: dict[str, object],
+    information_requirements: dict[str, object],
 ) -> str:
-    evidence_lines = _render_list([
-        f"{item.get('title', 'Saved local source')} (chunk {item.get('chunk_id', 'unknown')}): {item.get('excerpt', 'No excerpt supplied.')}"
-        for item in evidence
-    ]) if evidence else "- No local evidence was attached or retrieved."
+    evidence_lines = (
+        _render_list(
+            [
+                f"{item.get('title', 'Saved local source')} (chunk {item.get('chunk_id', 'unknown')}): {item.get('excerpt', 'No excerpt supplied.')}"
+                for item in evidence
+            ]
+        )
+        if evidence
+        else "- No local evidence was attached or retrieved."
+    )
     assumptions = [
         "Upstream handoffs are planning inputs, not independently verified facts.",
         "Any environmental effect not directly supported by a cited source requires human validation.",
