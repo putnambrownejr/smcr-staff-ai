@@ -4,6 +4,7 @@ import yaml
 
 from app.schemas.agents import AgentMetadata
 from app.services.agents.ace_agent import build_ace_agent
+from app.services.agents.actor_network_agent import build_actor_network_agent
 from app.services.agents.area_study_agent import build_area_study_agent
 from app.services.agents.artillery_08xx_agent import build_artillery_08xx_agent
 from app.services.agents.assessment_learning_agent import build_assessment_learning_agent
@@ -13,6 +14,7 @@ from app.services.agents.chief_of_staff_agent import build_chief_of_staff_agent
 from app.services.agents.drill_prep_agent import build_drill_prep_agent
 from app.services.agents.gce_agent import build_gce_agent
 from app.services.agents.infantry_03xx_agent import build_infantry_03xx_agent
+from app.services.agents.information_requirements_agent import build_information_requirements_agent
 from app.services.agents.installation_agent import build_installation_agent
 from app.services.agents.lce_agent import build_lce_agent
 from app.services.agents.leadership_agent import build_leadership_agent
@@ -58,6 +60,8 @@ _AGENT_CATEGORY_BY_ID: dict[str, str] = {
     "osint-research-assistant": "Intelligence & Research",
     "terrain-map-advisor": "Intelligence & Research",
     "area-study-builder": "Intelligence & Research",
+    "actor-network-analyst": "Intelligence & Research",
+    "information-requirements-manager": "Intelligence & Research",
     "pki-cac-troubleshooter": "Reserve Admin & Readiness",
     "uniform-advisor": "Reserve Admin & Readiness",
     "installation-practical-advisor": "Reserve Admin & Readiness",
@@ -144,6 +148,8 @@ def default_agents() -> list[Agent]:
         build_osint_agent(),
         build_map_agent(),
         build_area_study_agent(),
+        build_actor_network_agent(),
+        build_information_requirements_agent(),
         build_checkin_agent(),
         # MAGTF element agents (standalone)
         build_ace_agent(),

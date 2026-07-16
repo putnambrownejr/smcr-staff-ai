@@ -245,6 +245,38 @@ class AreaStudyScenarioOutput(StrictScenarioModel):
 
 
 # ---------------------------------------------------------------------------
+# Actor Network and Information Requirements
+# ---------------------------------------------------------------------------
+
+
+class ActorNetworkScenarioOutput(StrictScenarioModel):
+    """Organization-level actor network for planning handoff."""
+
+    role: str = "actor_network"
+    actors: list[dict[str, str]] = Field(default_factory=list)
+    relationships: list[dict[str, str]] = Field(default_factory=list)
+    evidence_gaps: list[str] = Field(default_factory=list)
+
+
+class InformationRequirement(StrictScenarioModel):
+    """Human-reviewable information requirement, not a collection tasking."""
+
+    category: str = "CIR"
+    requirement: str = ""
+    decision_supported: str = ""
+    indicator: str = ""
+    collection_question: str = ""
+    recommended_owner: str = ""
+    priority: str = ""
+
+
+class InformationRequirementsScenarioOutput(StrictScenarioModel):
+    role: str = "information_requirements"
+    requirements: list[InformationRequirement] = Field(default_factory=list)
+    evidence_gaps: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
 # Union type and chain request
 # ---------------------------------------------------------------------------
 
@@ -260,6 +292,8 @@ ScenarioOutput = (
     | SelPtScenarioOutput
     | OrmPtScenarioOutput
     | AreaStudyScenarioOutput
+    | ActorNetworkScenarioOutput
+    | InformationRequirementsScenarioOutput
 )
 
 SCENARIO_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
@@ -274,6 +308,8 @@ SCENARIO_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
     "sel": SelPtScenarioOutput,
     "orm": OrmPtScenarioOutput,
     "area_study": AreaStudyScenarioOutput,
+    "actor_network": ActorNetworkScenarioOutput,
+    "information_requirements": InformationRequirementsScenarioOutput,
 }
 
 
