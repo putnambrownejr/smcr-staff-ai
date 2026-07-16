@@ -1,4 +1,5 @@
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
+from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, ScenarioOutputStatus
+from app.schemas.scenario_handoff import AssessmentLearningScenarioOutput, CorrectiveActionRecord
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import (
     STAFF_PROCESS_REFERENCES,
@@ -7,6 +8,10 @@ from app.services.agents.source_refs import (
     source_trust_markers,
     structured_citations,
 )
+
+_DRAFT_WARNING = "DRAFT — Verify all references against current official sources before acting."
+_NOT_PROVIDED = "Not provided"
+_HUMAN_ASSIGNMENT_REQUIRED = "Not provided — human assignment required"
 
 
 class AssessmentLearningAgent(Agent):
@@ -76,6 +81,11 @@ class AssessmentLearningAgent(Agent):
         )
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        corrective_action = _corrective_action_record(input_text)
+        scenario_output = AssessmentLearningScenarioOutput(
+            corrective_action_register=[corrective_action],
+            missing_evidence_or_ownership=_missing_fields(corrective_action),
+        )
         answer = (
             "Assessment / learning advisory.\n\n"
             "Use this to connect the event to the next event — training that does not change "
@@ -115,7 +125,21 @@ class AssessmentLearningAgent(Agent):
             "- report timeliness and decision quality\n"
             "- corrective action closure rate (drill-over-drill)\n"
             "- comm reliability and accountability discipline\n"
-            "- commander decision support quality\n"
+            "- commander decision support quality\n\n"
+            "Corrective-action register:\n"
+            f"- Observation: {corrective_action.observation}\n"
+            f"- Standard or measure: {corrective_action.standard_or_measure}\n"
+            f"- Root cause: {corrective_action.root_cause}\n"
+            f"- Corrective action: {corrective_action.corrective_action}\n"
+            f"- Owner: {corrective_action.owner}\n"
+            f"- Suspense: {corrective_action.suspense}\n"
+            "- Status: Open — completion has not been evidenced or inferred.\n"
+            "- Next-drill verification condition: "
+            f"{corrective_action.next_drill_verification_condition}\n\n"
+            "Missing evidence or ownership:\n"
+            + "\n".join(f"- {item}" for item in scenario_output.missing_evidence_or_ownership)
+            + "\n\n"
+            + _DRAFT_WARNING
         )
         refs = TRAINING_REFERENCES + STAFF_PROCESS_REFERENCES
         return self._response(
@@ -135,8 +159,67 @@ class AssessmentLearningAgent(Agent):
                 "What observation actually changes the next drill?",
                 "Who owns the corrective action before the next event?",
             ],
+            scenario_output=scenario_output.model_dump(),
+            scenario_output_status=ScenarioOutputStatus.validated,
         )
 
 
 def build_assessment_learning_agent() -> AssessmentLearningAgent:
     return AssessmentLearningAgent()
+
+
+def _corrective_action_record(input_text: str) -> CorrectiveActionRecord:
+    """Capture only explicitly labelled AAR fields; keep unprovided fields open."""
+
+    fields = _labelled_fields(input_text)
+    observation = fields.get("observation") or input_text.strip() or _NOT_PROVIDED
+    return CorrectiveActionRecord(
+        observation=observation,
+        standard_or_measure=fields.get("standard") or fields.get("measure") or _NOT_PROVIDED,
+        root_cause=fields.get("root cause") or _NOT_PROVIDED,
+        corrective_action=fields.get("corrective action") or fields.get("action") or _NOT_PROVIDED,
+        owner=fields.get("owner") or _HUMAN_ASSIGNMENT_REQUIRED,
+        suspense=fields.get("suspense") or _HUMAN_ASSIGNMENT_REQUIRED,
+        next_drill_verification_condition=(
+            fields.get("next-drill verification condition")
+            or fields.get("verification condition")
+            or fields.get("verification")
+            or _NOT_PROVIDED
+        ),
+    )
+
+
+def _labelled_fields(input_text: str) -> dict[str, str]:
+    """Read only simple, user-supplied ``label: value`` entries from an AAR note."""
+
+    supported = {
+        "observation", "standard", "measure", "root cause", "corrective action", "action",
+        "owner", "suspense", "next-drill verification condition", "verification condition", "verification",
+    }
+    values: dict[str, str] = {}
+    for line in input_text.splitlines():
+        if ":" not in line:
+            continue
+        label, value = line.split(":", maxsplit=1)
+        normalized_label = label.strip().lower().lstrip("-*").strip()
+        normalized_value = value.strip()
+        if normalized_label in supported and normalized_value:
+            values[normalized_label] = normalized_value
+    return values
+
+
+def _missing_fields(record: CorrectiveActionRecord) -> list[str]:
+    missing: list[str] = []
+    if record.standard_or_measure == _NOT_PROVIDED:
+        missing.append("Standard or measure not provided; do not treat attendance or completion as performance evidence.")
+    if record.root_cause == _NOT_PROVIDED:
+        missing.append("Root cause not provided; validate causes before selecting a correction.")
+    if record.corrective_action == _NOT_PROVIDED:
+        missing.append("Corrective action not provided; human review must define the change before the next drill.")
+    if record.owner == _HUMAN_ASSIGNMENT_REQUIRED:
+        missing.append("Owner not provided; human assignment required before the action can be tracked.")
+    if record.suspense == _HUMAN_ASSIGNMENT_REQUIRED:
+        missing.append("Suspense not provided; human assignment required before the action can be tracked.")
+    if record.next_drill_verification_condition == _NOT_PROVIDED:
+        missing.append("Next-drill verification condition not provided; completion cannot be inferred.")
+    return missing

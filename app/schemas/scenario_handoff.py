@@ -277,6 +277,45 @@ class InformationRequirementsScenarioOutput(StrictScenarioModel):
 
 
 # ---------------------------------------------------------------------------
+# IPB Assistant
+# ---------------------------------------------------------------------------
+
+
+class IpbScenarioOutput(StrictScenarioModel):
+    """Planning-level IPB scaffold built from the specialist handoffs."""
+
+    role: str = "ipb"
+    operational_environment: list[str] = Field(default_factory=list)
+    environmental_effects: list[str] = Field(default_factory=list)
+    broad_threat_or_hazard_patterns: list[str] = Field(default_factory=list)
+    indicators_and_event_templates: list[str] = Field(default_factory=list)
+    collection_gaps: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Assessment and Learning
+# ---------------------------------------------------------------------------
+
+
+class CorrectiveActionRecord(StrictScenarioModel):
+    """Open corrective action captured from an AAR or assessment input."""
+
+    observation: str = ""
+    standard_or_measure: str = "Not provided"
+    root_cause: str = "Not provided"
+    corrective_action: str = "Not provided"
+    owner: str = "Not provided — human assignment required"
+    suspense: str = "Not provided — human assignment required"
+    next_drill_verification_condition: str = "Not provided"
+
+
+class AssessmentLearningScenarioOutput(StrictScenarioModel):
+    role: str = "assessment_learning"
+    corrective_action_register: list[CorrectiveActionRecord] = Field(default_factory=list)
+    missing_evidence_or_ownership: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
 # Union type and chain request
 # ---------------------------------------------------------------------------
 
@@ -294,6 +333,8 @@ ScenarioOutput = (
     | AreaStudyScenarioOutput
     | ActorNetworkScenarioOutput
     | InformationRequirementsScenarioOutput
+    | IpbScenarioOutput
+    | AssessmentLearningScenarioOutput
 )
 
 SCENARIO_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
@@ -310,6 +351,8 @@ SCENARIO_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
     "area_study": AreaStudyScenarioOutput,
     "actor_network": ActorNetworkScenarioOutput,
     "information_requirements": InformationRequirementsScenarioOutput,
+    "ipb": IpbScenarioOutput,
+    "assessment_learning": AssessmentLearningScenarioOutput,
 }
 
 

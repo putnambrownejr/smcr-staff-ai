@@ -16,6 +16,7 @@ from app.services.agents.gce_agent import build_gce_agent
 from app.services.agents.infantry_03xx_agent import build_infantry_03xx_agent
 from app.services.agents.information_requirements_agent import build_information_requirements_agent
 from app.services.agents.installation_agent import build_installation_agent
+from app.services.agents.ipb_agent import build_ipb_assistant_agent
 from app.services.agents.lce_agent import build_lce_agent
 from app.services.agents.leadership_agent import build_leadership_agent
 from app.services.agents.map_agent import build_map_agent
@@ -62,6 +63,7 @@ _AGENT_CATEGORY_BY_ID: dict[str, str] = {
     "area-study-builder": "Intelligence & Research",
     "actor-network-analyst": "Intelligence & Research",
     "information-requirements-manager": "Intelligence & Research",
+    "ipb-assistant": "Intelligence & Research",
     "pki-cac-troubleshooter": "Reserve Admin & Readiness",
     "uniform-advisor": "Reserve Admin & Readiness",
     "installation-practical-advisor": "Reserve Admin & Readiness",
@@ -150,6 +152,7 @@ def default_agents() -> list[Agent]:
         build_area_study_agent(),
         build_actor_network_agent(),
         build_information_requirements_agent(),
+        build_ipb_assistant_agent(),
         build_checkin_agent(),
         # MAGTF element agents (standalone)
         build_ace_agent(),
