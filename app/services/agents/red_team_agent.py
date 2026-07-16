@@ -1,5 +1,6 @@
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
 from app.schemas.source_state import SourceTrustMarker
+from app.schemas.strategic_lens import StrategicLensMode, StrategicLensOutput, StrategicLensRequest
 from app.schemas.training import ScenarioArchetype
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import (
@@ -12,6 +13,7 @@ from app.services.agents.source_refs import (
 )
 from app.services.training.redcell_engine import build_redcell_design
 from app.services.training.scenario_engine import infer_archetype_from_text
+from app.services.training.strategic_lens import StrategicLensBuilder
 
 _DRAFT_WARNING = "DRAFT — Verify all references against current official sources before acting."
 _MODES = {"assumptions", "evidence", "hypotheses"}
@@ -46,13 +48,16 @@ class RedTeamAssumptionsAgent(Agent):
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
         mode = _mode(context)
+        strategic_lens = _strategic_lens(context)
         if mode == "evidence":
-            return self._evidence_response(input_text, context)
+            return self._evidence_response(input_text, context, strategic_lens)
         if mode == "hypotheses":
-            return self._hypotheses_response(input_text, context)
-        return self._assumptions_response(input_text, context)
+            return self._hypotheses_response(input_text, context, strategic_lens)
+        return self._assumptions_response(input_text, context, strategic_lens)
 
-    def _assumptions_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+    def _assumptions_response(
+        self, input_text: str, context: AgentContext, strategic_lens: StrategicLensOutput | None
+    ) -> AgentRunResponse:
         archetype = _infer_archetype(input_text)
         redcell = build_redcell_design(
             archetype=archetype,
@@ -88,6 +93,7 @@ class RedTeamAssumptionsAgent(Agent):
             "- Recommend the smallest useful correction.\n\n"
             "Red-cell questions:\n"
             f"{question_lines}\n\n"
+            f"{_assumptions_lens_section(strategic_lens)}"
             "Helpful red-cell cuts:\n"
             "- If the adversary is probing, what routine are we showing it?\n"
             "- If the adversary wants overreaction, where are we easiest to bait?\n"
@@ -120,7 +126,9 @@ class RedTeamAssumptionsAgent(Agent):
             ],
         )
 
-    def _evidence_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+    def _evidence_response(
+        self, input_text: str, context: AgentContext, strategic_lens: StrategicLensOutput | None
+    ) -> AgentRunResponse:
         evidence = _source_evidence(context)
         local_citations = _local_citations(evidence)
         if evidence:
@@ -148,6 +156,7 @@ class RedTeamAssumptionsAgent(Agent):
             "- Separate source observations from staff assumptions.\n"
             "- Record corroboration, recency, and relevance before relying on any claim.\n"
             "- Convert unresolved claims into explicit collection needs.\n\n"
+            f"{_evidence_lens_section(strategic_lens)}"
             f"{_DRAFT_WARNING}"
         )
         return self._response(
@@ -163,7 +172,9 @@ class RedTeamAssumptionsAgent(Agent):
             ],
         )
 
-    def _hypotheses_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+    def _hypotheses_response(
+        self, input_text: str, context: AgentContext, strategic_lens: StrategicLensOutput | None
+    ) -> AgentRunResponse:
         evidence = _source_evidence(context)
         local_citations = _local_citations(evidence)
         evidence_note = (
@@ -181,6 +192,7 @@ class RedTeamAssumptionsAgent(Agent):
             "  - Support/refutation: look for unconfirmed assumptions, conflicting source observations, or missing owners.\n"
             "  - Discriminator: a verified gap that changes the decision, branch, or abort trigger.\n\n"
             f"Evidence available: {evidence_note}\n\n"
+            f"{_hypotheses_lens_section(strategic_lens)}"
             "Confidence: low until a human reviewer compares current evidence against the discriminators.\n"
             "What would change the assessment: confirmed or refuted evidence for the highest-consequence dependency.\n\n"
             f"{_DRAFT_WARNING}"
@@ -220,6 +232,67 @@ def _source_evidence(context: AgentContext) -> list[dict[str, str]]:
     if not isinstance(raw, list):
         return []
     return [{str(key): str(value) for key, value in item.items() if value is not None} for item in raw if isinstance(item, dict)]
+
+
+def _strategic_lens(context: AgentContext) -> StrategicLensOutput | None:
+    options = context.extra.get("agent_options")
+    raw = options.get("strategic_lens") if isinstance(options, dict) else None
+    if raw is None:
+        return None
+    request = StrategicLensRequest.model_validate(raw)
+    return StrategicLensBuilder().build(request, _source_evidence(context))
+
+
+def _assumptions_lens_section(lens: StrategicLensOutput | None) -> str:
+    if lens is None:
+        return ""
+    questions = "\n".join(
+        f"- Mirror-imaging check: are we assuming {lens.actor_name} will share our framing of {item.removeprefix('Scenario assumption: ')}?"
+        for item in lens.strategic_objective[:2]
+    )
+    return (
+        "Strategic lens (exercise framing, not a forecast):\n"
+        f"- Actor: {lens.actor_name}\n"
+        f"{questions}\n"
+        f"- Competing interpretation: {lens.competing_interpretation}\n"
+        f"- Discriminator: {lens.discriminator}\n\n"
+    )
+
+
+def _evidence_lens_section(lens: StrategicLensOutput | None) -> str:
+    if lens is None:
+        return ""
+    if lens.mode is StrategicLensMode.public_source:
+        observations = "\n".join(f"- Observation: {item}" for item in lens.evidence_observations)
+        provenance = "\n".join(
+            f"- Source: {item.title} (hash: {item.source_hash}; trust: {item.trust_status}; retrieved: {item.retrieved_at or 'unknown'})"
+            for item in lens.evidence_provenance
+        )
+        assumptions = "\n".join(f"- Hypothesis, not fact: {item}" for item in lens.hypotheses)
+        return (
+            "Strategic lens evidence (attributed local sources; not a forecast):\n"
+            f"- Actor: {lens.actor_name}\n{observations}\n{provenance}\n{assumptions}\n\n"
+        )
+    assumptions = "\n".join(f"- Scenario assumption: {item}" for item in lens.hypotheses)
+    return (
+        "Strategic lens assumptions (fictional exercise framing, not evidence):\n"
+        f"- Actor: {lens.actor_name}\n{assumptions}\n\n"
+    )
+
+
+def _hypotheses_lens_section(lens: StrategicLensOutput | None) -> str:
+    if lens is None:
+        return ""
+    hypotheses = "\n".join(f"- {item}" for item in lens.hypotheses)
+    observations = "\n".join(f"- Evidence: {item}" for item in lens.evidence_observations)
+    return (
+        "Strategic lens (exercise framing, not a forecast of real-world conduct):\n"
+        f"- Actor: {lens.actor_name}\n"
+        f"{observations + chr(10) if observations else ''}"
+        f"Hypotheses:\n{hypotheses}\n"
+        f"Competing interpretation: {lens.competing_interpretation}\n"
+        f"Discriminator: {lens.discriminator}\n\n"
+    )
 
 
 def _local_citations(evidence: list[dict[str, str]]) -> list[StructuredCitation]:
