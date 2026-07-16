@@ -80,6 +80,7 @@ class AgentRunRequest(BaseModel):
     )
     input: str = Field(min_length=1)
     context: dict[str, Any] = Field(default_factory=dict)
+    options: dict[str, Any] = Field(default_factory=dict)
     source_selection: SourceSelection | None = None
     external_processing_approval: ExternalProcessingApproval | None = None
 

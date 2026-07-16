@@ -1,4 +1,5 @@
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
+from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
+from app.schemas.source_state import SourceTrustMarker
 from app.schemas.training import ScenarioArchetype
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import (
@@ -11,6 +12,9 @@ from app.services.agents.source_refs import (
 )
 from app.services.training.redcell_engine import build_redcell_design
 from app.services.training.scenario_engine import infer_archetype_from_text
+
+_DRAFT_WARNING = "DRAFT — Verify all references against current official sources before acting."
+_MODES = {"assumptions", "evidence", "hypotheses"}
 
 
 class RedTeamAssumptionsAgent(Agent):
@@ -41,6 +45,14 @@ class RedTeamAssumptionsAgent(Agent):
         )
 
     def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        mode = _mode(context)
+        if mode == "evidence":
+            return self._evidence_response(input_text, context)
+        if mode == "hypotheses":
+            return self._hypotheses_response(input_text, context)
+        return self._assumptions_response(input_text, context)
+
+    def _assumptions_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
         archetype = _infer_archetype(input_text)
         redcell = build_redcell_design(
             archetype=archetype,
@@ -86,6 +98,7 @@ class RedTeamAssumptionsAgent(Agent):
             "- The plan depends on support that has not actually been confirmed.\n"
             "- Risk language exists, but nobody can say what would trigger a branch or abort.\n"
             "- The brief sounds polished because the hard part was edited out.\n"
+            f"\n{_DRAFT_WARNING}"
         )
         return self._response(
             answer=answer,
@@ -107,6 +120,84 @@ class RedTeamAssumptionsAgent(Agent):
             ],
         )
 
+    def _evidence_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        evidence = _source_evidence(context)
+        local_citations = _local_citations(evidence)
+        if evidence:
+            ledger = "\n".join(
+                (
+                    f"- Claim: {item.get('excerpt', 'No excerpt supplied.')}\n"
+                    f"  - Source: {item.get('title', 'Saved local source')} "
+                    f"(chunk {item.get('chunk_id', 'unknown')}; trust: {item.get('trust_status', 'unknown')})\n"
+                    "  - Assessment: supplied evidence only; corroboration and applicability require human review.\n"
+                    "  - Collection need: seek an independent, current source before treating this as a planning fact."
+                )
+                for item in evidence
+            )
+        else:
+            ledger = (
+                "- Collection need: no saved local evidence was attached or retrieved.\n"
+                "  - Do not promote the request text into a claim. Identify the decision, then collect approved public "
+                "or scenario evidence that could support or refute it."
+            )
+        answer = (
+            "Red-team / evidence advisory.\n\n"
+            "Claim ledger:\n"
+            f"{ledger}\n\n"
+            "Review gate:\n"
+            "- Separate source observations from staff assumptions.\n"
+            "- Record corroboration, recency, and relevance before relying on any claim.\n"
+            "- Convert unresolved claims into explicit collection needs.\n\n"
+            f"{_DRAFT_WARNING}"
+        )
+        return self._response(
+            answer=answer,
+            input_text=input_text,
+            citations=[*citation_titles((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *[citation.title for citation in local_citations]],
+            structured_citations=[*structured_citations((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *local_citations],
+            source_trust=[*source_trust_markers((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *_local_source_trust(context)],
+            confidence=Confidence.low,
+            follow_up_questions=[
+                "Which claim has enough current, corroborated evidence to retain?",
+                "Which collection need matters most to the next commander decision?",
+            ],
+        )
+
+    def _hypotheses_response(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        evidence = _source_evidence(context)
+        local_citations = _local_citations(evidence)
+        evidence_note = (
+            "; ".join(item.get("title", "Saved local source") for item in evidence)
+            if evidence
+            else "No saved local evidence attached; these remain collection scaffolds."
+        )
+        answer = (
+            "Red-team / hypotheses advisory.\n\n"
+            "Competing hypotheses:\n"
+            "- H1 — The current concept is feasible if stated dependencies hold.\n"
+            "  - Support/refutation: validate each dependency with current, corroborated evidence.\n"
+            "  - Discriminator: confirmed support, access, and timing against the stated conditions.\n"
+            "- H2 — The concept fails because one or more dependencies are unavailable, late, or misread.\n"
+            "  - Support/refutation: look for unconfirmed assumptions, conflicting source observations, or missing owners.\n"
+            "  - Discriminator: a verified gap that changes the decision, branch, or abort trigger.\n\n"
+            f"Evidence available: {evidence_note}\n\n"
+            "Confidence: low until a human reviewer compares current evidence against the discriminators.\n"
+            "What would change the assessment: confirmed or refuted evidence for the highest-consequence dependency.\n\n"
+            f"{_DRAFT_WARNING}"
+        )
+        return self._response(
+            answer=answer,
+            input_text=input_text,
+            citations=[*citation_titles((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *[citation.title for citation in local_citations]],
+            structured_citations=[*structured_citations((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *local_citations],
+            source_trust=[*source_trust_markers((*STAFF_PROCESS_REFERENCES, *S2_REFERENCES, *S3_REFERENCES)), *_local_source_trust(context)],
+            confidence=Confidence.low,
+            follow_up_questions=[
+                "Which discriminator can the staff validate before the next decision?",
+                "What evidence would make you reject the current leading hypothesis?",
+            ],
+        )
+
 
 def build_red_team_agent() -> RedTeamAssumptionsAgent:
     return RedTeamAssumptionsAgent()
@@ -114,3 +205,47 @@ def build_red_team_agent() -> RedTeamAssumptionsAgent:
 
 def _infer_archetype(input_text: str) -> ScenarioArchetype:
     return infer_archetype_from_text(input_text)
+
+
+def _mode(context: AgentContext) -> str:
+    options = context.extra.get("agent_options")
+    mode = options.get("mode", "assumptions") if isinstance(options, dict) else "assumptions"
+    if not isinstance(mode, str) or mode not in _MODES:
+        raise ValueError("Unsupported Red Team mode. Use assumptions, evidence, or hypotheses.")
+    return mode
+
+
+def _source_evidence(context: AgentContext) -> list[dict[str, str]]:
+    raw = context.extra.get("source_evidence")
+    if not isinstance(raw, list):
+        return []
+    return [{str(key): str(value) for key, value in item.items() if value is not None} for item in raw if isinstance(item, dict)]
+
+
+def _local_citations(evidence: list[dict[str, str]]) -> list[StructuredCitation]:
+    return [
+        StructuredCitation(
+            title=item.get("title", "Saved local source"),
+            url=item.get("url") or None,
+            publisher=item.get("publisher") or None,
+            retrieved_at=item.get("retrieved_at") or None,
+            source_hash=item.get("source_hash") or None,
+            chunk_id=item.get("chunk_id") or None,
+            confidence=Confidence.low,
+            notes=f"Local source evidence; trust_status={item.get('trust_status', 'unknown')}.",
+        )
+        for item in evidence
+    ]
+
+
+def _local_source_trust(context: AgentContext) -> list[SourceTrustMarker]:
+    raw = context.extra.get("source_trust")
+    if not isinstance(raw, list):
+        return []
+    markers: list[SourceTrustMarker] = []
+    for item in raw:
+        try:
+            markers.append(item if isinstance(item, SourceTrustMarker) else SourceTrustMarker.model_validate(item))
+        except ValueError:
+            continue
+    return markers

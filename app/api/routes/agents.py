@@ -180,6 +180,7 @@ def preview_agent_external_processing(
     context = _build_agent_context(
         request.context,
         active_context_store,
+        options=request.options,
         source_selection=request.source_selection,
         source_evidence_resolver=source_evidence_resolver,
         approval=None,
@@ -206,6 +207,7 @@ def run_agent(
     context = _build_agent_context(
         request.context,
         active_context_store,
+        options=request.options,
         source_selection=request.source_selection,
         source_evidence_resolver=source_evidence_resolver,
         approval=request.external_processing_approval,
@@ -213,6 +215,8 @@ def run_agent(
     )
     try:
         return _apply_source_context(agent.run(request.input, context), context)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except ExternalProcessingApprovalRequiredError as exc:
         raise _approval_http_error(exc) from exc
 
@@ -317,6 +321,7 @@ def _build_agent_context(
     expected_call_count: int = 1,
     approval_digest_override: str | None = None,
     prior_assessments: dict[str, object] | None = None,
+    options: dict[str, object] | None = None,
     source_selection: SourceSelection | None = None,
     source_evidence_resolver: SourceEvidenceResolver | None = None,
 ) -> AgentContext:
@@ -325,6 +330,8 @@ def _build_agent_context(
     raw_extra = context_payload.get("extra")
     extra = dict(raw_extra) if isinstance(raw_extra, dict) else {}
     extra.update(unknown_context)
+    if options:
+        extra["agent_options"] = dict(options)
 
     if user_key := context_payload.get("user_key"):
         stored_context = active_context_store.get(str(user_key))
