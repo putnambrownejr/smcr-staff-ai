@@ -4,6 +4,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from app.schemas.agents import SourceSelection
+from app.schemas.strategic_lens import StrategicLensOutput, StrategicLensRequest
+
 
 class TrainingScenarioType(StrEnum):
     field_exercise = "field_exercise"
@@ -91,6 +94,9 @@ class TrainingScenarioRequest(BaseModel):
     secondary_scenario_input: str | None = None
     current_event_context: list[str] = Field(default_factory=list)
     source_items: list[dict[str, str]] = Field(default_factory=list)
+    user_key: str | None = None
+    source_selection: SourceSelection | None = None
+    strategic_lens: StrategicLensRequest | None = None
     coordinating_sections: list[str] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
     training_only: bool = True
@@ -109,6 +115,7 @@ class TrainingScenarioResponse(BaseModel):
     inject_matrix: list[ScenarioInjectCard] = Field(default_factory=list)
     facilitator_notes: list[str] = Field(default_factory=list)
     redcell_questions: list[str] = Field(default_factory=list)
+    strategic_lens: StrategicLensOutput | None = None
     support_requirements: list[str] = Field(default_factory=list)
     admin_requirements: list[str] = Field(default_factory=list)
     orm_considerations: list[str] = Field(default_factory=list)

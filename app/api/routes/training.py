@@ -3,6 +3,8 @@ from collections.abc import Callable
 from fastapi import APIRouter, HTTPException
 
 from app.core.auth import LocalApiKeyDependency
+from app.core.config import get_settings
+from app.schemas.strategic_lens import StrategicLensMode, StrategicLensOutput
 from app.schemas.tdg import TdgGenerationRequest, TdgGenerationResponse
 from app.schemas.training import (
     AnnualTrainingPlanRequest,
@@ -23,6 +25,8 @@ from app.schemas.training import (
     TrainingScenarioRequest,
     TrainingScenarioResponse,
 )
+from app.services.agents.source_context import SourceEvidenceResolver
+from app.services.source_library.store import SourceLibraryStore
 from app.services.training.case_study_builder import TrainingCaseStudyBuilder
 from app.services.training.event_planner import AnnualTrainingPlanner, RangePackagePlanner
 from app.services.training.infantry_package_builder import InfantryTrainingPackageBuilder
@@ -30,6 +34,7 @@ from app.services.training.s3_planner import S3Planner
 from app.services.training.s4_planner import S4Planner
 from app.services.training.scenario_builder import RangeSafetyBuilder, TrainingScenarioBuilder
 from app.services.training.scenario_preset_catalog import ScenarioPresetCatalog
+from app.services.training.strategic_lens import StrategicLensBuilder
 from app.services.training.tdg_builder import TdgBuilder
 
 router = APIRouter(prefix="/training", tags=["training workflows"], dependencies=[LocalApiKeyDependency])
@@ -57,6 +62,12 @@ _case_study_builder = TrainingCaseStudyBuilder()
 _infantry_package_builder = InfantryTrainingPackageBuilder()
 
 
+def get_training_source_evidence_resolver() -> SourceEvidenceResolver:
+    """Provide local-only Source Library evidence for training scenarios."""
+    settings = get_settings()
+    return SourceEvidenceResolver(SourceLibraryStore(settings.source_library_storage_dir))
+
+
 @router.get("/scenario-presets", response_model=ScenarioPresetListResponse)
 def list_scenario_presets() -> ScenarioPresetListResponse:
     return _scenario_presets.list()
@@ -69,7 +80,37 @@ def build_training_scenario(request: TrainingScenarioRequest) -> TrainingScenari
             lambda: _scenario_presets.apply_to_training_request(request),
             request.scenario_preset_id,
         )
-    return _scenario_builder.build(request)
+    resolved_source_items = request.source_items
+    if request.source_selection is not None:
+        if not request.user_key:
+            raise HTTPException(status_code=422, detail="Source selection requires a user_key.")
+        try:
+            resolved_source_items = get_training_source_evidence_resolver().resolve(
+                request.user_key, request.source_selection
+            ).items
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    strategic_lens: StrategicLensOutput | None = None
+    if request.strategic_lens is not None:
+        if request.strategic_lens.mode is StrategicLensMode.public_source:
+            if request.source_selection is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Public-source strategic lenses require selected reviewed local evidence.",
+                )
+            if not resolved_source_items:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Public-source strategic lenses require reviewed local evidence.",
+                )
+        try:
+            strategic_lens = StrategicLensBuilder().build(request.strategic_lens, resolved_source_items)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    request = request.model_copy(update={"source_items": resolved_source_items})
+    return _scenario_builder.build(request, strategic_lens=strategic_lens)
 
 
 @router.post("/range-safety", response_model=RangeSafetyResponse)

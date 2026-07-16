@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
+from app.schemas.strategic_lens import StrategicLensMode, StrategicLensOutput
 from app.schemas.training import (
     ScenarioActorProfile,
     ScenarioArchetype,
@@ -43,6 +44,7 @@ def build_s3_scenario_design(
     source_items: list[dict[str, str]],
     coordinating_sections: list[str],
     constraints: list[str],
+    strategic_lens: StrategicLensOutput | None = None,
 ) -> ScenarioDesign:
     seed = _seed_text(title, mission_or_training_goal, event_type, primary_scenario_input, secondary_scenario_input)
     archetype = _scenario_archetype(
@@ -57,6 +59,15 @@ def build_s3_scenario_design(
     place_name = _fictional_place(seed)
     country_name = _fictional_country(seed)
     actor = _fictional_actor(seed, archetype, place_name)
+    if strategic_lens is not None and strategic_lens.mode is StrategicLensMode.fictional:
+        actor = ScenarioActorProfile(
+            name=strategic_lens.actor_name,
+            role=actor.role,
+            disposition=actor.disposition,
+            objectives=actor.objectives,
+            capabilities=actor.capabilities,
+            signature_tactics=actor.signature_tactics,
+        )
     redcell_design = build_redcell_design(
         archetype=archetype,
         actor_name=actor.name,
@@ -70,6 +81,7 @@ def build_s3_scenario_design(
         audience=audience,
         current_event_context=current_event_context,
         source_items=source_items,
+        strategic_lens=strategic_lens,
     )
     frame = _frame_lines(
         archetype=archetype,
@@ -78,6 +90,7 @@ def build_s3_scenario_design(
         primary_scenario_input=primary_scenario_input,
         secondary_scenario_input=secondary_scenario_input,
         source_items=source_items,
+        strategic_lens=strategic_lens,
     )
     beats = _narrative_beats(
         archetype=archetype,
@@ -85,6 +98,7 @@ def build_s3_scenario_design(
         place_name=place_name,
         primary_scenario_input=primary_scenario_input,
         secondary_scenario_input=secondary_scenario_input,
+        strategic_lens=strategic_lens,
     )
     escalation = [f"{beat.phase} - {beat.summary}" for beat in beats]
     injects = _inject_cards(
@@ -97,7 +111,11 @@ def build_s3_scenario_design(
         primary_scenario_input=primary_scenario_input,
         secondary_scenario_input=secondary_scenario_input,
     )
-    facilitator_notes = _facilitator_notes(archetype, actor.name, coordinating_sections)
+    facilitator_notes = _facilitator_notes(archetype, actor.name, coordinating_sections, strategic_lens)
+    redcell_questions = [
+        *redcell_design.questions,
+        *_strategic_lens_questions(strategic_lens, actor.name),
+    ]
     return ScenarioDesign(
         archetype=archetype,
         inject_tags_used=list(dict.fromkeys(inject_tags)),
@@ -109,7 +127,7 @@ def build_s3_scenario_design(
         beats=beats,
         injects=injects,
         facilitator_notes=facilitator_notes,
-        redcell_questions=redcell_design.questions,
+        redcell_questions=redcell_questions,
     )
 
 
@@ -263,6 +281,7 @@ def _setting_lines(
     audience: str | None,
     current_event_context: list[str],
     source_items: list[dict[str, str]],
+    strategic_lens: StrategicLensOutput | None,
 ) -> list[str]:
     base = [
         (
@@ -300,6 +319,16 @@ def _setting_lines(
         base.append(f"Real-world grounding cue: {current_event_context[0]}")
     if source_items:
         base.append(f"Public-source grounding cue: {source_items[0].get('title', 'Source item')}")
+    if strategic_lens is not None and strategic_lens.mode is StrategicLensMode.fictional:
+        base.append(
+            "Strategic-lens exercise friction: "
+            + strategic_lens.strategic_objective[0].removeprefix("Scenario assumption: ")
+        )
+    if strategic_lens is not None and strategic_lens.mode is StrategicLensMode.public_source:
+        base.append(
+            f"Attributed analytical subject: reviewed local observations about {strategic_lens.actor_name}; "
+            "this is not a forecast of real-world conduct."
+        )
     return base
 
 
@@ -311,6 +340,7 @@ def _frame_lines(
     primary_scenario_input: str | None,
     secondary_scenario_input: str | None,
     source_items: list[dict[str, str]],
+    strategic_lens: StrategicLensOutput | None,
 ) -> list[str]:
     frame = [
         "Build a scenario that pressures command relationships, reporting, and standards instead of only adding noise.",
@@ -325,6 +355,11 @@ def _frame_lines(
         frame.append(f"Secondary complication to turn it up: {secondary_scenario_input}")
     if source_items:
         frame.append(f"Public-source grounding: {source_items[0].get('title', 'Source item')}")
+    if strategic_lens is not None and strategic_lens.mode is StrategicLensMode.public_source:
+        frame.append(
+            "Public-source lens boundary: use its attributed observations only as analytical context; "
+            "keep hypotheses separate from evidence."
+        )
     frame.append(
         "Keep the scenario nested with the training standard: every inject should force a decision, "
         "report, branch, or cross-staff handoff."
@@ -341,6 +376,7 @@ def _narrative_beats(
     place_name: str,
     primary_scenario_input: str | None,
     secondary_scenario_input: str | None,
+    strategic_lens: StrategicLensOutput | None,
 ) -> list[ScenarioNarrativeBeat]:
     opening_summary = primary_scenario_input or (
         f"Routine operations around {place_name} are disrupted by signs that {actor.name} is testing local control."
@@ -375,6 +411,14 @@ def _narrative_beats(
             phase="Phase III - Escalation",
             summary=f"{actor.name} exploits relief friction and crowd pressure around {place_name}.",
             command_problem="Decide how to preserve legitimacy, movement, and safety without losing the timeline.",
+        )
+    if strategic_lens is not None and strategic_lens.mode is StrategicLensMode.fictional:
+        beats[1] = ScenarioNarrativeBeat(
+            phase="Phase II - Friction",
+            summary=(
+                f"{actor.name} introduces exercise friction consistent with the selected fictional strategic lens."
+            ),
+            command_problem="Test the scenario assumption before treating it as a stable adversary preference.",
         )
     return beats
 
@@ -648,7 +692,10 @@ def _apply_tagged_injects(
 
 
 def _facilitator_notes(
-    archetype: ScenarioArchetype, actor_name: str, coordinating_sections: list[str]
+    archetype: ScenarioArchetype,
+    actor_name: str,
+    coordinating_sections: list[str],
+    strategic_lens: StrategicLensOutput | None,
 ) -> list[str]:
     notes = [
         "Run the scenario like a thinking enemy and a messy environment, not like a scripted slideshow.",
@@ -661,4 +708,30 @@ def _facilitator_notes(
         notes.append("Keep access, legitimacy, and reporting friction as important as kinetic-seeming activity.")
     if any("medical" in section.lower() or "safety" in section.lower() for section in coordinating_sections):
         notes.append("Do not let casualty or safety injects become decoration; they should change command behavior.")
+    if strategic_lens is not None and strategic_lens.mode is StrategicLensMode.public_source:
+        notes.extend(
+            [
+                "Public-source strategic lens: distinguish attributed observations from hypotheses; it is not a forecast of real-world conduct.",
+                *[f"Strategic-lens evidence gap: {gap}" for gap in strategic_lens.evidence_gaps],
+            ]
+        )
+    if strategic_lens is not None and strategic_lens.mode is StrategicLensMode.fictional:
+        notes.append("Fictional strategic lens: treat each posture card as a scenario assumption to test, not an assertion about a real actor.")
     return notes
+
+
+def _strategic_lens_questions(
+    strategic_lens: StrategicLensOutput | None,
+    actor_name: str,
+) -> list[str]:
+    if strategic_lens is None:
+        return []
+    if strategic_lens.mode is StrategicLensMode.fictional:
+        return [
+            f"If {actor_name}'s selected fictional posture is wrong, what competing explanation best fits the exercise friction?",
+            "What observable exercise result would discriminate between the posture assumption and routine friction?",
+        ]
+    return [
+        f"Which attributed observation about {strategic_lens.actor_name} supports the lens, and which remains only a hypothesis?",
+        strategic_lens.discriminator,
+    ]

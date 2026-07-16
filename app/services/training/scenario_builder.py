@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.core.security import DEFAULT_WARNINGS
+from app.schemas.strategic_lens import StrategicLensOutput
 from app.schemas.training import (
     RangeSafetyRequest,
     RangeSafetyResponse,
@@ -12,7 +13,12 @@ from app.services.training.scenario_engine import build_s3_scenario_design
 
 
 class TrainingScenarioBuilder:
-    def build(self, request: TrainingScenarioRequest) -> TrainingScenarioResponse:
+    def build(
+        self,
+        request: TrainingScenarioRequest,
+        *,
+        strategic_lens: StrategicLensOutput | None = None,
+    ) -> TrainingScenarioResponse:
         concept, support_requirements, admin_requirements, orm_considerations = _scenario_parts(request.scenario_type)
         concept = [f"Objective: {request.training_objective}", *concept]
         if request.audience:
@@ -30,6 +36,7 @@ class TrainingScenarioBuilder:
             source_items=request.source_items,
             coordinating_sections=request.coordinating_sections,
             constraints=request.constraints,
+            strategic_lens=strategic_lens,
         )
         concept.extend(
             [
@@ -51,6 +58,7 @@ class TrainingScenarioBuilder:
             inject_matrix=scenario_design.injects,
             facilitator_notes=scenario_design.facilitator_notes,
             redcell_questions=scenario_design.redcell_questions,
+            strategic_lens=strategic_lens,
             support_requirements=support_requirements,
             admin_requirements=admin_requirements,
             orm_considerations=orm_considerations,
