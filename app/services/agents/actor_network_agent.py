@@ -9,7 +9,9 @@ from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import S2_REFERENCES, citation_titles, source_trust_markers, structured_citations
 
 _DRAFT_WARNING = "DRAFT — Verify all references against current official sources before acting."
-_TARGETING_TERMS = ("targeting", "target", "named civilian", "private person", "individual profile")
+# Match individual-targeting/profiling intent without tripping on ordinary staff
+# language like "target audience" (IO/civil-affairs) or "target date" (planning).
+_TARGETING_TERMS = ("targeting", "individual target", "named civilian", "private person", "individual profile")
 
 
 class ActorNetworkAnalystAgent(Agent):
