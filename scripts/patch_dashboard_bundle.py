@@ -3749,7 +3749,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "source library: expose panel bindings",
-        "      sourceLibraryRows, sourceLibraryResults, sourceLibraryPreview, sourceLibraryRecheck,\n",
+        "onSourceLibraryQuery: (e) => this.setState({ sourceLibraryQuery: e.target.value }),\n",
         "      benchCards, benchCardsGrid, projectFilesCard, workflows,\n",
         "      benchCards, benchCardsGrid, projectFilesCard, workflows,\n"
         "      sourceLibraryRows, sourceLibraryResults, sourceLibraryPreview, sourceLibraryRecheck, sourceLibraryStatus: this.state.sourceLibraryStatus, sourceLibraryUrl: this.state.sourceLibraryUrl, sourceLibraryTitle: this.state.sourceLibraryTitle, sourceLibraryPublisher: this.state.sourceLibraryPublisher, sourceLibraryApproved: this.state.sourceLibraryApproved, sourceLibraryRecheckApproved: this.state.sourceLibraryRecheckApproved, onSourceLibraryUrl: (e) => this.setState({ sourceLibraryUrl: e.target.value }), onSourceLibraryTitle: (e) => this.setState({ sourceLibraryTitle: e.target.value }), onSourceLibraryPublisher: (e) => this.setState({ sourceLibraryPublisher: e.target.value }), onPreviewSourceLibraryFetch: (e) => this.previewSourceLibraryFetch(e), onSourceLibraryApproval: (e) => this.setState({ sourceLibraryApproved: e.target.checked }), fetchSourceLibrary: () => this.fetchSourceLibrary(), previewSourceLibraryRecheck: (id) => this.previewSourceLibraryRecheck(id), onSourceLibraryRecheckApproval: (e) => this.setState({ sourceLibraryRecheckApproved: e.target.checked }), recheckSourceLibrary: () => this.recheckSourceLibrary(), retrieveSourceLibrary: (e) => this.retrieveSourceLibrary(e), onSourceLibraryQuery: (e) => this.setState({ sourceLibraryQuery: e.target.value }),\n",
