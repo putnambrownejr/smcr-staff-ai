@@ -18,6 +18,7 @@ from app.api.routes import (
     calendar,
     career,
     career_opportunities,
+    civil_networks,
     chief,
     chief_setup,
     connectors,
@@ -90,6 +91,7 @@ def create_app() -> FastAPI:
     app.include_router(billets.router)
     app.include_router(career.router)
     app.include_router(career_opportunities.router)
+    app.include_router(civil_networks.router)
     app.include_router(context.router)
     app.include_router(custom_mos_recipes.router)
     app.include_router(custom_watch_feeds.router)
