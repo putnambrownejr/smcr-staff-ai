@@ -115,6 +115,7 @@ Browser-based local operations board with five lanes:
 - **Privacy sweep** — Pre-push review for PII/OPSEC leakage
 - **PKI/CAC troubleshooting** — Advisory playbooks for common certificate issues
 - **Career tracking** — PME gaps, FitRep reminders, billet discovery
+- **Civil Network / Nodal Analysis** — event-scoped G-9/CA datasets for public organizations, services, forums, broad groups, and role-bound public leaders. Records retain cited evidence, uncertainty, review state, and immutable planning snapshots; they are not for private-person tracking, targeting, vulnerability scoring, or authority determination.
 
 ## Architecture
 

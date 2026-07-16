@@ -14,6 +14,19 @@ organizational plumbing — command relationships, liaison, comms interoperabili
 agreements, and coordination mechanisms that make joint/interagency/multinational
 operations work.
 
+### Civil Network / Nodal Analysis (local planning dataset)
+
+For a specific exercise or event, Bench+Files can retain a bounded civil-network
+dataset that links public organizations, services, forums, broad groups, and
+role-bound public leaders. Relationships are limited to coordination, dependency,
+influence, information flow, authority/approval, resource support, and
+legitimacy/trust. Each entry must remain a sourced observation, analytic inference,
+or planning hypothesis with evidence, date, confidence, and review state; snapshots
+are immutable planning records. Use public or cited material only. Do not use this
+feature for private-person tracking, contact dossiers, targeting, vulnerability
+scoring, collection tasking, or determining legal authority. Confirm authorities and
+current organizational roles through approved channels.
+
 ---
 
 ## 1. Joint Operations (Other US Military Branches)
