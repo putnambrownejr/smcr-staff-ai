@@ -229,6 +229,22 @@ class OrmPtScenarioOutput(StrictScenarioModel):
 
 
 # ---------------------------------------------------------------------------
+# Area Study Builder
+# ---------------------------------------------------------------------------
+
+
+class AreaStudyScenarioOutput(StrictScenarioModel):
+    """Public-source civil baseline passed to downstream planning specialists."""
+
+    role: str = "area_study"
+    operational_area: str = ""
+    pmesii: dict[str, list[str]] = Field(default_factory=dict)
+    ascope: AscopeEntry = Field(default_factory=AscopeEntry)
+    infrastructure_and_culture: list[str] = Field(default_factory=list)
+    evidence_gaps: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
 # Union type and chain request
 # ---------------------------------------------------------------------------
 
@@ -243,6 +259,7 @@ ScenarioOutput = (
     | OpsPtScenarioOutput
     | SelPtScenarioOutput
     | OrmPtScenarioOutput
+    | AreaStudyScenarioOutput
 )
 
 SCENARIO_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
@@ -256,6 +273,7 @@ SCENARIO_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
     "opso": OpsPtScenarioOutput,
     "sel": SelPtScenarioOutput,
     "orm": OrmPtScenarioOutput,
+    "area_study": AreaStudyScenarioOutput,
 }
 
 

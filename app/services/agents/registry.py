@@ -4,6 +4,7 @@ import yaml
 
 from app.schemas.agents import AgentMetadata
 from app.services.agents.ace_agent import build_ace_agent
+from app.services.agents.area_study_agent import build_area_study_agent
 from app.services.agents.artillery_08xx_agent import build_artillery_08xx_agent
 from app.services.agents.assessment_learning_agent import build_assessment_learning_agent
 from app.services.agents.base import Agent
@@ -56,6 +57,7 @@ _AGENT_CATEGORY_BY_ID: dict[str, str] = {
     "infantry-tactics-advisor": "MAGTF Warfighting Elements",
     "osint-research-assistant": "Intelligence & Research",
     "terrain-map-advisor": "Intelligence & Research",
+    "area-study-builder": "Intelligence & Research",
     "pki-cac-troubleshooter": "Reserve Admin & Readiness",
     "uniform-advisor": "Reserve Admin & Readiness",
     "installation-practical-advisor": "Reserve Admin & Readiness",
@@ -141,6 +143,7 @@ def default_agents() -> list[Agent]:
         build_family_deployment_readiness_agent(),
         build_osint_agent(),
         build_map_agent(),
+        build_area_study_agent(),
         build_checkin_agent(),
         # MAGTF element agents (standalone)
         build_ace_agent(),
