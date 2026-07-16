@@ -160,6 +160,10 @@ def default_source_library_dir() -> Path:
     return default_local_context_dir() / "source_library"
 
 
+def default_civil_network_storage_dir() -> Path:
+    return default_local_context_dir() / "civil_networks"
+
+
 def default_projects_dir() -> Path:
     # AGENTS.md ("Saving User Work Products"): user work saves to the repo-root
     # projects/ folder, which is gitignored. The dashboard's Project files
@@ -216,6 +220,7 @@ class Settings(BaseSettings):
     chief_setup_storage_dir: str = str(default_chief_setup_dir())
     external_processing_audits_storage_dir: str = str(default_external_processing_audits_dir())
     source_library_storage_dir: str = str(default_source_library_dir())
+    civil_network_storage_dir: str = str(default_civil_network_storage_dir())
     projects_dir: str = str(default_projects_dir())
     user_docs_dir: str = str(default_user_docs_dir())
     local_api_key: str | None = None
@@ -265,6 +270,7 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.chief_setup_storage_dir),
         Path(settings.external_processing_audits_storage_dir),
         Path(settings.source_library_storage_dir),
+        Path(settings.civil_network_storage_dir),
         Path(settings.projects_dir),
         Path(settings.user_docs_dir),
     ]
