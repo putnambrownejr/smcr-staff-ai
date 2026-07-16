@@ -11,7 +11,7 @@ from app.main import app
 from app.schemas.family_readiness import FamilyReadinessEventCreateRequest, ReadinessDurationBand
 from app.services.agents.base import AgentContext
 from app.services.agents.registry import agent_registry, category_for_agent
-from app.services.family_readiness.builder import build_event, render_spouse_summary
+from app.services.family_readiness.builder import build_event, render_spouse_summary, select_duration_band
 from app.services.family_readiness.store import FamilyReadinessStore
 from app.services.user_docs.store import UserDocsStore
 
@@ -30,6 +30,13 @@ def test_extended_at_builds_short_readiness_event() -> None:
     assert {item.category.value for item in event.items} >= {"legal", "deers", "contacts", "opsec"}
     assert any(item.source_url and "tricare.mil/DEERS" in item.source_url for item in event.items)
     assert any(milestone.label.startswith("T-") for milestone in event.milestones)
+
+
+def test_short_absence_under_two_weeks_is_short_band() -> None:
+    # A 5-day absence used to fall through to the medium band; it should be short.
+    assert select_duration_band(date(2027, 7, 1), date(2027, 7, 5)) is ReadinessDurationBand.short
+    assert select_duration_band(date(2027, 7, 1), date(2027, 8, 15)) is ReadinessDurationBand.medium
+    assert select_duration_band(None, None) is ReadinessDurationBand.custom
 
 
 def test_summary_excludes_private_and_nonshareable_content() -> None:

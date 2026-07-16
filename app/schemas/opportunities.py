@@ -9,7 +9,6 @@ from app.schemas.billets import BilletUserProfile
 class OpportunityType(StrEnum):
     smcr = "smcr"
     ima = "ima"
-    smcr_bic = "smcr_bic"
     ados = "ados"
     ia_jia = "ia_jia"
     other = "other"

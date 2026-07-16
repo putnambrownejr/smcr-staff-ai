@@ -1,4 +1,4 @@
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import httpx
 from bs4 import BeautifulSoup, Tag
@@ -14,6 +14,17 @@ OFFICIAL_BILLET_SOURCE_URLS = {
     "marforres_billets": MARFORRES_BILLETS_URL,
     "manpower_dap": DAP_URL,
 }
+ALLOWED_BILLET_HOSTS = {
+    "www.marforres.marines.mil",
+    "marforres.marines.mil",
+    "www.manpower.marines.mil",
+    "manpower.marines.mil",
+}
+
+
+def _is_official_billet_url(url: str) -> bool:
+    parsed = urlparse(url)
+    return parsed.scheme == "https" and (parsed.hostname or "").casefold() in ALLOWED_BILLET_HOSTS
 
 
 def official_billet_sources() -> list[BilletSourceInfo]:
@@ -44,9 +55,15 @@ class SmcrBicScraper:
         self.timeout_seconds = timeout_seconds
 
     async def fetch_html(self, url: str) -> str:
+        if not _is_official_billet_url(url):
+            raise ValueError("Billet source URL is not on an allowlisted host.")
         async with httpx.AsyncClient(timeout=self.timeout_seconds, follow_redirects=True) as client:
             response = await client.get(url)
             response.raise_for_status()
+            # follow_redirects is on, so re-check the final URL before parsing:
+            # a redirect off an official source must not feed attacker HTML in.
+            if not _is_official_billet_url(str(response.url)):
+                raise ValueError("Billet source redirected off an allowlisted host.")
             return response.text
 
     def parse(self, html: str, source_url: str) -> tuple[list[SmcrBillet], list[str]]:

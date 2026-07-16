@@ -53,6 +53,12 @@ class MarforresOpportunityAdapter:
         async with httpx.AsyncClient(timeout=self.timeout_seconds, follow_redirects=True) as client:
             response = await client.get(url)
             response.raise_for_status()
+            # follow_redirects is on, so the response may have landed on a
+            # different host than the allowlisted one we requested. Re-check the
+            # final URL before parsing so a redirect off an official source
+            # cannot feed attacker-controlled HTML into the opportunity feed.
+            if not _is_official_link(str(response.url)):
+                raise ValueError("Official opportunity source redirected off an allowlisted host.")
             content_type = response.headers.get("content-type", "").casefold()
             if "html" not in content_type:
                 raise ValueError("Official opportunity source did not return HTML.")
@@ -107,6 +113,7 @@ class MarforresOpportunityAdapter:
                     source_order=source_order,
                     tracked=False,
                 )
+                record.match_score = _actionability_score(record)
                 records.append(record)
         warnings: list[str] = []
         if not records:
@@ -117,6 +124,31 @@ class MarforresOpportunityAdapter:
             official_links=official_links,
             warnings=warnings,
         )
+
+
+def _actionability_score(record: OpportunityRecord) -> int:
+    """Rank how directly a listing can be acted on.
+
+    The public feed has no per-user profile to match against, so "match score"
+    scores actionability instead: a listing you can apply to directly, with a
+    deadline and the rank/MOS/location a Marine needs to self-screen, ranks
+    above a bare title. Sorting by this field surfaces the most complete,
+    ready-to-pursue rows first. (A future per-profile match would layer on top.)
+    """
+    score = 0
+    if record.direct_url:
+        score += 3
+    if record.due_date:
+        score += 2
+    if record.rank or record.rank_min or record.rank_max:
+        score += 1
+    if record.mos:
+        score += 1
+    if record.location:
+        score += 1
+    if record.published_at:
+        score += 1
+    return score
 
 
 def _official_links(soup: BeautifulSoup, source_url: str) -> list[str]:

@@ -22,12 +22,14 @@ def seeded_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, Pa
         "projects": tmp_path / "projects",
         "actions": tmp_path / "actions",
         "chief_setup": tmp_path / "chief_setup",
+        "fitreps": tmp_path / "fitreps",
     }
     settings = get_settings()
     monkeypatch.setattr(settings, "user_docs_dir", str(dirs["user_docs"]))
     monkeypatch.setattr(settings, "projects_dir", str(dirs["projects"]))
     monkeypatch.setattr(settings, "actions_storage_dir", str(dirs["actions"]))
     monkeypatch.setattr(settings, "chief_setup_storage_dir", str(dirs["chief_setup"]))
+    monkeypatch.setattr(settings, "fitrep_storage_dir", str(dirs["fitreps"]))
     return dirs
 
 
@@ -39,7 +41,21 @@ def test_seed_creates_baseline_demo_files(seeded_dirs: dict[str, Path]) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["user_key"] == DEMO_USER_KEY
-    assert body["seeded"] == {"notebook": 3, "fitreps": 2, "generations": 2, "actions": 3, "chief_setup": 1}
+    assert body["seeded"] == {
+        "notebook": 3,
+        "fitreps": 2,
+        "generations": 2,
+        "actions": 3,
+        "chief_setup": 1,
+        "fitrep_analytics": 4,
+    }
+
+    # Profile analytics reads the structured FitrepStore, so demo mode must
+    # return a populated analysis (not the empty-state upload prompt).
+    analytics = client.get(f"/fitreps/{DEMO_USER_KEY}/analytics").json()
+    assert analytics["sample_size"] == 4
+    assert len(analytics["by_reporting_senior"]) == 2
+    assert analytics["comparative_assessment_distribution"]
 
     # The demo Chief of Staff setup is populated so the Automations tab has a
     # worked example in demo mode.
@@ -128,7 +144,17 @@ def test_clear_removes_all_demo_files(seeded_dirs: dict[str, Path]) -> None:
     resp = client.delete("/demo/workspace")
     assert resp.status_code == 200
     removed = resp.json()["removed"]
-    assert removed == {"notebook": 3, "fitreps": 2, "generations": 2, "actions": 3, "chief_setup": 1}
+    assert removed == {
+        "notebook": 3,
+        "fitreps": 2,
+        "generations": 2,
+        "actions": 3,
+        "chief_setup": 1,
+        "fitrep_analytics": 7,
+    }
+
+    # The structured FitRep history is gone too, so analytics returns to empty.
+    assert client.get(f"/fitreps/{DEMO_USER_KEY}/analytics").json()["sample_size"] == 0
 
     # Nothing remains on disk under the demo key.
     for category in UserDocCategory:

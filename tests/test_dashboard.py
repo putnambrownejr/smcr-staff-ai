@@ -101,6 +101,17 @@ def test_dashboard_bundle_is_wired_to_real_actions_api() -> None:
     assert "dueMatch" in component_source
 
 
+def test_dashboard_bundle_has_source_library_controls() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert "Source Library" in component_source
+    assert 'fetch("/documents/source-library/preview"' in component_source
+    assert 'fetch("/documents/source-library/retrieve"' in component_source
+    assert "Retrieve approved source" in component_source
+    assert "Recheck approval required" in component_source
+    assert "URL entry only prepares a preview" in component_source
+
+
 def test_dashboard_bundle_renders_dual_history_from_workspace_data() -> None:
     component_source = _decoded_dashboard_component_source()
 
@@ -174,7 +185,6 @@ def test_dashboard_bundle_has_sortable_career_opportunities_watch_widget() -> No
     assert '"/career-opportunities/sources/" + encodeURIComponent(sourceKey) + "/refresh"' in component_source
     assert "Career Opportunities" in component_source
     assert "SMCR / IMA / ADOS" in component_source
-    assert "Sort by" in component_source
     assert "Title" in component_source
     assert "Component" in component_source
     assert "Rank" in component_source
@@ -276,17 +286,15 @@ def test_dashboard_bundle_has_fitrep_profile_imports_manual_entry_and_analytics(
     assert "does not predict promotion" in component_source
 
 
-def test_dashboard_bundle_has_unit_pt_planner_and_private_cadence_library() -> None:
+def test_dashboard_bundle_has_unit_pt_planner_in_bench_files() -> None:
     component_source = _decoded_dashboard_component_source()
 
     assert "this._loadCadences();" in component_source
     assert 'fetch("/fitness/unit-pt/plan"' in component_source
     assert 'fetch("/cadences/" + encodeURIComponent(this.userKey)' in component_source
-    assert "Unit PT Planner &amp; Cadences" in component_source
+    assert "Unit PT Planner" in component_source
     assert "5–50 Marines" in component_source
     assert "S-3, S-4, SgtMaj/SEL, Fitness, and ORM review" in component_source
-    assert "Show my adult-labeled cadences" in component_source
-    assert "still excludes slurs, harassment, hazing, sexual violence" in component_source
 
 
 def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:

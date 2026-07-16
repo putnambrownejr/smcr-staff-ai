@@ -196,10 +196,12 @@ class FamilyReadinessStore:
         return event
 
     def _write(self, event: FamilyReadinessEvent) -> None:
-        self._path(event.user_key, event.event_id).write_text(
-            event.model_dump_json(indent=2),
-            encoding="utf-8",
-        )
+        # Write to a temp file then atomically replace, so a crash mid-write
+        # cannot leave a half-written event JSON that fails to parse on read.
+        path = self._path(event.user_key, event.event_id)
+        temporary = path.with_suffix(".tmp")
+        temporary.write_text(event.model_dump_json(indent=2), encoding="utf-8")
+        temporary.replace(path)
 
     def _path(self, user_key: str, event_id: str) -> Path:
         return self.root_dir / f"{_user_digest(user_key)}-{event_id}.json"

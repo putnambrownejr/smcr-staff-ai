@@ -1,11 +1,47 @@
+import asyncio
 from pathlib import Path
 
+import httpx
+import pytest
 from bs4 import BeautifulSoup
 from pydantic import ValidationError
 
 from app.schemas.billets import BilletSearchRequest, BilletUserProfile
 from app.services.billets.recommender import recommend_billets
-from app.services.ingestion.smcr_bic_scraper import SmcrBicScraper, parse_billet_cards
+from app.services.ingestion import smcr_bic_scraper as scraper_module
+from app.services.ingestion.smcr_bic_scraper import (
+    MARFORRES_BILLETS_URL,
+    SmcrBicScraper,
+    parse_billet_cards,
+)
+
+
+def test_scraper_rejects_non_allowlisted_url() -> None:
+    with pytest.raises(ValueError, match="allowlisted"):
+        asyncio.run(SmcrBicScraper().fetch_html("https://example.test/billets"))
+
+
+def test_scraper_rejects_off_host_redirect(monkeypatch: pytest.MonkeyPatch) -> None:
+    class _RedirectingClient:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        async def __aenter__(self) -> "_RedirectingClient":
+            return self
+
+        async def __aexit__(self, *exc: object) -> bool:
+            return False
+
+        async def get(self, url: str) -> httpx.Response:
+            return httpx.Response(
+                200,
+                html="<html><body>injected</body></html>",
+                request=httpx.Request("GET", "https://evil.test/billets"),
+            )
+
+    monkeypatch.setattr(scraper_module.httpx, "AsyncClient", _RedirectingClient)  # type: ignore[attr-defined]
+    with pytest.raises(ValueError, match="redirected off"):
+        asyncio.run(SmcrBicScraper().fetch_html(MARFORRES_BILLETS_URL))
 
 
 def test_smcr_bic_scraper_parses_fixture() -> None:

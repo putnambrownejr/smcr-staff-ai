@@ -104,7 +104,10 @@ def select_duration_band(start: date | None, end: date | None) -> ReadinessDurat
     if start is None or end is None:
         return ReadinessDurationBand.custom
     days = (end - start).days + 1
-    if 14 <= days <= 30:
+    # The create request validates end >= start, so days >= 1 here. Any absence
+    # up to a month is "short" (previously anything under 14 days fell through
+    # to "medium"); month-plus is "medium", and past roughly a year is "long".
+    if days <= 30:
         return ReadinessDurationBand.short
     if days <= 180:
         return ReadinessDurationBand.medium

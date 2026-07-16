@@ -30,6 +30,7 @@ from app.services.billets.recommender import DEFAULT_BILLET_WARNINGS, recommend_
 from app.services.chief.setup_store import ChiefSetupStore
 from app.services.demo.scenarios import DEMO_USER_KEY, build_demo_career_watch, build_demo_chief_brief
 from app.services.demo.workspace_seed import clear_demo_workspace, seed_demo_workspace
+from app.services.fitreps.store import FitrepStore
 from app.services.planning.orchestrator import StaffPlanningOrchestrator
 from app.services.staff_products.builder import StaffProductBuilder
 from app.services.user_docs.store import UserDocsStore
@@ -79,7 +80,8 @@ def seed_demo_workspace_route(only_if_empty: bool = False) -> dict[str, object]:
     store = UserDocsStore(settings.user_docs_dir, settings.projects_dir)
     tracker = ActionTracker(settings.actions_storage_dir)
     chief_store = ChiefSetupStore(settings.chief_setup_storage_dir)
-    counts = seed_demo_workspace(store, tracker, chief_store, only_if_empty=only_if_empty)
+    fitrep_store = FitrepStore(settings.fitrep_storage_dir)
+    counts = seed_demo_workspace(store, tracker, chief_store, fitrep_store, only_if_empty=only_if_empty)
     return {"user_key": DEMO_USER_KEY, "seeded": counts, "skipped": counts is None}
 
 
@@ -99,7 +101,8 @@ def clear_demo_workspace_route() -> dict[str, object]:
     store = UserDocsStore(settings.user_docs_dir, settings.projects_dir)
     tracker = ActionTracker(settings.actions_storage_dir)
     chief_store = ChiefSetupStore(settings.chief_setup_storage_dir)
-    removed = clear_demo_workspace(store, tracker, chief_store)
+    fitrep_store = FitrepStore(settings.fitrep_storage_dir)
+    removed = clear_demo_workspace(store, tracker, chief_store, fitrep_store)
     return {"user_key": DEMO_USER_KEY, "removed": removed}
 
 
