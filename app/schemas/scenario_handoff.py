@@ -11,6 +11,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.agents import SourceSelection
 from app.schemas.external_processing import ExternalProcessingApproval
 
 # ---------------------------------------------------------------------------
@@ -267,6 +268,7 @@ class ChainRequest(BaseModel):
     scenario: str = Field(min_length=1)
     steps: list[ChainStep] = Field(min_length=1)
     context: dict[str, Any] = Field(default_factory=dict)
+    source_selection: SourceSelection | None = None
     external_processing_approval: ExternalProcessingApproval | None = None
 
 
