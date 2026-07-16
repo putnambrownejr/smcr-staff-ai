@@ -3070,6 +3070,8 @@ PATCHES: list[tuple[str, ...]] = [
         '    travelLoadStatus: "",\n'
         '    travelDraftTitle: "",\n'
         '    travelDraftDestination: "",\n'
+        '    travelDraftFolder: "",\n'
+        '    travelDraftTags: "",\n'
         '    travelLedgerDate: "",\n'
         '    travelLedgerDescription: "",\n'
         '    travelLedgerAmount: "",\n'
@@ -3085,6 +3087,8 @@ PATCHES: list[tuple[str, ...]] = [
         '    travelLoadStatus: "",\n'
         '    travelDraftTitle: "",\n'
         '    travelDraftDestination: "",\n'
+        '    travelDraftFolder: "",\n'
+        '    travelDraftTags: "",\n'
         '    travelLedgerDate: "",\n'
         '    travelLedgerDescription: "",\n'
         '    travelLedgerAmount: "",\n'
@@ -3141,8 +3145,8 @@ PATCHES: list[tuple[str, ...]] = [
         "    if (!title) return;\n"
         '    this.setState({ travelLoadStatus: "Saving trip…" });\n'
         '    this._travelJson("/travel-cases/" + encodeURIComponent(this.userKey), {\n'
-        '      user_key: this.userKey, title, destination: (this.state.travelDraftDestination || "").trim(),\n'
-        '    }).then(() => this.setState({ travelDraftTitle: "", travelDraftDestination: "" }))\n'
+        '      user_key: this.userKey, title, destination: (this.state.travelDraftDestination || "").trim(), folder: (this.state.travelDraftFolder || "").trim(), tags: (this.state.travelDraftTags || "").split(",").map((t) => t.trim()).filter(Boolean),\n'
+        '    }).then(() => this.setState({ travelDraftTitle: "", travelDraftDestination: "", travelDraftFolder: "", travelDraftTags: "" }))\n'
         '      .catch(() => this.setState({ travelLoadStatus: "Trip could not be saved." }));\n'
         "  }\n"
         "  addTravelLedgerEntry(e) {\n"
@@ -3185,7 +3189,7 @@ PATCHES: list[tuple[str, ...]] = [
         "  travelWorkspaceVals() {\n"
         "    const active = this.state.travelCases.find((item) => item.trip_id === this.state.activeTravelTripId) || null;\n"
         "    const trips = this.state.travelCases.map((item) => ({\n"
-        '      id: item.trip_id, title: item.title, meta: [item.destination, item.travel_start].filter(Boolean).join(" · ") || "No dates set",\n'
+        '      id: item.trip_id, title: item.title, meta: [item.folder, [item.destination, item.travel_start].filter(Boolean).join(" · "), ((item.tags || []).length ? "#" + item.tags.join(" #") : "")].filter(Boolean).join("  —  ") || "No dates set",\n'
         "      onClick: () => this.setState({ activeTravelTripId: item.trip_id }),\n"
         '      style: "width:100%;text-align:left;padding:9px 10px;border:1px solid " + (active && active.trip_id === item.trip_id ? "#b21f2d" : "#313844") + ";border-radius:6px;background:#0d1014;color:#eef2f6;font:inherit;cursor:pointer;",\n'
         "    }));\n"
@@ -3197,10 +3201,10 @@ PATCHES: list[tuple[str, ...]] = [
         '      activeTravelTotal: active ? active.estimated_spend_total : "0.00", travelLedger: ledger, travelLedgerEmpty: ledger.length === 0,\n'
         "      travelReceipts: active ? (active.attachment_names || []).map((name) => ({ name })) : [], travelReceiptsEmpty: !active || !(active.attachment_names || []).length,\n"
         '      gtccLatestLabel: latest ? ("Last checked " + new Date(latest.checked_at).toLocaleDateString() + (latest.paid_in_full ? " · marked paid in full" : "")) : "No GTCC check recorded yet.",\n'
-        "      travelLoadStatus: this.state.travelLoadStatus, travelDraftTitle: this.state.travelDraftTitle, travelDraftDestination: this.state.travelDraftDestination,\n"
+        "      travelLoadStatus: this.state.travelLoadStatus, travelDraftTitle: this.state.travelDraftTitle, travelDraftDestination: this.state.travelDraftDestination, travelDraftFolder: this.state.travelDraftFolder, travelDraftTags: this.state.travelDraftTags,\n"
         "      travelLedgerDate: this.state.travelLedgerDate, travelLedgerDescription: this.state.travelLedgerDescription, travelLedgerAmount: this.state.travelLedgerAmount, travelLedgerCategory: this.state.travelLedgerCategory,\n"
         "      gtccBalance: this.state.gtccBalance, gtccPayment: this.state.gtccPayment, gtccPaidInFull: this.state.gtccPaidInFull, gtccCheckNotes: this.state.gtccCheckNotes,\n"
-        "      onTravelTitle: (e) => this.setState({ travelDraftTitle: e.target.value }), onTravelDestination: (e) => this.setState({ travelDraftDestination: e.target.value }), onCreateTravel: (e) => this.createTravelCase(e),\n"
+        "      onTravelTitle: (e) => this.setState({ travelDraftTitle: e.target.value }), onTravelDestination: (e) => this.setState({ travelDraftDestination: e.target.value }), onTravelFolder: (e) => this.setState({ travelDraftFolder: e.target.value }), onTravelTags: (e) => this.setState({ travelDraftTags: e.target.value }), onCreateTravel: (e) => this.createTravelCase(e),\n"
         "      onTravelLedgerDate: (e) => this.setState({ travelLedgerDate: e.target.value }), onTravelLedgerDescription: (e) => this.setState({ travelLedgerDescription: e.target.value }), onTravelLedgerAmount: (e) => this.setState({ travelLedgerAmount: e.target.value }), onTravelLedgerCategory: (e) => this.setState({ travelLedgerCategory: e.target.value }), onAddTravelLedger: (e) => this.addTravelLedgerEntry(e),\n"
         "      onGtccBalance: (e) => this.setState({ gtccBalance: e.target.value }), onGtccPayment: (e) => this.setState({ gtccPayment: e.target.value }), onGtccPaid: (e) => this.setState({ gtccPaidInFull: e.target.checked }), onGtccNotes: (e) => this.setState({ gtccCheckNotes: e.target.value }), onRecordGtccCheck: (e) => this.recordGtccCheck(e),\n"
         "      onTravelReceiptFile: (e) => this.uploadTravelReceipt(e),\n"
@@ -3234,8 +3238,8 @@ PATCHES: list[tuple[str, ...]] = [
         '              <sc-if value="{{ travelTripsEmpty }}" hint-placeholder-val="{{ true }}"><p style="margin:0;color:#8a94a0;font-size:0.8rem;">No trips yet. Create one below.</p></sc-if>\n'
         '              <form sc-camel-on-submit="{{ onCreateTravel }}" style="display:grid;gap:7px;padding-top:8px;border-top:1px solid #313844;">\n'
         '                <input value="{{ travelDraftTitle }}" sc-camel-on-change="{{ onTravelTitle }}" placeholder="Trip title" aria-label="Trip title" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
-        '                <input value="{{ travelDraftDestination }}" sc-camel-on-change="{{ onTravelDestination }}" placeholder="Destination (optional)" aria-label="Trip destination" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
-        '                <button type="submit" style="height:32px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">+ Create travel folder</button>\n'
+        '                <input value="{{ travelDraftDestination }}" sc-camel-on-change="{{ onTravelDestination }}" placeholder="Destination (optional)" aria-label="Trip destination" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ travelDraftFolder }}" sc-camel-on-change="{{ onTravelFolder }}" placeholder="Folder (optional)" aria-label="Trip folder" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;"><input value="{{ travelDraftTags }}" sc-camel-on-change="{{ onTravelTags }}" placeholder="Tags, comma-separated" aria-label="Trip tags" style="height:34px;border:1px solid #313844;border-radius:6px;padding:0 10px;background:#0d1014;color:#eef2f6;font:inherit;">\n'
+        '                <button type="submit" style="height:32px;border:1px solid #313844;border-radius:6px;background:#1a2027;color:#eef2f6;font:inherit;font-weight:600;cursor:pointer;">+ Add trip</button>\n'
         "              </form>\n"
         "            </div>\n"
         '            <sc-if value="{{ activeTravelExists }}" hint-placeholder-val="{{ false }}">\n'
