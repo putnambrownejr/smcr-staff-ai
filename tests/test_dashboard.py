@@ -286,15 +286,15 @@ def test_dashboard_bundle_has_fitrep_profile_imports_manual_entry_and_analytics(
     assert "does not predict promotion" in component_source
 
 
-def test_dashboard_bundle_has_unit_pt_planner_in_bench_files() -> None:
+def test_dashboard_bundle_has_no_unit_pt_planner_card() -> None:
+    # The Unit PT Planner moved out of the dashboard into the Fitness Planning
+    # Advisor agent, which builds the scaled plan in chat. The bench card markup
+    # is intentionally gone.
     component_source = _decoded_dashboard_component_source()
 
-    assert "this._loadCadences();" in component_source
-    assert 'fetch("/fitness/unit-pt/plan"' in component_source
-    assert 'fetch("/cadences/" + encodeURIComponent(this.userKey)' in component_source
-    assert "Unit PT Planner" in component_source
-    assert "5–50 Marines" in component_source
-    assert "S-3, S-4, SgtMaj/SEL, Fitness, and ORM review" in component_source
+    assert "Unit PT Planner" not in component_source
+    assert "Plan a unit PT event" not in component_source
+    assert "Build staff-reviewed plan" not in component_source
 
 
 def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:

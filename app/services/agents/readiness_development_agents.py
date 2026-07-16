@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import re
+
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
+from app.schemas.fitness import FitnessObjective, UnitPtPlan, UnitPtPlanRequest
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import (
     FAMILY_READINESS_REFERENCES,
@@ -13,6 +16,7 @@ from app.services.agents.source_refs import (
     source_trust_markers,
     structured_citations,
 )
+from app.services.fitness.unit_pt_planner import build_unit_pt_plan
 
 
 class ReadinessDevelopmentAgent(Agent):
@@ -152,8 +156,36 @@ def build_financial_readiness_agent() -> Agent:
     )
 
 
+class FitnessPlanningAgent(Agent):
+    """Builds a scaled unit-PT draft in chat from a plain-language request.
+
+    Parses the participant count, objective, and duration out of the request
+    (defaulting the rest and stating every assumption), runs the deterministic
+    unit-PT engine, and renders the scaled organization, blocks, staff reviews,
+    and ORM matrix inline. No official-event or medical authority is claimed.
+    """
+
+    def __init__(self, *, metadata: AgentMetadata, references: tuple[SourceRef, ...], questions: list[str]) -> None:
+        self.metadata = metadata
+        self.references = references
+        self.questions = questions
+
+    def run(self, input_text: str, context: AgentContext) -> AgentRunResponse:
+        request, assumptions = _parse_unit_pt_request(input_text)
+        plan = build_unit_pt_plan(request)
+        return self._response(
+            answer=_render_unit_pt_plan(plan, assumptions),
+            input_text=input_text,
+            citations=citation_titles(self.references),
+            structured_citations=structured_citations(self.references),
+            source_trust=source_trust_markers(self.references),
+            confidence=Confidence.medium,
+            follow_up_questions=self.questions,
+        )
+
+
 def build_fitness_planning_agent() -> Agent:
-    return ReadinessDevelopmentAgent(
+    return FitnessPlanningAgent(
         metadata=AgentMetadata(
             id="fitness-planning-advisor",
             name="Fitness Planning Advisor",
@@ -163,26 +195,132 @@ def build_fitness_planning_agent() -> Agent:
             allowed_sources=[ref.title for ref in FITNESS_REFERENCES],
             disallowed_inputs=["medical diagnoses", "rehabilitation prescriptions", "official risk acceptance"],
             system_prompt=(
-                "Use the typed unit-PT planner for structured plans. Ask participant count, objective, time, location, "
-                "equipment, ability/limitations, conditions, and cadence preference. Coordinate S-3, S-4, SEL, and ORM."
+                "Build a scaled unit-PT draft from the request. Read participant count (5–50), objective, and time; "
+                "default location, equipment, ability, and conditions when unstated and name every assumption. Return "
+                "scaled organization, blocks, S-3/S-4/SEL/ORM reviews, and an editable ORM matrix without claiming "
+                "official-event, medical, or risk-acceptance authority."
             ),
         ),
         references=FITNESS_REFERENCES,
-        answer=(
-            "Fitness-planning advisory draft.\n\n"
-            "For a unit plan, open Unit PT Planner and provide: 5–50 participants, PFT/CFT/general objective, available "
-            "time and site, equipment, mixed-ability or medical limitations, current conditions, and whether you want "
-            "a cadence from the local library. The planner returns scaled lanes/stations, S-3/S-4/SgtMaj reviews, and "
-            "an editable ORM matrix.\n\n"
-            "This advisor is not an FFI, CPTR, medical provider, or official PFT/CFT monitor. Qualified personnel and "
-            "the chain of command must validate official events, restrictions, and residual-risk acceptance."
-        ),
         questions=[
-            "How many Marines (5–50), what objective, and how much time?",
+            "How many Marines (5–50), what objective (PFT/CFT/general/strength/endurance/mobility), and how much time?",
             "What location, equipment, ability limitations, and current weather/site constraints apply?",
             "Should the plan use a clean or user-approved adult cadence from the local library?",
         ],
     )
+
+
+def _parse_unit_pt_request(input_text: str) -> tuple[UnitPtPlanRequest, list[str]]:
+    lower = input_text.lower()
+    assumptions: list[str] = []
+
+    count = _extract_count(input_text, lower)
+    if count is None:
+        count = 20
+        assumptions.append("Participant count not stated — assumed 20 Marines (say e.g. '30 Marines').")
+
+    objective = _extract_objective(lower)
+    if objective is None:
+        objective = FitnessObjective.general
+        assumptions.append(
+            "Objective not stated — assumed general fitness (PFT/CFT/strength/endurance/mobility also supported)."
+        )
+
+    duration = _extract_duration(lower)
+    if duration is None:
+        duration = 60
+        assumptions.append("Duration not stated — assumed 60 minutes (20–120 supported).")
+
+    assumptions.append(
+        "Location, equipment, ability notes, and conditions used safe defaults — tell me the real ones to refine."
+    )
+    return (
+        UnitPtPlanRequest(participant_count=count, objective=objective, duration_minutes=duration),
+        assumptions,
+    )
+
+
+def _extract_count(input_text: str, lower: str) -> int | None:
+    tied = re.search(r"(\d{1,3})\s*(?:marines|participants|personnel|troops|pax|people|pers)\b", lower)
+    if tied and 5 <= int(tied.group(1)) <= 50:
+        return int(tied.group(1))
+    for match in re.finditer(r"\b(\d{1,3})\b", input_text):
+        value = int(match.group(1))
+        trailing = lower[match.end() : match.end() + 12].lstrip()
+        if 5 <= value <= 50 and not trailing.startswith(("min", "hour", "hr")):
+            return value
+    return None
+
+
+def _extract_objective(lower: str) -> FitnessObjective | None:
+    if "cft" in lower:
+        return FitnessObjective.cft
+    if "pft" in lower:
+        return FitnessObjective.pft
+    if "strength" in lower:
+        return FitnessObjective.strength
+    if "endurance" in lower or "conditioning" in lower:
+        return FitnessObjective.endurance
+    if "mobility" in lower or "recovery" in lower or "stretch" in lower:
+        return FitnessObjective.mobility
+    if "general" in lower:
+        return FitnessObjective.general
+    return None
+
+
+def _extract_duration(lower: str) -> int | None:
+    minutes = re.search(r"(\d{2,3})\s*(?:mins|min|minutes|minute)\b", lower)
+    if minutes:
+        return max(20, min(120, int(minutes.group(1))))
+    hours = re.search(r"(\d(?:\.\d)?)\s*(?:hours|hour|hrs|hr)\b", lower)
+    if hours:
+        return max(20, min(120, round(float(hours.group(1)) * 60)))
+    return None
+
+
+def _render_unit_pt_plan(plan: UnitPtPlan, assumptions: list[str]) -> str:
+    lines = ["Fitness-planning advisory — unit PT plan draft", ""]
+    if assumptions:
+        lines.append("Assumptions I made (give me the real values and I'll rebuild):")
+        lines.extend(f"- {item}" for item in assumptions)
+        lines.append("")
+    lines.append(
+        f"Snapshot: {plan.participant_count} Marines · {plan.objective.value} · "
+        f"{plan.duration_minutes} min · {plan.scaling_band}"
+    )
+    lines.append("")
+    lines.append("Organization:")
+    lines.extend(f"- {item}" for item in plan.organization)
+    lines.append("")
+    lines.append("Session blocks:")
+    for block in plan.blocks:
+        lines.append(f"- {block.name} ({block.minutes} min): {' '.join(block.instructions)}")
+        if block.scaling:
+            lines.append(f"  Scaling: {'; '.join(block.scaling)}")
+    if plan.cadence:
+        lines.extend(["", f"Cadence: {plan.cadence}"])
+    lines.extend(["", "Staff reviews:"])
+    for review in plan.staff_reviews:
+        lines.append(f"- {review.role}: {' '.join([*review.findings, *review.actions])}")
+    lines.extend(["", "ORM matrix:"])
+    for hazard in plan.orm.hazards:
+        lines.append(
+            f"- {hazard.hazard} (initial {hazard.initial_risk} → residual {hazard.residual_risk}) · owner {hazard.owner}"
+        )
+        lines.append(f"  Controls: {'; '.join(hazard.controls)}. Stop-work: {hazard.stop_trigger}")
+    lines.append(f"({plan.orm.acceptance_note})")
+    lines.extend(["", "Warnings:"])
+    lines.extend(f"- {item}" for item in plan.warnings)
+    lines.extend(
+        [
+            "",
+            "This advisor is not an FFI, CPTR, medical provider, or official PFT/CFT monitor. Qualified personnel "
+            "and the chain of command must validate official events, restrictions, and residual-risk acceptance.",
+            "",
+            plan.footer,
+        ]
+    )
+    return "\n".join(lines)
 
 
 def build_warrior_monk_agent() -> Agent:
