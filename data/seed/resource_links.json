@@ -63,6 +63,13 @@
     "description": "Benefits, dependents, and DoD ID card management"
   },
   {
+    "id": "deers",
+    "title": "DEERS (eligibility / ID card)",
+    "url": "https://www.tricare.mil/DEERS",
+    "category": "admin_pay",
+    "description": "Defense Enrollment Eligibility Reporting System — dependent enrollment and ID-card eligibility"
+  },
+  {
     "id": "myaccess",
     "title": "My Access Center",
     "url": "https://myaccess.dmdc.osd.mil",

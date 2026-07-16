@@ -11,28 +11,12 @@ def _dashboard_inner_html() -> str:
     return cast(str, json.loads(html[start:end].strip()))
 
 
-def test_dashboard_has_data_first_civil_network_workspace() -> None:
+def test_dashboard_civil_network_brick_removed_from_bench_files() -> None:
+    # The Civil Network / Nodal Analysis brick was pulled out of Bench/Files at
+    # the user's request; the capability stays available through the
+    # actor-network agent and the /civil-networks API (backend untouched).
     html = _dashboard_inner_html()
 
-    assert 'id="civil-network-workspace"' in html
-    assert "/civil-networks" in html
-    assert "civilNetworkMap" in html
-    assert "civil-network-agent-run" not in html
-    assert "centrality" not in html.lower()
-    assert "vulnerability score" not in html.lower()
-    assert "public_role_holder" in html
-    assert "Public role (required)" in html
-    assert "Sourced relationships require a title and excerpt." in html
-    assert "review_state: edge.review_state" in html
-    assert "edge.review_state === civilNetworkFilters.review" in html
-    for relationship_kind in (
-        "coordination",
-        "dependency",
-        "influence",
-        "information_flow",
-        "authority_approval",
-        "resource_support",
-        "legitimacy_trust",
-    ):
-        assert relationship_kind in html
-    assert "fetch(\"/civil-networks" in html
+    assert 'id="civil-network-workspace"' not in html
+    assert "Civil Network / Nodal Analysis" not in html
+    assert "Public organization, service, forum, group, or role-holder" not in html

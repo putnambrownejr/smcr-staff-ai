@@ -176,26 +176,19 @@ def test_dashboard_bundle_uses_independent_feed_actions_and_real_source_updates(
     assert "MCO 1001R.1 possible change" not in component_source
 
 
-def test_dashboard_bundle_has_sortable_career_opportunities_watch_widget() -> None:
+def test_dashboard_bundle_career_opportunities_is_button_only() -> None:
+    # The MARFORRES sources 403 server-side, so the scraper filter/sort/listing
+    # UI was retired; Career Opportunities is two "open official source" cards.
     component_source = _decoded_dashboard_component_source()
 
-    assert "this._loadCareerOpportunities();" in component_source
-    assert 'fetch("/career-opportunities?" + params.toString()' in component_source
-    assert 'fetch("/career-opportunities/refresh"' in component_source
-    assert '"/career-opportunities/sources/" + encodeURIComponent(sourceKey) + "/refresh"' in component_source
     assert "Career Opportunities" in component_source
     assert "SMCR / IMA / ADOS" in component_source
-    assert "Title" in component_source
-    assert "Component" in component_source
-    assert "Rank" in component_source
-    assert "MOS" in component_source
-    assert "Unit" in component_source
-    assert "Location" in component_source
-    assert "Duration" in component_source
-    assert "Publication date" in component_source
-    assert "Application / due date" in component_source
-    assert "Clear filters" in component_source
-    assert "Open official listing" in component_source
+    assert "Open official source" in component_source
+    assert "Listings live in browser-based portals" in component_source
+    # the scraper chrome is gone
+    assert "Clear filters" not in component_source
+    assert "Refresh listings" not in component_source
+    assert "Open official listing" not in component_source
     assert "Showing cached results" in component_source
     assert "Availability and eligibility require verification at the official source" in component_source
 
