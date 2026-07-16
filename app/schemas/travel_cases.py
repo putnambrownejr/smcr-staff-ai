@@ -38,6 +38,16 @@ class TravelCaseCreateRequest(BaseModel):
     travel_status: str = "watch"
     dts_authorization_ref: str = ""
     dts_voucher_ref: str = ""
+    folder: str = Field(default="", max_length=120)
+    tags: list[str] = Field(default_factory=list)
+
+
+class TravelCaseOrganizeRequest(BaseModel):
+    """Set a trip's folder and/or tags without touching the rest of the record."""
+
+    user_key: str
+    folder: str = Field(default="", max_length=120)
+    tags: list[str] = Field(default_factory=list)
 
 
 class TravelLedgerEntryRequest(BaseModel):
@@ -66,6 +76,8 @@ class TravelCaseRecord(BaseModel):
     title: str
     purpose: str = ""
     destination: str = ""
+    folder: str = ""
+    tags: list[str] = Field(default_factory=list)
     travel_status: str = "watch"
     travel_start: date | None = None
     travel_end: date | None = None
@@ -118,3 +130,4 @@ class LinkTravelReceiptRequest(BaseModel):
 class TravelCaseListResponse(BaseModel):
     total_cases: int
     records: list[TravelCaseRecord] = Field(default_factory=list)
+    folders: list[str] = Field(default_factory=list)

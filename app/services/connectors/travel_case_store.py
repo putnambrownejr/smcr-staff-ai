@@ -11,6 +11,7 @@ from app.schemas.travel_cases import (
     GtccCheckRecord,
     GtccCheckRequest,
     TravelCaseCreateRequest,
+    TravelCaseOrganizeRequest,
     TravelCaseRecord,
     TravelLedgerEntry,
     TravelLedgerEntryRequest,
@@ -67,11 +68,39 @@ class TravelCaseStore:
             travel_end=request.travel_end,
             dts_authorization_ref=request.dts_authorization_ref.strip(),
             dts_voucher_ref=request.dts_voucher_ref.strip(),
+            folder=request.folder.strip(),
+            tags=_dedupe(request.tags),
             created_at=now,
             updated_at=now,
         )
         self._write(record)
         return record
+
+    def set_organization(
+        self,
+        *,
+        user_key: str,
+        trip_id: str,
+        request: TravelCaseOrganizeRequest,
+    ) -> TravelCaseRecord:
+        """Assign the trip to a folder and replace its tag set."""
+        record = self._require_case(user_key, trip_id)
+        updated = record.model_copy(
+            update={
+                "folder": request.folder.strip(),
+                "tags": _dedupe(request.tags),
+                "updated_at": datetime.now(UTC),
+            }
+        )
+        self._write(updated)
+        return updated
+
+    def folders(self, user_key: str) -> list[str]:
+        """Distinct, case-insensitively de-duplicated folder names, sorted."""
+        return sorted(
+            _dedupe([record.folder for record in self.list_cases(user_key) if record.folder]),
+            key=str.casefold,
+        )
 
     def add_ledger_entry(
         self,

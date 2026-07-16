@@ -3,8 +3,43 @@ from decimal import Decimal
 from pathlib import Path
 
 from app.schemas.connector_digest import TravelEmailCaseSummary
-from app.schemas.travel_cases import GtccCheckRequest, TravelCaseCreateRequest, TravelLedgerEntryRequest
+from app.schemas.travel_cases import (
+    GtccCheckRequest,
+    TravelCaseCreateRequest,
+    TravelCaseOrganizeRequest,
+    TravelLedgerEntryRequest,
+)
 from app.services.connectors.travel_case_store import TravelCaseStore
+
+
+def test_travel_case_folders_and_tags_round_trip(tmp_path: Path) -> None:
+    store = TravelCaseStore(tmp_path / "travel-cases")
+    user_key = "capt-travel"
+
+    created = store.create_case(
+        TravelCaseCreateRequest(
+            user_key=user_key,
+            title="Annual Training 2027",
+            folder="FY27 AT",
+            tags=["reimbursed", "GTCC", "reimbursed", "  gtcc  "],  # dupes/case/space collapse
+        )
+    )
+    assert created.folder == "FY27 AT"
+    assert created.tags == ["reimbursed", "GTCC"]
+
+    # A second trip in another folder, plus one with no folder.
+    store.create_case(TravelCaseCreateRequest(user_key=user_key, title="Schools", folder="Schools"))
+    store.create_case(TravelCaseCreateRequest(user_key=user_key, title="Loose", folder=""))
+    assert store.folders(user_key) == ["FY27 AT", "Schools"]
+
+    # Re-organize the first trip: move folder, replace tag set.
+    moved = store.set_organization(
+        user_key=user_key,
+        trip_id=created.trip_id,
+        request=TravelCaseOrganizeRequest(user_key=user_key, folder="Schools", tags=["pending"]),
+    )
+    assert moved.folder == "Schools" and moved.tags == ["pending"]
+    assert store.folders(user_key) == ["Schools"]
 
 
 def test_travel_case_store_merges_same_trip_across_messages(tmp_path: Path) -> None:

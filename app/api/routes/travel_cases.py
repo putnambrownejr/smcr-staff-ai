@@ -10,6 +10,7 @@ from app.schemas.travel_cases import (
     LinkTravelReceiptRequest,
     TravelCaseCreateRequest,
     TravelCaseListResponse,
+    TravelCaseOrganizeRequest,
     TravelCaseRecord,
     TravelLedgerEntryRequest,
 )
@@ -34,7 +35,11 @@ def list_travel_cases(
     store: Annotated[TravelCaseStore, Depends(get_travel_case_store)],
 ) -> TravelCaseListResponse:
     records = store.list_cases(user_key)
-    return TravelCaseListResponse(total_cases=len(records), records=records)
+    return TravelCaseListResponse(
+        total_cases=len(records),
+        records=records,
+        folders=store.folders(user_key),
+    )
 
 
 @router.post("/{user_key}", response_model=TravelCaseRecord, status_code=201)
@@ -116,6 +121,20 @@ def delete_travel_ledger_entry(
 ) -> TravelCaseRecord:
     try:
         return store.remove_ledger_entry(user_key=user_key, trip_id=trip_id, entry_id=entry_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.patch("/{user_key}/{trip_id}/organize", response_model=TravelCaseRecord)
+def organize_travel_case(
+    user_key: str,
+    trip_id: str,
+    request: TravelCaseOrganizeRequest,
+    store: Annotated[TravelCaseStore, Depends(get_travel_case_store)],
+) -> TravelCaseRecord:
+    _require_matching_user_key(user_key, request.user_key)
+    try:
+        return store.set_organization(user_key=user_key, trip_id=trip_id, request=request)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 

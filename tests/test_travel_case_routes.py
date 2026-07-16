@@ -10,6 +10,34 @@ from app.services.connectors.travel_case_store import TravelCaseStore
 from app.services.storage.local_context_store import LocalContextStore
 
 
+def test_travel_case_route_creates_and_organizes_with_folders_and_tags(tmp_path: Path) -> None:
+    travel_case_store = TravelCaseStore(tmp_path / "travel-cases")
+    app.dependency_overrides[get_travel_case_store] = lambda: travel_case_store
+    client = TestClient(app)
+    try:
+        created = client.post(
+            "/travel-cases/capt-travel",
+            json={"user_key": "capt-travel", "title": "Annual Training 2027", "folder": "FY27 AT", "tags": ["GTCC"]},
+        )
+        assert created.status_code == 201
+        trip_id = created.json()["trip_id"]
+        assert created.json()["folder"] == "FY27 AT" and created.json()["tags"] == ["GTCC"]
+
+        listing = client.get("/travel-cases/capt-travel").json()
+        assert listing["folders"] == ["FY27 AT"]
+
+        organized = client.patch(
+            f"/travel-cases/capt-travel/{trip_id}/organize",
+            json={"user_key": "capt-travel", "folder": "Schools", "tags": ["pending", "personal"]},
+        )
+        assert organized.status_code == 200
+        assert organized.json()["folder"] == "Schools"
+        assert organized.json()["tags"] == ["pending", "personal"]
+        assert client.get("/travel-cases/capt-travel").json()["folders"] == ["Schools"]
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_travel_case_route_links_local_receipt_context(tmp_path: Path) -> None:
     travel_case_store = TravelCaseStore(tmp_path / "travel-cases")
     context_store = LocalContextStore(tmp_path / "context")
