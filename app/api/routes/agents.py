@@ -215,10 +215,10 @@ def run_agent(
     )
     try:
         return _apply_source_context(agent.run(request.input, context), context)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except ExternalProcessingApprovalRequiredError as exc:
         raise _approval_http_error(exc) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.post("/chain", response_model=ChainResponse)

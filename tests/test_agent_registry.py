@@ -76,6 +76,11 @@ def test_agent_registry_loads_expected_agents() -> None:
         "fires-advisor",
         "osint-research-assistant",
         "terrain-map-advisor",
+        # Source-aware planning specialists
+        "area-study-builder",
+        "actor-network-analyst",
+        "information-requirements-manager",
+        "ipb-assistant",
         "unit-checkin",
         # MAGTF element agents
         "ace",
@@ -600,6 +605,8 @@ def test_list_metadata_assigns_curated_categories() -> None:
     assert by_id["planning-advisor"].category == "Planning & Decision"
     assert by_id["ace"].category == "MAGTF Warfighting Elements"
     assert by_id["gce"].category == "MAGTF Warfighting Elements"
+    assert by_id["area-study-builder"].category == "Intelligence & Research"
+    assert by_id["ipb-assistant"].category == "Intelligence & Research"
 
     # "staff-products" starts with "staff-" but is a real product agent, not a
     # virtual staff-council seat.
