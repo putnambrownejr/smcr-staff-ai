@@ -73,6 +73,16 @@ def apply_patches(inner_html: str, patches: list[tuple[str, ...]]) -> str:
     # history) before markers were introduced -- multi-method "add X helpers"
     # patches MUST pass an explicit, stable marker (e.g. one method's def
     # line) that no other patch's inserted text will ever sit inside of.
+    #
+    # The same trap springs a second way: when a LATER patch REWRITES an
+    # earlier patch's output, the earlier patch's `new` text no longer exists
+    # verbatim, so it stops self-detecting as applied, tries to re-apply, and
+    # aborts the whole run because its `old` is long gone too. Whenever you add
+    # a patch that edits text some earlier patch produced, give that earlier
+    # entry an explicit marker -- one line that survives your rewrite, or a
+    # distinctive line your rewrite introduces. Either is fine: a fresh export
+    # has neither, so ordering still applies both patches correctly. Run
+    # --check after adding patches; it catches exactly this.
     for entry in patches:
         if len(entry) == 4:
             label, marker, old, new = entry

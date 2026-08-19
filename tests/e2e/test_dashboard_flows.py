@@ -47,15 +47,16 @@ def test_watch_shows_per_feed_actions_and_dated_source_updates(browser_page: Any
 
 
 @pytest.mark.e2e
-def test_watch_has_sortable_official_career_opportunities(browser_page: Any) -> None:
+def test_watch_links_out_to_official_career_sources(browser_page: Any) -> None:
     page = browser_page
     _open_lane(page, "Watch")
 
+    # The in-dashboard listing/filter UI was retired: billets live in
+    # browser-based portals, so this panel links out to the official sources
+    # rather than restating listings the dashboard cannot authenticate.
     career = page.get_by_role("heading", name="Career Opportunities", level=3).locator("xpath=ancestor::section[1]")
     _expect(career).to_contain_text("SMCR / IMA / ADOS")
     _expect(career.get_by_role("link", name=re.compile("Open official source"))).to_have_count(2)
-    _expect(career.get_by_label("Sort Career Opportunities by field")).to_be_visible()
-    _expect(career.get_by_role("button", name="Clear filters", exact=True)).to_be_visible()
 
 
 @pytest.mark.e2e
@@ -87,7 +88,8 @@ def test_template_library_opens_a_real_template(browser_page: Any) -> None:
     # with a toggle that swaps every section over to its worked example.
     page.get_by_role("button", name="View template", exact=True).click()
     _expect(page.get_by_text("Showing the annotated scaffold", exact=False)).to_be_visible()
-    _expect(page.get_by_text("Task Organization", exact=False)).to_be_visible()
+    # exact=True: the phrase also appears inside another section's scaffold text.
+    _expect(page.get_by_text("Task Organization", exact=True)).to_be_visible()
 
     page.get_by_role("button", name="Show worked example", exact=True).click()
     _expect(page.get_by_text("Showing a worked example", exact=False)).to_be_visible()
@@ -101,18 +103,26 @@ def test_fitreps_are_a_first_class_lane_with_counseling_link(browser_page: Any) 
 
     _expect(page.get_by_role("heading", name="FitRep Tracker", level=3)).to_be_visible()
     _expect(page.get_by_role("button", name="+ Start linked counseling", exact=True)).to_be_visible()
-    _expect(page.get_by_text("(A–G scale, MCO 1610.7)", exact=True)).to_be_visible()
+    _expect(page.get_by_text("(A–G, or H for not observed · MCO 1610.7)", exact=True)).to_be_visible()
+
+    # The tracker grades the 14 real MCO 1610.7 attributes, grouped under the
+    # report's own sections -- not the five section headings themselves.
+    _expect(page.get_by_text("D. Mission Accomplishment", exact=True)).to_be_visible()
+    _expect(page.get_by_text("H. Fulfillment of Evaluation Responsibilities", exact=True)).to_be_visible()
+    _expect(page.get_by_text("Effectiveness Under Stress", exact=True)).to_be_visible()
+    _expect(page.get_by_text("Ensuring Well-being of Subordinates", exact=True)).to_be_visible()
 
 
 @pytest.mark.e2e
-def test_workspace_exposes_unit_pt_and_gtcc_tools(browser_page: Any) -> None:
+def test_workspace_exposes_gtcc_tools(browser_page: Any) -> None:
     page = browser_page
     _open_lane(page, "Workspace")
 
     _expect(page.get_by_role("heading", name="Travel & GTCC", level=3)).to_be_visible()
     _expect(page.get_by_role("link", name=re.compile("Open CitiManager"))).to_be_visible()
-    _expect(page.get_by_role("heading", name="Unit PT Planner & Cadences", level=3)).to_be_visible()
-    _expect(page.get_by_role("button", name="Build staff-reviewed plan", exact=True)).to_be_visible()
+    # The Unit PT Planner card was retired; the agent builds that plan in chat.
+    _expect(page.get_by_role("heading", name="Logbook", level=3)).to_be_visible()
+    _expect(page.get_by_role("heading", name="Session / Drill Handoff", level=3)).to_be_visible()
 
 
 @pytest.mark.e2e
