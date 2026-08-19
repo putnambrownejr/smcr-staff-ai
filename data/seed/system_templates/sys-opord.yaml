@@ -1,0 +1,145 @@
+# Structured system-template source.
+# Rendered to the dashboard viewer as: annotated scaffold (default) + worked example (toggle).
+# NOTE: `example` blocks are notional and training-safe. No real unit names, grids, or
+# operationally sensitive detail. Verify against current doctrine before reuse.
+
+template_id: sys-opord
+template_name: "Operations Order (OPORD)"
+template_type: opord
+preferred_format: order
+audience_hint: "Subordinate leaders and staff executing a tasked operation or training event."
+agent_handoff: staff-products
+one_liner: "The five-paragraph order (SMEAC) that turns a plan into executable direction."
+
+when_to_use: >
+  Use an OPORD to direct the execution of an operation, exercise, or major training event once
+  planning is complete and the mission is set. If you are starting movement or parallel planning
+  before the plan is finished, issue a WARNO first. If you are changing an order already in
+  effect, issue a FRAGO.
+
+doctrine_refs:
+  - "MCWP 5-10 (Marine Corps Planning Process) — order development"
+  - "MCRP 3-30.7 / Commander's tactical handbook — five-paragraph order (SMEAC)"
+  - "MCDP 1-0 (Marine Corps Operations) — mission, intent, main effort"
+
+# Each section renders heading + scaffold by default; the viewer toggles `example` in.
+sections:
+  - key: task_org
+    heading: "Task Organization"
+    scaffold: |
+      List who is task-organized under this order — subordinate elements, attachments (with
+      effective time), and detachments. State command/support relationships (OPCON, TACON,
+      DS/GS) so no one has to infer them. Put it before paragraph 1 if it is long; reference an
+      annex if it is very long.
+      Ask: Who do I own for this operation, and who owns capabilities I depend on?
+    example: |
+      Company B, 1st Bn (notional) — Main effort.
+        - 1st, 2d, 3d Platoons (organic)
+        - 1x Combat Engineer Squad (DS from Engr Plt, effective 060600)
+        - 1x Corpsman team (attached)
+      Weapons Platoon (GS to the company)
+      Detached: 4th Squad, 3d Platoon (OPCON to Company A for the range period)
+
+  - key: situation
+    heading: "1. Situation"
+    scaffold: |
+      Frame only what subordinates need to understand the operation. Three standard subparts:
+        a. Enemy / OPFOR — composition, disposition, most likely and most dangerous courses of
+           action. In training, this is the exercise OPFOR or the assessed threat.
+        b. Friendly — higher's mission and intent (two levels up), adjacent units, and the
+           supporting effort you can lean on.
+        c. Attachments/Detachments — only if not already covered in Task Organization.
+      Include civil considerations if they affect the operation.
+      Ask: What about the environment changes how my subordinates will act?
+    example: |
+      a. Enemy (OPFOR). A reinforced OPFOR squad is defending OBJ FALCON with prepared positions
+         and one crew-served weapon oriented on the eastern approach.
+         - Most likely COA: hold and delay from OBJ FALCON.
+         - Most dangerous COA: spoiling attack against our assembly area before LD.
+      b. Friendly. 1st Bn (notional) attacks to seize OBJ EAGLE to enable follow-on movement;
+         intent is a fast tempo that denies OPFOR time to reset. Company A supports by fire from
+         the north. Company C is battalion reserve.
+      c. Attachments/Detachments. See Task Organization.
+
+  - key: mission
+    heading: "2. Mission"
+    scaffold: |
+      One clear sentence: WHO, WHAT (tactical task), WHEN, WHERE, and WHY (purpose). No "and"-
+      chaining of multiple tasks — one mission, one main effort. The purpose ("in order to…")
+      is the part subordinates fall back on when the plan changes.
+      Ask: If everything else is forgotten, is this one sentence enough to act on?
+    example: |
+      Company B seizes OBJ FALCON NLT 061200 AUG in order to protect the battalion main effort's
+      eastern flank during the seizure of OBJ EAGLE.
+
+  - key: execution
+    heading: "3. Execution"
+    scaffold: |
+      The heart of the order.
+        a. Commander's Intent — expanded purpose, key tasks, and end state. Write it so a
+           subordinate two levels down could act without further guidance.
+        b. Concept of Operations — scheme of maneuver + main effort + fires in narrative form.
+        c. Tasks — a numbered subparagraph per subordinate element (task + purpose each).
+        d. Coordinating Instructions — timings, control measures, ROE/RUF, CCIR, rehearsals,
+           anything that applies to two or more elements.
+      Name the main effort explicitly. State the decisive point.
+      Ask: Does every subordinate know their task, their purpose, and who the main effort is?
+    example: |
+      a. Commander's Intent. Purpose: protect the battalion's eastern flank. Key tasks:
+         (1) suppress OPFOR on OBJ FALCON, (2) seize FALCON, (3) establish a hasty defense
+         oriented east. End state: FALCON secured, OPFOR unable to interfere with OBJ EAGLE,
+         company consolidated and ready for on-order follow-on tasks.
+      b. Concept of Operations. Main effort is 1st Platoon's assault on FALCON. Weapons Platoon
+         establishes a support-by-fire position vic Hill 210 to suppress. 2d Platoon fixes OPFOR
+         from the south. 3d Platoon (supporting effort) is prepared to reinforce the assault.
+      c. Tasks.
+         (1) 1st Platoon (main effort): assault and seize OBJ FALCON to defeat the OPFOR squad.
+         (2) 2d Platoon: fix OPFOR from the south to prevent repositioning.
+         (3) Weapons Platoon: establish SBF vic Hill 210 to suppress FALCON from LD until assault.
+         (4) 3d Platoon: company reserve; be prepared to reinforce 1st Platoon on order.
+      d. Coordinating Instructions. LD time 060600. Rehearsals NLT 052000. CCIR: any OPFOR
+         armor. Training ROE per exercise SOP — blank-fire only, no dry movement across the
+         live-fire lane. Casualty play per range OIC.
+
+  - key: admin_log
+    heading: "4. Administration and Logistics"
+    scaffold: |
+      What sustains the fight. Two subparts:
+        a. Administration — casualty handling/CASEVAC plan, EPW/detainee handling, personnel
+           reporting.
+        b. Logistics — classes of supply that matter (usually I water, III fuel, V ammo, VIII
+           medical), resupply plan, maintenance, transportation.
+      Keep it to what subordinates must act on; push the rest to an annex.
+      Ask: What runs the unit out of fight if I leave it out?
+    example: |
+      a. Administration. CASEVAC: casualty collection point vic the LD; corpsman with 1st Platoon;
+         evacuation by vehicle to the range aid station. Report casualties immediately by radio.
+      b. Logistics. Class V: combat load plus one resupply staged at the AA. Class I: full water
+         resupply at 061100. Maintenance: pre-combat checks NLT 052000. No live Class V outside
+         the designated lane.
+
+  - key: command_signal
+    heading: "5. Command and Signal"
+    scaffold: |
+      a. Command — location of the commander and key leaders during the operation; succession of
+         command (who takes over if the commander is out).
+      b. Signal — primary/alternate/contingency/emergency (PACE) communications, call signs,
+         frequencies, challenge/password, and any signals (pyro, marking) in use.
+      Ask: If the radio dies and the commander is down, can the unit still fight?
+    example: |
+      a. Command. Company commander moves with the main effort (1st Platoon). Succession: XO,
+         then 1st Platoon commander, then 2d Platoon commander.
+      b. Signal. PACE: (P) company tac net, (A) battalion command net, (C) messenger, (E) visual
+         signals per exercise SOP. Call signs per SOI. Challenge/password per range brief.
+
+guidance:
+  - "Lead with mission, command relationships, and the concept for execution — those carry the fight."
+  - "Name the main effort out loud. An order without a clear main effort is a suggestion."
+  - "Write the intent so a Marine two levels down can act when the plan falls apart — because it will."
+  - "State support relationships before they become friction during execution."
+  - "Cut anything a subordinate does not need to act on; move it to an annex."
+
+warnings:
+  - "System template only. Keep it training-safe and scrub all operationally sensitive details before use."
+  - "The example is notional. Replace every unit, grid, time, and callsign with reviewed information."
+  - "Verify format and control measures against your unit SOP and current doctrine before issuing."

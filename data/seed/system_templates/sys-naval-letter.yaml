@@ -1,0 +1,109 @@
+# Structured system-template source. Annotated scaffold (default) + worked example (toggle).
+# `example` blocks are notional and training-safe. Verify against current doctrine before reuse.
+
+template_id: sys-naval-letter
+template_name: "Standard Naval Letter / Memorandum"
+template_type: naval_letter
+preferred_format: correspondence
+audience_hint: "Anyone drafting official correspondence up, down, or across the chain."
+agent_handoff: s1-admin-chief
+one_liner: "The standard naval letter format — headers, subject line, and numbered paragraphs done right."
+
+when_to_use: >
+  Use the standard naval letter for official correspondence between commands or up/down the chain —
+  requests, reports, endorsements-in-body, forwarding actions. For internal, less formal
+  correspondence a memorandum ('From/To' memo) uses the same paragraph structure with a simpler
+  heading. When in doubt on format, follow the Correspondence Manual and your unit's admin SOP.
+
+doctrine_refs:
+  - "SECNAV M-5216.5 (Department of the Navy Correspondence Manual) — standard letter format"
+  - "Unit administrative SOP / S-1 formatting guidance"
+
+sections:
+  - key: heading
+    heading: "Letterhead, SSIC & Date Line"
+    scaffold: |
+      Start with the command letterhead. On the right, place the Standard Subject Identification
+      Code (SSIC), the originator's code, and the date. The SSIC is the numeric file code for the
+      subject — get it from the Correspondence Manual's SSIC list or your admin shop.
+      Ask: Do I have the correct SSIC and originator code for this subject?
+    example: |
+      (Command letterhead)
+                                                               1500
+                                                               S-3
+                                                               16 Aug 26
+
+  - key: from_to_via
+    heading: "From / To / Via"
+    scaffold: |
+      'From' is the originator by title (not name). 'To' is the action addressee by title. Use
+      'Via' when the letter must route through intermediate commands, numbered in order of routing.
+      Titles, not personal names, so the letter survives a change of personnel.
+      Ask: Who is originating, who acts on it, and what chain must it route through?
+    example: |
+      From:  Commanding Officer, Company B, 1st Battalion (notional)
+      To:    Commanding Officer, 1st Battalion (notional)
+      Via:   (1) Executive Officer, 1st Battalion (notional)
+
+  - key: subject
+    heading: "Subject Line"
+    scaffold: |
+      'Subj:' in ALL CAPITAL LETTERS, concise, and specific enough to file and retrieve. It should
+      capture the action and object of the letter.
+      Ask: Would someone reading only this line know what the letter is about?
+    example: |
+      Subj:  REQUEST FOR ADDITIONAL RANGE AMMUNITION FOR AUGUST SQUAD LIVE-FIRE
+
+  - key: refs_encl
+    heading: "References & Enclosures"
+    scaffold: |
+      'Ref:' lists documents you cite, lettered (a), (b), (c). 'Encl:' lists attachments, numbered
+      (1), (2). Cite each in the body where it is used. Include only what the reader actually needs.
+      Ask: What documents does the reader need to understand or act on this — and are they cited in the body?
+    example: |
+      Ref:   (a) Company B CONOP for August Live-Fire Range
+      Encl:  (1) Ammunition Forecast Worksheet
+
+  - key: body
+    heading: "Body (numbered paragraphs)"
+    scaffold: |
+      Number main paragraphs (1., 2., 3.), sub-paragraphs a., b., then (1), (2). Standard flow:
+      purpose (para 1, state the action/request up front), background/discussion (middle), and the
+      specific action or request (final paragraph — say exactly what you want and by when). Plain,
+      direct language.
+      Ask: Does paragraph 1 state the ask, and does the last paragraph make the action unmistakable?
+    example: |
+      1. Per reference (a), Company B requests an additional 2,000 rounds of 5.56mm to support
+         squad live-fire certification on 16-17 August.
+
+      2. The approved forecast covers day fire only. Enclosure (1) reflects the additional
+         requirement for limited night iterations for certified squads.
+
+      3. Request approval and release of the additional ammunition NLT 12 August to meet the
+         draw timeline. Point of contact is the company operations chief.
+
+  - key: signature
+    heading: "Signature Block"
+    scaffold: |
+      The signature is the originator's last name in ALL CAPS, no rank or title on the signature
+      line itself (the 'From' line already establishes authority). Add a 'Copy to:' line if others
+      need an information copy.
+      Ask: Does the signature match the 'From' originator, and does anyone need an info copy?
+    example: |
+      (Signature is placed on the right side of the page:)
+                                        I. M. LEADER
+
+      Copy to:
+      S-4
+
+guidance:
+  - "Address by title, not name — correspondence outlives the people in the billets."
+  - "State the action or request in paragraph 1; do not bury the ask in the background."
+  - "Cite every reference and enclosure in the body at the point you use it."
+  - "The subject line is a filing tool — make it specific and all-caps per the manual."
+  - "When format and your example disagree, the Correspondence Manual and your S-1 win."
+
+warnings:
+  - "System template only. Verify current format against SECNAV M-5216.5 and your unit admin SOP before sending."
+  - "The example is notional. Replace the SSIC, addressees, subject, and body with reviewed information."
+  - "SSIC and routing errors get correspondence bounced — confirm both with your admin shop."

@@ -1,0 +1,102 @@
+# Structured system-template source. Annotated scaffold (default) + worked example (toggle).
+# `example` blocks are notional and training-safe. Verify against current doctrine before reuse.
+
+template_id: sys-decision-brief
+template_name: "Decision Brief"
+template_type: decision_brief
+preferred_format: briefing
+audience_hint: "A commander or decision-maker who must choose between options and direct action."
+agent_handoff: staff-products
+one_liner: "A staff brief built to get a decision — recommendation up front, options compared, risk named."
+
+when_to_use: >
+  Use a decision brief when you need a commander to choose: which course of action, whether to
+  proceed, how to resource. It is not an information brief — every part exists to support a
+  recommendation and a decision. If you are only updating status, use a Command Update Brief instead.
+
+doctrine_refs:
+  - "MCWP 5-10 (Marine Corps Planning Process) — course-of-action comparison and the decision brief"
+  - "MCDP 1-0 (Marine Corps Operations) — decision-making"
+
+sections:
+  - key: bluf
+    heading: "Purpose & BLUF (Recommendation)"
+    scaffold: |
+      Open with the decision required and your recommendation — bottom line up front. The
+      commander should know what they are being asked to decide and what you recommend within the
+      first ten seconds. Everything after this justifies it.
+      Ask: What is the decision, and what do I recommend — stated before any background?
+    example: |
+      Decision required: which weekend to conduct the company live-fire range. Recommendation:
+      execute during the August drill (16-17 AUG) rather than September.
+
+  - key: problem
+    heading: "Problem / Background"
+    scaffold: |
+      The minimum context needed to understand the decision: what prompted it, constraints,
+      the deadline. No history for its own sake — only what bears on the choice.
+      Ask: What does the commander need to know to weigh this — and nothing more?
+    example: |
+      Squads must be live-fire certified before the fall field exercise. Two drill weekends remain
+      that can support a range: August and September. Range 5 is available both, but ammunition is
+      forecast-limited and September competes with the battalion's own range window.
+
+  - key: options
+    heading: "Options (Courses of Action)"
+    scaffold: |
+      Lay out the viable options — usually two or three. For each: a one-line description and its
+      main pros and cons. Keep them genuinely distinct and genuinely viable (no straw-man option
+      that exists only to make your pick look good).
+      Ask: What are the real choices, stated fairly enough that the commander could pick any of them?
+    example: |
+      COA 1 — August (recommended): Pro: certifies before the field exercise with a full month of
+      margin; ammo forecast confirmed. Con: compresses pre-range prep to two weeks.
+      COA 2 — September: Pro: more prep time. Con: competes with battalion's range window; if it
+      slips, squads enter the field exercise uncertified.
+      COA 3 — Split (half in August, half in September): Pro: hedges. Con: doubles range overhead
+      and leaves half the company uncertified longer.
+
+  - key: comparison
+    heading: "Comparison & Analysis"
+    scaffold: |
+      Compare the options against the criteria that matter (time, risk, cost, readiness impact).
+      A short comparison — narrative or a simple table — showing why one leads. Be explicit about
+      the tradeoff the commander is accepting.
+      Ask: Against the things we actually care about, why does the recommended option win?
+    example: |
+      Against the criteria — certification timing, schedule risk, and overhead — August leads on
+      all three. September buys prep time at the cost of schedule risk right before the exercise;
+      the split option is the worst on overhead for no readiness gain. The tradeoff for choosing
+      August is a tighter two-week prep window, which is manageable.
+
+  - key: risk
+    heading: "Risk & Mitigation"
+    scaffold: |
+      The key risks of the recommended option and how you will mitigate them, ending with the
+      residual risk level. This is where the commander accepts risk knowingly.
+      Ask: What could go wrong with my recommendation, and what am I doing about it?
+    example: |
+      Risk: compressed prep could leave squads under-rehearsed. Mitigation: front-load dry and
+      blank iterations on the first range day and certify only squads that pass a dry run.
+      Residual risk: LOW-MEDIUM.
+
+  - key: decision
+    heading: "Recommendation & Decision Requested"
+    scaffold: |
+      Restate the recommendation and state exactly what you need from the commander — approve,
+      choose a COA, allocate a resource. Give a clean decision line and, if useful, next steps
+      that trigger on a 'yes.'
+      Ask: What, precisely, am I asking the commander to say yes to?
+    example: |
+      Recommend the commander approve COA 1 (August range, 16-17 AUG) and direct the S-4 to lock
+      the ammunition forecast. On approval, the company issues a WARNO the same day.
+
+guidance:
+  - "Recommendation first. A decision brief that makes the commander wait for the point is an information brief in disguise."
+  - "Give real options fairly stated — a rigged comparison destroys your credibility the moment it is noticed."
+  - "Name the tradeoff the commander is accepting. Decisions are choices between imperfect options."
+  - "End with a clean decision line so the meeting ends with a decision, not more questions."
+
+warnings:
+  - "System template only. Keep it training-safe and scrub sensitive details before use."
+  - "The example is notional. Replace the decision, options, and figures with reviewed information."

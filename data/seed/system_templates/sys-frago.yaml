@@ -1,0 +1,94 @@
+# Structured system-template source. Annotated scaffold (default) + worked example (toggle).
+# `example` blocks are notional and training-safe. Verify against current doctrine before reuse.
+
+template_id: sys-frago
+template_name: "Fragmentary Order (FRAGO)"
+template_type: frago
+preferred_format: order
+audience_hint: "Subordinate leaders executing an order already in effect that now needs to change."
+agent_handoff: staff-products
+one_liner: "A short order that changes an OPORD already in effect — only what changed, nothing else."
+
+when_to_use: >
+  Issue a FRAGO to change an order that is already being executed: a new task, a shifted timeline,
+  a repositioned main effort, a changed control measure. It references the base order and states
+  only the changes; everything not mentioned stays in effect. Use it for speed — a FRAGO should be
+  issuable over the radio.
+
+doctrine_refs:
+  - "MCWP 5-10 (Marine Corps Planning Process) — fragmentary orders"
+  - "MCRP 3-30.7 / Commander's tactical handbook — FRAGO format"
+
+sections:
+  - key: reference
+    heading: "Reference / Base Order"
+    scaffold: |
+      Identify the order this FRAGO modifies and the current time. This anchors everyone to the
+      same baseline so 'the change' is unambiguous.
+      Ask: Which order are we changing, and as of when?
+    example: |
+      FRAGO 1 to OPORD 07-24 (Seizure of OBJ FALCON). Effective 061015 AUG.
+
+  - key: situation_change
+    heading: "1. Situation (what changed)"
+    scaffold: |
+      State only the change in the situation that drives this order — new enemy action, a
+      friendly development, a shift in higher's intent. Do not re-brief the whole situation.
+      Ask: What single change in the picture is forcing a new order?
+    example: |
+      OPFOR on OBJ FALCON has begun withdrawing north toward OBJ EAGLE rather than defending.
+      The battalion main effort's flank is now threatened from a new direction.
+
+  - key: mission_change
+    heading: "2. Mission (if changed)"
+    scaffold: |
+      Restate the mission only if it changes. If it does, write it as a full mission statement
+      (who/what/when/where/why) so there is no ambiguity. If unchanged, say 'No change.'
+      Ask: Does the mission itself change, or just how we execute it?
+    example: |
+      Company B pursues and blocks the withdrawing OPFOR vic Route 4 NLT 061130 AUG in order to
+      prevent reinforcement of OBJ EAGLE.
+
+  - key: execution_change
+    heading: "3. Execution (changes)"
+    scaffold: |
+      The core of the FRAGO. State changed tasks, a shifted main effort, new phases, and any new
+      or modified control measures (checkpoints, boundaries, fire support). Number changes to
+      match the base order's paragraphs where you can.
+      Ask: For each element — what is different about what they do now?
+    example: |
+      - Main effort shifts to 2d Platoon for the pursuit along Route 4.
+      - 1st Platoon: consolidate on OBJ FALCON and hold; no longer the main effort.
+      - Weapons Platoon: displace to vic CP 12 to support the pursuit by fire.
+      - New control measure: Limit of Advance at PL BLUE — do not cross without company approval.
+
+  - key: sustain_cmd_change
+    heading: "4. Sustainment / Command & Signal (changes)"
+    scaffold: |
+      Note only changes to logistics, casualty flow, command location, or communications caused
+      by the new scheme. If none, say 'No change.'
+      Ask: Does moving the fight break any sustainment or comms assumption from the base order?
+    example: |
+      - Casualty collection point moves forward to vic CP 12.
+      - Commander moves with 2d Platoon (new main effort). Succession unchanged.
+      - All other Command and Signal instructions from OPORD 07-24 remain in effect.
+
+  - key: remains_in_effect
+    heading: "5. In Effect / Acknowledge"
+    scaffold: |
+      State explicitly that all other elements of the base order remain in effect, and direct
+      subordinates to acknowledge. This one line prevents a partial order from being read as a
+      whole new plan.
+      Ask: Is it clear that everything I did NOT change still stands?
+    example: |
+      All other elements of OPORD 07-24 remain in effect. Acknowledge receipt.
+
+guidance:
+  - "Change only what changed. The power of a FRAGO is that it is short."
+  - "Always close with 'all other elements remain in effect' — it is the difference between a tweak and confusion."
+  - "Write it so it could be passed over the radio and copied correctly the first time."
+  - "Number your changes to the base order's paragraphs so subordinates can slot them in fast."
+
+warnings:
+  - "System template only. Keep it training-safe and scrub operationally sensitive details before use."
+  - "The example is notional. Replace the base-order reference, units, times, and control measures with reviewed information."

@@ -1,0 +1,95 @@
+# Structured system-template source. Annotated scaffold (default) + worked example (toggle).
+# `example` blocks are notional and training-safe. Verify against current doctrine before reuse.
+
+template_id: sys-command-update
+template_name: "Command Update Brief (CUB)"
+template_type: command_update_brief
+preferred_format: briefing
+audience_hint: "The commander and primary staff, as a recurring battle-rhythm update."
+agent_handoff: staff-products
+one_liner: "A recurring, decision-oriented update that keeps the commander current and surfaces what needs a call."
+
+when_to_use: >
+  Use a CUB as the unit's regular battle-rhythm update — the standing brief that keeps the
+  commander and staff synchronized on current operations, upcoming events, and readiness. Its value
+  is not status for its own sake; it is surfacing the issues that need a commander's decision. If
+  you need a single decision made, use a Decision Brief instead.
+
+doctrine_refs:
+  - "MCWP 5-10 (Marine Corps Planning Process) — battle rhythm and staff estimates"
+  - "MCTP 3-30B (staff operations) — running estimates and command updates"
+
+sections:
+  - key: purpose
+    heading: "Purpose & Commander's Priorities"
+    scaffold: |
+      State the reporting period and orient the brief around the commander's stated priorities.
+      Framing the update against priorities (not staff sections) keeps it decision-oriented.
+      Ask: What period does this cover, and what does the commander care most about right now?
+    example: |
+      Command update for the week of 12-18 AUG. Commander's priorities: (1) certify squads for the
+      fall exercise, (2) close out overdue medical readiness, (3) finalize the drill-weekend plan.
+
+  - key: current_ops
+    heading: "Current Operations"
+    scaffold: |
+      Where things stand on active efforts against the plan — green/amber/red where useful, with a
+      one-line 'so what' for anything not green. Do not narrate everything; report by exception.
+      Ask: What is on track, what is not, and does anything off-track need action?
+    example: |
+      - Squad certification: AMBER. Two of six squads still need a dry-run pass before the range.
+        So what: prep window is tight; addressed under decisions below.
+      - Drill-weekend logistics: GREEN. Transportation and chow confirmed.
+
+  - key: future_ops
+    heading: "Future Operations & Planning"
+    scaffold: |
+      The next events on the horizon and their planning status: what is coming, when, and whether
+      planning is keeping pace. Flag anything that needs a decision now to stay on timeline.
+      Ask: What is coming that we must act on now to be ready for?
+    example: |
+      - Company live-fire range (16-17 AUG): CONOP approved; WARNO issued; OPORD in development.
+      - Fall field exercise (Sep): battalion order expected next drill; begin parallel planning.
+
+  - key: readiness
+    heading: "Personnel & Readiness"
+    scaffold: |
+      The readiness picture that affects execution: strength/availability, medical/dental, training
+      gates, equipment status. Keep it to what changes decisions, not the full roster.
+      Ask: Is anything about our people or gear going to limit what we can do?
+    example: |
+      - Strength: 118 of 124 available for the range weekend.
+      - Medical readiness: 9 Marines overdue (down from 14). On track to clear before the exercise.
+      - Weapons/optics: fully mission capable.
+
+  - key: issues
+    heading: "Issues Requiring Decision"
+    scaffold: |
+      The point of the brief: the specific items that need the commander to decide or direct. For
+      each, state the issue, the recommendation, and the decision needed. This is what separates a
+      CUB from a status dump.
+      Ask: What are we actually asking the commander to decide today?
+    example: |
+      - Issue: two squads may not complete dry runs before the range. Recommendation: authorize an
+        extra weeknight rehearsal for those squads. Decision: approve/deny the added rehearsal.
+
+  - key: way_ahead
+    heading: "Way Ahead"
+    scaffold: |
+      The next steps and who owns them, ending with the next update. Turn decisions from this brief
+      into tasked actions with an owner and a suspense.
+      Ask: Coming out of this, who does what by when?
+    example: |
+      - S-3: publish range OPORD NLT 060001 (OPR: S-3).
+      - Platoon commanders: complete squad dry runs NLT 052000.
+      - Next command update: 19 AUG.
+
+guidance:
+  - "Organize around the commander's priorities, not around staff sections — it keeps the brief decision-focused."
+  - "Report by exception. Green items get a word; amber and red get a 'so what' and an action."
+  - "The 'Issues Requiring Decision' slide is why the brief exists — never let it be empty by default."
+  - "Turn every decision into a tasked action with an owner and a suspense before the meeting ends."
+
+warnings:
+  - "System template only. Keep it training-safe and scrub sensitive details before use."
+  - "The example is notional. Replace status, figures, and issues with reviewed, current information."

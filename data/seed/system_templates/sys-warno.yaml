@@ -1,0 +1,96 @@
+# Structured system-template source. Annotated scaffold (default) + worked example (toggle).
+# `example` blocks are notional and training-safe. Verify against current doctrine before reuse.
+
+template_id: sys-warno
+template_name: "Warning Order (WARNO)"
+template_type: warno
+preferred_format: order
+audience_hint: "Subordinate leaders and staff, to start preparation and parallel planning early."
+agent_handoff: staff-products
+one_liner: "Early direction that starts movement, prep, and parallel planning before the plan is finished."
+
+when_to_use: >
+  Issue a WARNO as soon as you know an operation or event is coming — you do not wait for a
+  finished plan. Its job is to buy subordinates time: start pre-combat prep, initiate coordination,
+  and begin their own planning in parallel with yours. Follow it with an OPORD once the plan is set,
+  and additional WARNOs as the picture clarifies.
+
+doctrine_refs:
+  - "MCWP 5-10 (Marine Corps Planning Process) — warning orders and parallel planning"
+  - "MCRP 3-30.7 / Commander's tactical handbook — warning order format"
+
+sections:
+  - key: situation
+    heading: "1. Situation"
+    scaffold: |
+      A short frame of what is coming: the anticipated enemy/OPFOR picture and the friendly
+      context (higher's likely mission). Say only what you know — a WARNO is allowed to be
+      incomplete. Flag what is still assumed or unconfirmed.
+      Ask: What do subordinates need to know now to start moving in the right direction?
+    example: |
+      Battalion is preparing to attack east to seize OBJ EAGLE within the next 72 hours. OPFOR is
+      assessed to be defending forward positions including OBJ FALCON on the eastern flank.
+      Details unconfirmed; this order is to start preparation, not to direct the attack.
+
+  - key: mission
+    heading: "2. Mission (if known)"
+    scaffold: |
+      State the anticipated mission if you have it, even in draft. If you do not yet, say so
+      plainly and give the probable task and purpose so subordinates can orient their prep.
+      Ask: Even roughly, what will we likely be told to do, and why?
+    example: |
+      Anticipated: Company B will likely be tasked to protect the battalion's eastern flank,
+      probably by seizing OBJ FALCON. Confirmation to follow in the OPORD.
+
+  - key: gen_instructions
+    heading: "3. General Instructions"
+    scaffold: |
+      The engine of the WARNO. Cover:
+        - Anticipated task-organization changes (so leaders can plan attachments/detachments).
+        - Movement/readiness posture to assume now.
+        - Reconnaissance, coordination, or requests to initiate immediately.
+        - CCIR — what the commander must be told the moment it is known.
+        - Timeline: key planning/prep milestones, rehearsal windows, expected OPORD time.
+      Ask: What can subordinates start doing right now that they would otherwise wait on?
+    example: |
+      - Task org: plan to receive one attached engineer squad; Weapons Platoon prepare for a
+        support-by-fire role.
+      - Readiness: assume 2-hour movement posture beginning tonight.
+      - Initiate now: platoon leaders conduct map recon of the eastern approach; XO coordinate
+        Class V draw with battalion S-4.
+      - CCIR: any indication of OPFOR armor or a spoiling attack on the assembly area.
+      - Timeline: warning order issued now; leaders' recon 052000; OPORD NLT 060001; rehearsal
+        NLT 052000.
+
+  - key: specific_instructions
+    heading: "4. Specific Instructions"
+    scaffold: |
+      Direct taskings to named subordinates that should begin before the OPORD — pre-combat
+      checks, liaison, drawing gear, submitting requirements. One line per element keeps it
+      actionable.
+      Ask: Who specifically needs to do what, tonight, without waiting for me?
+    example: |
+      - 1st Platoon: be prepared to be the main effort; begin rehearsal of squad assault drills.
+      - Weapons Platoon: recon a support-by-fire position vic Hill 210.
+      - XO: submit consolidated logistics requirements to S-4 NLT 051800.
+      - All: complete pre-combat inspections NLT 052000 and report shortfalls.
+
+  - key: acknowledge
+    heading: "5. Acknowledgement / Command and Signal"
+    scaffold: |
+      Direct subordinates to acknowledge receipt. Give the essentials of how to reach the
+      commander and where the next order will be issued (time and place of the OPORD brief).
+      Ask: Does everyone know this order landed, and where/when the full order comes?
+    example: |
+      Acknowledge receipt. Commander at the company CP. OPORD will be issued at the company CP
+      at 060001. Leaders' recon departs the CP at 052000.
+
+guidance:
+  - "Speed over completeness — a WARNO's value is the time it buys. Send it early, refine later."
+  - "Be honest about what is still assumed. A confident-sounding wrong assumption costs more than a caveat."
+  - "Every WARNO should let subordinates start something concrete tonight."
+  - "Set the OPORD time and place up front so parallel planning has a finish line."
+
+warnings:
+  - "System template only. Keep it training-safe and scrub operationally sensitive details before use."
+  - "The example is notional. Replace units, objectives, times, and control measures with reviewed information."

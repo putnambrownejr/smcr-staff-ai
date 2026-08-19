@@ -1,0 +1,118 @@
+# Structured system-template source. Annotated scaffold (default) + worked example (toggle).
+# `example` blocks are notional and training-safe. Verify against current doctrine before reuse.
+
+template_id: sys-conop
+template_name: "Concept of Operations (CONOP)"
+template_type: conop
+preferred_format: briefing
+audience_hint: "The approving commander and staff, to gain approval for an operation or training event."
+agent_handoff: staff-products
+one_liner: "A one-page concept that gets an operation or training event approved before you build the full order."
+
+when_to_use: >
+  Use a CONOP to get a commander's approval and resources for an event before you invest in a full
+  OPORD — a live-fire range, a field exercise, a movement, a community event. It is a decision
+  document: enough detail to approve, not the execution order itself. Once approved, expand it into
+  an OPORD.
+
+doctrine_refs:
+  - "MCWP 5-10 (Marine Corps Planning Process) — concept development and approval"
+  - "MCDP 1-0 (Marine Corps Operations) — commander's intent and concept of operations"
+  - "Unit training SOP / range order requirements (for training CONOPs)"
+
+sections:
+  - key: purpose
+    heading: "Purpose"
+    scaffold: |
+      One or two sentences: what this event is and what decision you are asking the approver to
+      make. Lead with the ask so the reader knows why they are reading.
+      Ask: What am I asking this commander to approve, in one breath?
+    example: |
+      Requesting approval to conduct a company live-fire range during the August drill weekend to
+      certify squad-level fire and movement. This CONOP requests approval of the concept, range
+      dates, and ammunition forecast.
+
+  - key: situation_forces
+    heading: "Situation & Forces"
+    scaffold: |
+      Brief context and who is involved: participating units, key attachments, and the who/what/
+      where/when of the event. Note any external coordination (range control, installation,
+      partner unit).
+      Ask: Who is doing this, where, when, and with what support?
+    example: |
+      Company B (approx. 120 Marines) conducts the event at Range 5, notional installation, on
+      16-17 AUG. Battalion provides ammunition and a range safety officer. Range control
+      coordination initiated.
+
+  - key: mission_intent
+    heading: "Mission & Commander's Intent"
+    scaffold: |
+      The mission statement for the event and a short intent: purpose, key tasks, and end state.
+      For training, the end state is usually a certification or proficiency standard achieved.
+      Ask: What does 'done and successful' look like?
+    example: |
+      Mission: Company B conducts a squad live-fire range 16-17 AUG to certify all squads on fire
+      and movement. Intent: every squad qualifies to standard, safely, with leaders gaining
+      reps running a live-fire lane. End state: 100% squads certified, zero safety incidents.
+
+  - key: concept
+    heading: "Concept of Operations"
+    scaffold: |
+      The scheme in phases — how the event flows from start to finish. Keep it to the level of
+      detail an approver needs: phases, main effort per phase, and the decisive event. Diagram or
+      timeline it if that is clearer.
+      Ask: How does this unfold, phase by phase, and what is the critical moment?
+    example: |
+      Phase I (Prep, 15 AUG): draw ammo, safety brief, dry/blank iterations.
+      Phase II (Day fire, 16 AUG): squads rotate through the live lane; main effort is the
+      lane OIC certifying each squad.
+      Phase III (Night fire, 16 AUG): limited night iterations for qualified squads.
+      Phase IV (Recovery, 17 AUG): brass/ammo turn-in, range cleanup, AAR.
+      Decisive event: each squad's certified live run.
+
+  - key: sustainment_c2
+    heading: "Sustainment & Command/Signal"
+    scaffold: |
+      The resources the event needs and how it is controlled: ammunition, medical/CASEVAC,
+      transportation, chow/water; then command relationships and communications. Highlight
+      anything the approver must resource (this is often why the CONOP exists).
+      Ask: What does the commander have to provide, and how is this event controlled?
+    example: |
+      Sustainment: ammunition forecast attached; ambulance and corpsman on site (range cannot run
+      without it); water and chow via unit. C2: company commander is OIC; lane NCOs run lanes;
+      medical net monitored throughout. Range goes cold on any safety violation.
+
+  - key: risk_gonogo
+    heading: "Risk (ORM) & Go/No-Go Criteria"
+    scaffold: |
+      The top hazards, their controls, and the residual risk level — this is where a commander
+      accepts or refuses risk. Then the Go/No-Go criteria: the conditions that MUST be met to
+      execute (and that, if unmet, stop the event).
+      Ask: What could hurt someone, how is it controlled, and what stops the event cold?
+    example: |
+      Top hazards: negligent discharge (control: strict lane discipline, cleared weapons off the
+      line), heat (control: work/rest cycle, water plan), night ID (control: night qual only for
+      certified squads). Residual risk: MEDIUM.
+      Go/No-Go: certified RSO present; ambulance on site; comms up on the range net; weather within
+      limits. Any 'No-Go' stops the event.
+
+  - key: approval
+    heading: "Recommendation / Approval Requested"
+    scaffold: |
+      State exactly what you want approved and any decisions/resources required. Make it easy to
+      say yes: list the specific approvals in a line or two.
+      Ask: What is the commander signing off on?
+    example: |
+      Recommend approval of: (1) the concept as briefed, (2) range dates 16-17 AUG, (3) the
+      attached ammunition forecast, and (4) acceptance of MEDIUM residual risk.
+
+guidance:
+  - "A CONOP is a decision document — give enough to approve, not the whole execution order."
+  - "Lead with the ask. The approver should know what they are deciding in the first sentence."
+  - "Go/No-Go criteria protect you and your Marines. Make them concrete and enforceable."
+  - "Name what the commander must resource; a CONOP that hides the cost gets approved and then fails."
+
+warnings:
+  - "System template only. Keep it training-safe and scrub operationally sensitive details before use."
+  - "The example is notional. Replace units, ranges, dates, and forecasts with reviewed information."
+  - "Training CONOPs must meet your unit's range/SOP and ORM requirements — verify before submission."

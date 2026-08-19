@@ -1,0 +1,99 @@
+# Structured system-template source. Annotated scaffold (default) + worked example (toggle).
+# `example` blocks are notional and training-safe. Verify against current doctrine before reuse.
+
+template_id: sys-aar
+template_name: "After Action Review (AAR)"
+template_type: aar
+preferred_format: report
+audience_hint: "Leaders and staff capturing lessons from a completed event to improve the next one."
+agent_handoff: staff-products
+one_liner: "A structured look back that turns what happened into what changes next time — sustain, improve, act."
+
+when_to_use: >
+  Conduct an AAR after any event worth learning from — a range, an exercise, a drill weekend, an
+  inspection. It compares what was supposed to happen with what actually happened, then converts
+  the gap into concrete, assigned improvements. An AAR without action items is just storytelling.
+
+doctrine_refs:
+  - "MCTP 8-10A (unit training management) / MCRP 8-10B — after action review methodology"
+  - "MCDP 7 (Learning) — how units learn from experience"
+
+sections:
+  - key: overview
+    heading: "Event Overview"
+    scaffold: |
+      What the event was, when, who participated, and its objectives. Establish the baseline the
+      review measures against.
+      Ask: What were we trying to accomplish, and under what conditions?
+    example: |
+      Company B squad live-fire range, 16-17 AUG, Range 5 (notional). 118 Marines, six squads.
+      Objective: certify all squads on fire and movement, day and limited night, safely.
+
+  - key: planned
+    heading: "What Was Supposed to Happen"
+    scaffold: |
+      The plan/standard as briefed — the intended flow, timeline, and success criteria. Stating it
+      plainly makes the comparison honest and specific.
+      Ask: What was the plan and the standard we set ourselves?
+    example: |
+      Plan: all six squads complete a dry run, then a certified day live run on 16 AUG; certified
+      squads run limited night iterations that evening; recovery and AAR on 17 AUG. Standard:
+      100% squads certified, zero safety incidents.
+
+  - key: actual
+    heading: "What Actually Happened"
+    scaffold: |
+      The facts of execution — what went as planned and what deviated. Keep it objective and
+      specific (times, counts), not yet interpretation. The 'why' comes in the next sections.
+      Ask: What actually occurred, stated as facts before opinions?
+    example: |
+      Five of six squads certified on day fire on schedule. One squad's certification slipped to
+      17 AUG after a late start caused by an ammunition draw delay. Night iterations ran for four
+      squads (two ran out of daylight prep time). Zero safety incidents.
+
+  - key: sustain
+    heading: "Sustain (what worked, and why)"
+    scaffold: |
+      What went well and — critically — WHY, so it can be repeated. Tie each sustain to a cause you
+      can reproduce, not luck.
+      Ask: What worked, and what caused it to work so we can do it again?
+    example: |
+      - Lane discipline was excellent — cause: the extra weeknight rehearsal for the two weak
+        squads paid off in confident, safe runs. Repeat the pre-range rehearsal next time.
+      - Medical coverage was seamless — cause: corpsman rehearsed the CASEVAC lane beforehand.
+
+  - key: improve
+    heading: "Improve (what to fix, root cause)"
+    scaffold: |
+      What fell short, the ROOT cause (not the symptom), and what specifically should change. Push
+      past the first answer — 'late start' is a symptom; the ammo-draw process is the cause.
+      Ask: What went wrong, and what is the real cause underneath the obvious one?
+    example: |
+      - One squad's late certification. Symptom: late start. Root cause: ammunition draw was not
+        pre-coordinated with the ASP, so the draw took two hours instead of thirty minutes.
+      - Night prep shortfall. Root cause: the day schedule left no buffer, so slips cascaded into
+        the night window.
+
+  - key: actions
+    heading: "Recommendations & Action Items"
+    scaffold: |
+      Convert improvements into assigned actions: each with an owner (OPR) and a suspense. This is
+      the deliverable — the part that makes the next event better. Vague recommendations die; owned,
+      dated ones get done.
+      Ask: Who will do what, by when, so this actually changes next time?
+    example: |
+      - Pre-coordinate ammunition draw with the ASP 72 hours out. OPR: XO. Suspense: standing, before
+        every range.
+      - Build a 2-hour buffer into range day timelines. OPR: S-3. Suspense: next range OPORD.
+      - Add pre-range rehearsal as a standing certification gate. OPR: company commander. Suspense: now.
+
+guidance:
+  - "Compare intended vs. actual honestly — the gap is where all the learning lives."
+  - "Chase the root cause. Fixing the symptom guarantees you meet the same problem again."
+  - "Sustains need a 'why' too, or you cannot deliberately repeat what worked."
+  - "Every finding ends as an action with an owner and a suspense, or the AAR changes nothing."
+
+warnings:
+  - "System template only. Keep it training-safe and scrub sensitive details before use."
+  - "The example is notional. Replace event facts, causes, and action items with reviewed information."
+  - "Keep AARs candid but professional; they are learning tools, not blame records."
