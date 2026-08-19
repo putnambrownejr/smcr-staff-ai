@@ -254,7 +254,8 @@ def _seed_fitrep_analytics(fitrep_store: FitrepStore) -> int:
 
     Four Capt reports across two reporting seniors give the analytics view a
     relative-value trend, per-RS summaries, a comparative-assessment
-    distribution, and trait trends. All values are illustrative demo data.
+    distribution, and trait trends. Traits are real MCO 1610.7 attributes.
+    All values are illustrative demo data.
     """
     _wipe_demo_fitrep_analytics(fitrep_store)
     today = date.today()
@@ -272,7 +273,7 @@ def _seed_fitrep_analytics(fitrep_store: FitrepStore) -> int:
             ro_label="Col M. Vance",
             relative_value=Decimal("88.4"),
             comparative_assessment=5,
-            traits={"Mission Accomplishment": 4.0, "Proficiency": 4.0, "Leadership": 4.0, "Judgment": 4.0},
+            traits={"Performance": 4.0, "Proficiency": 4.0, "Leading Subordinates": 4.0, "Judgment": 4.0},
         ),
         FitrepReportCreateRequest(
             user_key=DEMO_USER_KEY,
@@ -285,7 +286,7 @@ def _seed_fitrep_analytics(fitrep_store: FitrepStore) -> int:
             ro_label="Col M. Vance",
             relative_value=Decimal("90.1"),
             comparative_assessment=6,
-            traits={"Mission Accomplishment": 5.0, "Proficiency": 5.0, "Leadership": 4.0, "Judgment": 5.0},
+            traits={"Performance": 5.0, "Proficiency": 5.0, "Leading Subordinates": 4.0, "Judgment": 5.0},
         ),
         FitrepReportCreateRequest(
             user_key=DEMO_USER_KEY,
@@ -298,7 +299,7 @@ def _seed_fitrep_analytics(fitrep_store: FitrepStore) -> int:
             ro_label="LtCol A. Reyes",
             relative_value=Decimal("90.6"),
             comparative_assessment=6,
-            traits={"Mission Accomplishment": 5.0, "Proficiency": 5.0, "Leadership": 5.0, "Judgment": 5.0},
+            traits={"Performance": 5.0, "Proficiency": 5.0, "Leading Subordinates": 5.0, "Judgment": 5.0},
         ),
         FitrepReportCreateRequest(
             user_key=DEMO_USER_KEY,
@@ -311,7 +312,7 @@ def _seed_fitrep_analytics(fitrep_store: FitrepStore) -> int:
             ro_label="LtCol A. Reyes",
             relative_value=Decimal("91.3"),
             comparative_assessment=7,
-            traits={"Mission Accomplishment": 6.0, "Proficiency": 5.0, "Leadership": 6.0, "Judgment": 5.0},
+            traits={"Performance": 6.0, "Proficiency": 5.0, "Leading Subordinates": 6.0, "Judgment": 5.0},
         ),
     ]
     for request in reports:

@@ -14,7 +14,7 @@ def test_fitrep_analytics_builds_transparent_trends_and_rs_groups() -> None:
             rs_label="RS Alpha",
             relative_value=Decimal("88.0"),
             comparative_assessment=4,
-            traits={"leadership": 4.0},
+            traits={"Leading Subordinates": 4.0},
         ),
         FitrepReport(
             report_id="r2",
@@ -23,13 +23,13 @@ def test_fitrep_analytics_builds_transparent_trends_and_rs_groups() -> None:
             rs_label="RS Alpha",
             relative_value=Decimal("92.0"),
             comparative_assessment=3,
-            traits={"leadership": 5.0},
+            traits={"Leading Subordinates": 5.0},
         ),
     ]
     analytics = build_fitrep_analytics(FitrepWorkspace(user_key="capt-fitrep", reports=reports))
     assert [point.value for point in analytics.relative_value_trend] == [Decimal("88.0"), Decimal("92.0")]
     assert analytics.by_reporting_senior[0].average_relative_value == Decimal("90.0")
-    assert analytics.trait_trends["leadership"][1].value == Decimal("5.0")
+    assert analytics.trait_trends["Leading Subordinates"][1].value == Decimal("5.0")
     assert analytics.sample_size == 2
     assert any("small" in warning.lower() for warning in analytics.data_quality_warnings)
 
