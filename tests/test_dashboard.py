@@ -566,15 +566,15 @@ def test_reveal_opens_existing_file_and_strips_fragment(monkeypatch: pytest.Monk
 
     response = client.get(
         "/dashboard/files/reveal",
-        params={"path": "data/seed/system_templates.example.yaml#sys-opord"},
+        params={"path": "data/seed/system_templates/sys-opord.yaml#situation"},
     )
 
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "opened"
-    assert body["resolved"].endswith("data/seed/system_templates.example.yaml")
+    assert body["resolved"].endswith("data/seed/system_templates/sys-opord.yaml")
     assert len(opened) == 1
-    assert opened[0].name == "system_templates.example.yaml"
+    assert opened[0].name == "sys-opord.yaml"
 
 
 def test_reveal_falls_back_to_nearest_existing_ancestor(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -879,8 +879,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         assert payload["alnav_ticker"][0]["status"] == "ALNAV"
         assert payload["dod_ticker"][0]["status"] == "DoD"
         system_template = next(item for item in payload["template_library"] if item["template_source"] == "system")
-        assert system_template["source_path"].startswith("data/templates/system/")
+        assert system_template["source_path"].startswith("/product-templates/system/")
         assert "#sys-" not in system_template["source_path"]
-        assert Path(system_template["source_path"]).is_file()
     finally:
         app.dependency_overrides.clear()

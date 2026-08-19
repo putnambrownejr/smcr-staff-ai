@@ -105,3 +105,26 @@ class ProductTemplateListResponse(BaseModel):
     total_templates: int
     by_type: dict[str, int]
     records: list[ProductTemplateRecord]
+
+
+class SystemTemplateSection(BaseModel):
+    key: str
+    heading: str
+    scaffold: str
+    example: str | None = None
+
+
+class SystemTemplateDetail(ProductTemplateRecord):
+    source_path: str
+    agent_handoff: str | None = None
+    one_liner: str | None = None
+    when_to_use: str | None = None
+    doctrine_refs: list[str] = Field(default_factory=list)
+    sections: list[SystemTemplateSection] = Field(default_factory=list)
+    guidance: list[str] = Field(default_factory=list)
+
+
+class SystemTemplateListResponse(BaseModel):
+    total_templates: int
+    by_type: dict[str, int]
+    records: list[SystemTemplateDetail]

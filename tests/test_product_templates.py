@@ -4,26 +4,13 @@ from fastapi.testclient import TestClient
 
 from app.api.routes.product_templates import get_context_store
 from app.api.routes.product_templates import get_template_repository as get_product_template_repository
+from app.api.routes.staff_products import get_system_template_catalog
 from app.api.routes.staff_products import get_template_repository as get_staff_product_template_repository
 from app.main import app
 from app.schemas.product_templates import CreateProductTemplateFromContextRequest, ProductTemplateType
 from app.services.storage.local_context_store import LocalContextStore
 from app.services.templates.product_template_repository import ProductTemplateRepository
 from app.services.templates.system_template_catalog import SystemTemplateCatalog
-
-
-def test_every_system_template_has_one_real_markdown_file() -> None:
-    catalog = SystemTemplateCatalog.from_yaml(Path("data/seed/system_templates.example.yaml"))
-    records = catalog.list()
-    template_dir = Path("data/templates/system")
-    files = sorted(template_dir.glob("*.md"))
-
-    assert len(files) == len(records)
-    assert {path.stem for path in files} == {record.template_id for record in records}
-    for record in records:
-        content = (template_dir / f"{record.template_id}.md").read_text(encoding="utf-8")
-        assert content.startswith(f"# {record.template_name}\n")
-        assert "DRAFT — Verify all references against current official sources before acting." in content
 
 
 def test_product_template_repository_promotes_local_example(tmp_path: Path) -> None:
@@ -101,6 +88,49 @@ def test_product_template_routes_create_list_and_reuse(tmp_path: Path) -> None:
         assert payload["applied_templates"] == ["Company FRAGO Example"]
         first_section_prompts = payload["sections"][0]["prompts"]
         assert any("Local template reference" in prompt for prompt in first_section_prompts)
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_product_template_routes_expose_curated_system_templates() -> None:
+    client = TestClient(app)
+
+    list_response = client.get("/product-templates/system")
+    assert list_response.status_code == 200
+    list_payload = list_response.json()
+    assert list_payload["total_templates"] >= 8
+    opord_summary = next(record for record in list_payload["records"] if record["template_id"] == "sys-opord")
+    assert opord_summary["source_path"] == "/product-templates/system/sys-opord"
+
+    detail_response = client.get("/product-templates/system/sys-opord")
+    assert detail_response.status_code == 200
+    detail = detail_response.json()
+    assert detail["template_name"] == "Operations Order (OPORD)"
+    assert detail["source_path"] == "/product-templates/system/sys-opord"
+    assert detail["agent_handoff"] == "staff-products"
+    assert detail["sections"][0]["scaffold"]
+    assert detail["sections"][0]["example"]
+
+
+def test_staff_product_draft_accepts_system_template_id() -> None:
+    app.dependency_overrides[get_system_template_catalog] = lambda: SystemTemplateCatalog.from_dir(
+        Path("data/seed/system_templates")
+    )
+    client = TestClient(app)
+    try:
+        response = client.post(
+            "/staff-products/draft",
+            json={
+                "product_type": "frago",
+                "topic": "Training-only timeline change",
+                "template_ids": ["sys-frago"],
+            },
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["applied_templates"] == ["Fragmentary Order (FRAGO)"]
+        assert any("System template reference" in prompt for prompt in payload["sections"][0]["prompts"])
+        assert any("System templates are curated scaffolds only." in warning for warning in payload["warnings"])
     finally:
         app.dependency_overrides.clear()
 

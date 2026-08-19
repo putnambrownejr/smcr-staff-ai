@@ -1807,11 +1807,13 @@ class StaffProductBuilder:
             *detect_sensitive_input(" ".join([request.topic, *request.facts, *request.constraints])),
             "Staff products are advisory drafts and must be reviewed by the appropriate human chain.",
         ]
-        if applied_templates:
+        if any(template.local_only for template in applied_templates):
             warnings.append(
                 "Local templates are reusable examples only. Scrub stale names, "
                 "routing, dates, and unit-specific details."
             )
+        if any(not template.local_only for template in applied_templates):
+            warnings.append("System templates are curated scaffolds only. Verify current format, authority, and SOP fit.")
         if request.product_type in {
             StaffProductType.opord,
             StaffProductType.warno,
@@ -1991,8 +1993,9 @@ def _enrich_sections(
     ]
     template_prompts: list[str] = []
     for template in templates:
+        template_source = "Local" if template.local_only else "System"
         template_prompts.append(
-            f"Local template reference: {template.template_name} "
+            f"{template_source} template reference: {template.template_name} "
             f"({template.template_type.value}). Use as structure only."
         )
         if template.audience_hint:

@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,9 +11,15 @@ from app.schemas.product_templates import (
     CreateProductTemplateFromContextRequest,
     ProductTemplateListResponse,
     ProductTemplateRecord,
+    SystemTemplateDetail,
+    SystemTemplateListResponse,
 )
 from app.services.storage.local_context_store import LocalContextStore
 from app.services.templates.product_template_repository import ProductTemplateRepository
+from app.services.templates.system_template_catalog import SystemTemplateCatalog
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SEED_DIR = REPO_ROOT / "data" / "seed"
 
 router = APIRouter(
     prefix="/product-templates",
@@ -29,6 +36,10 @@ def get_context_store() -> Iterator[LocalContextStore]:
 def get_template_repository() -> Iterator[ProductTemplateRepository]:
     settings = get_settings()
     yield ProductTemplateRepository(settings.product_template_storage_dir)
+
+
+def get_system_template_catalog() -> SystemTemplateCatalog:
+    return SystemTemplateCatalog.from_dir(SEED_DIR / "system_templates")
 
 
 @router.post("/from-context", response_model=ProductTemplateRecord)
@@ -66,6 +77,33 @@ def list_product_templates(
     )
 
 
+@router.get("/system", response_model=SystemTemplateListResponse)
+def list_system_product_templates(
+    catalog: Annotated[SystemTemplateCatalog, Depends(get_system_template_catalog)],
+) -> SystemTemplateListResponse:
+    records = [catalog.get_detail(record.template_id) for record in catalog.list()]
+    system_records = [record for record in records if record is not None]
+    by_type: dict[str, int] = {}
+    for record in system_records:
+        by_type[record.template_type.value] = by_type.get(record.template_type.value, 0) + 1
+    return SystemTemplateListResponse(
+        total_templates=len(system_records),
+        by_type=by_type,
+        records=system_records,
+    )
+
+
+@router.get("/system/{template_id}", response_model=SystemTemplateDetail)
+def get_system_product_template(
+    template_id: str,
+    catalog: Annotated[SystemTemplateCatalog, Depends(get_system_template_catalog)],
+) -> SystemTemplateDetail:
+    record = catalog.get_detail(template_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail=f"Unknown system product template: {template_id}")
+    return record
+
+
 @router.get("/{template_id}", response_model=ProductTemplateRecord)
 def get_product_template(
     template_id: str,
@@ -84,4 +122,3 @@ def delete_product_template(
 ) -> None:
     if not repository.delete(template_id):
         raise HTTPException(status_code=404, detail=f"Unknown product template: {template_id}")
-

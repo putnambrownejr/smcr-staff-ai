@@ -376,7 +376,7 @@ def get_template_repository() -> Iterator[ProductTemplateRepository]:
 
 
 def get_system_template_catalog() -> SystemTemplateCatalog:
-    return SystemTemplateCatalog.from_yaml(SEED_DIR / "system_templates.example.yaml")
+    return SystemTemplateCatalog.from_dir(SEED_DIR / "system_templates")
 
 
 def get_reading_state_store() -> Iterator[ReadingProgressStore]:
@@ -551,7 +551,7 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
         documentation_updates=chief_brief.documentation_updates,
         document_details=[],
         template_library=_template_library(
-            system_template_catalog=SystemTemplateCatalog.from_yaml(SEED_DIR / "system_templates.example.yaml"),
+            system_template_catalog=get_system_template_catalog(),
             template_repository=None,
         ),
         section_memory_profile=None,
@@ -692,7 +692,7 @@ def _template_library(
             template_name=record.template_name,
             template_type=record.template_type.value,
             template_source="system",
-            source_path=f"data/templates/system/{record.template_id}.md",
+            source_path=getattr(record, "source_path", f"/product-templates/system/{record.template_id}"),
             description=record.description,
             tags=record.tags,
             preferred_format=record.preferred_format,
