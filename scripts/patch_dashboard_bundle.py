@@ -3708,21 +3708,33 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         'fitrep traits: normalize scores and group rows by section',
+        # Stable marker: a later not-observed patch rewrites this entry's output,
+        # so `new` can no longer serve as its own marker.
+        '    const activeScores = Component.frScores(active ? active.scores : null);\n',
         '    const LETTERS = ["A", "B", "C", "D", "E", "F", "G"];\n    const frTraits = Component.FR_TRAITS.map((t) => {\n      const v = active ? active.scores[t.id] : 4;\n      return { label: t.label, value: v, letter: LETTERS[v - 1], onChange: this.updateFitrepScore(t.id) };\n    });\n',
         '    const LETTERS = ["A", "B", "C", "D", "E", "F", "G"];\n    const activeScores = Component.frScores(active ? active.scores : null);\n    let frLastSection = "";\n    const frTraits = Component.FR_TRAITS.map((t) => {\n      const v = activeScores[t.id];\n      const showSection = t.section !== frLastSection;\n      frLastSection = t.section;\n      return { label: t.label, section: t.section, showSection, value: v, letter: LETTERS[v - 1], onChange: this.updateFitrepScore(t.id) };\n    });\n',
     ),
     (
         'fitrep traits: chart bars use normalized scores',
+        # Stable marker: a later not-observed patch rewrites this entry's output,
+        # so `new` can no longer serve as its own marker.
+        '      if (v === Component.FR_NOT_OBSERVED) {\n',
         '    const frChartBars = Component.FR_TRAITS.map((t) => {\n      const v = active ? active.scores[t.id] : 0;\n      return { label: t.label, barStyle: `height:100%;width:${(v / 7) * 100}%;background:${barColor(v)};border-radius:3px;` };\n    });\n',
         '    const frChartBars = Component.FR_TRAITS.map((t) => {\n      const v = activeScores[t.id];\n      return { label: t.label, barStyle: `height:100%;width:${(v / 7) * 100}%;background:${barColor(v)};border-radius:3px;` };\n    });\n',
     ),
     (
         'fitrep traits: rank averages use normalized scores',
+        # Stable marker: a later not-observed patch rewrites this entry's output,
+        # so `new` can no longer serve as its own marker.
+        '      const vals = Component.frObservedValues(f.scores);\n',
         '    const rankGroups = {};\n    this.state.fitreps.forEach((f) => {\n      const rank = f.rank || "Unranked";\n      const vals = Object.values(f.scores);\n      const avg = vals.reduce((a, b) => a + b, 0) / vals.length;\n      if (!rankGroups[rank]) rankGroups[rank] = [];\n      rankGroups[rank].push(avg);\n    });\n',
         '    const rankGroups = {};\n    this.state.fitreps.forEach((f) => {\n      const rank = f.rank || "Unranked";\n      const vals = Object.values(Component.frScores(f.scores));\n      const avg = vals.reduce((a, b) => a + b, 0) / vals.length;\n      if (!rankGroups[rank]) rankGroups[rank] = [];\n      rankGroups[rank].push(avg);\n    });\n',
     ),
     (
         'fitrep traits: active average uses normalized scores',
+        # Stable marker: a later not-observed patch rewrites this entry's output,
+        # so `new` can no longer serve as its own marker.
+        '    const activeObserved = active ? Component.frObservedValues(active.scores) : [];\n',
         '    const activeAvg = active ? Object.values(active.scores).reduce((a, b) => a + b, 0) / Object.values(active.scores).length : null;\n',
         '    const activeAvg = active ? Object.values(activeScores).reduce((a, b) => a + b, 0) / Object.values(activeScores).length : null;\n',
     ),
@@ -3748,8 +3760,57 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         'fitrep traits: render attribute rows under section headers',
+        # Stable marker: a later not-observed patch rewrites this entry's output,
+        # so `new` can no longer serve as its own marker.
+        '{{ t.section }}</div>\n',
         '                <sc-for list="{{ frTraits }}" as="t" hint-placeholder-count="6">\n                  <div style="display:grid;grid-template-columns:170px 1fr 46px;gap:10px;align-items:center;">\n                    <span style="font-size:0.82rem;color:#c7cfd8;">{{ t.label }}</span>\n                    <input type="range" min="1" max="7" step="1" value="{{ t.value }}" sc-camel-on-change="{{ t.onChange }}" style="width:100%;">\n                    <span style="text-align:right;">\n                      <span style="font-family:\'IBM Plex Mono\',monospace;font-size:1rem;font-weight:700;">{{ t.letter }}</span>\n                      <span style="font-family:\'IBM Plex Mono\',monospace;font-size:0.7rem;color:#8a94a0;">/{{ t.value }}</span>\n                    </span>\n                  </div>\n                </sc-for>\n',
         '                <sc-for list="{{ frTraits }}" as="t" hint-placeholder-count="6">\n                  <div>\n                    <sc-if value="{{ t.showSection }}" hint-placeholder-val="{{ false }}">\n                      <div style="margin:10px 0 4px;font-size:0.68rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#8a94a0;border-bottom:1px solid #313844;padding-bottom:3px;">{{ t.section }}</div>\n                    </sc-if>\n                    <div style="display:grid;grid-template-columns:200px 1fr 46px;gap:10px;align-items:center;">\n                      <span style="font-size:0.8rem;color:#c7cfd8;">{{ t.label }}</span>\n                      <input type="range" min="1" max="7" step="1" value="{{ t.value }}" sc-camel-on-change="{{ t.onChange }}" style="width:100%;">\n                      <span style="text-align:right;">\n                        <span style="font-family:\'IBM Plex Mono\',monospace;font-size:1rem;font-weight:700;">{{ t.letter }}</span>\n                        <span style="font-family:\'IBM Plex Mono\',monospace;font-size:0.7rem;color:#8a94a0;">/{{ t.value }}</span>\n                      </span>\n                    </div>\n                  </div>\n                </sc-for>\n',
+    ),
+    (
+        'fitrep not observed: add H constant and observed-value helper',
+        '  static FR_NOT_OBSERVED = 8;\n',
+        '  static frScores(raw) {\n',
+        "  // A mark of H on the real report means Not Observed: the attribute is not\n  // graded and is left out of the reporting senior's average entirely.\n  static FR_NOT_OBSERVED = 8;\n\n  static frObservedValues(raw) {\n    return Object.values(Component.frScores(raw)).filter((v) => v !== Component.FR_NOT_OBSERVED);\n  }\n\n  static frScores(raw) {\n",
+    ),
+    (
+        'fitrep not observed: mark H rows in the trait list',
+        '    const LETTERS = ["A", "B", "C", "D", "E", "F", "G"];\n    const activeScores = Component.frScores(active ? active.scores : null);\n    let frLastSection = "";\n    const frTraits = Component.FR_TRAITS.map((t) => {\n      const v = activeScores[t.id];\n      const showSection = t.section !== frLastSection;\n      frLastSection = t.section;\n      return { label: t.label, section: t.section, showSection, value: v, letter: LETTERS[v - 1], onChange: this.updateFitrepScore(t.id) };\n    });\n',
+        '    const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];\n    const activeScores = Component.frScores(active ? active.scores : null);\n    let frLastSection = "";\n    const frTraits = Component.FR_TRAITS.map((t) => {\n      const v = activeScores[t.id];\n      const notObserved = v === Component.FR_NOT_OBSERVED;\n      const showSection = t.section !== frLastSection;\n      frLastSection = t.section;\n      return { label: t.label, section: t.section, showSection, value: v, letter: LETTERS[v - 1], notObserved, valueLabel: notObserved ? "not obs" : "/" + v, onChange: this.updateFitrepScore(t.id) };\n    });\n',
+    ),
+    (
+        'fitrep not observed: chart bars show H as an ungraded stub',
+        '    const frChartBars = Component.FR_TRAITS.map((t) => {\n      const v = activeScores[t.id];\n      return { label: t.label, barStyle: `height:100%;width:${(v / 7) * 100}%;background:${barColor(v)};border-radius:3px;` };\n    });\n',
+        '    const frChartBars = Component.FR_TRAITS.map((t) => {\n      const v = activeScores[t.id];\n      if (v === Component.FR_NOT_OBSERVED) {\n        return { label: t.label, barStyle: "height:100%;width:2%;background:#4a5565;border-radius:3px;" };\n      }\n      return { label: t.label, barStyle: `height:100%;width:${(v / 7) * 100}%;background:${barColor(v)};border-radius:3px;` };\n    });\n',
+    ),
+    (
+        'fitrep not observed: exclude H from rank averages',
+        '    const rankGroups = {};\n    this.state.fitreps.forEach((f) => {\n      const rank = f.rank || "Unranked";\n      const vals = Object.values(Component.frScores(f.scores));\n      const avg = vals.reduce((a, b) => a + b, 0) / vals.length;\n      if (!rankGroups[rank]) rankGroups[rank] = [];\n      rankGroups[rank].push(avg);\n    });\n',
+        '    const rankGroups = {};\n    this.state.fitreps.forEach((f) => {\n      const rank = f.rank || "Unranked";\n      const vals = Component.frObservedValues(f.scores);\n      if (!vals.length) return;\n      const avg = vals.reduce((a, b) => a + b, 0) / vals.length;\n      if (!rankGroups[rank]) rankGroups[rank] = [];\n      rankGroups[rank].push(avg);\n    });\n',
+    ),
+    (
+        'fitrep not observed: exclude H from the active report average',
+        '    const activeAvg = active ? Object.values(activeScores).reduce((a, b) => a + b, 0) / Object.values(activeScores).length : null;\n',
+        '    const activeObserved = active ? Component.frObservedValues(active.scores) : [];\n    const activeAvg = activeObserved.length ? activeObserved.reduce((a, b) => a + b, 0) / activeObserved.length : null;\n',
+    ),
+    (
+        'fitrep not observed: guard the profile marker when nothing is graded',
+        '      const isActiveRank = active && (active.rank || "Unranked") === rank;\n',
+        '      const isActiveRank = active && (active.rank || "Unranked") === rank && activeAvg !== null;\n',
+    ),
+    (
+        'fitrep not observed: extend the mark slider to H',
+        '                      <input type="range" min="1" max="7" step="1" value="{{ t.value }}" sc-camel-on-change="{{ t.onChange }}" style="width:100%;">\n',
+        '                      <input type="range" min="1" max="8" step="1" value="{{ t.value }}" aria-label="{{ t.label }} mark, A through G or H for not observed" sc-camel-on-change="{{ t.onChange }}" style="width:100%;">\n',
+    ),
+    (
+        'fitrep not observed: label H rows as not observed',
+        '                        <span style="font-family:\'IBM Plex Mono\',monospace;font-size:0.7rem;color:#8a94a0;">/{{ t.value }}</span>\n',
+        '                        <span style="font-family:\'IBM Plex Mono\',monospace;font-size:0.7rem;color:#8a94a0;">{{ t.valueLabel }}</span>\n',
+    ),
+    (
+        'fitrep not observed: note H in the trait-scores header',
+        '<div style="font-size:0.76rem;font-weight:600;color:#8a94a0;">Trait scores <span style="font-weight:400;">(A–G scale, MCO 1610.7)</span></div>',
+        '<div style="font-size:0.76rem;font-weight:600;color:#8a94a0;">Trait scores <span style="font-weight:400;">(A–G, or H for not observed · MCO 1610.7)</span></div>',
     ),
 ]
 
