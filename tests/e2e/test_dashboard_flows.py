@@ -79,11 +79,19 @@ def test_template_library_opens_a_real_template(browser_page: Any) -> None:
     page = browser_page
     _open_lane(page, "Bench / Files")
 
-    page.get_by_role("button", name="System OPORD system", exact=True).click()
-    _expect(page.get_by_role("heading", name="System OPORD", level=3)).to_be_visible()
-    _expect(page.get_by_text("data/templates/system/sys-opord.md", exact=False)).to_be_visible()
+    page.get_by_role("button", name="Operations Order (OPORD) system", exact=True).click()
+    _expect(page.get_by_role("heading", name="Operations Order (OPORD)", level=3)).to_be_visible()
     _expect(page.get_by_role("button", name="Start new draft", exact=True)).to_be_visible()
-    _expect(page.get_by_role("button", name="Open template location", exact=True)).to_be_visible()
+
+    # The viewer opens the curated template: annotated scaffold by default,
+    # with a toggle that swaps every section over to its worked example.
+    page.get_by_role("button", name="View template", exact=True).click()
+    _expect(page.get_by_text("Showing the annotated scaffold", exact=False)).to_be_visible()
+    _expect(page.get_by_text("Task Organization", exact=False)).to_be_visible()
+
+    page.get_by_role("button", name="Show worked example", exact=True).click()
+    _expect(page.get_by_text("Showing a worked example", exact=False)).to_be_visible()
+    _expect(page.get_by_role("button", name="Show annotated scaffold", exact=True)).to_be_visible()
 
 
 @pytest.mark.e2e
