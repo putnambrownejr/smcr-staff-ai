@@ -16,7 +16,8 @@ def e2e_base_url() -> str:
 @pytest.fixture
 def demo_project_name() -> Generator[str, None, None]:
     name = f"e2e-demo-project-{uuid.uuid4().hex[:8]}"
-    project_dir = Path(__file__).resolve().parents[2] / "projects" / name
+    projects_root = Path(os.getenv("PROJECTS_DIR", str(Path(__file__).resolve().parents[2] / "projects")))
+    project_dir = projects_root / name
     metadata_path = project_dir / ".smcr-project.json"
     project_dir.mkdir(parents=True, exist_ok=False)
     metadata_path.write_text(

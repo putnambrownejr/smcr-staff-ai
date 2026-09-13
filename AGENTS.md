@@ -9,7 +9,8 @@ Claude, Codex, Gemini, Copilot, Cursor, or any other tool. Tool-specific files
 ## What This Is
 
 A local-first command-post dashboard for USMC reserve staff officers. Runs on your
-machine — no cloud calls at runtime. The AI assistant (you, reading this) is the
+machine — external scenario inference is optional and requires explicit approval.
+The AI assistant (you, reading this) is the
 reasoning layer; the app provides structure, continuity storage, and workflow scaffolds.
 
 Five lanes: **Overview** · **Watch** · **Bench+Files** · **Workflows** · **Workspace**
@@ -193,6 +194,34 @@ projects/
 
 ---
 
+## Convening the Virtual Staff (round table) as the AI Assistant
+
+The app's agents are **deterministic doctrine templates**. They organize a seat's scope,
+standing questions, products, and role notes; they do not analyze anything. **You are the
+analysis.** When a user drops in a SITREP, scenario, training idea, or generic staff question
+and wants "the staff" on it, convene the staff yourself:
+
+1. **Seat the table.** Ask the app which seats belong (or pick them): `POST /agents/roundtable/packet`
+   with `{"scenario": "<their text>", "preset": "full_staff" | "training" | "command_team" | "auto"}`,
+   or in Python `resolve_participants(scenario, [], "chief-of-staff", preset)` from
+   `app.services.agents.roundtable`. The packet returns each seat's scope, lenses, standing
+   questions, products, and role notes (doctrine). Read them; they are your briefing, not your answer.
+2. **Answer as each seat.** For every seat, write that seat's assessment of *this* input: summary,
+   key concerns, recommendations with owner and time, products it will build, questions for the
+   commander, risks. Use the seat's role notes and cite publications by number. Do not restate the
+   framework. Where the input lacks a fact, say so; never invent unit specifics.
+3. **Synthesize as the Chief of Staff.** Bottom line, agreements and disagreements between seats,
+   decisions for the commander in priority order with deadlines, taskings by seat, one consolidated
+   product list, open questions, risks.
+4. **Build the products.** Use the Staff Products builder scaffolds (`staff-products` agent or
+   `app/services/staff_products/builder.py`) for structure, then write the content. Save under
+   `projects/<name>/products/` as `.md` and `.docx`, plus a session log (see *Saving User Work Products*).
+5. **Label everything** advisory and UNCLASSIFIED; end each product with the DRAFT footer.
+
+If `LLM_API_KEY` is configured on the server, the dashboard's Round table tab can do steps 1–3
+itself through the approval preview (`POST /agents/roundtable`, `inference: "auto"`). Without it,
+the dashboard only builds the packet and says so. Never present a template run as analysis.
+
 ## Key Reference Files
 
 - **`docs/interagency_reference.md`** — Joint, multinational, interagency, and NGO coordination
@@ -214,7 +243,9 @@ projects/
 - **Auth:** Optional passkey via `X-Local-API-Key` header. Unset = no gate (fine for
   single-user local use).
 - **Routes:** `app/api/routes/` — each file is one domain. `app/main.py` registers all of them.
-- **Dashboard JS:** `app/static/dashboard/dashboard.js` — single file, function-based, no bundler.
+- **Dashboard:** `app/static/dashboard/index.html` is a self-contained generated bundle.
+  Embedded component logic is JSON-encoded; see `scripts/patch_dashboard_bundle.py`
+  for the decode/patch/re-encode workflow. There is no separate `dashboard.js`.
 
 ---
 
@@ -253,5 +284,5 @@ Activate in the dashboard → Bench+Files → Module Packs → Activate.
 | Add a new API route | Create `app/api/routes/foo.py`, register in `app/main.py` |
 | Add a new schema | `app/schemas/foo.py` (Pydantic BaseModel) |
 | Add a new store | Follow pattern in `app/services/staff/bench_sections_store.py` |
-| Add a new dashboard widget | Edit `app/static/dashboard/index.html` + `dashboard.js` |
+| Add a new dashboard widget | Inspect `scripts/patch_dashboard_bundle.py` and the embedded logic in `app/static/dashboard/index.html`; run browser tests |
 | Change storage paths | `app/core/config.py` → add `default_*_dir()` + field in `Settings` |

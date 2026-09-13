@@ -11,6 +11,7 @@ services:
     environment:
       # Point all storage at the persistent volume
       SMCR_STAFF_AI_HOME: /data
+      PROJECTS_DIR: /data/projects
     restart: unless-stopped
 
 volumes:

@@ -1940,6 +1940,7 @@ PATCHES: list[tuple[str, ...]] = [
     ),
     (
         "agentGroups: carry intended users onto each agent card",
+        "          hasIntendedUsers: !!(a.intendedUsers && a.intendedUsers.length),\n",  # stable marker
         "        agents: agentsFiltered.filter((a) => a.category === cat).map((a) => ({\n"
         "          id: a.id,\n"
         "          name: a.name,\n"
@@ -3826,15 +3827,25 @@ PATCHES: list[tuple[str, ...]] = [
 
 
 def main() -> int:
+    from dashboard_integrity_patches import MARKER, patch_integrity
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Dry run: apply patches in memory, don't write the file.")
     args = parser.parse_args()
 
     html, json_start, json_end, inner = load_bundle(BUNDLE_PATH)
-    patched = apply_patches(inner, PATCHES)
+    # The legacy export patches form the v1 baseline. Integrity repairs replace
+    # several v1 method bodies, so do not replay obsolete patches over v2 source.
+    baseline = inner if MARKER in inner else apply_patches(inner, PATCHES)
+    patched = patch_integrity(baseline)
 
     if args.check:
-        print(f"OK: all {len(PATCHES)} patches apply cleanly (dry run, no file written).")
+        baseline_status = (
+            "existing integrity marker found; legacy baseline patches skipped"
+            if MARKER in inner
+            else f"{len(PATCHES)} legacy baseline patches applied in memory"
+        )
+        print(f"OK: {baseline_status}; integrity patch check passed (dry run, no file written).")
         return 0
 
     write_bundle(BUNDLE_PATH, html, json_start, json_end, patched)

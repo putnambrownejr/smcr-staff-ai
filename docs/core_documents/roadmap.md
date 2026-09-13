@@ -9,10 +9,12 @@ see [ARCHITECTURE.md](../../ARCHITECTURE.md).
 
 These are implemented, tested, and in active use.
 
-- **Advisory agent layer** — 35 agents: 19 standalone advisors + 16 echelon-adaptive
-  staff archetypes (platoon → division/group). Includes MAGTF elements (ACE/GCE/LCE),
-  functional advisors (ORM, OSINT, PKI, red-team, writing/briefing, uniform, drill prep),
-  and MOS-specific advisors (infantry 03xx, artillery 08xx, custom MOS recipes).
+- **Advisory agent layer** — 37 agents: 21 standalone advisors + 16 echelon-adaptive
+  staff archetypes (platoon → division/group). Includes MAGTF elements (ACE/GCE; LCE is
+  a mode of the S-4 seat), functional advisors (ORM, OSINT, PKI, red-team,
+  writing/briefing with a FitRep & awards mode, uniform), and MOS-specific advisors
+  (infantry 03xx, artillery 08xx, custom MOS recipes). Eight former agents survive as
+  modes of a staff seat (see `MERGED_AGENT_ALIASES` in the registry).
 - **JSON file-store continuity** — handoffs, actions/POAMs, travel cases, battle
   rhythm, section memory, opportunities, drill plans. Survives between drills.
 - **Dashboard** — single-page operator surface with lane navigation, readiness
@@ -20,7 +22,8 @@ These are implemented, tested, and in active use.
 - **Chief of Staff / Aide brief** — orchestrates handoff + documents + drill +
   career + actions into a daily/drill-period brief.
 - **MARADMIN / message ingestion** — RSS/print-view parsing, message-watch
-  feeds (NAVADMIN/ALNAV/DoD), custom watch feeds, source hashing.
+  feeds (ALMAR/DoD; NAVADMIN/ALNAV are portal links because they have no
+  public feed), custom watch feeds, source hashing.
 - **SMCR billet discovery** — public BIC parsing and MOS/rank/location ranking.
 - **Admin workflows** — DTS, GTCC, MROWS rebuttal, RIDT scaffolds.
 - **Staff products** — WARNO/OPORD/FRAGO/SITREP/AAR and correspondence scaffolds.

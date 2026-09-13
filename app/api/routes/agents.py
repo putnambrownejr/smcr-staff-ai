@@ -5,17 +5,27 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.api.routes.user_docs import get_user_docs_store
 from app.core.auth import LocalApiKeyDependency
 from app.core.config import get_settings
 from app.schemas.agents import AgentMetadata, AgentRunRequest, AgentRunResponse, ScenarioOutputStatus, SourceSelection
 from app.schemas.external_processing import DisclosureMode, ExternalProcessingApproval, ExternalProcessingPreview
-from app.schemas.roundtable import RoundtableRequest, RoundtableResponse
+from app.schemas.roundtable import (
+    RoundtableCapability,
+    RoundtablePacketRequest,
+    RoundtablePacketResponse,
+    RoundtableRequest,
+    RoundtableResponse,
+)
 from app.schemas.scenario_handoff import ChainRequest, ChainResponse, ChainStepResult
 from app.schemas.source_state import SourceTrustMarker
+from app.schemas.user_docs import UserDocCategory, UserDocCreateRequest
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.perspective import apply_external_perspective
 from app.services.agents.registry import agent_registry
 from app.services.agents.roundtable import RoundtableService, resolve_participants
 from app.services.agents.source_context import SourceEvidenceResolver
+from app.services.agents.staff_call_packet import build_staff_call_packet
 from app.services.external_processing.preflight import (
     ExternalProcessingApprovalRequiredError,
     ExternalProcessingPreviewReadyError,
@@ -23,6 +33,7 @@ from app.services.external_processing.preflight import (
 )
 from app.services.session.active_context_store import ActiveUserContextStore
 from app.services.source_library.store import SourceLibraryStore
+from app.services.user_docs.store import UserDocsStore
 
 router = APIRouter(prefix="/agents", tags=["agents"], dependencies=[LocalApiKeyDependency])
 
@@ -71,6 +82,88 @@ def preview_chain_external_processing(
     return _no_external_preview("chain", "The requested chain does not use external scenario inference.")
 
 
+@router.get("/roundtable/capability", response_model=RoundtableCapability)
+def roundtable_capability() -> RoundtableCapability:
+    """Tell the caller honestly whether a live (AI) round table is possible on this install."""
+    settings = get_settings()
+    available = bool(settings.llm_api_key)
+    return RoundtableCapability(
+        external_available=available,
+        model=settings.llm_model if available else None,
+        provider_base_url=settings.llm_base_url if available else None,
+        note=(
+            "An external AI is configured. The round table can convene every seat live after you review and "
+            "approve the outbound preview."
+            if available
+            else "No external AI is configured on this server (LLM_API_KEY is unset). Nothing here can analyze "
+            "your input. The round table can only build a staff call packet — your input plus the right seats' "
+            "lenses and doctrine notes — for you to paste into your own AI."
+        ),
+    )
+
+
+@router.post("/roundtable/packet", response_model=RoundtablePacketResponse)
+def build_roundtable_packet(
+    request: RoundtablePacketRequest,
+    docs_store: Annotated[UserDocsStore, Depends(get_user_docs_store)],
+) -> RoundtablePacketResponse:
+    """Organize the input and the seats' lenses into a prompt for the user's own AI. No analysis."""
+    synthesizer_id = request.synthesizer if request.kind == "roundtable" else None
+    if request.kind == "chain" and not request.agents:
+        raise HTTPException(status_code=422, detail="A chain packet needs an ordered list of agents.")
+    participants, _ = resolve_participants(request.scenario, request.agents, synthesizer_id, request.preset)
+    seated: list[tuple[str, Agent]] = []
+    for agent_id in participants:
+        agent = agent_registry.get(agent_id)
+        if agent is None:
+            raise HTTPException(status_code=404, detail=f"Unknown agent in packet: {agent_id}")
+        seated.append((agent_id, agent))
+    synthesizer: tuple[str, Agent] | None = None
+    if synthesizer_id:
+        synth_agent = agent_registry.get(synthesizer_id)
+        if synth_agent is None:
+            raise HTTPException(status_code=404, detail=f"Unknown synthesizer: {synthesizer_id}")
+        synthesizer = (synthesizer_id, synth_agent)
+    packet = build_staff_call_packet(
+        scenario=request.scenario,
+        participants=seated,
+        synthesizer=synthesizer,
+        kind=request.kind,
+        label=request.title or (request.preset if not request.agents else "selected seats"),
+        include_role_notes=request.include_role_notes,
+    )
+    saved_doc_id: str | None = None
+    saved_category: str | None = None
+    if request.save:
+        if not request.user_key or not request.user_key.strip():
+            raise HTTPException(status_code=422, detail="Saving a packet requires user_key.")
+        title = request.title or f"Staff call packet — {request.preset if not request.agents else 'selected seats'}"
+        entry = docs_store.create(
+            UserDocCategory.generations,
+            request.user_key,
+            UserDocCreateRequest(
+                title=title,
+                body=packet,
+                fields={"templateType": "staff_call_packet", "kind": request.kind, "participants": participants},
+            ),
+        )
+        saved_doc_id = entry.id
+        saved_category = UserDocCategory.generations.value
+    return RoundtablePacketResponse(
+        kind=request.kind,
+        participants=participants,
+        participant_names=[agent.metadata.name for _, agent in seated],
+        synthesizer=synthesizer_id,
+        packet_markdown=packet,
+        saved_doc_id=saved_doc_id,
+        saved_category=saved_category,
+        note=(
+            "No AI analysis was performed. This packet organizes your input and the seats' lenses and doctrine "
+            "notes so your own AI can convene the staff."
+        ),
+    )
+
+
 @router.post("/roundtable/external-processing-preview", response_model=ExternalProcessingPreview)
 def preview_roundtable_external_processing(
     request: RoundtableRequest,
@@ -102,7 +195,9 @@ def run_roundtable(
 def _resolve_roundtable_agents(
     request: RoundtableRequest,
 ) -> tuple[list[str], list[str], dict[str, Agent]]:
-    participants, auto_selected = resolve_participants(request.scenario, request.agents, request.synthesizer)
+    participants, auto_selected = resolve_participants(
+        request.scenario, request.agents, request.synthesizer, request.preset
+    )
     if not participants:
         raise HTTPException(status_code=422, detail="No participants resolved for the round table.")
     agents: dict[str, Agent] = {}
@@ -145,6 +240,7 @@ def _run_roundtable(
         return _build_agent_context(
             request.context,
             active_context_store,
+            options={"inference": request.inference},
             approval=request.external_processing_approval,
             preview_only=preview_only,
             scope_label=scope_label,
@@ -214,7 +310,9 @@ def run_agent(
         scope_label=f"agent:{agent_id}",
     )
     try:
-        return _apply_source_context(agent.run(request.input, context), context)
+        response = agent.run(request.input, context)
+        response = apply_external_perspective(agent, response, request.input, context)
+        return _apply_source_context(response, context)
     except ExternalProcessingApprovalRequiredError as exc:
         raise _approval_http_error(exc) from exc
     except ValueError as exc:
@@ -272,7 +370,9 @@ def _run_agent_chain(
             prior_assessments=prior_assessments,
         )
         agent_input = step.input or request.scenario
-        response = _apply_source_context(agent.run(agent_input, context), context)
+        response = agent.run(agent_input, context)
+        response = apply_external_perspective(agent, response, agent_input, context)
+        response = _apply_source_context(response, context)
 
         scenario_output = response.scenario_output
         if scenario_output is not None:

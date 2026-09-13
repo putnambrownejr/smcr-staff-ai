@@ -7,7 +7,6 @@
 // "enter your repo root" prompt with the real repo root the server injected.
 (function () {
   var ROOT = (window.__SMCR_REPO_ROOT__ || "").replace(/\/+$/, "");
-  var API_KEY = window.__SMCR_API_KEY__ || "";
   var origOpen = window.open.bind(window);
   var origPrompt = window.prompt.bind(window);
 
@@ -48,7 +47,8 @@
     if (typeof url === "string" && url.indexOf("file://") === 0) {
       var path = url.slice("file://".length);
       var headers = {};
-      if (API_KEY) headers["X-Local-API-Key"] = API_KEY;
+      var key = sessionStorage.getItem("smcr_access_key") || "";
+      if (key) headers["X-Local-API-Key"] = key;
       fetch("/dashboard/files/reveal?path=" + encodeURIComponent(path), { headers: headers })
         .then(function (res) {
           return res

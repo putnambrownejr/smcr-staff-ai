@@ -12,16 +12,35 @@ The echelon modifier lives in ``ECHELON_CONTEXT`` and ``_echelon_adapt()``.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from pydantic import BaseModel
 
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, ScenarioOutputStatus
-from app.schemas.scenario_handoff import G9ScenarioOutput, S2ScenarioOutput, S4ScenarioOutput, S6ScenarioOutput
+from app.schemas.scenario_handoff import (
+    G8ScenarioOutput,
+    G9ScenarioOutput,
+    OpsoScenarioOutput,
+    PaoScenarioOutput,
+    ProvostScenarioOutput,
+    S2ScenarioOutput,
+    S4ScenarioOutput,
+    S6ScenarioOutput,
+    SjaScenarioOutput,
+    SurgeonScenarioOutput,
+    XoScenarioOutput,
+)
 from app.schemas.staff import MagtfLens, StaffEchelon, StaffRoleMetadata
+from app.services.agents.actor_network_agent import build_actor_network_agent
+from app.services.agents.area_study_agent import build_area_study_agent
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.information_requirements_agent import build_information_requirements_agent
+from app.services.agents.ipb_agent import build_ipb_assistant_agent
 from app.services.agents.osint_agent import build_osint_agent
+from app.services.agents.reserve_admin_text import NAVY_RESERVE_ADMIN, RESERVE_ADMIN_SYSTEMS
 from app.services.agents.source_refs import (
+    FAMILY_READINESS_REFERENCES,
     FORCE_PROTECTION_REFERENCES,
     G8_REFERENCES,
     G9_REFERENCES,
@@ -37,6 +56,7 @@ from app.services.agents.source_refs import (
     MOS_3002_REFERENCES,
     MOS_4402_REFERENCES,
     PAO_REFERENCES,
+    RANGE_TRAINING_REFERENCES,
     S1_REFERENCES,
     S2_REFERENCES,
     S3_REFERENCES,
@@ -148,6 +168,82 @@ ECHELON_CONTEXT: dict[StaffEchelon, EchelonContext] = {
 DEFAULT_ECHELON = StaffEchelon.battalion
 
 
+# ---------------------------------------------------------------------------
+# Modes (agents merged into staff seats in the Sep 2026 review)
+# ---------------------------------------------------------------------------
+
+# Modes that delegate to a bounded specialist builder. The specialist keeps
+# its own scenario_output role so chains and round tables still receive the
+# same structured handoffs they did when these were standalone agents.
+_MODE_DELEGATES: dict[str, dict[str, Callable[[], Agent]]] = {
+    "s2": {
+        "ipb": build_ipb_assistant_agent,
+        "information_requirements": build_information_requirements_agent,
+    },
+    "g9": {
+        "area_study": build_area_study_agent,
+        "actor_network": build_actor_network_agent,
+    },
+}
+
+# Conservative phrase triggers so a plain request still lands in the right
+# mode without an explicit agent_options.mode.
+_MODE_KEYWORDS: dict[str, tuple[str, ...]] = {
+    "ipb": ("ipb scaffold", "build an ipb", "build the ipb", "intelligence preparation of the battlespace"),
+    "information_requirements": (
+        "information requirements",
+        "information-requirements",
+        "pir/ffir",
+        "ccir register",
+        "ir register",
+    ),
+    "area_study": ("area study", "area-study", "pmesii-ascope", "pmesii/ascope baseline"),
+    "actor_network": ("actor network", "actor-network", "map organization-level actors", "stakeholder map"),
+    "family_readiness": (
+        "family readiness",
+        "deployment readiness",
+        "family care plan",
+        "power of attorney",
+        "household readiness",
+    ),
+}
+_ROLE_MODES: dict[str, tuple[str, ...]] = {
+    "s2": ("ipb", "information_requirements"),
+    "g9": ("area_study", "actor_network"),
+    "s1": ("family_readiness",),
+    "s4": ("lce",),
+}
+
+
+def _requested_mode(context: AgentContext) -> str | None:
+    options = context.extra.get("agent_options")
+    mode = options.get("mode") if isinstance(options, dict) else None
+    return mode if isinstance(mode, str) and mode else None
+
+
+def _infer_mode(role: str, input_text: str) -> str | None:
+    lowered = input_text.lower()
+    for mode in _ROLE_MODES.get(role, ()):
+        if any(keyword in lowered for keyword in _MODE_KEYWORDS.get(mode, ())):
+            return mode
+    return None
+
+
+_FAMILY_READINESS_BLOCK = (
+    "\nFamily and deployment readiness (household checklist lane, formerly a standalone advisor):\n"
+    "- Use the Bench+Files Family Readiness checklist to track unit coordination, legal-assistance review, "
+    "power of attorney questions for qualified counsel, DEERS and ID-card checks, public or user-approved "
+    "contacts, household continuity, communication, OPSEC, and reintegration. It scales from an extended AT "
+    "to roughly a year away.\n"
+    "- Family care plan: required for single parents and dual-military couples with dependents (MCO 1740.13 "
+    "series); the S-1 verifies it is current before orders are cut.\n"
+    "- Orders over 30 days: TRICARE Reserve Select vs. active-duty TRICARE transition, DEERS updates for "
+    "dependents, SGLI/RED currency, and USERRA employer notification with ESGR as the escalation path.\n"
+    "- Route legal (wills, POA), medical, financial, and command determinations to qualified support; do not "
+    "enter mission, movement, SSN, medical, account, or legal-document details into this tool.\n"
+)
+
+
 def _resolve_echelon(context: AgentContext) -> StaffEchelon:
     """Pull echelon from context, falling back to battalion."""
     raw = context.extra.get("echelon")
@@ -238,9 +334,27 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "- Whether the planning process is actually disciplined enough to trust.\n"
             "- Whether assumptions, tasks, and required section inputs are being captured cleanly.\n"
             "- Whether the OPT is producing decisions or just busy slides.\n"
-            "- Whether the plan can survive a handoff between drills without rebuilding from zero."
+            "- Whether the plan can survive a handoff between drills without rebuilding from zero.\n\n"
+            "Range, ammunition, and training-resource lead times (as of 2026; verify the installation range "
+            "control and ASP SOPs — every base differs):\n"
+            "- Ranges and training areas: request through RFMSS (Range Facility Management Support System) via "
+            "installation range control; busy installations are booked 90+ days out and AT windows a year out. "
+            "A certified OIC and RSO by name, an approved surface danger zone, and a range safety brief are "
+            "required before execution (MCO 3570.1D).\n"
+            "- Ammunition, Class V(W): the annual training allowance is forecast by DODIC through the unit "
+            "ammo tech; requests, issue, and turn-in run through the supporting ASP under Marine Corps "
+            "ammunition accounting (OIS-MC). Submit requests 45–60 days before the event; unexpended ammo is "
+            "turned in, never held at the RTC; residue and brass turn-in close the event.\n"
+            "- Marksmanship: annual rifle/pistol qualification per MCO 3574.2 series; PMI before the range; "
+            "ISMT for dry and simulated fire when live ranges are unavailable.\n"
+            "- Cross-service ranges: ISAs and DD Form 1144 support agreements let reserve units use Army, "
+            "Navy, or Air Force ranges; their range control rules apply.\n"
+            "- T&R credit: select events by unit level and MET, evaluate to standard, and record in MCTIMS so "
+            "the DRRS-MC T-level reflects the drill (assessed Y/Q/N per MCO 3000.13B).\n"
+            "- Reserve reality: the range request, the ammo request, the MROWS orders for the OIC/RSO, and the "
+            "medical standby are four separate suspenses that must all land before a live-fire drill."
         ),
-        references_extra=MOS_0511_REFERENCES,
+        references_extra=(*MOS_0511_REFERENCES, *RANGE_TRAINING_REFERENCES),
     ),
     StaffRoleArchetype(
         role="s1",
@@ -257,12 +371,13 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
         ),
         mos_depth=(
             "0102 Adjutant depth:\n"
-            "- Admin system responsibilities: Drill Manager (IDT pay), MROWS (ADT/AT orders), "
-            "MOL (self-service), DTS (travel), MCTFS/Unit Diary (status changes).\n"
-            "- Baseline: 48 IDT + 14 days AT per year (MCO 1001R.1L w/CH-2, 7 Mar 2025).\n"
-            "- MARADMIN 157/25: $750 IDT travel reimbursement cap.\n"
+            + RESERVE_ADMIN_SYSTEMS
+            + "- Baseline: 48 IDT periods + 14 days AT per year (MCO 1001R.1L w/CH-2).\n"
+            "- MARADMIN 157/25: IDT travel reimbursement up to $750 per qualifying trip for designated billets.\n"
             "- Drill-to-pay: attendance captured → Drill Manager → pay run; errors delay entire cycle.\n"
-            "- FitRep timeline: officer reporting periods, submission windows, RS/RO responsibilities.\n"
+            "- FitRep discipline (MCO 1610.7B): know each Marine's report occasions (annual, change of "
+            "RS, transfer, end of AT/ADT over 30 days, etc.), the submission window after the ending "
+            "date, and the RS → RO → HQMC (MMRP) chain; the S-1 tracks due dates, the RS writes.\n"
             "- Reserve friction points: asynchronous admin between drills, dual-status civilians, "
             "geographic dispersion, system fragmentation across 6+ platforms.\n"
             "- Whether adjutant systems are actually under control instead of just claimed on a tracker.\n"
@@ -299,12 +414,19 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
     ),
     StaffRoleArchetype(
         role="s4",
-        title="S-4 / G-4 / Logistics",
-        scope="Logistics, sustainment, supply accountability, and movement support",
-        focus=("transportation", "supply", "maintenance", "supportability", "lead times"),
+        title="S-4 / G-4 / Logistics (LCE)",
+        scope=(
+            "Logistics, sustainment, supply accountability, movement support, and the MAGTF Logistics Combat "
+            "Element (LCE) perspective — distribution, health services, recovery and reconstitution"
+        ),
+        focus=(
+            "transportation", "supply", "maintenance", "supportability", "lead times",
+            "LCE integration with GCE and ACE", "classes of supply", "health services",
+        ),
         magtf_lenses=(MagtfLens.ce_c2, MagtfLens.lce),
         products=(
-            "logistics estimate", "support request matrix", "recovery timeline",
+            "logistics estimate", "CSS estimate (9-section)", "logistics synchronization matrix",
+            "support request matrix", "recovery timeline",
         ),
         mos_depth=(
             "0402 Logistics Officer depth:\n"
@@ -315,9 +437,30 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "- Whether embarkation tasks are resourced early enough instead of becoming a last-week panic.\n"
             "3002 Supply Officer depth:\n"
             "- A harder read on supply records, inventory readiness, and command-accountability risk.\n"
-            "- Whether the support plan depends on gear that is on paper but not truly serviceable."
+            "- Whether the support plan depends on gear that is on paper but not truly serviceable.\n\n"
+            "LCE / Logistics Combat Element depth (this seat answers LCE, MLG, CLR, and CLB questions):\n"
+            "- LCE organization: the Marine Logistics Group (MLG) is the LCE of the MEF and provides Combat "
+            "Logistics Regiments (CLRs) and Combat Logistics Battalions (CLBs). A CLB is the standard "
+            "direct-support logistics battalion — supply, maintenance, transportation, engineering, and health "
+            "services to a supported regiment or independent unit. A CSSE task-organizes from the CLR/MLG.\n"
+            "- Six logistics functions: supply, maintenance, transportation, general engineering, health "
+            "services, services (postal, exchange, disbursing, legal, mortuary affairs).\n"
+            "- Classes of supply and planning factors: I rations (~3 lbs/person/day field; MRE = 1 meal); "
+            "II clothing/equipment (demand-driven); III POL (~1 gal/vehicle/hr idle, 3–5 gal/hr moving; verify "
+            "by vehicle type); IV construction; V ammunition (CSR/RSR by DODIC); VI personal items; VII major "
+            "end items; VIII medical (blood, pharmaceuticals, consumables); IX repair parts; X non-standard "
+            "(civic action).\n"
+            "- CSS estimate format: (1) mission, (2) situation, (3) personnel/admin, (4) logistics — supply, "
+            "maintenance, transportation, services, (5) health services, (6) command/signal, (7) assessment "
+            "criteria, (8) conclusions, (9) recommendations.\n"
+            "- Logistics synchronization matrix: time-phase pushes, convoys, maintenance windows, and casualty "
+            "collection against the operations timeline so logistics is not planned in isolation.\n"
+            "- LCE lenses: which sustainment assumption carries too much weight; which distribution or "
+            "health-service gap surfaces first under friction; which recovery/reconstitution timeline is "
+            "unrealistic; which logistics decision belongs to the MAGTF commander rather than the LCE; whether "
+            "classes of supply are planned by consumption rates or by guesswork."
         ),
-        references_extra=(*MOS_0402_REFERENCES, *MOS_0430_REFERENCES, *MOS_3002_REFERENCES),
+        references_extra=(*MOS_0402_REFERENCES, *MOS_0430_REFERENCES, *MOS_3002_REFERENCES, *MEDICAL_REFERENCES),
     ),
     StaffRoleArchetype(
         role="s6",
@@ -360,7 +503,9 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
         ),
         mos_depth=(
             "Senior Enlisted Leader depth:\n\n"
-            "ENLISTED PME GATES (MCO 1553.4B):\n"
+            "ENLISTED PME GATES (MCO 1553.4B; course names, MCTIMS codes, and resident/DEP gates were "
+            "revised by MARADMIN in 2025 — verify every gate below against the latest EPME MARADMIN "
+            "before briefing a Marine; content as of 2025):\n"
             "- LCpl: Leading Marines (EPME3000, MarineNet distance) + LCpl Leadership & Ethics "
             "Seminar (341, one-day). Required after 3 of 9 drills and 6 months in grade.\n"
             "- Cpl: Corporals Course (C21, resident at regional PME academies). Complete "
@@ -368,10 +513,10 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "- Sgt: Sergeants School (T4M, resident) OR Sergeants Seminar (315) or Reserve "
             "Sergeants Course (CFF). Must complete Sergeant School DEP (EPME5000/T3W, "
             "MarineNet distance) before attending resident. Required before SSgt selection board.\n"
-            "- SSgt: Staff NCO Career School (EPME6000/T5P, distance only). Required before "
-            "GySgt selection board.\n"
-            "- GySgt: SNCO Leadership School (31Q, resident) OR Seminar (31R). Must complete "
-            "DEP EPME7000/T3X first. All GySgts must attend resident or equivalent.\n"
+            "- SSgt: Career School (resident at an SNCO Academy, or Career Course Seminar) with the "
+            "Career School DEP (EPME6000) as prerequisite. Required before GySgt selection board.\n"
+            "- GySgt: Advanced School (resident, formerly Advanced Course) OR seminar equivalent. Must "
+            "complete the Advanced School DEP (EPME7000) first.\n"
             "- MSgt/1stSgt: 1stSgt School (L64, resident) for 1stSgt selectees. MSgts attend "
             "annual SNCO seminars. GySgt PME must be complete.\n"
             "- SgtMaj/MGySgt: SNCO Symposium (MCSEA), Joint/SOLE PME (Cornerstone, EJPME II). "
@@ -384,7 +529,8 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "- Time in service (weighted months)\n"
             "- Proficiency marks (average from fitness reports)\n"
             "- Conduct marks (average from fitness reports)\n"
-            "- Education points: up to 100 (15 per MCI, 10 per college course)\n"
+            "- Self-education points: MarineNet/PME-completion and college-credit points (the MCI "
+            "program ended; verify current point values in MCO P1400.32D)\n"
             "- Special duty bonus: up to 100 (recruiter, DI, MSG, CEP)\n"
             "- Commands use composite scores to control promotion quotas. Marines become "
             "eligible when quarterly scores are posted.\n\n"
@@ -465,37 +611,14 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "- Dental readiness: Class 1 (no treatment needed), Class 2 (treatment needed, "
             "not urgent — deployable), Class 3 (urgent treatment needed — NOT deployable), "
             "Class 4 (no dental exam on file — NOT deployable).\n"
-            "- HIV testing: annual requirement for all servicemembers.\n"
+            "- HIV testing: DoD periodic requirement (every two years for most members; verify the "
+            "current BUMED/Marine interval before briefing).\n"
             "- Immunizations: tracked in MRRS. Deployment-specific requirements vary by AOR.\n"
-            "- DNA sample: one-time requirement, verified in MEDPROS.\n\n"
-            "Navy personnel attached to Marine units (CRITICAL — different admin chain):\n"
-            "- Corpsmen (HM), chaplains (RP), and other Navy rates attached to Marine commands "
-            "are Navy reservists, not Marines. Their admin runs through the Navy Reserve, not USMC.\n"
-            "- NOSC (Navy Operational Support Center): the Navy equivalent of I&I. Every Navy "
-            "reservist is assigned to a NOSC for admin, pay, and orders processing.\n"
-            "- Dual admin chain: the Marine unit is the gaining command (operational/training), "
-            "but the NOSC is the supporting command (admin/orders/pay).\n"
-            "- Orders processing: Navy reservists use NROWS (Navy Reserve Order Writing System), "
-            "NOT MROWS. The gaining Marine unit writes the request letter, but the NOSC "
-            "processes, funds, and issues the orders.\n"
-            "- AT/ADT orders for Navy personnel: the Marine unit S-3/OpsO writes a letter of "
-            "request to the NOSC specifying dates, location, funding source, and justification. "
-            "NOSC submits in NROWS. Approval chain goes through CNRFC (Commander, Navy Reserve "
-            "Forces Command), not MARFORRES.\n"
-            "- ADSW/ADOS for Navy personnel: similar to Marine ADOS but processed through Navy "
-            "channels. Different order types and funding categories.\n"
-            "- Pay: Navy reservists are paid through Navy systems (MyPay/NSIPS), not Marine "
-            "Corps pay systems. Pay issues route through the NOSC, not the Marine unit S-1.\n"
-            "- Medical readiness: tracked in MRRS (Medical Readiness Reporting System) for Navy, "
-            "not the same system Marines use. The gaining command sees readiness status but "
-            "corrections route through the NOSC.\n"
-            "- Common friction: Marine unit plans training, needs their doc — but orders take "
-            "longer because they go through Navy channels. Start NROWS requests at T-60 minimum "
-            "(vs T-45 for MROWS). Last-minute AT additions are much harder for Navy personnel.\n"
-            "- NSIPS (Navy Standard Integrated Personnel System): Navy equivalent of MOL for "
-            "service records, training, and admin.\n"
-            "- The Marine unit surgeon/medical officer should maintain a tracker of all Navy "
-            "personnel and their NOSC assignment, NROWS status, and readiness."
+            "- DNA sample: one-time requirement, verified in MRRS (MEDPROS is the Army system).\n\n"
+            + NAVY_RESERVE_ADMIN
+            + "- ADSW/ADOS for Navy personnel: similar to Marine ADOS but processed through Navy "
+            "channels with different order types and funding categories.\n"
+            "- The unit surgeon/medical officer owns the Navy-personnel readiness tracker alongside the S-1."
         ),
         references_extra=MEDICAL_REFERENCES,
     ),
@@ -521,7 +644,7 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "- Courts-martial: summary (no right to counsel), special (BCD-authorized), "
             "general (Article 32 hearing required, felony-level).\n"
             "- Reserve-specific: UCMJ jurisdiction applies when on Title 10 orders or in IDT status; "
-            "unsatisfactory participation separation under MCO P1900.16.\n"
+            "unsatisfactory participation separation under MCO 1900.16 (MARCORSEPMAN).\n"
             "- Mobilization legal readiness: powers of attorney, wills, SCRA protections, "
             "family care plans, employer notification.\n"
             "- What facts are missing before a lawyer can responsibly advise.\n"
@@ -591,39 +714,65 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "and Marine Corps tradition (rifle, boots, helmet, dog tags).\n"
             "- Critical incident stress: chaplain coordinates CISM (Critical Incident Stress "
             "Management) debriefings after significant events.\n\n"
-            "Navy reserve admin (CRITICAL — same as corpsmen):\n"
-            "- Chaplains and RPs are Navy reservists. Their orders, pay, and admin "
-            "run through a NOSC (Navy Operational Support Center), not the Marine unit.\n"
-            "- NOSC processes orders via NROWS (Navy Reserve Order Writing System), "
-            "not MROWS. The Marine unit writes the request; the NOSC executes.\n"
-            "- AT/ADT requests: Marine unit OpsO or S-1 sends a letter of request to "
-            "the NOSC with dates, location, funding, and justification. "
-            "NOSC submits in NROWS for CNRFC approval.\n"
-            "- Start NROWS requests at T-60 minimum. Navy approval chain is slower "
-            "than Marine MROWS — last-minute orders for chaplains/RPs are extremely "
-            "difficult. Plan early.\n"
-            "- Pay issues route through the NOSC, not the Marine S-1.\n"
-            "- Medical/dental readiness tracked in MRRS, corrections through NOSC.\n"
-            "- NSIPS for service records, not MOL.\n"
-            "- The S-1 should maintain a tracker of all Navy personnel with NOSC "
-            "assignment, NROWS status, and upcoming order requirements."
+            + NAVY_RESERVE_ADMIN
         ),
     ),
     StaffRoleArchetype(
         role="provost",
         title="Provost Marshal / Security",
-        scope="Force protection, access control, traffic control, and security planning",
-        focus=("force protection", "access control", "security coordination"),
+        scope="Force protection, antiterrorism, access control, traffic control, and security planning",
+        focus=("force protection", "antiterrorism / FPCON", "access control", "security coordination"),
         magtf_lenses=(MagtfLens.ce_c2, MagtfLens.lce),
         products=("Security annex", "access-control plan", "traffic and parking control plan", "visitor control checklist"),
+        mos_depth=(
+            "Provost / force protection depth (as of 2026; the installation order and local law-enforcement "
+            "MOU always win — verify):\n"
+            "- FPCON levels: Normal, Alpha, Bravo, Charlie, Delta. Each level adds mandatory measures; the "
+            "installation commander sets FPCON, tenant units execute it, and Random Antiterrorism Measures "
+            "(RAMs) run between levels to break patterns (MCO 3302.1F).\n"
+            "- Every unit appoints an Antiterrorism Officer (ATO); the AT plan is reviewed annually and "
+            "exercised; Level I AT awareness training is an annual all-hands requirement.\n"
+            "- Access control: DBIDS credentials and vetting at installations (MCO 5530.13); by-name rosters "
+            "and pre-registration for visitors and contractors; REAL ID or alternate identity proofing.\n"
+            "- Reserve Training Centers usually have no PMO. Security is a unit function under an MOU with "
+            "local police — know who responds, how fast, and what the duty NCO does until they arrive.\n"
+            "- Physical security (MCO 5530.14A): arms room and AA&E standards, key and lock control, intrusion "
+            "detection, and the physical security survey; the armory is the first thing an inspector checks.\n"
+            "- Events (family day, change of command, ceremonies): traffic and parking control plan coordinated "
+            "with PMO or local police, medical standby, lost-child and severe-weather plans, and a crowd "
+            "control lane that never involves Marines using force on civilians.\n"
+            "- Use of force: security personnel follow rules for the use of force under DoDD 5210.56 and the "
+            "installation order; the provost does not write ROE and does not create detainee injects without SJA.\n"
+            "- Serious incident reporting: OPREP-3 / SIR through the chain per unit SOP; preserve the scene, "
+            "separate witnesses, and route investigations to the SJA or NCIS."
+        ),
     ),
     StaffRoleArchetype(
         role="ig",
         title="Inspector General",
         scope="Inspection readiness, inquiry boundaries, impartiality, and readiness trends",
-        focus=("inspection readiness", "inquiry boundaries", "impartiality"),
+        focus=("inspection readiness", "inquiry boundaries", "impartiality", "functional area checklists"),
         magtf_lenses=(MagtfLens.ce_c2,),
         products=("IG inspection touchpoints", "inquiry boundary note", "readiness trend memo"),
+        mos_depth=(
+            "Inspector General depth (as of 2026; verify with the MARFORRES IG):\n"
+            "- Inspection programs: the Commanding General's Inspection Program (CGIP) and, for SMCR units, "
+            "the Commanding General's Readiness Inspection (CGRI) run by the MARFORRES IG. The IGMC Functional "
+            "Area Checklists (FACs) are the standard; self-assess against them quarterly and keep the evidence.\n"
+            "- Lanes that are NOT the IG: request mast (MCO 1700.23 series) is a command channel; Article 138 "
+            "complaints of wrongs go through the chain; command investigations (JAGMAN) belong to the SJA; "
+            "Congressional inquiries route through legislative affairs. The IG assistance channel (Marine Corps "
+            "Hotline, MCO 5370.8A) handles complaints and fraud, waste, and abuse.\n"
+            "- Whistleblower protections: 10 USC 1034 and DoDD 7050.06 — no reprisal for protected "
+            "communications; leaders who retaliate become the subject of the next inquiry.\n"
+            "- IG independence: the IG does not run command investigations, enforce standards, or substitute "
+            "for the SJA or safety officer; keep those lanes clean so IG findings stay credible.\n"
+            "- Readiness trends: track discrepancies by functional area with owner and closure date; label "
+            "systemic (repeat across inspections or sections) separately from isolated; brief the CO on the "
+            "systemic ones.\n"
+            "- Reserve reality: the I&I staff prepares most CGRI evidence; the reserve staff owns the standards. "
+            "Both must be able to show the same binder."
+        ),
     ),
     # aviation: moved to standalone ace agent
     # lce: moved to standalone lce agent
@@ -638,7 +787,8 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "resourcing decision point", "unfunded requirements list", "fiscal execution tracker",
         ),
         mos_depth=(
-            "G-8 / Reserve Resources depth:\n\n"
+            "G-8 / Reserve Resources depth (policy figures current as of Sep 2026; confirm current "
+            "status before briefing):\n\n"
             "RESERVE FUNDING CATEGORIES AND APPROPRIATIONS:\n"
             "- IDT (Inactive Duty Training): weekend drills, 4-hr drill periods, up to 48/year. "
             "Funded by RPMC (Reserve Personnel, Marine Corps, T/S 17-1108). "
@@ -667,7 +817,7 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "Commands receive initial allocations/allotments.\n"
             "- Oct-Dec: initial execution — book recurring requirements (training contracts, "
             "base ops, drill/AT orders). Quarterly reporting begins.\n"
-            "- Mar-Apr: Mid-Year Review (MIDLIFE) — formal opportunity for units to report "
+            "- Mar-Apr: Mid-Year Review (MYR) — formal opportunity for units to report "
             "shortfalls and adjust spending plans. Commands submit UFRs to HQMC.\n"
             "- Jul: Congress enacts appropriation (if later than Oct); commands update plans.\n"
             "- Aug-Sep: year-end surge — finalize obligations, liquidate payments, accrue expenses, "
@@ -719,7 +869,9 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "- Maintain audit trails: source documents for all obligating transactions. "
             "Retain contracts, travel vouchers, and supporting documentation.\n\n"
             "GOVERNMENT PURCHASE CARD (GPC):\n"
-            "- Micro-purchase threshold: $3,500 for supplies, $2,500 for services.\n"
+            "- Micro-purchase threshold (FAR 2.101): $15,000 effective 1 Oct 2025; $2,500 for services "
+            "subject to the Service Contract Labor Standards; $2,000 for Davis-Bacon construction. "
+            "Verify before citing — the threshold is inflation-adjusted every five years.\n"
             "- Requires appointed Agency Program Coordinator (APC) and cardholder training.\n"
             "- Monthly reconciliation required in the bank's electronic access system.\n\n"
             "RESERVE-SPECIFIC FUNDING FRICTION:\n"
@@ -764,7 +916,8 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "- Targeting integration: civil considerations shape no-strike lists and collateral damage.\n"
             "- Transition planning: conditions-based handoff to host nation or follow-on force.\n"
             "\n"
-            "Interagency coordination (post-2025 USAID dissolution):\n"
+            "Interagency coordination (post-2025 USAID dissolution — organizational facts below are as "
+            "of Sep 2026; confirm current status, State reorganizations continue):\n"
             "- USAID is operationally defunct. All civilian humanitarian/development functions "
             "now fall under the Department of State.\n"
             "- New State structure: Under Secretary for Foreign Assistance & Humanitarian Affairs "
@@ -783,7 +936,7 @@ ROLE_ARCHETYPES: tuple[StaffRoleArchetype, ...] = (
             "factor degraded civilian capacity into FHADR planning.\n"
             "- Regional development now managed by State geographic bureaus (AFR, EAP, EUR, NEA, WHA) "
             "not dedicated USAID regional offices.\n"
-            "- Food for Peace (Title II) transferred to USDA, not State.\n"
+            "- Food for Peace (Title II) was slated for transfer to USDA, not State (verify current status).\n"
             "\n"
             "For joint operations, multinational coordination, and broader interagency mechanics "
             "(command relationships, liaison, comms interop, agreements), see docs/interagency_reference.md."
@@ -815,6 +968,7 @@ class StaffAdvisorAgent(Agent):
                 "classified information",
                 "CUI",
                 "sensitive operational details",
+                "mission details or precise movement and return details beyond planning need",
                 "private personal data",
             ],
             system_prompt=(
@@ -825,6 +979,7 @@ class StaffAdvisorAgent(Agent):
                 "timeline, or situation details), apply your framework TO that scenario and produce a "
                 "structured assessment. Do not return the framework description — return your analysis "
                 "of the situation using the framework."
+                + (f"\n\nROLE DEPTH (doctrine notes this seat works from):\n{archetype.mos_depth}" if archetype.mos_depth else "")
             ),
         )
 
@@ -837,6 +992,12 @@ class StaffAdvisorAgent(Agent):
         echelon = _resolve_echelon(context)
         ectx = ECHELON_CONTEXT.get(echelon, ECHELON_CONTEXT[DEFAULT_ECHELON])
         arch = self.archetype
+
+        mode = _requested_mode(context) or _infer_mode(arch.role, input_text)
+        delegate_builder = _MODE_DELEGATES.get(arch.role, {}).get(mode or "")
+        if delegate_builder is not None:
+            delegated = delegate_builder().run(input_text, context)
+            return delegated.model_copy(update={"agent_id": self.metadata.id})
 
         focus_lines = "\n".join(f"- {item}" for item in arch.focus)
 
@@ -855,6 +1016,8 @@ class StaffAdvisorAgent(Agent):
 
         role_refs = _role_references(arch.role)
         all_refs = role_refs + arch.references_extra
+        if arch.role == "s1" and mode == "family_readiness":
+            all_refs = all_refs + FAMILY_READINESS_REFERENCES
         if all_refs:
             citations.extend(citation_titles(all_refs))
             structured.extend(structured_citations(all_refs))
@@ -868,6 +1031,8 @@ class StaffAdvisorAgent(Agent):
         mos_section = ""
         if arch.mos_depth:
             mos_section = f"\nMOS-specific depth:\n{arch.mos_depth}\n"
+        if arch.role == "s1" and mode == "family_readiness":
+            mos_section += _FAMILY_READINESS_BLOCK
 
         active_context_lines = self._active_context_lines(context)
         active_context_block = ""
@@ -1046,7 +1211,9 @@ def _build_answer_text(
             "- What should be caveated instead of concluded?\n\n"
             "Recommended next action:\n"
             "- Reduce the estimate to corroborated facts, explicit assumptions, and one collection gap.\n"
-            "- Keep OSINT in the sourced-public lane and kill anything that looks like guesswork."
+            "- Keep OSINT in the sourced-public lane and kill anything that looks like guesswork.\n"
+            "- Modes: ask for an 'IPB scaffold' (mode=ipb) or an 'information requirements' register "
+            "(mode=information_requirements) to get the bounded PIR/FFIR/CIR and four-step IPB products."
             f"{active_context_block}{mos_section}{osint_note}"
         )
 
@@ -1066,7 +1233,9 @@ def _build_answer_text(
             "- What should be cut now to protect supportability?\n\n"
             "Recommended next action:\n"
             "- Publish the minimum support package, longest lead-time suspense, and recovery timeline.\n"
-            "- Force a yes, no, or not-yet from every support owner before calling the plan executable."
+            "- Force a yes, no, or not-yet from every support owner before calling the plan executable.\n"
+            "- For LCE-level questions (MLG/CLR/CLB support, distribution, health services, reconstitution), "
+            "build the 9-section CSS estimate and the logistics synchronization matrix from the LCE depth below."
             f"{active_context_block}{mos_section}{osint_note}"
         )
 
@@ -1257,7 +1426,9 @@ def _build_answer_text(
             "- What assumption about local familiarity or partner access is too casual?\n\n"
             "Recommended next action:\n"
             "- Narrow the civil picture to the handful of partner and continuity issues that can affect execution.\n"
-            "- Write the revalidation point and the owner before drill ends."
+            "- Write the revalidation point and the owner before drill ends.\n"
+            "- Modes: ask for an 'area study' (mode=area_study) or an 'actor network' map (mode=actor_network) "
+            "to get the bounded, source-aware PMESII/ASCOPE and organization-level products."
             f"{active_context_block}{mos_section}{osint_note}"
         )
 
@@ -1540,6 +1711,180 @@ def _build_scenario_answer(
         )
         return _try_llm_populate(text, input_text, system_prompt, S6ScenarioOutput, "s6", context)
 
+    if role == "surgeon":
+        text = (
+            f"{scenario_header}"
+            "MEDICAL ESTIMATE (scenario-specific; keep it training-safe and generic):\n\n"
+            "1. MEDICAL ENVIRONMENT:\n"
+            "   - Assess endemic disease, climate/heat-cold injury risk, water and sanitation, and "
+            "host-nation medical capacity from the scenario\n"
+            "   - Identify the nearest capable medical treatment facilities (Role 2/3) and evacuation distances\n\n"
+            "2. CASUALTY ESTIMATE:\n"
+            "   - Estimate the most likely casualty types (trauma, disease and non-battle injury, heat) "
+            "for the force size and duration\n"
+            "   - Identify the mass-casualty trigger and what overwhelms organic care\n\n"
+            "3. CASEVAC / MEDEVAC PLAN:\n"
+            "   - Recommend casualty collection points, evacuation means (ground, rotary, host nation), "
+            "and the 9-line reporting path\n"
+            "   - Identify who has stop-training / stop-movement authority for medical reasons\n\n"
+            "4. CLASS VIII AND MEDICAL LOGISTICS:\n"
+            "   - Estimate Class VIII resupply needs, blood/pharmaceutical cold chain, and TCCC kit "
+            "sustainment for the duration\n\n"
+            "5. MEDICAL READINESS ACTIONS:\n"
+            "   - List the IMR, immunization, and PHA actions required before deployment (MRRS)\n"
+            "   - Flag Navy-personnel (corpsman) orders lead time through the NOSC/NROWS\n\n"
+            "6. RECOMMENDATIONS AND RISKS:\n"
+            "   - Recommend priority medical actions and coordination (surgeon, S-4, S-6, host nation)\n"
+            "   - Identify the medical assumption that breaks the plan if wrong\n"
+            f"{active_context_block}{mos_section}{osint_note}{prior_context}"
+        )
+        return _try_llm_populate(text, input_text, system_prompt, SurgeonScenarioOutput, "surgeon", context)
+
+    if role == "sja":
+        text = (
+            f"{scenario_header}"
+            "LEGAL ISSUE-SPOTTER (scenario-specific; issue-spotting, not legal advice):\n\n"
+            "1. LEGAL FRAMEWORK:\n"
+            "   - Identify the authorities and status-of-forces framework implied by the scenario "
+            "(Title 10 status, SOFA or diplomatic note, host-nation law, Posse Comitatus if domestic)\n\n"
+            "2. ROE / RUF CONSIDERATIONS:\n"
+            "   - Identify the standing ROE/RUF questions the commander must have answered before "
+            "execution (self-defense, protection of property, detention, use of force in HA/DR)\n\n"
+            "3. ISSUES SPOTTED:\n"
+            "   - List legal issues the scenario raises: claims, fiscal law (what funds can pay for "
+            "what), contracting, environmental, medical rules of eligibility, detainee handling, "
+            "media release, ethics/gifts, interaction with NGOs and partner forces\n\n"
+            "4. PAUSE UNTIL REVIEWED:\n"
+            "   - Identify command actions that should pause until the SJA or responsible counsel reviews them\n\n"
+            "5. CLAIMS AND INVESTIGATION BOUNDARIES:\n"
+            "   - Describe how claims, mishaps, and any investigation would be routed and kept separate "
+            "from operational reporting\n\n"
+            "6. RECOMMENDATIONS:\n"
+            "   - Recommend the legal review triggers, the legal annex inputs, and the questions to send "
+            "to the servicing legal office now\n"
+            f"{active_context_block}{mos_section}{osint_note}{prior_context}"
+        )
+        return _try_llm_populate(text, input_text, system_prompt, SjaScenarioOutput, "sja", context)
+
+    if role == "pao":
+        text = (
+            f"{scenario_header}"
+            "PUBLIC AFFAIRS / COMMSTRAT ASSESSMENT (scenario-specific):\n\n"
+            "1. INFORMATION ENVIRONMENT:\n"
+            "   - Describe the media landscape, host-nation and adversary narratives, and social-media "
+            "dynamics from the scenario\n\n"
+            "2. PUBLIC POSTURE:\n"
+            "   - Recommend active, passive, or responsive posture and why\n\n"
+            "3. RELEASE AUTHORITY:\n"
+            "   - Identify who can release information at each echelon (unit, MSC, MARFOR, embassy/PAO "
+            "for interagency scenarios) and what must be coordinated with the Country Team\n\n"
+            "4. THEMES AND MESSAGES:\n"
+            "   - Draft 3-5 themes and messages aligned with commander intent and higher guidance\n\n"
+            "5. ANTICIPATED QUERIES:\n"
+            "   - List the questions media and the public will ask first, with response-to-query lines\n\n"
+            "6. OPSEC RISKS AND RECOMMENDATIONS:\n"
+            "   - Identify imagery, visitor, and social-media OPSEC risks\n"
+            "   - Recommend priority PA actions, media engagement plan, and community relations touchpoints\n"
+            f"{active_context_block}{mos_section}{osint_note}{prior_context}"
+        )
+        return _try_llm_populate(text, input_text, system_prompt, PaoScenarioOutput, "pao", context)
+
+    if role == "xo":
+        text = (
+            f"{scenario_header}"
+            "STAFF INTEGRATION AND DECISION SUPPORT (scenario-specific):\n\n"
+            "1. COMMANDER DECISIONS:\n"
+            "   - List the decisions the commander must make, in order, with the trigger and deadline for each\n\n"
+            "2. STAFF INTEGRATION GAPS:\n"
+            "   - Identify which staff sections have not yet shaped the plan and what input is missing "
+            "(S-1 through S-6, surgeon, SJA, PAO, G-9)\n\n"
+            "3. DECISION SUPPORT MATRIX:\n"
+            "   - For each decision: the information required, who provides it, and the no-later-than time\n\n"
+            "4. DUE-OUTS:\n"
+            "   - List owner, task, and suspense for every open action the staff owes the commander\n\n"
+            "5. RISKS AND RECOMMENDATION:\n"
+            "   - Identify the assumption doing too much work and the seam most likely to break in execution\n"
+            "   - Give the XO's single recommendation for the next staff touchpoint\n"
+            f"{active_context_block}{mos_section}{osint_note}{prior_context}"
+        )
+        return _try_llm_populate(text, input_text, system_prompt, XoScenarioOutput, "xo", context)
+
+    if role == "opso":
+        text = (
+            f"{scenario_header}"
+            "OPERATIONS AND TRAINING ESTIMATE (scenario-specific):\n\n"
+            "1. MISSION AND END STATE:\n"
+            "   - Restate the mission or training purpose and the commander's end state in plain language\n\n"
+            "2. TRAINING OBJECTIVES OR TASKS:\n"
+            "   - List the METs, T&R events, or operational tasks this scenario must drive, with the standard for each\n\n"
+            "3. CONCEPT OF OPERATIONS:\n"
+            "   - Phase the effort (plan, prepare, execute, recover) with what each element does in each phase\n"
+            "   - Name the main effort and the supporting efforts\n\n"
+            "4. CRITICAL PATH AND SUSPENSES:\n"
+            "   - Identify the long-lead items (ranges via RFMSS, Class V(W) through the ASP, orders via MROWS, "
+            "medical standby, transportation) with no-later-than dates\n"
+            "   - Identify the decision point at which the event must be scaled down or cancelled\n\n"
+            "5. RESOURCE REQUESTS:\n"
+            "   - List the requests to higher, adjacent, and supporting units (ranges, ammo, lift, comms, medical)\n\n"
+            "6. SYNCHRONIZATION POINTS:\n"
+            "   - Identify where S-1, S-2, S-4, S-6, surgeon, SJA, and safety must be integrated before execution\n"
+            "   - Recommend the confirmation brief, rehearsal, and AAR timing\n\n"
+            "7. RISKS:\n"
+            "   - Identify the assumption that breaks the training plan if wrong and the first thing to cut\n"
+            f"{active_context_block}{mos_section}{osint_note}{prior_context}"
+        )
+        return _try_llm_populate(text, input_text, system_prompt, OpsoScenarioOutput, "opso", context)
+
+    if role == "provost":
+        text = (
+            f"{scenario_header}"
+            "FORCE PROTECTION AND SECURITY ESTIMATE (scenario-specific; training-safe and generic):\n\n"
+            "1. THREAT AND FPCON READ:\n"
+            "   - Assess the force-protection threat implied by the scenario (crowds, crime, civil unrest, "
+            "insider, environmental) and the FPCON posture and RAMs that follow\n\n"
+            "2. ACCESS CONTROL PLAN:\n"
+            "   - Recommend entry control, credentialing, visitor and contractor vetting, and restricted-area "
+            "measures for the site or installation in the scenario\n\n"
+            "3. MOVEMENT AND TRAFFIC CONTROL:\n"
+            "   - Recommend convoy, parking, route, and crowd-flow control; identify chokepoints and the "
+            "coordination needed with local police or host-nation security\n\n"
+            "4. SECURITY COORDINATION:\n"
+            "   - List who must be coordinated with (PMO, local law enforcement, host nation, embassy RSO, "
+            "adjacent units) and what agreements or liaison are required\n\n"
+            "5. USE OF FORCE BOUNDARIES:\n"
+            "   - State the rules-for-use-of-force and detention boundaries the security force must be briefed "
+            "on; flag anything that needs SJA review before execution\n\n"
+            "6. RECOMMENDATIONS AND RISKS:\n"
+            "   - Recommend the priority security actions and the security annex inputs\n"
+            "   - Identify the security assumption most likely to fail first\n"
+            f"{active_context_block}{mos_section}{osint_note}{prior_context}"
+        )
+        return _try_llm_populate(text, input_text, system_prompt, ProvostScenarioOutput, "provost", context)
+
+    if role == "g8":
+        text = (
+            f"{scenario_header}"
+            "RESOURCE ESTIMATE (scenario-specific):\n\n"
+            "1. FUNDING SOURCES AND AUTHORITIES:\n"
+            "   - Identify which appropriation pays for what in this scenario (RPMC for reserve pay/orders, "
+            "O&M for operations and training, MPMC for AC-directed tours; OHDACA or other authorities for "
+            "humanitarian response) and who approves each\n\n"
+            "2. COST DRIVERS:\n"
+            "   - List the largest cost lines (orders and per diem, travel, transportation/lift, contracts, "
+            "consumables, range/facility fees) with rough magnitude and timing\n\n"
+            "3. UNFUNDED REQUIREMENTS:\n"
+            "   - Identify shortfalls that must go up the chain as UFRs, with priority and mission impact\n\n"
+            "4. FISCAL CONTROLS AND RISKS:\n"
+            "   - Flag Anti-Deficiency Act, purpose, and bona fide need risks; identify audit-trail "
+            "requirements and I&I coordination points\n\n"
+            "5. TRADEOFFS:\n"
+            "   - State what can be funded, absorbed, deferred, or cut, and what each choice costs the mission\n\n"
+            "6. RESOURCING DECISION POINT AND RECOMMENDATIONS:\n"
+            "   - Identify the commander's resourcing decision, its no-later-than date, and the recommended option\n"
+            f"{active_context_block}{mos_section}{osint_note}{prior_context}"
+        )
+        return _try_llm_populate(text, input_text, system_prompt, G8ScenarioOutput, "g8", context)
+
     # Roles without a specific scenario template fall through to framework mode
     return None
 
@@ -1556,7 +1901,7 @@ def _role_references(role: str) -> tuple[SourceRef, ...]:
         "opso": S3_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "s1": S1_REFERENCES,
         "s2": S2_REFERENCES + STAFF_PRODUCT_REFERENCES,
-        "s4": S4_REFERENCES + STAFF_PRODUCT_REFERENCES,
+        "s4": S4_REFERENCES + STAFF_PRODUCT_REFERENCES,  # LCE lane merged here; MEDICAL refs via references_extra
         "s6": S6_REFERENCES + STAFF_PRODUCT_REFERENCES,
         "sel": SEL_REFERENCES,
         "surgeon": MEDICAL_REFERENCES + STAFF_PRODUCT_REFERENCES,

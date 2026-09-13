@@ -1,0 +1,19 @@
+services:
+  public-library:
+    build:
+      context: .
+      dockerfile: Dockerfile.public
+    ports:
+      - "127.0.0.1:8010:8080"
+    environment:
+      SMCR_PUBLIC_BASE_URL: http://127.0.0.1:8010
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

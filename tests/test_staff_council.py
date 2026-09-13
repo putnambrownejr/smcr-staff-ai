@@ -49,7 +49,7 @@ def test_registry_includes_chief_and_staff_agents() -> None:
     # MAGTF elements are now standalone agents
     assert "ace" in ids
     assert "gce" in ids
-    assert "lce" in ids
+    assert "lce" not in ids  # LCE merged into staff-s4 (Sep 2026); id still resolves via alias
     # Echelon-specific IDs were removed — archetypes adapt to echelon at runtime
     assert not any(id_.startswith("staff-company-") for id_ in ids)
     assert not any(id_.startswith("staff-battalion-") for id_ in ids)

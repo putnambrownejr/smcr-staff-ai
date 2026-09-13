@@ -17,6 +17,7 @@ HIGH_RISK_EXACT_PATHS = {
 }
 HIGH_RISK_PREFIXES = (
     "data/local_context/",
+    "projects/",
     "docs/scenarios/",
     "outputs/",
 )
@@ -74,7 +75,10 @@ class RepoPrivacySweeper:
                 unstaged_files.append(path)
 
         findings: list[PrivacyFinding] = []
-        tracked_high_risk = sorted(path for path in tracked_files if _is_high_risk_path(path))
+        tracked_high_risk = sorted(
+            path for path in tracked_files
+            if _is_high_risk_path(path) and not self._is_empty_placeholder(path)
+        )
         if tracked_high_risk:
             findings.append(
                 PrivacyFinding(
@@ -94,11 +98,17 @@ class RepoPrivacySweeper:
             )
 
         present_high_risk = self._present_high_risk_paths()
-        ignored_high_risk = sorted(path for path in present_high_risk if path in set(ignored_files))
+        def is_ignored(path: str) -> bool:
+            return any(
+                path == ignored.rstrip("/") or path.startswith(ignored.rstrip("/") + "/")
+                for ignored in ignored_files
+            )
+
+        ignored_high_risk = sorted(path for path in present_high_risk if is_ignored(path))
         unprotected_high_risk = sorted(
             path
             for path in present_high_risk
-            if path not in tracked_files and path not in set(ignored_files)
+            if path not in tracked_files and not is_ignored(path)
         )
         if unprotected_high_risk:
             findings.append(
@@ -183,7 +193,8 @@ class RepoPrivacySweeper:
         text = self._git_text(args)
         if text is None:
             return None
-        return [line.strip() for line in text.splitlines() if line.strip()]
+        # Porcelain status uses leading spaces to distinguish unstaged changes.
+        return [line for line in text.splitlines() if line.strip()]
 
     def _git_text(self, args: list[str]) -> str | None:
         try:
@@ -194,10 +205,30 @@ class RepoPrivacySweeper:
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
+                # Diffs can contain non-UTF-8 file bytes. Preserve the readable
+                # surrounding content for heuristics instead of losing stdout.
+                errors="replace",
             )
         except (FileNotFoundError, subprocess.CalledProcessError):
             return None
         return result.stdout
+
+    def _is_empty_placeholder(self, path: str) -> bool:
+        if path not in {"data/local_context/.gitkeep", "projects/.gitkeep"}:
+            return False
+        candidate = self.repo_root / path
+        # Only exempt the known directory markers when both the working file
+        # and staged content are empty (an optional line ending is harmless).
+        # A renamed payload is still a finding.
+        if not candidate.is_file() or candidate.stat().st_size > 2 or candidate.read_bytes().strip():
+            return False
+        try:
+            staged = subprocess.run(
+                ["git", "show", f":{path}"], cwd=self.repo_root, check=True, capture_output=True,
+            ).stdout
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            return False
+        return len(staged) <= 2 and not staged.strip()
 
     def _present_high_risk_paths(self) -> list[str]:
         found: set[str] = set()
@@ -211,6 +242,7 @@ class RepoPrivacySweeper:
         found.update(_glob_matches(self.repo_root, "scripts/scratch_*"))
         found.update(_glob_matches(self.repo_root, "scripts/scratch_*/*"))
         found.update(_glob_matches(self.repo_root, "data/local_context/**/*"))
+        found.update(_glob_matches(self.repo_root, "projects/**/*"))
         found.update(_glob_matches(self.repo_root, "*.db"))
         found.update(_glob_matches(self.repo_root, "*.sqlite*"))
         return sorted(path for path in found if _is_high_risk_path(path))

@@ -17,6 +17,7 @@ from app.schemas.user_docs import (
     UserDocUpdateRequest,
 )
 from app.services.session.handoff_store import is_valid_user_key
+from app.services.user_docs.export import render_product_docx, render_product_markdown
 
 logger = logging.getLogger(__name__)
 
@@ -160,8 +161,41 @@ class UserDocsStore:
                 f"# {project}\n\nCreated {datetime.now(UTC):%Y-%m-%d} via Save to project.\n",
                 encoding="utf-8",
             )
-        target = products_dir / f"{_slugify(entry.title)}.md"
-        target.write_text(_render_markdown(entry), encoding="utf-8")
+        stem = _slugify(entry.title)
+        markdown = render_product_markdown(entry)
+        word = render_product_docx(markdown)
+        version = 1
+        while True:
+            suffix = "" if version == 1 else f"-{version}"
+            target = products_dir / f"{stem}{suffix}.md"
+            word_target = target.with_suffix(".docx")
+            try:
+                # Reserve the name atomically; concurrent saves must not replace
+                # an existing product, even when their titles are identical.
+                output = target.open("x", encoding="utf-8")
+            except FileExistsError:
+                version += 1
+                continue
+            try:
+                word_output = word_target.open("xb")
+            except FileExistsError:
+                output.close()
+                target.unlink(missing_ok=True)
+                version += 1
+                continue
+            except OSError:
+                output.close()
+                target.unlink(missing_ok=True)
+                raise
+            try:
+                with output, word_output:
+                    output.write(markdown)
+                    word_output.write(word)
+            except OSError:
+                target.unlink(missing_ok=True)
+                word_target.unlink(missing_ok=True)
+                raise
+            break
         self.delete(category, user_key, doc_id)
         return Path(project_slug) / "products" / target.name
 

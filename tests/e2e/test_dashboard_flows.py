@@ -3,6 +3,8 @@ from typing import Any
 
 import pytest
 
+from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateTriggerType
+
 
 def _expect(locator: Any) -> Any:
     from playwright.sync_api import expect
@@ -10,7 +12,7 @@ def _expect(locator: Any) -> Any:
     return expect(locator)
 
 
-def _open_lane(page: Any, button_name: str, heading_name: str | None = None) -> None:
+def _open_lane(page: Any, button_name: str, heading_name: str | re.Pattern[str] | None = None) -> None:
     page.get_by_role("button", name=button_name, exact=True).click()
     _expect(page.get_by_role("heading", name=heading_name or button_name, level=2)).to_be_visible()
 
@@ -18,8 +20,8 @@ def _open_lane(page: Any, button_name: str, heading_name: str | None = None) -> 
 @pytest.mark.e2e
 def test_current_dashboard_lane_navigation(browser_page: Any) -> None:
     page = browser_page
-    lanes = [
-        ("Overview", "Good evening, Capt Schmuckatelli"),
+    lanes: list[tuple[str, str | re.Pattern[str]]] = [
+        ("Overview", re.compile(r"^Good evening, .+")),
         ("Watch", "Watch"),
         ("Bench / Files", "Bench / Files"),
         ("Workspace", "Workspace"),
@@ -35,6 +37,19 @@ def test_current_dashboard_lane_navigation(browser_page: Any) -> None:
 @pytest.mark.e2e
 def test_watch_shows_per_feed_actions_and_dated_source_updates(browser_page: Any) -> None:
     page = browser_page
+    candidate = DocumentationUpdateCandidate(
+        candidate_id="e2e-source-update",
+        tracked_title="Fictional source review fixture",
+        trigger_type=UpdateTriggerType.manual_review,
+    )
+    def with_source_update(route: Any) -> None:
+        response = route.fetch()
+        payload = response.json()
+        payload["documentation_updates"] = [candidate.model_dump(mode="json")]
+        route.fulfill(response=response, json=payload)
+
+    page.route("**/dashboard/data/*", with_source_update)
+    page.reload(wait_until="domcontentloaded")
     _open_lane(page, "Watch")
 
     _expect(page.get_by_role("heading", name="Connected feeds", level=3)).to_be_visible()

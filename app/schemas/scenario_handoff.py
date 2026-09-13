@@ -138,6 +138,144 @@ class S6ScenarioOutput(StrictScenarioModel):
 
 
 # ---------------------------------------------------------------------------
+# Surgeon — Medical Estimate
+# ---------------------------------------------------------------------------
+
+
+class SurgeonScenarioOutput(StrictScenarioModel):
+    role: str = "surgeon"
+    medical_environment: str = ""
+    casualty_estimate: str = ""
+    casevac_medevac_plan: str = ""
+    class_viii_and_medical_logistics: str = ""
+    medical_readiness_actions: list[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# SJA — Legal Issue-Spotter
+# ---------------------------------------------------------------------------
+
+
+class SjaScenarioOutput(StrictScenarioModel):
+    role: str = "sja"
+    legal_framework: str = ""
+    roe_ruf_considerations: str = ""
+    issues_spotted: list[str] = Field(default_factory=list)
+    pause_until_reviewed: list[str] = Field(default_factory=list)
+    claims_and_investigation_boundaries: str = ""
+    recommendations: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# PAO / COMMSTRAT — Public Affairs Posture
+# ---------------------------------------------------------------------------
+
+
+class PaoScenarioOutput(StrictScenarioModel):
+    role: str = "pao"
+    information_environment: str = ""
+    public_posture: str = ""
+    release_authority: str = ""
+    themes_and_messages: list[str] = Field(default_factory=list)
+    anticipated_queries: list[str] = Field(default_factory=list)
+    opsec_risks: list[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# XO — Staff Integration and Decision Support
+# ---------------------------------------------------------------------------
+
+
+class XoScenarioOutput(StrictScenarioModel):
+    role: str = "xo"
+    commander_decisions: list[str] = Field(default_factory=list)
+    staff_integration_gaps: list[str] = Field(default_factory=list)
+    decision_support_matrix: list[str] = Field(default_factory=list)
+    due_outs: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    recommendation: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Generic staff perspective (any seat, any input) and round-table synthesis
+# ---------------------------------------------------------------------------
+
+
+class StaffPerspectiveOutput(StrictScenarioModel):
+    """A seat's assessment of arbitrary input; `role` is bound per seat at runtime."""
+
+    role: str = ""
+    summary: str = ""
+    key_concerns: list[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
+    products_to_build: list[str] = Field(default_factory=list)
+    questions_for_commander: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+
+
+class RoundtableSynthesisOutput(StrictScenarioModel):
+    role: str = "cos_synthesis"
+    bottom_line: str = ""
+    integrated_assessment: str = ""
+    decisions_for_commander: list[str] = Field(default_factory=list)
+    taskings_by_seat: list[str] = Field(default_factory=list)
+    products_to_produce: list[str] = Field(default_factory=list)
+    open_questions: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# OpsO / S-3 — Operations and Training Estimate
+# ---------------------------------------------------------------------------
+
+
+class OpsoScenarioOutput(StrictScenarioModel):
+    role: str = "opso"
+    mission_and_end_state: str = ""
+    training_objectives_or_tasks: list[str] = Field(default_factory=list)
+    concept_of_operations: str = ""
+    critical_path_and_suspenses: list[str] = Field(default_factory=list)
+    resource_requests: list[str] = Field(default_factory=list)
+    synchronization_points: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Provost — Force Protection and Security Estimate
+# ---------------------------------------------------------------------------
+
+
+class ProvostScenarioOutput(StrictScenarioModel):
+    role: str = "provost"
+    threat_and_fpcon_read: str = ""
+    access_control_plan: str = ""
+    movement_and_traffic_control: str = ""
+    security_coordination: list[str] = Field(default_factory=list)
+    use_of_force_boundaries: str = ""
+    recommendations: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# G-8 — Resource Estimate
+# ---------------------------------------------------------------------------
+
+
+class G8ScenarioOutput(StrictScenarioModel):
+    role: str = "g8"
+    funding_sources_and_authorities: str = ""
+    cost_drivers: list[str] = Field(default_factory=list)
+    unfunded_requirements: list[str] = Field(default_factory=list)
+    fiscal_controls_and_risks: list[str] = Field(default_factory=list)
+    tradeoffs: list[str] = Field(default_factory=list)
+    resourcing_decision_point: str = ""
+    recommendations: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
 # Planning Advisor — Mission Analysis Shell
 # ---------------------------------------------------------------------------
 
@@ -209,7 +347,7 @@ class FitnessScenarioOutput(StrictScenarioModel):
 
 
 class OpsPtScenarioOutput(StrictScenarioModel):
-    role: str = "opso"
+    role: str = "opso_pt"
     schedule_actions: list[str] = Field(default_factory=list)
     training_standard: str = ""
     cancellation_criteria: list[str] = Field(default_factory=list)
@@ -324,6 +462,13 @@ ScenarioOutput = (
     | S2ScenarioOutput
     | S4ScenarioOutput
     | S6ScenarioOutput
+    | SurgeonScenarioOutput
+    | SjaScenarioOutput
+    | PaoScenarioOutput
+    | XoScenarioOutput
+    | OpsoScenarioOutput
+    | ProvostScenarioOutput
+    | G8ScenarioOutput
     | PlanningScenarioOutput
     | CoSScenarioOutput
     | FitnessScenarioOutput
@@ -345,7 +490,15 @@ SCENARIO_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
     "planning": PlanningScenarioOutput,
     "cos": CoSScenarioOutput,
     "fitness": FitnessScenarioOutput,
-    "opso": OpsPtScenarioOutput,
+    "surgeon": SurgeonScenarioOutput,
+    "sja": SjaScenarioOutput,
+    "pao": PaoScenarioOutput,
+    "xo": XoScenarioOutput,
+    "opso": OpsoScenarioOutput,
+    "provost": ProvostScenarioOutput,
+    "g8": G8ScenarioOutput,
+    "opso_pt": OpsPtScenarioOutput,
+    "cos_synthesis": RoundtableSynthesisOutput,
     "sel": SelPtScenarioOutput,
     "orm": OrmPtScenarioOutput,
     "area_study": AreaStudyScenarioOutput,

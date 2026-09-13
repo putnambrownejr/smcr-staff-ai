@@ -1,5 +1,6 @@
 import json
 import os
+import secrets
 import signal
 import subprocess
 import sys
@@ -10,7 +11,7 @@ from datetime import date
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from app.core.auth import LocalApiKeyDependency
@@ -76,20 +77,20 @@ _reference_library_cache: list[DashboardReferenceEntry] | None = None
 
 
 @router.get("/dashboard", summary="Open the lightweight SMCR Staff AI dashboard")
-def get_dashboard() -> HTMLResponse:
+def get_dashboard(request: Request) -> HTMLResponse:
     # The dashboard is a compiled, self-contained bundle (do not hand-edit it).
     # File-open buttons inside it target file:// URLs, which browsers block, so
     # inject a shim at serve time that reroutes them to /dashboard/files/reveal.
-    # The shim also needs the configured local API key (if any) so its request
-    # passes the same LocalApiKeyDependency gate every other write-capable route
-    # uses — this page is same-origin/loopback-only, so handing it back the key
-    # the user already configured is no different than the key living in the
-    # workspace passkey field the user types it into elsewhere in the app.
+    expected = get_settings().local_api_key or ""
+    supplied = request.headers.get("X-Local-API-Key", "")
+    if expected and not secrets.compare_digest(supplied.encode(), expected.encode()):
+        return HTMLResponse(
+            _DASHBOARD_HTML.with_name("access.html").read_text(encoding="utf-8"),
+            status_code=401, headers={"Cache-Control": "no-store"},
+        )
     html = _DASHBOARD_HTML.read_text(encoding="utf-8")
-    api_key = get_settings().local_api_key or ""
     shim_tags = (
-        f"<script>window.__SMCR_REPO_ROOT__ = {json.dumps(REPO_ROOT.as_posix())};"
-        f"window.__SMCR_API_KEY__ = {json.dumps(api_key)};</script>"
+        f"<script>window.__SMCR_REPO_ROOT__ = {json.dumps(REPO_ROOT.as_posix())};</script>"
         '<script src="/static/dashboard/reveal-shim.js"></script>'
     )
     # PWA metadata: lets the browser offer "Install SMCR Staff AI" as a
@@ -103,7 +104,7 @@ def get_dashboard() -> HTMLResponse:
         '<meta name="theme-color" content="#0d1014">'
     )
     html = html.replace("<head>", "<head>" + pwa_tags + shim_tags, 1)
-    return HTMLResponse(html)
+    return HTMLResponse(html, headers={"Cache-Control": "no-store"})
 
 
 @router.get(
@@ -401,14 +402,9 @@ def get_maradmin_feed_service() -> MaradminFeedService:
     return MaradminFeedService()
 
 
-def get_navadmin_store() -> Iterator[MessageRecordStore]:
+def get_almar_feed_store() -> Iterator[MessageRecordStore]:
     settings = get_settings()
-    yield MessageRecordStore(Path(settings.navy_message_storage_dir) / "navadmins")
-
-
-def get_alnav_store() -> Iterator[MessageRecordStore]:
-    settings = get_settings()
-    yield MessageRecordStore(Path(settings.navy_message_storage_dir) / "alnavs")
+    yield MessageRecordStore(settings.almar_feed_storage_dir)
 
 
 def get_dod_watch_store() -> Iterator[MessageRecordStore]:
@@ -449,8 +445,7 @@ def get_dashboard_data(
     reading_state_store: Annotated[ReadingProgressStore, Depends(get_reading_state_store)],
     reading_catalog: Annotated[ReadingListCatalogService, Depends(get_reading_catalog_service)],
     maradmin_feed_store: Annotated[MaradminFeedStore, Depends(get_maradmin_feed_store)],
-    navadmin_store: Annotated[MessageRecordStore, Depends(get_navadmin_store)],
-    alnav_store: Annotated[MessageRecordStore, Depends(get_alnav_store)],
+    almar_store: Annotated[MessageRecordStore, Depends(get_almar_feed_store)],
     dod_watch_store: Annotated[MessageRecordStore, Depends(get_dod_watch_store)],
     custom_watch_feed_store: Annotated[CustomWatchFeedStore, Depends(get_custom_watch_feed_store)],
     history_service: Annotated[TodayInMarineHistoryService, Depends(get_history_service)],
@@ -494,8 +489,7 @@ def get_dashboard_data(
         ),
         section_memory_profile=section_memory_profile,
         maradmin_ticker=_maradmin_ticker(maradmin_feed),
-        navadmin_ticker=_message_watch_ticker(navadmin_store.list(limit=8)),
-        alnav_ticker=_message_watch_ticker(alnav_store.list(limit=8)),
+        almar_ticker=_message_watch_ticker(almar_store.list(limit=8)),
         dod_ticker=_message_watch_ticker(dod_watch_store.list(limit=8)),
         custom_watch_feeds=custom_watch_feeds,
         usmc_history=usmc_history,
@@ -520,8 +514,7 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
     admin_readiness = _admin_from_demo_brief(chief_brief)
     settings = get_settings()
     maradmin_feed = MaradminFeedStore(settings.maradmin_feed_storage_dir).list(limit=10)
-    navadmin_feed = MessageRecordStore(Path(settings.navy_message_storage_dir) / "navadmins").list(limit=8)
-    alnav_feed = MessageRecordStore(Path(settings.navy_message_storage_dir) / "alnavs").list(limit=8)
+    almar_feed = MessageRecordStore(settings.almar_feed_storage_dir).list(limit=8)
     dod_feed = MessageRecordStore(settings.dod_watch_storage_dir).list(limit=8)
     custom_watch_feeds = _custom_watch_feed_summaries(
         CustomWatchFeedStore(settings.custom_watch_feed_storage_dir)
@@ -556,8 +549,7 @@ def get_demo_dashboard_data() -> DashboardWorkspaceResponse:
         ),
         section_memory_profile=None,
         maradmin_ticker=_maradmin_ticker(maradmin_feed),
-        navadmin_ticker=_message_watch_ticker(navadmin_feed),
-        alnav_ticker=_message_watch_ticker(alnav_feed),
+        almar_ticker=_message_watch_ticker(almar_feed),
         dod_ticker=_message_watch_ticker(dod_feed),
         custom_watch_feeds=custom_watch_feeds,
         usmc_history=usmc_history,
@@ -587,8 +579,7 @@ def _workspace_response(
     template_library: list[DashboardTemplateReference],
     section_memory_profile: SectionMemoryProfile | None,
     maradmin_ticker: list[DashboardTickerItem],
-    navadmin_ticker: list[DashboardTickerItem],
-    alnav_ticker: list[DashboardTickerItem],
+    almar_ticker: list[DashboardTickerItem],
     dod_ticker: list[DashboardTickerItem],
     custom_watch_feeds: list[DashboardCustomWatchFeed],
     usmc_history: HistorySelection | None,
@@ -641,8 +632,7 @@ def _workspace_response(
         template_library=template_library,
         section_memory_profile=section_memory_profile,
         maradmin_ticker=maradmin_ticker,
-        navadmin_ticker=navadmin_ticker,
-        alnav_ticker=alnav_ticker,
+        almar_ticker=almar_ticker,
         dod_ticker=dod_ticker,
         custom_watch_feeds=custom_watch_feeds,
         usmc_history=usmc_history,
@@ -729,9 +719,9 @@ def _maradmin_ticker(records: list[MessageRecord]) -> list[DashboardTickerItem]:
             title=item.title,
             status=item.status,
             summary=(
-                ", ".join(item.tags[:3])
-                or item.summary
-                or "Live MARADMIN feed item."
+                f"MARADMIN {item.message_number}"
+                if item.message_number
+                else (", ".join(item.tags[:3]) or item.summary or "Live MARADMIN feed item.")
             )[:220],
             source_url=item.canonical_url,
             published_at=item.published_at.isoformat() if item.published_at else None,
@@ -749,7 +739,11 @@ def _message_watch_ticker(records: list[MessageRecord]) -> list[DashboardTickerI
         DashboardTickerItem(
             title=item.title,
             status=item.source_family,
-            summary=(item.summary or ", ".join(item.tags[:3]) or "Second-tier message-watch item.")[:220],
+            summary=(
+                f"{item.source_family} {item.message_number}"
+                if item.message_number
+                else (item.summary or ", ".join(item.tags[:3]) or "Second-tier message-watch item.")
+            )[:220],
             source_url=item.canonical_url,
             published_at=item.published_at.isoformat() if item.published_at else None,
         )

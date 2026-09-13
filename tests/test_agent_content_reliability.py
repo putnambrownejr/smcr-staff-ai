@@ -7,7 +7,6 @@ DEFAULT_PROMPTS: dict[str, str] = {
     # Standalone utility agents
     "chief-of-staff": "Help me triage a reserve drill weekend and upcoming admin suspense.",
     "leadership-advisor": "Help me frame a PME on standards and command climate.",
-    "warrior-monk": "Help me reflect on duty and moral courage.",
     "gtcc-advisor": "Help me reconcile a user-entered GTCC trip log.",
     "financial-readiness-advisor": "Help me understand what to review on my LES.",
     "fitness-planning-advisor": "Help me plan PT for 30 Marines with an ORM matrix.",
@@ -19,19 +18,13 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "fires-advisor": "Help me shape a call-for-fire refresher drill for reserve artillery Marines.",
     "installation-practical-advisor": "Help me think through visitor access for a base event.",
     "uniform-advisor": "Help me think through the uniform and grooming prep for next drill.",
-    "drill-prep-calendar": "Help me plan recurring drill reminders for next month.",
     "orm-risk-management": "Help me think through no-go criteria and residual risk for a field event.",
     "staff-products": "Build a training-only AAR draft for a field event.",
     "pki-cac-troubleshooter": "MarineNet is not prompting for my CAC certificate.",
     "osint-research-assistant": "Help me summarize public-source trends for a training scenario.",
     "terrain-map-advisor": "Help me find the right public terrain and topo references for a training area.",
-    "area-study-builder": "Build a public-source area-study scaffold for a training scenario.",
-    "actor-network-analyst": "Map organization-level actors for a training planning scenario.",
-    "information-requirements-manager": "What must the commander know before a route decision?",
-    "ipb-assistant": "Build an IPB scaffold for a training scenario.",
     "ace": "Help me think through generic air-support coordination for an exercise.",
     "gce": "Help me think through ground scheme of maneuver for a combined-arms exercise.",
-    "lce": "Help me think through LCE sustainment and distribution support.",
     # Consolidated staff archetypes
     "staff-xo": "Help me build an XO sync for the next drill weekend.",
     # staff-chief removed — merged into chief-of-staff standalone
@@ -50,7 +43,6 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "staff-provost": "Help me think through security and access control for a base event.",
     "staff-ig": "Help me think through inspection readiness and systemic friction.",
     # staff-aviation removed — replaced by ace standalone
-    # staff-lce removed — replaced by lce standalone
     "staff-g8": "Help me think through resource constraints and funding tradeoffs.",
     "staff-g9": "Help me think through civil considerations for a reserve event.",
 }
@@ -76,6 +68,7 @@ def test_each_registered_agent_returns_a_usable_response(agent_id: str) -> None:
 
     assert response.agent_id == agent_id
     assert response.answer.strip()
+    assert "DRAFT — Verify all references against current official sources before acting." in response.answer
     assert response.human_review_required is True
     assert response.follow_up_questions
     assert "placeholder response" not in response.answer.lower()

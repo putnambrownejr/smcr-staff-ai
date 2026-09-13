@@ -20,6 +20,7 @@ from app.schemas.external_processing import (
     ExternalProcessingOutcome,
     ExternalProcessingPreview,
 )
+from app.services.agents.base import DRAFT_NOTICE
 from app.services.agents.registry import agent_registry
 from app.services.external_processing.audit_store import ExternalProcessingAuditStore
 from app.services.external_processing.preflight import (
@@ -371,7 +372,7 @@ def test_agent_route_sends_sanitized_preview_after_acknowledgement(
 
     assert run_response.status_code == 200
     payload = run_response.json()
-    assert payload["answer"] == "Approved civil assessment"
+    assert payload["answer"] == f"Approved civil assessment\n\n{DRAFT_NOTICE}"
     assert payload["scenario_output_status"] == "validated"
     sent_body = http_client.post.call_args.kwargs["json"]
     assert "703-555-0199" not in sent_body["messages"][1]["content"]

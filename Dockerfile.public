@@ -1,0 +1,21 @@
+FROM python:3.12-slim AS build
+WORKDIR /app
+COPY --from=ghcr.io/astral-sh/uv:0.11.3 /uv /usr/local/bin/uv
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project --extra cloud
+
+FROM python:3.12-slim
+WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8080 \
+    SMCR_PUBLIC_BIND_HOST=0.0.0.0
+COPY --from=build /app/.venv /app/.venv
+# Exact runtime inventory: no dashboard, local stores, .env, or raw source trees.
+COPY app/__init__.py /app/app/__init__.py
+COPY app/public_library/__init__.py app/public_library/__main__.py app/public_library/app.py app/public_library/catalog.py app/public_library/models.py app/public_library/server.py app/public_library/settings.py /app/app/public_library/
+COPY app/public_library/catalog.json /app/app/public_library/catalog.json
+COPY app/public_library/static/index.html app/public_library/static/library.css app/public_library/static/library.js /app/app/public_library/static/
+USER 10001:10001
+EXPOSE 8080
+CMD ["/app/.venv/bin/python", "-m", "app.public_library"]
