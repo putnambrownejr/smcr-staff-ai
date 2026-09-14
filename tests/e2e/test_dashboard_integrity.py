@@ -224,12 +224,14 @@ def test_staff_notes_persist_and_retry(personal_page: Any) -> None:
 
 
 @pytest.mark.e2e
-def test_notebook_failed_create_retains_text(personal_page: Any) -> None:
+@pytest.mark.parametrize("start_explicitly", [True, False])
+def test_notebook_failed_create_retains_text(personal_page: Any, start_explicitly: bool) -> None:
     from playwright.sync_api import expect
 
     page = personal_page
     page.get_by_role("button", name="Workspace", exact=True).click()
-    page.get_by_role("button", name="+ New note", exact=True).click()
+    if start_explicitly:
+        page.get_by_role("button", name="+ New note", exact=True).click()
     title = page.get_by_placeholder("Note title", exact=True)
     body = page.get_by_placeholder("Write anything — instructions, a combo, a running log…", exact=True)
     title.fill("Synthetic notebook recovery")

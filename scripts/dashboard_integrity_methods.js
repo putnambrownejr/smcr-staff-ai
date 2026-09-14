@@ -124,8 +124,9 @@
   }
   _writeDocument(url, payload, method) {
     const key = this.userKey, version = this._modeVersion;
-    const request = { url, payload, method: method || "PATCH", headers: this._apiHeaders({ "Content-Type": "application/json" }) };
     this._failedDocumentWrites = this._failedDocumentWrites || {};
+    payload = { ...((this._failedDocumentWrites[url] || {}).payload || {}), ...payload };
+    const request = { url, payload, method: method || "PATCH", headers: this._apiHeaders({ "Content-Type": "application/json" }) };
     this._documentWrites = this._documentWrites || {};
     this._failedDocumentWrites[url] = request;
     this._documentDirty = true;
@@ -202,8 +203,11 @@
   }
   saveNote() {
     return async () => {
-      const id = this.state.activeNoteId;
-      if (!id) return false;
+      let id = this.state.activeNoteId;
+      if (!id) {
+        id = "pending-" + crypto.randomUUID();
+        this.setState((s) => ({ notes: [{ id, title: s.draftTitle || "Untitled note", body: s.draftBody, archived: false }, ...s.notes], activeNoteId: id }));
+      }
       const key = this.userKey, version = this._modeVersion;
       const title = this.state.draftTitle || "Untitled note", body = this.state.draftBody;
       const record = this.state.notes.find((n) => n.id === id);
