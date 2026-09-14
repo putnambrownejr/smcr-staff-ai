@@ -67,6 +67,8 @@ def normalize_message_records(items: list[FeedItem]) -> list[MessageRecord]:
 
 def message_record_from_feed_item(item: FeedItem) -> MessageRecord:
     message_number, fiscal_year = _parse_message_number(item.title)
+    if message_number is None:
+        message_number, fiscal_year = _parse_header_number(item.summary or "")
     source_id = message_number or hashlib.sha256(item.link.encode("utf-8")).hexdigest()[:16]
     source_hash = hashlib.sha256(f"{item.title}\n{item.link}\n{item.summary or ''}".encode()).hexdigest()
     warnings = []
@@ -84,6 +86,15 @@ def message_record_from_feed_item(item: FeedItem) -> MessageRecord:
         source_hash=source_hash,
         parser_warnings=warnings,
     )
+
+
+def _parse_header_number(summary: str) -> tuple[str | None, int | None]:
+    """Read "...SEP 26MARADMIN 411/26MSGID..." from the RSS summary (no word boundaries there)."""
+    match = re.search(r"MARADMIN\s*(?P<number>\d{3})/(?P<year>\d{2})", summary, re.IGNORECASE)
+    if match is None:
+        return None, None
+    year = int(match.group("year"))
+    return f"{match.group('number')}/{match.group('year')}", 2000 + year if year < 80 else 1900 + year
 
 
 def _parse_message_number(title: str) -> tuple[str | None, int | None]:

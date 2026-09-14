@@ -1,7 +1,13 @@
-from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence, StructuredCitation
+from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.schemas.pki import PkiIssueType, PkiTroubleshootingRequest
 from app.services.admin.pki_support import PkiTroubleshootingService
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.source_refs import (
+    PKI_REFERENCES,
+    citation_titles,
+    source_trust_markers,
+    structured_citations,
+)
 
 
 class PkiTroubleshooterAgent(Agent):
@@ -59,17 +65,15 @@ class PkiTroubleshooterAgent(Agent):
         return self._response(
             answer=answer,
             input_text=input_text,
-            citations=[
-                "Public PKI/CAC troubleshooting references",
-                "Portal/browser support guidance",
-            ],
-            structured_citations=[
-                StructuredCitation(
-                    title="Public PKI/CAC troubleshooting references",
-                    confidence=Confidence.low,
-                    notes="Use this as an advisory placeholder until a verified public source stack is added.",
-                )
-            ],
+            citations=citation_titles(PKI_REFERENCES),
+            structured_citations=structured_citations(PKI_REFERENCES),
+            source_trust=source_trust_markers(
+                PKI_REFERENCES,
+                notes_prefix=(
+                    "Public troubleshooting references only; your unit S-6 or the enterprise help desk "
+                    "is the authority for GFE configuration."
+                ),
+            ),
             confidence=Confidence.low,
             follow_up_questions=[
                 "Is the failure happening before certificate selection, during selection, or after login?",

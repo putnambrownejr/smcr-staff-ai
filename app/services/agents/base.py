@@ -14,6 +14,8 @@ from app.schemas.external_processing import ExternalProcessingApproval
 from app.schemas.source_state import SourceTrustMarker, VerifiedSourceStatus
 from app.schemas.user_context import ActiveUserContext
 
+DRAFT_NOTICE = "DRAFT — Verify all references against current official sources before acting."
+
 
 class AgentContext(BaseModel):
     user_key: str | None = None
@@ -59,6 +61,8 @@ class Agent(ABC):
                 f"{answer}"
             )
             confidence = Confidence.low
+        if DRAFT_NOTICE not in answer:
+            answer = f"{answer.rstrip()}\n\n{DRAFT_NOTICE}"
         return AgentRunResponse(
             agent_id=self.metadata.id,
             answer=answer,

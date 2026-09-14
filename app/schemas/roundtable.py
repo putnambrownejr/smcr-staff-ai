@@ -9,7 +9,7 @@ with every other participant's structured assessment; a synthesizer agent
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -32,7 +32,24 @@ class RoundtableRequest(BaseModel):
     scenario: str = Field(min_length=1)
     agents: list[str] = Field(
         default_factory=list,
-        description="Participant agent ids. Empty list auto-selects participants from the scenario content.",
+        description="Participant agent ids. Empty list selects participants by `preset`.",
+    )
+    preset: Literal["auto", "full_staff", "training", "command_team"] = Field(
+        default="auto",
+        description=(
+            "Who sits at the table when `agents` is empty. 'auto' = core seats plus sections triggered by the "
+            "scenario text, falling back to the full staff when nothing specific is triggered; 'full_staff' = "
+            "every staff seat plus the planning, ORM, and red-team advisors; 'training' = the seats that build "
+            "and run a drill or exercise; 'command_team' = XO, OpsO, SEL, S-1, SJA, chaplain, planning, red team."
+        ),
+    )
+    inference: Literal["auto", "local", "external"] = Field(
+        default="auto",
+        description=(
+            "'auto' = every seat answers through the configured external AI (behind the approval preview) "
+            "when one is configured, otherwise from local doctrine templates; 'local' = templates only; "
+            "'external' = require the external path (returns the unavailable notice if none is configured)."
+        ),
     )
     rounds: int = Field(
         default=2,
@@ -46,6 +63,38 @@ class RoundtableRequest(BaseModel):
     )
     context: dict[str, Any] = Field(default_factory=dict)
     external_processing_approval: ExternalProcessingApproval | None = None
+
+
+class RoundtableCapability(BaseModel):
+    """What the round table can honestly do on this install."""
+
+    external_available: bool
+    model: str | None = None
+    provider_base_url: str | None = None
+    note: str
+
+
+class RoundtablePacketRequest(BaseModel):
+    scenario: str = Field(min_length=1)
+    agents: list[str] = Field(default_factory=list)
+    preset: Literal["auto", "full_staff", "training", "command_team"] = "full_staff"
+    synthesizer: str | None = "chief-of-staff"
+    kind: Literal["roundtable", "chain"] = "roundtable"
+    include_role_notes: bool = True
+    save: bool = False
+    user_key: str | None = None
+    title: str | None = None
+
+
+class RoundtablePacketResponse(BaseModel):
+    kind: str
+    participants: list[str]
+    participant_names: list[str]
+    synthesizer: str | None = None
+    packet_markdown: str
+    saved_doc_id: str | None = None
+    saved_category: str | None = None
+    note: str
 
 
 class RoundtableEntry(BaseModel):
@@ -65,6 +114,7 @@ class RoundtableRound(BaseModel):
 
 class RoundtableResponse(BaseModel):
     scenario: str
+    mode: Literal["external_ai", "local_templates"] = "local_templates"
     participants: list[str]
     auto_selected: list[str] = Field(default_factory=list)
     rounds: list[RoundtableRound]

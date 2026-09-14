@@ -110,11 +110,14 @@ def test_routes_create_update_export_and_summarize(tmp_path: Path) -> None:
         app.dependency_overrides.clear()
 
 
-def test_family_deployment_readiness_agent_is_registered_and_safe() -> None:
+def test_family_deployment_readiness_agent_resolves_to_s1_mode_and_is_safe() -> None:
+    # Merged into staff-s1 (mode=family_readiness) in the Sep 2026 review; the
+    # retired id still resolves so the dashboard's Family Readiness panel works.
     agent = agent_registry.get("family-deployment-readiness-advisor")
 
     assert agent is not None
-    assert category_for_agent(agent.metadata.id) == "Reserve Admin & Readiness"
+    assert agent.metadata.id == "staff-s1"
+    assert category_for_agent(agent.metadata.id) == "Virtual Staff Council"
     response = agent.run("Help me prepare for a 30-day AT", AgentContext())
     assert "power of attorney" in response.answer.lower()
     assert "DRAFT — Verify all references" in response.answer

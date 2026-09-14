@@ -106,9 +106,11 @@ def test_catalog_exposes_specialists_and_red_team_mode_remains_safe() -> None:
     )
 
     assert catalog.status_code == 200
-    specialists = {agent["id"]: agent for agent in catalog.json() if agent["id"] in _STEPS}
-    assert set(specialists) == set(_STEPS)
-    assert all(agent["category"] == "Intelligence & Research" for agent in specialists.values())
+    # The four source-aware specialists merged into staff-s2 / staff-g9 modes
+    # (Sep 2026); they resolve by id for chains but no longer sit in the catalog.
+    catalog_ids = {agent["id"] for agent in catalog.json()}
+    assert not catalog_ids & set(_STEPS)
+    assert {"staff-s2", "staff-g9"} <= catalog_ids
     assert red_team.status_code == 200
     assert "Competing hypotheses" in red_team.json()["answer"]
     assert actor_boundary.status_code == 200

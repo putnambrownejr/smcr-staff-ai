@@ -76,8 +76,8 @@ def default_maradmin_feed_dir() -> Path:
     return default_local_context_dir() / "maradmin_feed"
 
 
-def default_navy_message_dir() -> Path:
-    return default_local_context_dir() / "navy_messages"
+def default_almar_feed_dir() -> Path:
+    return default_local_context_dir() / "almar_feed"
 
 
 def default_dod_watch_dir() -> Path:
@@ -152,6 +152,10 @@ def default_chief_setup_dir() -> Path:
     return default_local_context_dir() / "chief_setup"
 
 
+def default_automations_dir() -> Path:
+    return default_local_context_dir() / "automations"
+
+
 def default_external_processing_audits_dir() -> Path:
     return default_local_context_dir() / "external_processing_audits"
 
@@ -199,7 +203,7 @@ class Settings(BaseSettings):
     reading_state_storage_dir: str = str(default_reading_state_dir())
     reading_catalog_storage_dir: str = str(default_reading_catalog_dir())
     maradmin_feed_storage_dir: str = str(default_maradmin_feed_dir())
-    navy_message_storage_dir: str = str(default_navy_message_dir())
+    almar_feed_storage_dir: str = str(default_almar_feed_dir())
     dod_watch_storage_dir: str = str(default_dod_watch_dir())
     custom_watch_feed_storage_dir: str = str(default_custom_watch_feed_dir())
     section_memory_storage_dir: str = str(default_section_memory_dir())
@@ -218,6 +222,7 @@ class Settings(BaseSettings):
     custom_mos_recipes_storage_dir: str = str(default_custom_mos_recipes_dir())
     agent_notes_storage_dir: str = str(default_agent_notes_dir())
     chief_setup_storage_dir: str = str(default_chief_setup_dir())
+    automations_storage_dir: str = str(default_automations_dir())
     external_processing_audits_storage_dir: str = str(default_external_processing_audits_dir())
     source_library_storage_dir: str = str(default_source_library_dir())
     civil_network_storage_dir: str = str(default_civil_network_storage_dir())
@@ -250,7 +255,7 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.reading_state_storage_dir),
         Path(settings.reading_catalog_storage_dir),
         Path(settings.maradmin_feed_storage_dir),
-        Path(settings.navy_message_storage_dir),
+        Path(settings.almar_feed_storage_dir),
         Path(settings.dod_watch_storage_dir),
         Path(settings.custom_watch_feed_storage_dir),
         Path(settings.section_memory_storage_dir),
@@ -268,6 +273,7 @@ def configured_storage_dirs(settings: Settings) -> list[Path]:
         Path(settings.custom_mos_recipes_storage_dir),
         Path(settings.agent_notes_storage_dir),
         Path(settings.chief_setup_storage_dir),
+        Path(settings.automations_storage_dir),
         Path(settings.external_processing_audits_storage_dir),
         Path(settings.source_library_storage_dir),
         Path(settings.civil_network_storage_dir),

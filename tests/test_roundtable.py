@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import threading
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -276,3 +277,201 @@ def test_roundtable_requires_approval_when_external_configured(external_llm_env:
     detail = response.json()["detail"]
     assert "preview" in detail
     assert detail["preview"]["required"] is True
+
+
+# ---------------------------------------------------------------------------
+# Presets and generic questions (Sep 2026): the whole staff answers in one go
+# ---------------------------------------------------------------------------
+
+def test_xo_sits_at_every_auto_selected_table() -> None:
+    participants, _ = resolve_participants(SCENARIO_INPUT, [], "chief-of-staff")
+    assert participants[0] == "staff-xo"
+
+
+def test_generic_question_falls_back_to_the_full_staff() -> None:
+    participants, auto = resolve_participants("What should I do about this?", [], "chief-of-staff")
+    assert "staff-s1" in participants
+    assert "staff-sel" in participants
+    assert "staff-g9" in participants
+    assert "orm-risk-management" in participants
+    assert "chief-of-staff" not in participants
+    assert auto == participants
+
+
+def test_training_question_pulls_the_training_seats_in_auto_mode() -> None:
+    participants, auto = resolve_participants(
+        "Plan a range day and land nav training event for next drill weekend.", [], "chief-of-staff"
+    )
+    assert "staff-opso" in auto
+    assert "orm-risk-management" in auto
+    assert "staff-xo" in participants
+
+
+@pytest.mark.parametrize(
+    ("preset", "must_include", "must_exclude"),
+    [
+        ("full_staff", {"staff-xo", "staff-s4", "staff-g8", "red-team-assumptions-challenge"}, set()),
+        ("training", {"staff-opso", "orm-risk-management", "assessment-learning-advisor"}, {"staff-g8", "staff-pao"}),
+        ("command_team", {"staff-xo", "staff-sel", "staff-sja", "staff-chaplain"}, {"staff-s4", "staff-s6"}),
+    ],
+)
+def test_named_presets_seat_fixed_councils(preset: str, must_include: set[str], must_exclude: set[str]) -> None:
+    participants, _ = resolve_participants("Anything at all.", [], "chief-of-staff", preset)
+    assert must_include <= set(participants)
+    assert not (must_exclude & set(participants))
+    assert "chief-of-staff" not in participants
+
+
+def test_roundtable_endpoint_full_staff_preset_answers_a_generic_training_question() -> None:
+    response = TestClient(app).post(
+        "/agents/roundtable",
+        json={
+            "scenario": "Help me build a two-day land navigation and patrolling drill for 60 Marines.",
+            "preset": "full_staff",
+            "rounds": 1,
+            "context": {"request_is_training_or_fictional": True},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["participants"]) >= 16
+    entries = data["rounds"][0]["entries"]
+    assert {entry["agent_id"] for entry in entries} == set(data["participants"])
+    assert all(entry["answer"].strip() for entry in entries)
+    assert data["synthesis"]["agent_id"] == "chief-of-staff"
+    # Local mode is labelled honestly: templates, no analysis.
+    assert data["mode"] == "local_templates"
+    assert data["warnings"][0].startswith("NO AI ANALYSIS WAS PERFORMED")
+
+
+# ---------------------------------------------------------------------------
+# Honest modes: capability, staff call packets, and external perspectives
+# ---------------------------------------------------------------------------
+
+def test_capability_reports_no_external_ai_when_unconfigured() -> None:
+    response = TestClient(app).get("/agents/roundtable/capability")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["external_available"] is False
+    assert "Nothing here can analyze your input" in data["note"]
+
+
+def test_packet_organizes_seats_without_analysis() -> None:
+    response = TestClient(app).post(
+        "/agents/roundtable/packet",
+        json={"scenario": "SITREP: land nav drill, 60 Marines, ammo pending.", "preset": "training"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["kind"] == "roundtable"
+    assert "staff-opso" in data["participants"]
+    assert data["synthesizer"] == "chief-of-staff"
+    packet = data["packet_markdown"]
+    assert "No AI has run and nothing below is analysis" in packet
+    assert "## Your input" in packet and "ammo pending" in packet
+    assert "## Instructions for the AI" in packet
+    assert "### 1. OpsO / S-3 / G-3" in packet
+    assert "Questions this seat always tests" in packet
+    assert "Role notes (doctrine this seat works from)" in packet
+    assert "## Synthesizer" in packet
+    assert data["saved_doc_id"] is None
+    assert "No AI analysis was performed" in data["note"]
+
+
+def test_packet_can_omit_role_notes_and_build_chains() -> None:
+    client = TestClient(app)
+    slim = client.post(
+        "/agents/roundtable/packet",
+        json={"scenario": "Test.", "preset": "command_team", "include_role_notes": False},
+    ).json()
+    assert "Role notes (doctrine" not in slim["packet_markdown"]
+    chain = client.post(
+        "/agents/roundtable/packet",
+        json={"scenario": "Test.", "kind": "chain", "agents": ["gce", "fires-advisor", "ace", "lce"]},
+    ).json()
+    assert chain["kind"] == "chain"
+    assert chain["participants"] == ["gce", "fires-advisor", "ace", "lce"]
+    assert "Run these agents **in order**" in chain["packet_markdown"]
+    assert "## Synthesizer" not in chain["packet_markdown"]
+    empty_chain = client.post("/agents/roundtable/packet", json={"scenario": "Test.", "kind": "chain"})
+    assert empty_chain.status_code == 422
+
+
+def test_packet_save_lands_in_drafted_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("USER_DOCS_DIR", str(tmp_path))
+    get_settings.cache_clear()
+    try:
+        client = TestClient(app)
+        saved = client.post(
+            "/agents/roundtable/packet",
+            json={"scenario": "Test.", "preset": "command_team", "save": True, "user_key": "capt-packet"},
+        )
+        assert saved.status_code == 200, saved.text
+        doc_id = saved.json()["saved_doc_id"]
+        assert doc_id
+        listed = client.get("/user-docs/generations/capt-packet").json()
+        assert any(entry["id"] == doc_id and "Staff call packet" in entry["title"] for entry in listed)
+        unsaved = client.post("/agents/roundtable/packet", json={"scenario": "Test.", "save": True})
+        assert unsaved.status_code == 422
+    finally:
+        get_settings.cache_clear()
+
+
+def test_local_roundtable_is_labelled_as_templates_not_analysis() -> None:
+    response = TestClient(app).post(
+        "/agents/roundtable",
+        json={"scenario": "This is a test.", "agents": ["staff-s4"], "rounds": 1},
+    )
+    data = response.json()
+    assert data["mode"] == "local_templates"
+    assert data["warnings"][0].startswith("NO AI ANALYSIS WAS PERFORMED")
+
+
+@patch("app.services.llm_client.generate_scenario_response")
+def test_external_roundtable_convenes_every_seat_on_a_generic_question(mock_generate: MagicMock) -> None:
+    def fake_generate(system_prompt: str, template: str, user_input: str, **kwargs: object) -> ScenarioGenerationResult:
+        if "ROUND TABLE SYNTHESIS" in template:
+            return _generated("Integrated picture", {"role": "cos_synthesis", "bottom_line": "Ammo is the long pole."})
+        if "Logistics (LCE)" in template:
+            return _generated("S-4 view", {"role": "s4", "summary": "Ammo request is late.", "key_concerns": ["ASP lead time"]})
+        return _generated("Planning view", {"role": "planning_advisor", "summary": "Deliberate tempo."})
+
+    mock_generate.side_effect = fake_generate
+    response = TestClient(app).post(
+        "/agents/roundtable",
+        json={
+            "scenario": "Plan a land nav drill for 60 Marines; ammo request not yet submitted.",
+            "agents": ["staff-s4", "planning-advisor"],
+            "rounds": 1,
+            "inference": "external",
+            "context": {"request_is_training_or_fictional": True},
+        },
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["mode"] == "external_ai"
+    assert mock_generate.call_count == 3  # two seats + synthesis
+    entries = {entry["agent_id"]: entry for entry in data["rounds"][0]["entries"]}
+    assert entries["staff-s4"]["scenario_output_status"] == "validated"
+    notice = "DRAFT — Verify all references against current official sources before acting."
+    assert entries["staff-s4"]["answer"] == "S-4 view\n\n" + notice
+    assert all(notice in entry["answer"] for entry in entries.values())
+    assert notice in data["synthesis"]["answer"]
+    assert data["assessments"]["s4"]["key_concerns"] == ["ASP lead time"]
+    assert data["synthesis"]["scenario_output"]["role"] == "cos_synthesis"
+    assert not any(w.startswith("NO AI ANALYSIS") for w in data["warnings"])
+    # The seat's template was sent as its lens, not as the answer.
+    lens_template = next(call.args[1] for call in mock_generate.call_args_list if "Logistics (LCE)" in call.args[1])
+    assert "STAFF PERSPECTIVE" in lens_template and "Concerns to test:" in lens_template
+
+
+def test_single_agent_external_inference_without_a_key_says_so() -> None:
+    response = TestClient(app).post(
+        "/agents/staff-s4/run",
+        json={"input": "Plan sustainment for a drill.", "options": {"inference": "external"}},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["scenario_output_status"] == "template_only"
+    assert "local deterministic template" in data["answer"]

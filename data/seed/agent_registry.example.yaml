@@ -1,82 +1,48 @@
+# AgentRegistry.from_yaml uses this file as an ID allowlist.
+# Remove entries to select a subset; omit the configuration to use defaults.
+# Echelon is supplied in run context, not encoded in the agent ID.
+#
+# Retired ids still resolve through MERGED_AGENT_ALIASES in
+# app/services/agents/registry.py (lce -> staff-s4, drill-prep-calendar ->
+# chief-of-staff, warrior-monk -> leadership-advisor,
+# family-deployment-readiness-advisor -> staff-s1, ipb-assistant and
+# information-requirements-manager -> staff-s2, area-study-builder and
+# actor-network-analyst -> staff-g9). They do not need to be listed here.
 agents:
-  - id: s1-admin-chief
-    doctrine_categories: [reserve_administration, fitrep_pes, correspondence_formatting]
-    linked_workflows: [dts_authorization, dts_voucher, gtcc]
-  - id: s2-intel
-    doctrine_categories: [intelligence_osint, operations_planning]
-    linked_agent: osint-research-assistant
-  - id: s3-opso
-    doctrine_categories: [core_marine_doctrine, operations_planning, training_readiness, orm]
-  - id: s4-logistics
-    doctrine_categories: [logistics_04xx, operations_planning]
-  - id: s6-comms
-    doctrine_categories: [communications, operations_planning]
-    linked_agent: pki-cac-troubleshooter
-  - id: sel-enlisted-leader
-    doctrine_categories: [leadership, uniform_regulations, correspondence_formatting, training_readiness]
-  - id: g9-civil-military
-    doctrine_categories: [civil_affairs, intelligence_osint, operations_planning, humanitarian_disaster_response]
-    linked_agent: mos-civil-affairs
-  - id: medical-doc-advisor
-    doctrine_categories: [orm, logistics_04xx, operations_planning]
-  - id: airo-advisor
-    doctrine_categories: [aviation_support, operations_planning]
-  - id: jag-legal-advisor
-    doctrine_categories: [reserve_administration, correspondence_formatting]
-  - id: chaplain-advisor
-    doctrine_categories: [leadership]
-  - id: chief-of-staff-aide
-    doctrine_categories: [core_marine_doctrine, reserve_administration, training_readiness, fitrep_pes]
+  - id: chief-of-staff
+  - id: planning-advisor
+  - id: red-team-assumptions-challenge
+  - id: assessment-learning-advisor
+  - id: writing-briefing-coach
   - id: uniform-advisor
-    doctrine_categories: [uniform_regulations]
-  - id: drill-prep-calendar
-    doctrine_categories: [training_readiness]
   - id: staff-products
-    doctrine_categories: [core_marine_doctrine, operations_planning, correspondence_formatting, training_readiness, orm]
   - id: orm-risk-management
-    doctrine_categories: [orm]
   - id: installation-practical-advisor
-    doctrine_categories: [reserve_administration, uniform_regulations]
+  - id: infantry-tactics-advisor
+  - id: fires-advisor
   - id: pki-cac-troubleshooter
-    doctrine_categories: [communications, reserve_administration]
-  - id: repo-privacy-sweeper
-    doctrine_categories: [reserve_administration]
   - id: leadership-advisor
-    doctrine_categories: [core_marine_doctrine, leadership, professional_reading]
+  - id: gtcc-advisor
+  - id: financial-readiness-advisor
+  - id: fitness-planning-advisor
   - id: osint-research-assistant
-    doctrine_categories: [core_marine_doctrine, intelligence_osint, professional_reading, humanitarian_disaster_response]
-  - id: mos-commo
-    doctrine_categories: [core_marine_doctrine, communications, operations_planning, logistics_04xx]
-  - id: mos-civil-affairs
-    doctrine_categories: [civil_affairs, intelligence_osint, operations_planning, humanitarian_disaster_response]
-staff_agent_patterns:
-  - id_pattern: staff-company-*
-    doctrine_categories: [core_marine_doctrine, reserve_administration, training_readiness]
-  - id_pattern: staff-battalion-s*
-    doctrine_categories: [core_marine_doctrine, operations_planning, training_readiness]
-  - id_pattern: staff-division_group-g*
-    doctrine_categories: [core_marine_doctrine, operations_planning]
-  - id_pattern: staff-battalion-s2
-    doctrine_categories: [core_marine_doctrine, intelligence_osint]
-    linked_agent: osint-research-assistant
-  - id_pattern: staff-division_group-g2
-    doctrine_categories: [core_marine_doctrine, intelligence_osint]
-    linked_agent: osint-research-assistant
-  - id_pattern: staff-division_group-g9
-    doctrine_categories: [civil_affairs, operations_planning, humanitarian_disaster_response]
-    linked_agent: mos-civil-affairs
-  - id_pattern: staff-company-doc
-    doctrine_categories: [orm, logistics_04xx, operations_planning]
-    linked_agent: medical-doc-advisor
-  - id_pattern: staff-company-firstsgt
-    doctrine_categories: [leadership, uniform_regulations, training_readiness]
-    linked_agent: sel-enlisted-leader
-  - id_pattern: staff-battalion-sgtmaj
-    doctrine_categories: [leadership, uniform_regulations, training_readiness]
-    linked_agent: sel-enlisted-leader
-  - id_pattern: staff-battalion-surgeon
-    doctrine_categories: [orm, logistics_04xx, operations_planning]
-    linked_agent: medical-doc-advisor
-  - id_pattern: staff-division_group-surgeon
-    doctrine_categories: [orm, logistics_04xx, operations_planning]
-    linked_agent: medical-doc-advisor
+  - id: terrain-map-advisor
+  - id: unit-checkin
+  - id: ace
+  - id: gce
+  - id: staff-xo
+  - id: staff-battle_captain
+  - id: staff-opso
+  - id: staff-s1
+  - id: staff-s2
+  - id: staff-s4
+  - id: staff-s6
+  - id: staff-sel
+  - id: staff-surgeon
+  - id: staff-sja
+  - id: staff-pao
+  - id: staff-chaplain
+  - id: staff-provost
+  - id: staff-ig
+  - id: staff-g8
+  - id: staff-g9

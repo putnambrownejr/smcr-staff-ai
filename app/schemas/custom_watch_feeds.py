@@ -40,6 +40,7 @@ class CreateCustomWatchFeedRequest(BaseModel):
 
 class UpdateCustomWatchFeedRequest(BaseModel):
     name: str | None = None
+    url: HttpUrl | None = None
     category: str | None = None
     trust_level: CustomWatchFeedTrustLevel | None = None
     enabled: bool | None = None

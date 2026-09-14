@@ -3,7 +3,22 @@ from __future__ import annotations
 from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.schemas.scenario_handoff import CoSScenarioOutput
 from app.services.agents.base import Agent, AgentContext
+from app.services.agents.reserve_admin_text import (
+    NAVY_RESERVE_ADMIN,
+    RESERVE_ADMIN_SYSTEMS,
+    RESERVE_FRICTION_POINTS,
+    RESERVE_POLICY_BASELINES,
+)
+from app.services.agents.source_refs import (
+    DRILL_PREP_REFERENCES,
+    MARADMIN_REFERENCES,
+    citation_titles,
+    source_trust_markers,
+    structured_citations,
+)
 from app.services.agents.staff_advisor_agent import _detect_scenario
+
+_COS_REFERENCES = (*DRILL_PREP_REFERENCES, *MARADMIN_REFERENCES)
 
 
 class ChiefOfStaffAideAgent(Agent):
@@ -12,37 +27,39 @@ class ChiefOfStaffAideAgent(Agent):
         name="Chief of Staff",
         description=(
             "Senior staff coordinator — battle rhythm, continuity, due-outs, brief posture, turnover, "
-            "drill weekend prep, MARADMIN awareness, calendar/email triage, and session handoff watch items."
+            "the standing drill-prep timeline (pre/during/post drill), MARADMIN awareness, calendar/email "
+            "triage, and session handoff watch items. Absorbed the former Drill Prep Calendar lane."
         ),
         domain="staff coordination and command-post continuity",
-        intended_users=["SMCR officers", "staff officers", "command teams"],
+        intended_users=["SMCR officers", "staff officers", "command teams", "company staff", "battalion staff"],
         allowed_sources=[
             "local session handoff",
             "local calendar provider",
             "future user-approved email provider",
             "MARADMIN and MCPEL public sources",
+            "public training requirements",
             "local context uploads",
         ],
         disallowed_inputs=[
             "classified information",
             "CUI in unapproved environments",
             "secrets or credentials",
+            "calendar tokens",
             "private data not required for task management",
             "sensitive operational plans",
         ],
         system_prompt=(
             "Act as an advisory Chief of Staff/Aide de Camp. Coordinate reminders, ask clarifying questions, "
-            "flag PME/FitRep/admin gaps, and route staff questions to the right agents. "
-            "Never provide official guidance.\n\n"
-            "Admin system chain awareness:\n"
-            "- Drill Manager → IDT pay (attendance errors delay entire cycle).\n"
-            "- MROWS → ADT/AT orders (needs lead time for approval chain).\n"
-            "- DTS → travel vouchers (most common post-drill drop).\n"
-            "- MOL → self-service (LES, OMPF, training records).\n"
-            "- MCTFS/Unit Diary → authoritative status changes.\n"
-            "- MRRS/RHRP/PHA → medical readiness tracking.\n\n"
-            "AT planning triggers: T-45 (MROWS submission), T-30 (DTS authorization), "
-            "T-15 (final coordination, billeting, ranges).\n\n"
+            "flag PME/FitRep/admin gaps, turn drill dates into practical preparation timelines, and route staff "
+            "questions to the right agents. Never provide official guidance.\n\n"
+            + RESERVE_ADMIN_SYSTEMS
+            + "\n"
+            + RESERVE_POLICY_BASELINES
+            + "\n"
+            + RESERVE_FRICTION_POINTS
+            + "\n"
+            + NAVY_RESERVE_ADMIN
+            + "\n"
             "Reserve continuity friction: 28-day gaps between drills break admin chains; "
             "handoff notes and due-out trackers are the only bridge.\n\n"
             "SCENARIO MODE: If the user provides a specific scenario (country, event type, forces, "
@@ -70,12 +87,29 @@ class ChiefOfStaffAideAgent(Agent):
 
         answer = (
             "Chief of Staff advisory brief.\n\n"
+            "Use this to shape the drill-prep rhythm and the command-post battle rhythm, not as an official "
+            "calendar or tasking authority.\n\n"
             "Immediate triage:\n"
-            "- Check next drill date and generate/update drill-prep plan.\n"
+            "- Confirm the next drill date and what must be true by first formation.\n"
             "- Review MARADMIN/news tags for Reserve, Officer, PME, Uniform, Training, Admin, Travel, Pay, Fitness, "
             "Awards, Safety, and Doctrine relevance.\n"
-            "- Review user-approved calendar events for suspense items once calendar access is connected.\n"
-            "- Review user-approved email search results for action items once email access is connected.\n\n"
+            "- Pull suspense items from the calendar and any approved email search results once those "
+            "connectors are enabled.\n\n"
+            "Standing drill-prep timeline (adjust to the unit SOP):\n"
+            "Pre-drill (T-14 to T-1):\n"
+            "- Confirm drill date, travel requirements, and must-hit suspense items.\n"
+            "- Verify MOL access, LES accuracy, and medical readiness (dental, PHA, IMR).\n"
+            "- Check DTS: prior voucher settled? New authorization needed?\n"
+            "- Uniform, gear, and required annual training (MarineNet) complete.\n"
+            "- MROWS: any ADT/AT orders pending approval? Navy personnel: NROWS submitted (T-60 lead)?\n"
+            "During drill:\n"
+            "- Drill Manager attendance captured accurately (drives pay).\n"
+            "- Capture action items while the right people are present.\n"
+            "- FitRep counseling, awards routing, admin corrections — do it now or it waits 28 days.\n"
+            "Post-drill (release + 5 days):\n"
+            "- DTS voucher completion (most common drop).\n"
+            "- Handoff notes updated for continuity between drills.\n"
+            "- Unresolved admin items tracked with owners and deadlines.\n\n"
             "Command-and-staff rhythm:\n"
             "- Keep a visible battle rhythm for running estimates, CUBs, CPBs, and commander decision points.\n"
             "- Force assumption, decision, and due-out logs to survive between drills.\n"
@@ -91,27 +125,28 @@ class ChiefOfStaffAideAgent(Agent):
             f"Recurring checks:\n{recurring_lines}\n\n"
             f"Admin watch items:\n{admin_lines}\n\n"
             "Recommended routing:\n"
-            "- Drill/admin readiness: Chief of Staff/Aide, XO, 1stSgt/SgtMaj, S-1/G-1.\n"
-            "- Training or exercise idea: XO, OpsO/S-3/G-3, Training Planner, ORM.\n"
+            "- Drill/admin readiness: Chief of Staff, XO, 1stSgt/SgtMaj, S-1/G-1.\n"
+            "- Training or exercise idea: XO, OpsO/S-3/G-3, ORM.\n"
             "- Information environment or public-source question: S-2/G-2 with OSINT source-evaluation support.\n"
-            "- Logistics or movement support: S-4/G-4 and logistics sources.\n\n"
-            "Connector status:\n"
-            "- Email: provider interface exists; live access is not enabled.\n"
-            "- Calendar: local ICS exists; Microsoft Graph and Google Calendar remain stubs.\n"
-            "- Session handoff: local JSON persistence exists for minimum necessary user context.\n\n"
-            "Bounded application capabilities:\n"
-            "- Read summaries from Travel/GTCC, FitReps, and the cadence library.\n"
-            "- Search readable repository source files inside the repo root; private projects and tool caches are "
-            "excluded.\n"
-            "- Append an explicit travel entry, GTCC check, FitRep/profile record, goal, or private cadence only after "
-            "the user asks for that change. Every append returns a local audit-backed Undo token.\n"
-            "- Treat inferred document imports as proposals that require review/confirmation.\n"
-            "- Never use an unrestricted filesystem writer, shell capability, credential, or silent replace/delete."
+            "- Logistics, movement, or LCE support: S-4/G-4.\n"
+            "- FitRep or award write-ups: Writing / Briefing Coach (FitRep & awards mode).\n\n"
+            "Connectors and bounded capabilities: local session handoff and ICS calendar are live; email and "
+            "external calendar connectors are stubs. Travel/GTCC, FitRep, goal, and cadence entries are appended "
+            "only when you ask, each with an Undo token; inferred document imports are proposals for review. "
+            "No unrestricted filesystem, shell, credential, or silent replace/delete capability exists."
         )
 
         return self._response(
             answer=answer,
             input_text=input_text,
+            citations=citation_titles(_COS_REFERENCES),
+            structured_citations=structured_citations(_COS_REFERENCES),
+            source_trust=source_trust_markers(
+                _COS_REFERENCES,
+                notes_prefix=(
+                    "Verify local drill dates, command rhythm, and current travel-admin guidance before execution."
+                ),
+            ),
             follow_up_questions=_follow_up_questions(handoff),
             confidence=_confidence(handoff),
         )
@@ -147,7 +182,8 @@ class ChiefOfStaffAideAgent(Agent):
             "4. COORDINATION REQUIREMENTS:\n"
             "   - Higher HQ: Identify required reporting and requests\n"
             "   - Adjacent units: Determine who needs to know and what\n"
-            "   - Interagency: Assess Embassy/Country Team, DoS/DHR, and NGO coordination needs\n"
+            "   - Interagency: Assess Embassy/Country Team, DoS/DHR, and NGO coordination needs "
+            "(see docs/interagency_reference.md for command relationships and liaison mechanics)\n"
             "   - Coalition/partner nation: Identify required coordination\n\n"
             "5. RISK WATCH:\n"
             "   - Identify the assumption that breaks the plan if wrong\n"
@@ -172,6 +208,9 @@ class ChiefOfStaffAideAgent(Agent):
         return self._response(
             answer=population.answer,
             input_text=input_text,
+            citations=citation_titles(_COS_REFERENCES),
+            structured_citations=structured_citations(_COS_REFERENCES),
+            source_trust=source_trust_markers(_COS_REFERENCES),
             confidence=Confidence.medium,
             follow_up_questions=[
                 "What forces are available and what is their current readiness?",
@@ -230,7 +269,7 @@ def _follow_up_questions(handoff: dict) -> list[str]:  # type: ignore[type-arg]
 
     # Gap-filling questions for missing sections
     if not drill_dates:
-        questions.append("What are your upcoming drill weekend dates?")
+        questions.append("What is the next drill date and what must be true by first formation?")
     if not pme:
         questions.append("What PME programs are you enrolled in or targeting for promotion?")
     if not fitreps:
@@ -238,7 +277,7 @@ def _follow_up_questions(handoff: dict) -> list[str]:  # type: ignore[type-arg]
     if not admin_items:
         questions.append("What admin items should be tracked heading into next drill?")
     if not recurring:
-        questions.append("What checks should repeat every drill weekend (ammo account, training schedule, claims)?")
+        questions.append("Which recurring checks should become standing reminders every drill weekend?")
 
     return questions[:4]
 

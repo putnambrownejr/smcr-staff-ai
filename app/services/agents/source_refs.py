@@ -46,7 +46,7 @@ S1_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCO 5216.20B Marine Corps Supplement to the Department of the Navy Correspondence Manual",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2869007/mco-521620b/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2795618/mco-521620b-wadmin-ch-4/",
         publisher="United States Marine Corps",
         notes="Official correspondence and routing format reference.",
     ),
@@ -82,7 +82,7 @@ MOS_0102_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCO 5216.20B Marine Corps Supplement to the Department of the Navy Correspondence Manual",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2869007/mco-521620b/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2795618/mco-521620b-wadmin-ch-4/",
         publisher="United States Marine Corps",
         notes="Official correspondence and routing discipline reference for adjutant work.",
     ),
@@ -97,25 +97,25 @@ MOS_0102_REFERENCES: tuple[SourceRef, ...] = (
 S2_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCDP 2 Intelligence",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcdp-2/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899838/mcdp-2/",
         publisher="United States Marine Corps",
         notes="Doctrine for framing intelligence as decision support rather than trivia collection.",
     ),
     SourceRef(
         title="MCTP 3-30A Command and Staff Actions",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2325814/mctp-3-30a/",
         publisher="United States Marine Corps",
         notes="Useful for how staff estimates should feed commander decisions and staff action.",
     ),
     SourceRef(
         title="MCRP 2-10B.1 Intelligence Preparation of the Battlespace",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899779/mcrp-2-10b1/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1654393/mcrp-2-10b1/",
         publisher="United States Marine Corps",
         notes="Reference for structured problem framing, assumptions, and information gaps.",
     ),
     SourceRef(
         title="MCWP 2-10 Marine Corps Intelligence",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899774/mcwp-2-10/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899569/mcwp-2-10/",
         publisher="United States Marine Corps",
         notes=(
             "Core S-2/G-2 warfighting pub covering IPB methodology, collection management, "
@@ -123,12 +123,12 @@ S2_REFERENCES: tuple[SourceRef, ...] = (
         ),
     ),
     SourceRef(
-        title="MCTP 2-10B Intelligence Preparation of the Battlespace",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899553/mctp-2-10b/",
+        title="MCTP 2-10B MAGTF Intelligence Production and Analysis",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899571/mctp-2-10b/",
         publisher="United States Marine Corps",
         notes=(
-            "Four-step IPB methodology (define, describe, evaluate, determine) with "
-            "practical worksheets, templates, and echelon-appropriate application guidance."
+            "Intelligence production and analysis TTP — how the S-2 turns collection into the "
+            "estimate, INTSUM, and IPB products (IPB itself is MCRP 2-10B.1 above)."
         ),
     ),
     SourceRef(
@@ -141,7 +141,7 @@ S2_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="USGS The National Map",
-        url="https://www.usgs.gov/the-national-map",
+        url="https://www.usgs.gov/programs/national-geospatial-program/national-map",
         publisher="United States Geological Survey",
         notes=(
             "Authoritative public terrain, elevation, hydrography, and topographic-map source for location-based "
@@ -161,20 +161,20 @@ MOS_0202_REFERENCES: tuple[SourceRef, ...] = (
         ),
     ),
     SourceRef(
-        title="NAVMC 3500.100B Intelligence Training and Readiness Manual",
-        url="https://www.marines.mil/portals/1/Publications/NAVMC%203500.100B.pdf",
+        title="NAVMC 3500.100C Intelligence and Ground Sensors Training and Readiness Manual",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1971766/navmc-3500100c/",
         publisher="United States Marine Corps",
         notes="Official intelligence T&R baseline for MAGTF intelligence officer training standards.",
     ),
     SourceRef(
         title="MCDP 2 Intelligence",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcdp-2/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899838/mcdp-2/",
         publisher="United States Marine Corps",
         notes="Doctrine for intelligence as commander decision support.",
     ),
     SourceRef(
         title="MCTP 3-30A Command and Staff Actions",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2325814/mctp-3-30a/",
         publisher="United States Marine Corps",
         notes="Staff-action rhythm for turning intelligence into usable command support.",
     ),
@@ -189,7 +189,7 @@ OSINT_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="USGS The National Map",
-        url="https://www.usgs.gov/the-national-map",
+        url="https://www.usgs.gov/programs/national-geospatial-program/national-map",
         publisher="United States Geological Survey",
         notes="Use as a first-line public source for terrain, elevation, hydrography, and topographic-map context.",
     ),
@@ -201,13 +201,13 @@ OSINT_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCDP 2 Intelligence",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcdp-2/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899838/mcdp-2/",
         publisher="United States Marine Corps",
         notes="Doctrine for disciplined assessment, caveats, and commander decision support.",
     ),
     SourceRef(
         title="MCTP 3-30A Command and Staff Actions",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2325814/mctp-3-30a/",
         publisher="United States Marine Corps",
         notes="Staff-action reference for turning sourced information into usable command support.",
     ),
@@ -264,7 +264,7 @@ S3_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCTP 3-30A Command and Staff Actions",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2325814/mctp-3-30a/",
         publisher="United States Marine Corps",
         notes="Command-post rhythm, staff-action flow, and planning support to decisions.",
     ),
@@ -463,19 +463,19 @@ MOS_3002_REFERENCES: tuple[SourceRef, ...] = (
 S6_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCDP 6 Command and Control",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899771/mcdp-6/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/898678/mcdp-6/",
         publisher="United States Marine Corps",
         notes="Doctrine for command-and-control design and disciplined information flow.",
     ),
     SourceRef(
         title="MCTP 3-30A Command and Staff Actions",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2325814/mctp-3-30a/",
         publisher="United States Marine Corps",
         notes="Useful for staff-action rhythm and information flow inside command posts and planning cycles.",
     ),
     SourceRef(
         title="MCTP 3-30B Information Management",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899781/mctp-3-30b/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899561/mctp-3-30b/",
         publisher="United States Marine Corps",
         notes="Information-management discipline and reporting flow reference.",
     ),
@@ -486,13 +486,82 @@ S6_REFERENCES: tuple[SourceRef, ...] = (
         notes="Communications training standards and readiness framing.",
     ),
     SourceRef(
-        title="MCWP 3-31 Marine Air-Ground Task Force C4",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899782/mcwp-3-31/",
+        title="MCRP 3-30B.2 MAGTF Communications System (formerly MCWP 3-40.3)",
+        url="https://www.marines.mil/News/Messages/Messages-Display/Article/889034/availability-of-mcwp-3-403-magtf-communications-system/",
         publisher="United States Marine Corps",
         notes=(
-            "MAGTF C4I architecture — enterprise, tactical, and transport layers; "
-            "Annex K structure (6 appendices), PACE planning, and EMCON guidance."
+            "MAGTF communications system doctrine — architecture layers, communications planning, "
+            "Annex K inputs, PACE planning, and EMCON. Verify the current MCPEL entry for MCRP 3-30B.2."
         ),
+    ),
+)
+
+FITREP_AWARDS_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCO 1610.7B Performance Evaluation System",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1513503/mco-16107b/",
+        publisher="United States Marine Corps",
+        notes=(
+            "PES Manual: report occasions, RS/RO/3O responsibilities, the 14 attributes, Section I "
+            "directed comments, relative value, and submission timelines."
+        ),
+    ),
+    SourceRef(
+        title="SECNAV M-1650.1 Navy and Marine Corps Awards Manual",
+        url="https://www.marines.mil/Portals/1/Publications/SECNAV%20M-1650.1.pdf?ver=2019-08-23-121307-600",
+        publisher="Department of the Navy",
+        notes=(
+            "Award criteria, awarding-authority delegation, summary-of-action and citation "
+            "requirements for personal decorations (NAM, NCM, MSM, and above)."
+        ),
+    ),
+    SourceRef(
+        title="MCO 1650.19J w/CH-1 Administrative and Issue Procedures for Decorations, Medals, and Awards",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900164/mco-165019j-wch-1/",
+        publisher="United States Marine Corps",
+        notes="Marine Corps award processing, iAPS routing, and administrative procedures (verify current change).",
+    ),
+)
+
+RANGE_TRAINING_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="MCO 3570.1D Range Safety",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/898977/mco-35701d/",
+        publisher="United States Marine Corps",
+        notes="Range safety policy: OIC/RSO responsibilities, surface danger zones, and live-fire approval.",
+    ),
+    SourceRef(
+        title="MCO 3574.2M Marine Corps Combat Marksmanship Program",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2996982/mco-35742m/",
+        publisher="United States Marine Corps",
+        notes="Annual rifle/pistol qualification tables, PMI requirements, and marksmanship training management.",
+    ),
+)
+
+PKI_REFERENCES: tuple[SourceRef, ...] = (
+    SourceRef(
+        title="DoD Cyber Exchange PKI/PKE (InstallRoot, certificates, middleware guidance)",
+        url="https://public.cyber.mil/pki-pke/",
+        publisher="Defense Information Systems Agency",
+        notes=(
+            "Official public source for DoD root/intermediate certificates (InstallRoot), end-user "
+            "PKI guidance, and browser/middleware configuration references."
+        ),
+    ),
+    SourceRef(
+        title="MilitaryCAC.com — CAC setup and troubleshooting",
+        url="https://www.militarycac.com",
+        publisher="MilitaryCAC.com (unofficial; maintained by a retired Army CW4)",
+        notes=(
+            "Widely used unofficial public reference for CAC reader, middleware, browser, and OS "
+            "troubleshooting on Windows and Mac. Cross-check against DoD Cyber Exchange before acting."
+        ),
+    ),
+    SourceRef(
+        title="DoD ID Card Office Online (RAPIDS) — certificate update and PIN reset locator",
+        url="https://idco.dmdc.osd.mil/idco/",
+        publisher="Defense Manpower Data Center",
+        notes="Official portal for updating CAC certificates, adding email certificates, and locating RAPIDS sites.",
     ),
 )
 
@@ -538,7 +607,7 @@ MOS_7200_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCWP 3-20 Aviation Operations",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899843/mcwp-3-20/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899781/mcwp-3-20/",
         publisher="United States Marine Corps",
         notes=(
             "MAGTF ACE doctrine defining the six functions of Marine aviation, MACCS agencies and roles, "
@@ -547,7 +616,7 @@ MOS_7200_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCWP 3-25 Control of Aircraft and Missiles",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899844/mcwp-3-25/",
+        url="https://www.marines.mil/Portals/1/Publications/MCWP%203-25%20Control%20of%20Aircraft%20and%20Missiles.pdf",
         publisher="United States Marine Corps",
         notes=(
             "MACCS operations doctrine covering TACC, DASC, MASS, TAOC employment and command relationships for ACE C2."
@@ -558,7 +627,7 @@ MOS_7200_REFERENCES: tuple[SourceRef, ...] = (
 MEDICAL_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCTP 3-40A Health Service Support",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899786/mctp-3-40a/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/4291835/mctp-3-40a/",
         publisher="United States Marine Corps",
         notes="Health-service-support planning and coordination reference.",
     ),
@@ -594,13 +663,13 @@ G9_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCWP 3-33.1 Marine Air-Ground Task Force Civil-Military Operations",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899782/mcwp-3-331/",
+        url="https://www.marines.mil/Portals/1/Publications/MCWP%203-33.1%20Marine%20Air-Ground%20Task%20Force%20Civil_Military%20Operations.pdf",
         publisher="United States Marine Corps",
         notes="Civil-military integration and external coordination reference.",
     ),
     SourceRef(
         title="MCRP 3-03A.2 MAGTF Civil-Military Operations Planning",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899779/mcrp-3-03a2/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1654458/mcrp-3-03a2/",
         publisher="United States Marine Corps",
         notes=(
             "Best current Marine planning source for G-9/CMO products across MCPP, "
@@ -609,7 +678,7 @@ G9_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCRP 3-03A.1 Civil Affairs Tactics, Techniques, and Procedures",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899778/mcrp-3-03a1/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/4076374/mcrp-3-03a1/",
         publisher="United States Marine Corps",
         notes=(
             "Civil reconnaissance, civil engagement, CIM, MARCIMS, network analysis, "
@@ -618,7 +687,7 @@ G9_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCWP 8-10 Information",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3077947/mcwp-8-10/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3712860/mcwp-8-10/",
         publisher="United States Marine Corps",
         notes=(
             "Generate, preserve, deny, project framework; Annex I and information-staff "
@@ -630,7 +699,7 @@ G9_REFERENCES: tuple[SourceRef, ...] = (
 SEL_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCO 5060.20 Marine Corps Drill and Ceremonies Manual",
-        url="https://www.marines.mil/Portals/1/Publications/MCO%205060.20_Enclosure%201_signed_EDD.pdf?ver=2019-06-05-105622-833",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1867417/mco-506020/",
         publisher="United States Marine Corps",
         notes="Primary drill, ceremonies, and military-ceremonial procedures reference.",
     ),
@@ -648,7 +717,7 @@ SEL_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCO 1020.34H Marine Corps Uniform Regulations",
-        url="https://www.marines.mil/portals/1/Publications/MCO%201020.34H%20v2.pdf?ver=20",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1559865/mco-102034h/",
         publisher="United States Marine Corps",
         notes="Uniform and appearance standards reference for ceremonies and formal events.",
     ),
@@ -755,8 +824,8 @@ PAO_REFERENCES: tuple[SourceRef, ...] = (
         ),
     ),
     SourceRef(
-        title="MCWP 3-33.3 Marine Corps Public Affairs",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899784/mcwp-3-333/",
+        title="MCTP 3-30F Marine Corps Public Affairs (formerly MCWP 3-33.3)",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899553/mctp-3-30f-formerly-mcwp-3-333/",
         publisher="United States Marine Corps",
         notes=(
             "PA/COMMSTRAT doctrine: media engagement, Annex F structure, community relations, "
@@ -768,7 +837,7 @@ PAO_REFERENCES: tuple[SourceRef, ...] = (
 FORCE_PROTECTION_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCO 5530.14A Marine Corps Physical Security Program Manual",
-        url="https://www.marines.mil/Portals/1/Publications/MCO%205530_14A.pdf",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899499/mco-553014a/",
         publisher="United States Marine Corps",
         notes=(
             "Primary Marine Corps physical-security and access-control baseline for protecting personnel, "
@@ -783,6 +852,12 @@ FORCE_PROTECTION_REFERENCES: tuple[SourceRef, ...] = (
             "Official message announcing site perimeter access-control policy and its relationship to the physical "
             "security program."
         ),
+    ),
+    SourceRef(
+        title="MCO 3302.1F Marine Corps Antiterrorism Program",
+        url="https://www.marines.mil/News/Messages/Messages-Display/Article/1824885/mco-33021f-marine-corps-antiterrorism-program/",
+        publisher="United States Marine Corps",
+        notes="FPCON measures, Random Antiterrorism Measures, ATO appointment, AT plan, and Level I training.",
     ),
     SourceRef(
         title="HQMC Physical Security",
@@ -916,7 +991,7 @@ INFANTRY_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCWP 3-10 MAGTF Ground Operations",
-        url="https://www.marines.mil/Portals/1/Publications/MCWP%203-10.pdf",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899778/mcwp-3-10/",
         publisher="United States Marine Corps",
         notes="Keystone ground-combat doctrine reference for planning and employing the GCE.",
     ),
@@ -1000,7 +1075,7 @@ STAFF_PROCESS_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCTP 3-30A Command and Staff Actions",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2325814/mctp-3-30a/",
         publisher="United States Marine Corps",
         notes=(
             "Staff-action and command-post rhythm reference for running estimates, battle rhythm, and follow-through."
@@ -1032,7 +1107,7 @@ WRITING_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCO 5216.20B Marine Corps Supplement to the Department of the Navy Correspondence Manual",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2869007/mco-521620b/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2795618/mco-521620b-wadmin-ch-4/",
         publisher="United States Marine Corps",
         notes="Formal correspondence, structure, and routing reference for official-style products.",
     ),
@@ -1066,7 +1141,7 @@ JOINT_FRAME_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCTP 3-30A Command and Staff Actions",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2325814/mctp-3-30a/",
         publisher="United States Marine Corps",
         notes="Staff-action reference for coordination, command relationships, and disciplined follow-through.",
     ),
@@ -1087,7 +1162,7 @@ OPORD_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCTP 3-30A Command and Staff Actions",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899747/mctp-3-30a/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/2325814/mctp-3-30a/",
         publisher="United States Marine Corps",
         notes="Command-and-staff action reference for order production and follow-through.",
     ),
@@ -1127,7 +1202,7 @@ CORRESPONDENCE_REFERENCES: tuple[SourceRef, ...] = (
 UNIFORM_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
         title="MCO 1020.34H Marine Corps Uniform Regulations",
-        url="https://www.marines.mil/portals/1/Publications/MCO%201020.34H%20v2.pdf?ver=20",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/1559865/mco-102034h/",
         publisher="United States Marine Corps",
         notes="Primary public uniform standards reference.",
     ),
@@ -1198,8 +1273,8 @@ MARADMIN_REFERENCES: tuple[SourceRef, ...] = (
 
 ORM_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
-        title="MCO 5100.29C Marine Corps Safety Management System",
-        url="https://www.marines.mil/News/Publications/MCPEL/Search/5100/",
+        title="MCO 5100.29C Volumes 1-9 w/CH-2 Marine Corps Safety Management System",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/3882066/mco-510029c/",
         publisher="United States Marine Corps",
         notes="Primary public safety-management and ORM reference family.",
     ),
@@ -1293,7 +1368,7 @@ MAP_REFERENCES: tuple[SourceRef, ...] = (
     # --- Topographic & Elevation ---
     SourceRef(
         title="USGS The National Map",
-        url="https://www.usgs.gov/the-national-map",
+        url="https://www.usgs.gov/programs/national-geospatial-program/national-map",
         publisher="United States Geological Survey",
         notes="Primary public source for elevation, hydrography, structures, transport layers, and topographic context.",
     ),
@@ -1426,18 +1501,21 @@ MAP_REFERENCES: tuple[SourceRef, ...] = (
         notes="High-resolution LiDAR and DEM data. Useful for detailed terrain analysis and slope/viewshed modeling.",
     ),
     SourceRef(
-        title="Fatmap / Strava Heatmap (terrain)",
-        url="https://www.fatmap.com/",
-        publisher="Strava / Fatmap",
-        notes="3D terrain visualization for mountainous/rugged areas. Activity heatmaps show human movement patterns.",
+        title="Strava Global Heatmap (terrain and movement)",
+        url="https://www.strava.com/heatmap",
+        publisher="Strava",
+        notes=(
+            "Public activity heatmap showing where people actually move on trails, roads, and terrain "
+            "(Fatmap was folded into Strava in 2024). Use for trafficability cues, never for tracking individuals."
+        ),
     ),
 )
 
 
 ARTILLERY_REFERENCES: tuple[SourceRef, ...] = (
     SourceRef(
-        title="MCWP 3-16 Fire Support Coordination in the Ground Combat Element",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899837/mcwp-3-16/",
+        title="MCTP 3-10F Fire Support Coordination in the Ground Combat Element (formerly MCWP 3-16)",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899543/mctp-3-10f-formerly-mcwp-3-16/",
         publisher="United States Marine Corps",
         notes=(
             "Core doctrine for fire support coordination, the FSCC, and fire support planning "
@@ -1446,15 +1524,18 @@ ARTILLERY_REFERENCES: tuple[SourceRef, ...] = (
     ),
     SourceRef(
         title="MCDP 3 Expeditionary Operations",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899543/mcdp-3/",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899839/mcdp-3/",
         publisher="United States Marine Corps",
         notes="Frames fire support and fires integration within the broader expeditionary context.",
     ),
     SourceRef(
-        title="MCWP 3-31 MAGTF Fires",
-        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/899845/mcwp-3-31/",
+        title="MCWP 3-31 MAGTF Fires and Effects (May 2024)",
+        url="https://www.marines.mil/News/Publications/MCPEL/Electronic-Library-Display/Article/900549/mcwp-3-31/",
         publisher="United States Marine Corps",
-        notes="MAGTF fires doctrine covering artillery, NSFS, and air-delivered fires integration.",
+        notes=(
+            "Current MAGTF fires and effects doctrine — targeting, fire support coordination, "
+            "FSCMs, and integration of surface, air-delivered, and naval fires."
+        ),
     ),
     SourceRef(
         title="Training Command Mission",

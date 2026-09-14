@@ -16,6 +16,24 @@ SMCR Staff AI is a local command-post dashboard that holds context between duty 
 
 **If you're a staff officer (S-1 through S-6):**
 - Your section notes, priority stack, and outstanding items are waiting for you when you log in — no "okay so where were we" conversation at the start of drill
+- **Round table** (AI page → Round table tab): drop in a SITREP, scenario, training idea, or staff question and
+  pick the seats (full staff, training team, command team, or auto by topic). If an external AI is configured on
+  the server (`LLM_API_KEY`), every seat answers live after you approve the outbound preview and the Chief of
+  Staff synthesizes. If not, the tab builds a **staff call packet** — your text plus each seat's scope, standing
+  questions, products, and doctrine notes — and says plainly that no analysis happened. Copy it into Claude,
+  ChatGPT, or Gemini (or Claude Code with this repo open) and the AI convenes the staff. Save the packet to
+  Drafted files, then to a project folder, so your AI can find it later.
+- **Automations** (AI page → Automations tab): set up your Chief of Staff once, then build your own routines —
+  a post-drill admin sweep, a MARADMIN watch, a range day package — from templates or blank. Each saves
+  locally, renders into a copy-paste standing-instruction block for any chatbot, and each run wraps your
+  input into a packet (optionally saved to Drafted files). The app stores and renders; your AI executes.
+- **Combos** (AI page → Combos tab): describe a task once, then build a packet for a pre-set chain of agents;
+  your AI runs them in order, each reading the previous one's output.
+- **Doctrine notes** on every agent card (AI page → Agents → + Notes): the publications, rules of thumb, and
+  reserve-specific facts the agent works from, with a one-click copy so you can paste the same role into any
+  chatbot.
+- The app's agents are templates: they organize a seat's lens and doctrine. They never analyze your situation.
+  The analysis is always the AI you bring (an external key, your chatbot, or Claude Code).
 - MARADMIN and public watch feeds summarized in one lane so you're not digging through email chains to find the one message that affects your section
 - Planning scaffolds for battle rhythm, drill prep, and section products that follow the standard SMCR format
 

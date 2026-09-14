@@ -6,11 +6,9 @@ from app.schemas.agents import AgentMetadata, AgentRunResponse, Confidence
 from app.schemas.fitness import FitnessObjective, UnitPtPlan, UnitPtPlanRequest
 from app.services.agents.base import Agent, AgentContext
 from app.services.agents.source_refs import (
-    FAMILY_READINESS_REFERENCES,
     FINANCIAL_READINESS_REFERENCES,
     FITNESS_REFERENCES,
     GTCC_REFERENCES,
-    WARRIOR_MONK_REFERENCES,
     SourceRef,
     citation_titles,
     source_trust_markers,
@@ -45,45 +43,6 @@ class ReadinessDevelopmentAgent(Agent):
             confidence=Confidence.medium,
             follow_up_questions=self.questions,
         )
-
-
-def build_family_deployment_readiness_agent() -> Agent:
-    return ReadinessDevelopmentAgent(
-        metadata=AgentMetadata(
-            id="family-deployment-readiness-advisor",
-            name="Family & Deployment Readiness Advisor",
-            description=("Builds household-readiness checklists for extended AT through long overseas absences."),
-            domain="family and deployment readiness",
-            intended_users=["reserve Marines", "service members", "unit leaders"],
-            allowed_sources=[ref.title for ref in FAMILY_READINESS_REFERENCES],
-            disallowed_inputs=[
-                "SSNs or dependent identity records",
-                "medical records or diagnoses",
-                "legal-document contents",
-                "mission details or precise movement and return details",
-                "account credentials or financial account numbers",
-            ],
-            system_prompt=(
-                "Tailor local checklists using duration and broad household needs. Track actions, not sensitive "
-                "contents. Route legal, medical, financial, and command determinations to qualified support."
-            ),
-        ),
-        references=FAMILY_READINESS_REFERENCES,
-        answer=(
-            "Family and deployment readiness advisory draft.\n\n"
-            "Use the Bench+Files readiness checklist to track unit coordination, legal-assistance review, "
-            "power of attorney questions for qualified counsel, DEERS and ID-card checks, public or "
-            "user-approved contacts, household continuity, communication, OPSEC, and reintegration. "
-            "The checklist can scale from extended AT to approximately a year away.\n\n"
-            "Do not enter mission, movement, SSN, medical, account, or legal-document details.\n\n"
-            "DRAFT — Verify all references against current official sources before acting."
-        ),
-        questions=[
-            "What is the approximate duration or absence window?",
-            "Which broad household responsibilities require continuity?",
-            "Which checklist areas are already complete?",
-        ],
-    )
 
 
 def build_gtcc_advisor_agent() -> Agent:
@@ -321,46 +280,3 @@ def _render_unit_pt_plan(plan: UnitPtPlan, assumptions: list[str]) -> str:
         ]
     )
     return "\n".join(lines)
-
-
-def build_warrior_monk_agent() -> Agent:
-    return ReadinessDevelopmentAgent(
-        metadata=AgentMetadata(
-            id="warrior-monk",
-            name="Warrior-Monk",
-            description="A philosophical reflection partner grounded in MCDP 1, Leading Marines, and MCU resources.",
-            domain="professional reflection and moral purpose",
-            intended_users=["Marines", "leaders", "PME facilitators"],
-            allowed_sources=[ref.title for ref in WARRIOR_MONK_REFERENCES],
-            disallowed_inputs=[
-                "clinical counseling",
-                "religious direction",
-                "legal findings",
-                "disciplinary decisions",
-            ],
-            system_prompt=(
-                "Be austere, candid, historically literate, and humane: Marcus Aurelius meets General Mattis in tone, "
-                "without impersonating either or inventing quotes. Focus on moral purpose, disciplined reflection, and action."
-            ),
-        ),
-        references=WARRIOR_MONK_REFERENCES,
-        answer=(
-            "Warrior-Monk reflection draft.\n\n"
-            "Strip the problem to what you control, what duty requires, and what fear or vanity is trying to disguise. "
-            "MCDP 1 treats uncertainty, friction, and human will as permanent features—not excuses. Leading Marines asks "
-            "for moral character expressed through conduct.\n\n"
-            "Reflection drill:\n"
-            "- Name the hard fact without drama.\n"
-            "- Separate obligation from appetite and reputation.\n"
-            "- Identify the Marine or institution that bears the cost of delay.\n"
-            "- Choose the smallest honorable action that changes reality today.\n"
-            "- Set a time to examine the result without self-deception.\n\n"
-            "For command programs, counseling mechanics, family support, or the full six MLD areas, hand this to the "
-            "Leadership Advisor. This lane is reflection, not therapy, chaplaincy, legal advice, or command authority."
-        ),
-        questions=[
-            "What fact are you reluctant to state plainly?",
-            "Which duty is actually yours, and what is outside your control?",
-            "What concrete action would make this reflection useful by tomorrow?",
-        ],
-    )
