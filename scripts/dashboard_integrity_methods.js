@@ -124,8 +124,9 @@
   }
   _writeDocument(url, payload, method) {
     const key = this.userKey, version = this._modeVersion;
-    const request = { url, payload, method: method || "PATCH", headers: this._apiHeaders({ "Content-Type": "application/json" }) };
     this._failedDocumentWrites = this._failedDocumentWrites || {};
+    payload = { ...((this._failedDocumentWrites[url] || {}).payload || {}), ...payload };
+    const request = { url, payload, method: method || "PATCH", headers: this._apiHeaders({ "Content-Type": "application/json" }) };
     this._documentWrites = this._documentWrites || {};
     this._failedDocumentWrites[url] = request;
     this._documentDirty = true;
