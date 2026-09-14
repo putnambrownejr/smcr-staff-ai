@@ -1,5 +1,7 @@
+import os
 import uuid
 from collections.abc import Generator
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -188,6 +190,11 @@ def test_mobile_lanes_do_not_overflow(personal_page: Any) -> None:
         page.get_by_role("button", name=lane, exact=True).click()
         width = page.evaluate("document.documentElement.scrollWidth")
         assert width <= 391, (lane, width)
+        evidence = os.getenv("SMCR_E2E_SCREENSHOT_DIR")
+        if evidence and lane in {"Overview", "Workspace"}:
+            folder = Path(evidence)
+            folder.mkdir(parents=True, exist_ok=True)
+            page.screenshot(path=str(folder / (lane.lower() + "-390.png")))
 
 
 @pytest.mark.e2e
@@ -217,12 +224,14 @@ def test_staff_notes_persist_and_retry(personal_page: Any) -> None:
 
 
 @pytest.mark.e2e
-def test_notebook_failed_create_retains_text(personal_page: Any) -> None:
+@pytest.mark.parametrize("start_explicitly", [True, False])
+def test_notebook_failed_create_retains_text(personal_page: Any, start_explicitly: bool) -> None:
     from playwright.sync_api import expect
 
     page = personal_page
     page.get_by_role("button", name="Workspace", exact=True).click()
-    page.get_by_role("button", name="+ New note", exact=True).click()
+    if start_explicitly:
+        page.get_by_role("button", name="+ New note", exact=True).click()
     title = page.get_by_placeholder("Note title", exact=True)
     body = page.get_by_placeholder("Write anything — instructions, a combo, a running log…", exact=True)
     title.fill("Synthetic notebook recovery")
@@ -239,3 +248,31 @@ def test_notebook_failed_create_retains_text(personal_page: Any) -> None:
     page.get_by_role("button", name="Workspace", exact=True).click()
     expect(title).to_have_value("Synthetic notebook recovery")
     expect(body).to_have_value("Keep the latest text")
+
+
+@pytest.mark.e2e
+def test_template_draft_save_failure_keeps_editor_open(personal_page: Any, e2e_base_url: str) -> None:
+    from playwright.sync_api import expect
+
+    page = personal_page
+    page.get_by_role("button", name="Bench / Files", exact=True).click()
+    page.get_by_role("button", name="Operations Order (OPORD) system", exact=True).click()
+    page.get_by_role("button", name="Start new draft", exact=True).click()
+    content = page.get_by_placeholder("Edit this scaffold", exact=True)
+    expect(content).to_be_visible()
+    status = page.get_by_label("Document save status", exact=True).get_by_role("status")
+    expect(status).to_have_text("Document edits saved")
+    page.route("**/user-docs/generations/*/*", lambda route: route.fulfill(status=500, body="unavailable") if route.request.method == "PATCH" else route.continue_())
+    content.fill("Synthetic latest template edits")
+    page.get_by_role("button", name="Save", exact=True).click()
+    expect(status).to_contain_text("Could not save document edits")
+    expect(content).to_have_value("Synthetic latest template edits")
+    page.unroute("**/user-docs/generations/*/*")
+    page.get_by_role("button", name="Save", exact=True).click()
+    expect(content).to_have_count(0)
+    user_key = page.evaluate("localStorage.getItem('smcr_user_key')")
+    endpoint = e2e_base_url + "/user-docs/generations/" + user_key
+    docs = page.request.get(endpoint).json()
+    assert len(docs) == 1
+    assert docs[0]["fields"]["data"]["content"] == "Synthetic latest template edits"
+    page.request.delete(endpoint + "/" + docs[0]["id"])

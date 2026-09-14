@@ -1,5 +1,7 @@
 /* Compact layouts preserve access to controls instead of clipping page overflow. */
 *, *::before, *::after { box-sizing: border-box; }
+[aria-label="Workspace save status"], [aria-label="Document save status"], [aria-label="Staff editor save status"] { font: 12px/1.4 system-ui; color: #aab4bf; }
+[aria-label="Workspace save status"] button, [aria-label="Document save status"] button, [aria-label="Staff editor save status"] button { border: 1px solid #526579; border-radius: 5px; color: #eef2f6; background: #1a2027; padding: 6px 10px; cursor: pointer; font: inherit; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid #91c9ed; outline-offset: 3px; }
 @media (max-width: 640px) {
   body { margin: 0; }

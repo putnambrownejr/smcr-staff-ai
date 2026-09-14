@@ -5,6 +5,17 @@
     if (key) headers["X-Local-API-Key"] = key;
     return headers;
   }
+  async closeWorkflowEditor() {
+    const id = this.state.workflowEditorId;
+    if (!id) return;
+    if (this._isPending(id)) {
+      if (!await this._createPendingDocument("generations", id)) return;
+    } else {
+      if (this._generationSaveTimers) { clearTimeout(this._generationSaveTimers[id]); delete this._generationSaveTimers[id]; }
+      if (!await this._saveGeneration(id)) return;
+    }
+    this.setState({ workflowEditorId: null });
+  }
   toggleBenchAdd(idx) {
     return () => {
       const card = this.state.benchCards[idx];
@@ -191,8 +202,11 @@
   }
   saveNote() {
     return async () => {
-      const id = this.state.activeNoteId;
-      if (!id) return false;
+      let id = this.state.activeNoteId;
+      if (!id) {
+        id = "pending-" + crypto.randomUUID();
+        this.setState((s) => ({ notes: [{ id, title: s.draftTitle || "Untitled note", body: s.draftBody, archived: false }, ...s.notes], activeNoteId: id }));
+      }
       const key = this.userKey, version = this._modeVersion;
       const title = this.state.draftTitle || "Untitled note", body = this.state.draftBody;
       const record = this.state.notes.find((n) => n.id === id);

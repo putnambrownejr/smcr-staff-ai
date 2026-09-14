@@ -60,6 +60,15 @@ _RESOLVE_LINE = "    if (!this.userKey) this.userKey = this._resolveUserKey();\n
 
 
 def finish_repairs(inner: str) -> str:
+    inner = inner.replace('this._editorDirty || this._documentDirty)', 'this._editorDirty || this._documentDirty || this._noteDirty)')
+    if 'editorRetryNeeded:' not in inner:
+        inner = inner.replace('      profilePasskey: this.state.profilePasskey,', '      editorRetryNeeded: /Could not|unavailable/.test(this.state.editorSaveStatus || ""),\n      documentSaveVisible: !!this.state.documentSaveStatus,\n      documentRetryNeeded: /Could not/.test(this.state.documentSaveStatus || ""),\n      profilePasskey: this.state.profilePasskey,', 1)
+    if '<sc-if value="{{ editorRetryNeeded }}">' not in inner:
+        inner = re.sub(r'(<button aria-label="Retry workspace save / load"[^>]*>.*?</button>)', r'<sc-if value="{{ editorRetryNeeded }}">\1</sc-if>', inner, flags=re.S)
+    if '<sc-if value="{{ documentRetryNeeded }}">' not in inner:
+        inner = re.sub(r'(<button type="button" sc-camel-on-click="{{ retryDocumentSaves }}">.*?</button>)', r'<sc-if value="{{ documentRetryNeeded }}">\1</sc-if>', inner, count=1, flags=re.S)
+    if '<sc-if value="{{ documentSaveVisible }}">' not in inner:
+        inner = re.sub(r'(<div aria-label="Document save status"[^\n]*</div>)', r'<sc-if value="{{ documentSaveVisible }}">\1</sc-if>', inner, count=1)
     for field, call in (("_fitrepSaveTimers", "this._saveFitrep(id)"), ("_generationSaveTimers", "this._saveGeneration(id)"), ("_agentNoteSaveTimers", "this._saveAgentNote(kind, id)")):
         key = "key" if field == "_agentNoteSaveTimers" else "id"
         old = f'this.{field}[{key}] = setTimeout(() => {call}, 800);'
