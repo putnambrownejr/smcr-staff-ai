@@ -55,7 +55,8 @@ def test_watch_shows_per_feed_actions_and_dated_source_updates(browser_page: Any
     _expect(page.get_by_role("heading", name="Connected feeds", level=3)).to_be_visible()
     connected_feeds = page.get_by_role("heading", name="Connected feeds", level=3).locator("xpath=..")
     _expect(connected_feeds.get_by_role("button", name="Refresh", exact=True)).to_have_count(2)
-    _expect(page.get_by_role("button", name="Open source", exact=True)).to_have_count(1)
+    # NAVADMIN, ALNAV, and the DoD source are portal links, not refreshable feeds.
+    _expect(connected_feeds.get_by_role("button", name="Open source", exact=True)).to_have_count(3)
     _expect(page.get_by_role("button", name="Manual", exact=True)).to_be_disabled()
     source_updates = page.get_by_role("heading", name="Source updates", level=3).locator("xpath=..")
     _expect(source_updates).to_contain_text(re.compile(r"(?:Published|Detected) [A-Z]{3} \d{1,2}, \d{4}"))

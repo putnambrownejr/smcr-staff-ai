@@ -60,12 +60,24 @@ _RESOLVE_LINE = "    if (!this.userKey) this.userKey = this._resolveUserKey();\n
 
 
 def finish_repairs(inner: str) -> str:
+    inner = re.sub(r'<sc-raw-select value="{{ f.type }}".*?</sc-raw-select>', '<span>Source URL</span>', inner, count=1, flags=re.S)
+    for method, category, next_method in (("createWorkflowDoc", "generations", "linkCounselingToFitrep"), ("newFitrep", "fitreps", "updateFitrepField")):
+        start = inner.index(f"  {method}(")
+        end = inner.index(f"  {next_method}(", start)
+        block = inner[start:end]
+        if '      fetch(' in block:
+            block = block[:block.index('      fetch(')] + f'      this._createPendingDocument("{category}", tempId);\n    }};\n  }}\n'
+            inner = inner[:start] + block + inner[end:]
+    inner = inner.replace('>Retry workspace save / load</button>', '>{{ retryEditorLabel }}</button>')
+    if 'retryEditorLabel: "Retry workspace save / load"' not in inner:
+        inner = inner.replace('      profilePasskey: this.state.profilePasskey,', '      retryEditorLabel: "Retry workspace save / load",\n      profilePasskey: this.state.profilePasskey,', 1)
     for field in ("Title", "Body"):
         old = f'on{field}Change: (e) => this.setState({{ draft{field}: e.target.value }}),'
         new = f'on{field}Change: (e) => {{ this._noteDirty = true; this._documentDirty = true; this.setState({{ draft{field}: e.target.value, documentSaveStatus: "Unsaved note. Choose Save to keep your changes." }}); }},'
         inner = inner.replace(old, new)
     if 'aria-label="Staff editor save status"' not in inner:
         inner = inner.replace('<textarea rows="8" value="{{ staffLaneNote }}"', '<div aria-label="Staff editor save status"><span role="status">{{ editorSaveStatus }}</span><button type="button" sc-camel-on-click="{{ retryEditorSave }}">Retry workspace save / load</button></div>\n            <textarea rows="8" value="{{ staffLaneNote }}"', 1)
+    inner = inner.replace('<button type="button" sc-camel-on-click="{{ retryEditorSave }}">', '<button aria-label="Retry workspace save / load" type="button" sc-camel-on-click="{{ retryEditorSave }}">')
     inner = hoist_identity_snapshots(inner)
     if 'documentSaveStatus: this.state.documentSaveStatus' not in inner:
         inner = inner.replace('      profilePasskey: this.state.profilePasskey,', '      documentSaveStatus: this.state.documentSaveStatus || "",\n      retryDocumentSaves: () => this.retryDocumentSaves(),\n      profilePasskey: this.state.profilePasskey,', 1)

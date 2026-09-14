@@ -5,6 +5,25 @@
     if (key) headers["X-Local-API-Key"] = key;
     return headers;
   }
+  updateActionField(id, field) {
+    return (event) => {
+      const value = event.target.value;
+      this.setState((s) => ({ actions: s.actions.map((a) => a.id === id ? { ...a, [field]: value } : a) }));
+      if (this._isPending(id)) return;
+      const apiField = field === "due" ? "suspense_date" : field;
+      this._writeDocument("/actions/" + encodeURIComponent(id), { [apiField]: field === "due" && (!value || value === "unscheduled") ? null : value });
+    };
+  }
+  updateFeedField(id, field) {
+    return (event) => {
+      const feed = this.state.feeds.find((f) => f.id === id);
+      if (!feed || !feed.isReal) { window.alert("Built-in feed settings are maintained by the app. Add a custom feed for your own source."); return; }
+      const value = event.target.value;
+      this.setState((s) => ({ feeds: s.feeds.map((f) => f.id === id ? { ...f, [field]: value } : f) }));
+      const apiField = field === "meta" ? "category" : field === "trust" ? "trust_level" : field;
+      this._writeDocument("/custom-watch-feeds/" + encodeURIComponent(id), { [apiField]: field === "trust" ? this._feedTrustToLevel(value) : value });
+    };
+  }
   _writeDocument(url, payload, method) {
     const key = this.userKey, version = this._modeVersion;
     const request = { url, payload, method: method || "PATCH", headers: this._apiHeaders({ "Content-Type": "application/json" }) };
@@ -31,7 +50,38 @@
   }
   async retryDocumentSaves() {
     const writes = Object.values(this._failedDocumentWrites || {});
-    return (await Promise.all(writes.map((r) => this._writeDocument(r.url, r.payload, r.method)))).every(Boolean);
+    const pending = [
+      ...this.state.workflowDocs.filter((d) => this._isPending(d.id)).map((d) => this._createPendingDocument("generations", d.id)),
+      ...this.state.fitreps.filter((d) => this._isPending(d.id)).map((d) => this._createPendingDocument("fitreps", d.id)),
+    ];
+    if (this._noteDirty) pending.push(this.saveNote()());
+    return (await Promise.all([...pending, ...writes.map((r) => this._writeDocument(r.url, r.payload, r.method))])).every(Boolean);
+  }
+  async _createPendingDocument(category, id) {
+    this._pendingCreates = this._pendingCreates || new Set();
+    if (this._pendingCreates.has(id)) return false;
+    const field = category === "fitreps" ? "fitreps" : "workflowDocs";
+    const active = category === "fitreps" ? "activeFitrepId" : "workflowEditorId";
+    const doc = this.state[field].find((d) => d.id === id);
+    if (!doc) return false;
+    const key = this.userKey, version = this._modeVersion;
+    this._pendingCreates.add(id);
+    this._documentDirty = true;
+    try {
+      const payload = category === "fitreps" ? this._fitrepPayload(doc) : this._generationPayload(doc);
+      const response = await fetch("/user-docs/" + category + "/" + encodeURIComponent(key), { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify(payload) });
+      if (!response.ok) throw new Error("create failed");
+      const saved = await response.json();
+      if (key !== this.userKey || version !== this._modeVersion) return true;
+      this.setState((s) => ({
+        [field]: s[field].map((d) => d.id === id ? { ...d, id: saved.id, path: "User Docs/" + (category === "fitreps" ? "FitReps" : "Generations") + "/" + saved.id + ".md" } : d),
+        [active]: s[active] === id ? saved.id : s[active],
+      }));
+      return category === "fitreps" ? await this._saveFitrep(saved.id) : await this._saveGeneration(saved.id);
+    } catch (err) {
+      if (key === this.userKey && version === this._modeVersion) this.setState({ documentSaveStatus: "Could not create document. Your edits are retained; retry document saves." });
+      return false;
+    } finally { this._pendingCreates.delete(id); }
   }
   _saveFitrep(id) {
     const record = this.state.fitreps.find((f) => f.id === id);
