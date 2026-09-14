@@ -3,6 +3,8 @@ from typing import Any
 
 import pytest
 
+from app.schemas.source_updates import DocumentationUpdateCandidate, UpdateTriggerType
+
 
 def _expect(locator: Any) -> Any:
     from playwright.sync_api import expect
@@ -10,7 +12,7 @@ def _expect(locator: Any) -> Any:
     return expect(locator)
 
 
-def _open_lane(page: Any, button_name: str, heading_name: str | None = None) -> None:
+def _open_lane(page: Any, button_name: str, heading_name: str | re.Pattern[str] | None = None) -> None:
     page.get_by_role("button", name=button_name, exact=True).click()
     _expect(page.get_by_role("heading", name=heading_name or button_name, level=2)).to_be_visible()
 
@@ -18,8 +20,8 @@ def _open_lane(page: Any, button_name: str, heading_name: str | None = None) -> 
 @pytest.mark.e2e
 def test_current_dashboard_lane_navigation(browser_page: Any) -> None:
     page = browser_page
-    lanes = [
-        ("Overview", "Good evening, Capt Schmuckatelli"),
+    lanes: list[tuple[str, str | re.Pattern[str]]] = [
+        ("Overview", re.compile(r"^Good evening, .+")),
         ("Watch", "Watch"),
         ("Bench / Files", "Bench / Files"),
         ("Workspace", "Workspace"),
@@ -35,12 +37,26 @@ def test_current_dashboard_lane_navigation(browser_page: Any) -> None:
 @pytest.mark.e2e
 def test_watch_shows_per_feed_actions_and_dated_source_updates(browser_page: Any) -> None:
     page = browser_page
+    candidate = DocumentationUpdateCandidate(
+        candidate_id="e2e-source-update",
+        tracked_title="Fictional source review fixture",
+        trigger_type=UpdateTriggerType.manual_review,
+    )
+    def with_source_update(route: Any) -> None:
+        response = route.fetch()
+        payload = response.json()
+        payload["documentation_updates"] = [candidate.model_dump(mode="json")]
+        route.fulfill(response=response, json=payload)
+
+    page.route("**/dashboard/data/*", with_source_update)
+    page.reload(wait_until="domcontentloaded")
     _open_lane(page, "Watch")
 
     _expect(page.get_by_role("heading", name="Connected feeds", level=3)).to_be_visible()
     connected_feeds = page.get_by_role("heading", name="Connected feeds", level=3).locator("xpath=..")
     _expect(connected_feeds.get_by_role("button", name="Refresh", exact=True)).to_have_count(2)
-    _expect(page.get_by_role("button", name="Open source", exact=True)).to_have_count(1)
+    # NAVADMIN, ALNAV, and the DoD source are portal links, not refreshable feeds.
+    _expect(connected_feeds.get_by_role("button", name="Open source", exact=True)).to_have_count(3)
     _expect(page.get_by_role("button", name="Manual", exact=True)).to_be_disabled()
     source_updates = page.get_by_role("heading", name="Source updates", level=3).locator("xpath=..")
     _expect(source_updates).to_contain_text(re.compile(r"(?:Published|Detected) [A-Z]{3} \d{1,2}, \d{4}"))

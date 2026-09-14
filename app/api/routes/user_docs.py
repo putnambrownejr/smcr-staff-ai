@@ -103,4 +103,4 @@ def save_user_doc_to_project(
         path = store.save_to_project(category, user_key, doc_id, body.project)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return SaveToProjectResponse(path=path.as_posix(), message=f"Saved to {body.project}.")
+    return SaveToProjectResponse(path=path.as_posix(), word_path=path.with_suffix(".docx").as_posix(), message=f"Saved Markdown and Word files to {body.project}.")

@@ -1,6 +1,8 @@
 import hashlib
+import os
 import re
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from app.core.security import DEFAULT_WARNINGS
 from app.schemas.session import UserSessionHandoff
@@ -19,7 +21,19 @@ class SessionHandoffStore:
         handoff.warnings = sorted(
             set([*handoff.warnings, *DEFAULT_WARNINGS, "Store minimum required user context only."])
         )
-        self._path(handoff.user_key).write_text(handoff.model_dump_json(indent=2), encoding="utf-8")
+        # Publish only a completely written file. A failed save must leave the
+        # previous handoff readable rather than truncating the user's continuity.
+        temporary: Path | None = None
+        try:
+            with NamedTemporaryFile(mode="w", encoding="utf-8", dir=self.root_dir, suffix=".tmp", delete=False) as output:
+                temporary = Path(output.name)
+                output.write(handoff.model_dump_json(indent=2))
+                output.flush()
+                os.fsync(output.fileno())
+            temporary.replace(self._path(handoff.user_key))
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
         return handoff
 
     def get(self, user_key: str) -> UserSessionHandoff | None:

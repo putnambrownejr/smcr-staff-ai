@@ -41,6 +41,7 @@ class SaveToProjectRequest(BaseModel):
 
 class SaveToProjectResponse(BaseModel):
     path: str
+    word_path: str
     message: str
 
 

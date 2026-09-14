@@ -1,14 +1,23 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
       - main
+      - 'codex/release-*'
 
 jobs:
   tests-and-types:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Check out repository
@@ -21,7 +30,10 @@ jobs:
           enable-cache: true
 
       - name: Install
-        run: uv sync --frozen --extra dev
+        run: uv sync --frozen --extra dev --extra cloud
+
+      - name: Check public publication snapshot
+        run: uv run --frozen --extra cloud python scripts/build_public_catalog.py --check
 
       - name: Install Playwright browsers
         run: uv run --frozen playwright install chromium --with-deps
@@ -41,6 +53,17 @@ jobs:
 
       - name: Run dashboard browser tests
         run: uv run --frozen pytest tests/e2e/ -m e2e -q
+
+      - name: Run public library browser tests
+        run: uv run --frozen --extra cloud pytest tests/public_library/ -m e2e -q
+
+      - name: Build public library image
+        if: runner.os == 'Linux'
+        run: docker build -f Dockerfile.public -t smcr-public-library:ci .
+
+      - name: Build local dashboard image
+        if: runner.os == 'Linux'
+        run: docker build -t smcr-staff-ai:ci .
 
       - name: Run type checks
         run: uv run --frozen mypy app tests

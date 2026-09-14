@@ -15,7 +15,7 @@ from app.schemas.external_processing import (
     ExternalProcessingPreview,
 )
 from app.schemas.scenario_handoff import G9ScenarioOutput
-from app.services.agents.base import AgentContext
+from app.services.agents.base import DRAFT_NOTICE, AgentContext
 from app.services.external_processing.preflight import (
     ExternalProcessingApprovalRequiredError,
     ExternalProcessingPreflightService,
@@ -256,7 +256,7 @@ class TestScenarioAgents:
 
         response = agents["staff-g9"].run(SCENARIO_INPUT, AgentContext())
 
-        assert response.answer == "LLM-populated G-9 civil estimate"
+        assert response.answer == f"LLM-populated G-9 civil estimate\n\n{DRAFT_NOTICE}"
         assert response.scenario_output_status is ScenarioOutputStatus.validated
         assert response.scenario_output is not None
 
@@ -319,7 +319,7 @@ class TestScenarioAgents:
 
         response = agents["staff-g9"].run(f"{SCENARIO_INPUT} COMSEC training reference.", AgentContext())
 
-        assert response.answer == "Acknowledged training assessment"
+        assert response.answer == f"Acknowledged training assessment\n\n{DRAFT_NOTICE}"
 
     @patch("app.services.llm_client.generate_scenario_response")
     def test_no_llm_returns_template_without_fake_handoff(self, mock_generate: MagicMock) -> None:

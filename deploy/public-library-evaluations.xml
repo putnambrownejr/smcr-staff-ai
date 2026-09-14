@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Manual host acceptance prompts for this fixed snapshot. Do not use for current-policy evaluation. -->
+<evaluation>
+  <qa_pair><question>Find and read the scaffold for reviewing a completed training event, then identify the library ID of the product that turns lessons into assigned improvements.</question><answer>sys-aar</answer></qa_pair>
+  <qa_pair><question>Compare the library's warning order and fragmentary order scaffolds. Which item's ID is for changes to an existing order?</question><answer>sys-frago</answer></qa_pair>
+  <qa_pair><question>Find the full five-paragraph order scaffold and inspect its source-file provenance. Return its catalog ID.</question><answer>sys-opord</answer></qa_pair>
+  <qa_pair><question>Find the template for a commander's decision, read the scaffold, and distinguish it from a general command update. Return the decision product's ID.</question><answer>sys-decision-brief</answer></qa_pair>
+  <qa_pair><question>Find and read the correspondence template for a formal naval letter. Return the filename recorded in its provenance.</question><answer>data/seed/system_templates/sys-naval-letter.yaml</answer></qa_pair>
+  <qa_pair><question>Find and inspect both prompt packs. Which one asks the AI to distinguish a search index from a verified publication?</question><answer>pack-source-checking</answer></qa_pair>
+  <qa_pair><question>Find and inspect both prompt packs. Which one directs the AI to ask about the product, audience, and decision before drafting?</question><answer>pack-staff-writing</answer></qa_pair>
+  <qa_pair><question>Read a template and a reference entry. What verification_status value do both use, regardless of their source fingerprints?</question><answer>not_live_verified</answer></qa_pair>
+  <qa_pair><question>Find the library's official MCDP 1 reference and retrieve it. Return the publisher shown in its metadata.</question><answer>United States Marine Corps</answer></qa_pair>
+  <qa_pair><question>Browse every template page, read a representative scaffold, and count how many distinct published templates are available.</question><answer>8</answer></qa_pair>
+</evaluation>

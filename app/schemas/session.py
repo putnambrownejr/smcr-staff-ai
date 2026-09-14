@@ -45,6 +45,19 @@ class RecurringCheck(BaseModel):
     notes: str | None = None
 
 
+class DrillHandoffEntry(BaseModel):
+    id: str = Field(min_length=1, max_length=100)
+    label: str = Field(default="Drill handoff", max_length=200)
+    date: str = Field(default="", max_length=40)
+    admin: str = Field(default="", max_length=20000)
+    drill: str = Field(default="", max_length=20000)
+    archived: bool = False
+
+
+class DrillHandoffJournalRequest(BaseModel):
+    entries: list[DrillHandoffEntry] = Field(max_length=500)
+
+
 class UserSessionHandoff(BaseModel):
     user_key: str
     display_name: str | None = None
@@ -58,6 +71,9 @@ class UserSessionHandoff(BaseModel):
     recurring_drill_notes: list[str] = Field(default_factory=list)
     recurring_checks: list[RecurringCheck] = Field(default_factory=list)
     admin_watch_items: list[str] = Field(default_factory=list)
+    # None denotes a legacy handoff that has not been opened in the journal.
+    # An empty list denotes an intentionally empty/deleted journal.
+    drill_handoffs: list[DrillHandoffEntry] | None = None
     rqs_context_id: str | None = None
     bio_context_id: str | None = None
     career_trends: list[CareerTrend] = Field(default_factory=list)
