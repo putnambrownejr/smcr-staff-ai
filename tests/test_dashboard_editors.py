@@ -9,6 +9,7 @@ from app.main import app
 
 def test_editor_state_is_protected_and_persistent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SMCR_STAFF_AI_HOME", str(tmp_path))
+    monkeypatch.setenv("USER_DOCS_DIR", str(tmp_path / "docs"))
     monkeypatch.setenv("LOCAL_API_KEY", "editor-test")
     get_settings.cache_clear()
     try:

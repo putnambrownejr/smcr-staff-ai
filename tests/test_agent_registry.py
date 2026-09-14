@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from app.services.agents.base import AgentContext
-from app.services.agents.registry import MERGED_AGENT_ALIASES, AgentRegistry
+from app.services.agents.registry import MERGED_AGENT_ALIASES, AgentRegistry, MergedAgentAlias
 
 
 def test_explicitly_empty_registry_does_not_enable_default_agents() -> None:
@@ -38,8 +38,8 @@ def test_yaml_legacy_alias_selects_only_its_survivor(tmp_path: Path, legacy_id: 
     registry = AgentRegistry.from_yaml(str(path))
     assert [item.id for item in registry.list_metadata()] == [MERGED_AGENT_ALIASES[legacy_id][0]]
     alias = registry.get(legacy_id)
-    assert alias is not None
-    assert getattr(alias, "mode") == MERGED_AGENT_ALIASES[legacy_id][1]
+    assert isinstance(alias, MergedAgentAlias)
+    assert alias.mode == MERGED_AGENT_ALIASES[legacy_id][1]
 
 
 @pytest.mark.parametrize(

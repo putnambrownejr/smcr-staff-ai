@@ -214,3 +214,28 @@ def test_staff_notes_persist_and_retry(personal_page: Any) -> None:
     page.get_by_text("S-1 / Administration", exact=True).first.click()
     page.get_by_role("button", name="Notes", exact=True).click()
     expect(notes).to_have_value("Synthetic continuity note")
+
+
+@pytest.mark.e2e
+def test_notebook_failed_create_retains_text(personal_page: Any) -> None:
+    from playwright.sync_api import expect
+
+    page = personal_page
+    page.get_by_role("button", name="Workspace", exact=True).click()
+    page.get_by_role("button", name="+ New note", exact=True).click()
+    title = page.get_by_placeholder("Note title", exact=True)
+    body = page.get_by_placeholder("Write anything — instructions, a combo, a running log…", exact=True)
+    title.fill("Synthetic notebook recovery")
+    body.fill("Keep the latest text")
+    page.route("**/user-docs/notebook/*", lambda route: route.fulfill(status=500, body="unavailable") if route.request.method == "POST" else route.continue_())
+    page.get_by_role("button", name="Save note", exact=True).click()
+    status = page.get_by_label("Document save status", exact=True).get_by_role("status")
+    expect(status).to_contain_text("Could not create note")
+    expect(body).to_have_value("Keep the latest text")
+    page.unroute("**/user-docs/notebook/*")
+    page.get_by_role("button", name="Save note", exact=True).click()
+    expect(status).to_have_text("Note saved")
+    page.reload()
+    page.get_by_role("button", name="Workspace", exact=True).click()
+    expect(title).to_have_value("Synthetic notebook recovery")
+    expect(body).to_have_value("Keep the latest text")

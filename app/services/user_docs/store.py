@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import re
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import yaml
 
@@ -208,7 +210,17 @@ class UserDocsStore:
 
     def _write(self, path: Path, entry: UserDocEntry) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(_render_markdown(entry), encoding="utf-8")
+        temporary: Path | None = None
+        try:
+            with NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as output:
+                temporary = Path(output.name)
+                output.write(_render_markdown(entry))
+                output.flush()
+                os.fsync(output.fileno())
+            temporary.replace(path)
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
 
     def _read(self, path: Path) -> UserDocEntry | None:
         if not path.exists():

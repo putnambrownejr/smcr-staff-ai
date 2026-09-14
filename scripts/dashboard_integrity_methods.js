@@ -5,6 +5,93 @@
     if (key) headers["X-Local-API-Key"] = key;
     return headers;
   }
+  toggleBenchAdd(idx) {
+    return () => {
+      const card = this.state.benchCards[idx];
+      if (card.title === "Personal files") { this.triggerFilePicker(idx, -1)(); return; }
+      this.setState((s) => ({ benchCards: s.benchCards.map((c, i) => i === idx ? { ...c, addOpen: !c.addOpen, draftName: "", draftMeta: "" } : c) }));
+    };
+  }
+  addBenchItem(idx) {
+    return async (event) => {
+      event.preventDefault();
+      const card = this.state.benchCards[idx];
+      const title = (card.draftName || "").trim();
+      if (!title) return;
+      try {
+        const response = await fetch("/product-templates/manual", { method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ template_name: title, template_type: "other", description: card.draftMeta || "", reusable_guidance: card.draftMeta ? [card.draftMeta] : [] }) });
+        if (!response.ok) throw new Error("save failed");
+        this.setState((s) => ({ benchCards: s.benchCards.map((c, i) => i === idx ? { ...c, addOpen: false, draftName: "", draftMeta: "" } : c), documentSaveStatus: "Reference saved in Template library" }));
+        this._loadRealWorkspace();
+      } catch (err) { window.alert("Could not save the reference. Your entries remain in the form; try Add again."); }
+    };
+  }
+  async onFileSelected(event) {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    const form = new FormData();
+    form.append("file", file);
+    form.append("document_type", "other");
+    try {
+      const response = await fetch("/context/upload", { method: "POST", headers: this._apiHeaders(), body: form });
+      if (!response.ok) throw new Error("upload failed");
+      this.setState({ pendingFileTarget: null, benchModal: null, documentSaveStatus: "File saved locally in Personal files" });
+      this._loadRealWorkspace();
+    } catch (err) { window.alert("Could not save the file. Your original file is unchanged; select it again to retry."); }
+  }
+  benchAddDraft(cardIdx, itemIdx) {
+    return async () => {
+      const source = this.state.benchCards[cardIdx].items[itemIdx];
+      try {
+        const response = await fetch("/product-templates/" + (source.meta === "system" ? "system/" : "") + encodeURIComponent(source.templateId), { headers: this._apiHeaders() });
+        if (!response.ok) throw new Error("template load failed");
+        const template = await response.json();
+        const content = template.sections ? template.sections.map((s) => "## " + s.heading + "\n\n" + s.scaffold).join("\n\n") : (template.reusable_headings || []).map((h) => "## " + h).concat(template.reusable_guidance || []).join("\n\n");
+        const id = "pending-" + crypto.randomUUID();
+        const doc = { id, title: source.name, templateType: "template", kind: "Staff product", data: { content }, receipts: [], path: "", receiptsFolder: "" };
+        this.setState((s) => ({ workflowDocs: [doc, ...s.workflowDocs], workflowEditorId: id, benchModal: null }));
+        await this._createPendingDocument("generations", id);
+      } catch (err) { window.alert("Could not start the template draft. Try again when the server is available."); }
+    };
+  }
+  async _loadTemplateDetail(templateId) {
+    try {
+      let response = await fetch("/product-templates/system/" + encodeURIComponent(templateId), { headers: this._apiHeaders() });
+      if (response.status === 404) response = await fetch("/product-templates/" + encodeURIComponent(templateId), { headers: this._apiHeaders() });
+      if (!response.ok) throw new Error("load failed");
+      const detail = await response.json();
+      if (!detail.sections) detail.sections = [{ key: "content", heading: detail.template_name, scaffold: (detail.reusable_headings || []).concat(detail.reusable_guidance || []).join("\n\n"), example: detail.example_excerpt || "" }];
+      this.setState((s) => s.templateViewer && s.templateViewer.id === templateId ? { templateViewer: { ...s.templateViewer, loading: false, detail } } : null);
+    } catch (err) {
+      this.setState((s) => s.templateViewer && s.templateViewer.id === templateId ? { templateViewer: { ...s.templateViewer, loading: false, error: "Could not load this template. Check the server and retry." } } : null);
+    }
+  }
+  async onReceiptFileSelected(event) {
+    const files = Array.from(event.target.files || []), id = this._pendingReceiptDoc;
+    event.target.value = "";
+    if (!files.length || !id) return;
+    if (this._isPending(id)) { window.alert("Wait for the draft to save, then select receipts again."); return; }
+    const key = this.userKey, version = this._modeVersion;
+    for (const file of files) {
+      const form = new FormData(); form.append("file", file); form.append("document_type", "other");
+      try {
+        const response = await fetch("/context/upload", { method: "POST", headers: this._apiHeaders(), body: form });
+        if (!response.ok) throw new Error("upload failed");
+        const item = (await response.json()).item;
+        if (key !== this.userKey || version !== this._modeVersion) return;
+        this.setState((s) => ({ workflowDocs: s.workflowDocs.map((d) => d.id === id ? { ...d, receiptsFolder: "local_context/files", receipts: [...d.receipts, { id: item.context_id, name: item.filename, path: "local_context/files/" + item.context_id + "-" + item.filename }] } : d) }));
+        if (!await this._saveGeneration(id)) return;
+      } catch (err) { window.alert("Could not save receipt " + file.name + ". Your original is unchanged; select it again to retry."); return; }
+    }
+    this._loadRealWorkspace();
+  }
+  removeReceipt(docId, receiptId) {
+    return () => {
+      this.setState((s) => ({ workflowDocs: s.workflowDocs.map((d) => d.id === docId ? { ...d, receipts: d.receipts.filter((r) => r.id !== receiptId) } : d) }));
+      this._saveGeneration(docId);
+    };
+  }
   updateActionField(id, field) {
     return (event) => {
       const value = event.target.value;
@@ -142,9 +229,14 @@
   }
   async _deleteSavedDocument(category, id) {
     if (this._isPending(id)) return true;
+    const url = "/user-docs/" + category + "/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(id);
+    const timers = category === "fitreps" ? this._fitrepSaveTimers : this._generationSaveTimers;
+    if (timers) { clearTimeout(timers[id]); delete timers[id]; }
+    if (this._documentWrites && this._documentWrites[url]) await this._documentWrites[url];
     try {
-      const response = await fetch("/user-docs/" + category + "/" + encodeURIComponent(this.userKey) + "/" + encodeURIComponent(id), { method: "DELETE", headers: this._apiHeaders() });
+      const response = await fetch(url, { method: "DELETE", headers: this._apiHeaders() });
       if (!response.ok) throw new Error("delete failed");
+      if (this._failedDocumentWrites) delete this._failedDocumentWrites[url];
       return true;
     } catch (err) { window.alert("Could not delete this document. It remains available; try Delete again."); return false; }
   }
@@ -400,8 +492,12 @@
     return this._handoffWrites;
   }
   async _switchDemoMode(on, opts) {
+    await this._flushScheduledDocuments();
+    if (this._noteDirty && !await this.saveNote()()) return;
     if (this._documentDirty && !window.confirm("Document edits may be unsaved. Switch workspace anyway?")) return;
     if (this._editorDirty && !await this._saveEditorState()) return;
+    this._failedDocumentWrites = {};
+    this._documentDirty = false;
     clearTimeout(this._handoffSaveTimer);
     this._modeVersion = (this._modeVersion || 0) + 1;
     const version = this._modeVersion;
@@ -474,6 +570,14 @@
     const payload = this._generationPayload(doc);
     return this._writeDocument("/user-docs/generations/" + encodeURIComponent(userKey) + "/" + encodeURIComponent(id), payload);
   }
+  async _flushScheduledDocuments() {
+    const writes = [];
+    for (const [field, save] of [["_fitrepSaveTimers", (id) => this._saveFitrep(id)], ["_generationSaveTimers", (id) => this._saveGeneration(id)], ["_agentNoteSaveTimers", (key) => { const split = key.indexOf(":"); return this._saveAgentNote(key.slice(0, split), key.slice(split + 1)); }]]) {
+      for (const [id, timer] of Object.entries(this[field] || {})) { clearTimeout(timer); writes.push(save(id)); }
+      this[field] = {};
+    }
+    await Promise.all(writes);
+  }
   moveWorkflowDocToProject(docId) {
     return async () => {
       const folder = this.state.draftMoveTarget[docId];
@@ -496,8 +600,9 @@
           method: "POST", headers: this._apiHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ project: folder }),
         });
         if (!response.ok) throw new Error("project save failed");
+        const saved = await response.json();
         if (userKey !== this.userKey || version !== this._modeVersion) return;
-        this.setState((s) => ({ workflowDocs: s.workflowDocs.filter((item) => item.id !== docId), workflowEditorId: s.workflowEditorId === docId ? null : s.workflowEditorId }));
+        this.setState((s) => ({ workflowDocs: s.workflowDocs.filter((item) => item.id !== docId), workflowEditorId: s.workflowEditorId === docId ? null : s.workflowEditorId, documentSaveStatus: "Saved Markdown and Word files in projects/" + folder + "/products/" + (saved.word_path ? " — " + saved.word_path.split("/").pop() : "") }));
         this._loadRealProjects();
       } catch (err) {
         window.alert("Could not save this draft to the project. It is still in Drafted files.");

@@ -14,7 +14,7 @@ def refresh_methods(inner: str) -> str:
         body = methods[match.start():source_starts[index + 1].start() if index + 1 < len(source_starts) else len(methods)]
         old_match = re.search(r"^  (?:async )?" + re.escape(name) + r"\([^\n]*\) \{", inner, re.M)
         if old_match:
-            next_method = re.search(r"^  (?:(?:async|static) )?\w+\([^\n]*\) \{", inner[old_match.end():], re.M)
+            next_method = re.search(r"^  (?:(?:(?:async|static) )?\w+\([^\n]*\) \{|static \w+\s*=)", inner[old_match.end():], re.M)
             if next_method is None:
                 raise ValueError(f"Missing method boundary for {name}")
             end = old_match.end() + next_method.start()
@@ -60,6 +60,21 @@ _RESOLVE_LINE = "    if (!this.userKey) this.userKey = this._resolveUserKey();\n
 
 
 def finish_repairs(inner: str) -> str:
+    for field, call in (("_fitrepSaveTimers", "this._saveFitrep(id)"), ("_generationSaveTimers", "this._saveGeneration(id)"), ("_agentNoteSaveTimers", "this._saveAgentNote(kind, id)")):
+        key = "key" if field == "_agentNoteSaveTimers" else "id"
+        old = f'this.{field}[{key}] = setTimeout(() => {call}, 800);'
+        new = f'this._documentDirty = true; this.{field}[{key}] = setTimeout(() => {{ delete this.{field}[{key}]; {call}; }}, 800);'
+        inner = inner.replace(old, new)
+    inner = inner.replace('(data.template_library || []).filter((item) => item.source_path).map(', '(data.template_library || []).map(')
+    inner = inner.replace('path: item.source_path,', 'path: item.source_path || "",')
+    inner = inner.replace('{ label: "Replace file",', '{ label: "Add another file",')
+    if 'template: { fields: [{ key: "content"' not in inner:
+        inner = inner.replace('  static WORKFLOW_TEMPLATES = {', '  static WORKFLOW_TEMPLATES = {\n    template: { fields: [{ key: "content", label: "Draft content", placeholder: "Edit this scaffold", rows: 20 }], doctrine: [], prompts: [], agents: [] },', 1)
+    # Staff seats are fixed; project folders are created by the real Save to project flow.
+    inner = re.sub(r'<button type="button" sc-camel-on-click="{{ projectFilesCard.onAdd }}"[^\n]*</button>', '<span>Save a draft to a named project below.</span>', inner, count=1)
+    inner = inner.replace('      onAdd: this.toggleBenchAdd(idx),', '      canAdd: c.title !== "Staff bench",\n      onAdd: this.toggleBenchAdd(idx),') if 'canAdd: c.title !== "Staff bench"' not in inner else inner
+    if '<sc-if value="{{ c.canAdd }}">' not in inner:
+        inner = re.sub(r'(<button type="button" sc-camel-on-click="{{ c.onAdd }}"[^\n]*</button>)', r'<sc-if value="{{ c.canAdd }}">\1</sc-if>', inner, count=1)
     inner = re.sub(r'<sc-raw-select value="{{ f.type }}".*?</sc-raw-select>', '<span>Source URL</span>', inner, count=1, flags=re.S)
     for method, category, next_method in (("createWorkflowDoc", "generations", "linkCounselingToFitrep"), ("newFitrep", "fitreps", "updateFitrepField")):
         start = inner.index(f"  {method}(")
