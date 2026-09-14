@@ -12,14 +12,13 @@ import app.api.routes.dashboard as dashboard_routes  # noqa: E402
 from app.api.routes.dashboard import (  # noqa: E402
     get_action_tracker,
     get_admin_service,
-    get_alnav_store,
+    get_almar_feed_store,
     get_battle_rhythm_store,
     get_career_service,
     get_chief_orchestrator,
     get_custom_watch_feed_store,
     get_document_organizer,
     get_dod_watch_store,
-    get_navadmin_store,
     get_opportunity_tracker,
     get_section_memory_store,
     get_update_store,
@@ -150,8 +149,14 @@ def test_dashboard_bundle_refreshes_real_feed_endpoints() -> None:
 
     assert "async _refreshFeeds()" in component_source
     assert 'url: "/maradmins/refresh"' in component_source
-    assert 'url: "/message-watch/navadmins/refresh"' in component_source
-    assert 'url: "/message-watch/alnavs/refresh"' in component_source
+    assert 'url: "/message-watch/almars/refresh"' in component_source
+    assert "navadmins/refresh" not in component_source
+    assert "alnavs/refresh" not in component_source
+    # NAVADMIN/ALNAV have no public feed: they stay on the Watch page as portal links only.
+    assert 'name: "NAVADMIN portal"' in component_source
+    assert 'name: "ALNAV portal"' in component_source
+    assert "realAlmars: mapTicker(data.almar_ticker)" in component_source
+    assert "realNavadmins" not in component_source
     assert 'url: "/message-watch/dod/refresh"' in component_source
     assert 'url: "/custom-watch-feeds/" + encodeURIComponent(feed.id) + "/refresh"' in component_source
     assert "failedLabels.join" in component_source
@@ -301,7 +306,7 @@ def test_dashboard_bundle_is_wired_to_real_feeds_links_and_handoff() -> None:
     assert 'fetch("/custom-watch-feeds"' in component_source
     assert 'fetch("/custom-watch-feeds/" + encodeURIComponent(id), { method: "DELETE"' in component_source
     assert 'fetch("/resource-links/" + encodeURIComponent(this.userKey)' in component_source
-    assert 'fetch("/handoffs/" + encodeURIComponent(this.userKey)' in component_source
+    assert 'fetch("/handoffs/" + encodeURIComponent(userKey)' in component_source
     assert "_scheduleHandoffSave()" in component_source
     assert 'method: "PUT"' in component_source
 
@@ -432,7 +437,7 @@ def test_reveal_is_open_when_no_local_api_key_is_configured() -> None:
     assert response.status_code == 200
 
 
-def test_dashboard_shell_injects_configured_api_key_for_the_shim(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_dashboard_never_discloses_configured_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("LOCAL_API_KEY", "reveal-secret")
     from app.core.config import get_settings
 
@@ -441,7 +446,14 @@ def test_dashboard_shell_injects_configured_api_key_for_the_shim(monkeypatch: py
 
     response = client.get("/dashboard")
 
-    assert 'window.__SMCR_API_KEY__ = "reveal-secret"' in response.text
+    assert response.status_code == 401
+    assert "reveal-secret" not in response.text
+    assert "Unlock SMCR Staff AI" in response.text
+    assert client.get("/dashboard", headers={"X-Local-API-Key": "wrong"}).status_code == 401
+    authenticated = client.get("/dashboard", headers={"X-Local-API-Key": "reveal-secret"})
+    assert authenticated.status_code == 200
+    assert "reveal-secret" not in authenticated.text
+    assert authenticated.headers["cache-control"] == "no-store"
     get_settings.cache_clear()
 
 
@@ -628,8 +640,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     custom_feed_store = CustomWatchFeedStore(tmp_path / "custom_feeds")
     battle_rhythm_store = BattleRhythmStore(tmp_path / "battle_rhythm")
     section_memory_store = SectionMemoryStore(tmp_path / "section_memory")
-    navadmin_store = MessageRecordStore(tmp_path / "navadmins")
-    alnav_store = MessageRecordStore(tmp_path / "alnavs")
+    almar_store = MessageRecordStore(tmp_path / "almars")
     dod_store = MessageRecordStore(tmp_path / "dod")
     reading_catalog = ReadingListCatalogService.from_yaml(Path("data/seed/reading_list.example.yaml"))
 
@@ -708,26 +719,16 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
             tags=["reserve"],
         )
     )
-    navadmin_store.save_many(
+    almar_store.save_many(
         [
             MessageRecord(
-                source_id="navadmin-001",
-                title="NAVADMIN 001/26 Sample",
-                canonical_url="https://example.test/navadmin-001",
-                summary="Sample NAVADMIN summary.",
-                source_family="NAVADMIN",
+                source_id="almar-021-26",
+                title="LABOR DAY MESSAGE 2026",
+                canonical_url="https://example.test/almar-021-26",
+                message_number="021/26",
+                summary="R 032026Z SEP 26ALMAR 021/26MSGID/CMC WASHINGTON DC//",
+                source_family="ALMAR",
                 published_at=datetime(2026, 4, 29, 13, 30, tzinfo=UTC),
-            )
-        ]
-    )
-    alnav_store.save_many(
-        [
-            MessageRecord(
-                source_id="alnav-001",
-                title="ALNAV 001/26 Sample",
-                canonical_url="https://example.test/alnav-001",
-                summary="Sample ALNAV summary.",
-                source_family="ALNAV",
             )
         ]
     )
@@ -813,11 +814,8 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     def override_battle_rhythm_store() -> BattleRhythmStore:
         return battle_rhythm_store
 
-    def override_navadmin_store() -> MessageRecordStore:
-        return navadmin_store
-
-    def override_alnav_store() -> MessageRecordStore:
-        return alnav_store
+    def override_almar_store() -> MessageRecordStore:
+        return almar_store
 
     def override_dod_store() -> MessageRecordStore:
         return dod_store
@@ -834,8 +832,7 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
     app.dependency_overrides[get_update_store] = override_updates
     app.dependency_overrides[get_custom_watch_feed_store] = override_custom_feed_store
     app.dependency_overrides[get_battle_rhythm_store] = override_battle_rhythm_store
-    app.dependency_overrides[get_navadmin_store] = override_navadmin_store
-    app.dependency_overrides[get_alnav_store] = override_alnav_store
+    app.dependency_overrides[get_almar_feed_store] = override_almar_store
     app.dependency_overrides[get_dod_watch_store] = override_dod_store
     app.dependency_overrides[get_section_memory_store] = override_section_memory_store
 
@@ -874,12 +871,44 @@ def test_personal_dashboard_data_route_returns_consolidated_payload(tmp_path: Pa
         suggested = next(item for item in payload["document_details"] if item["filename"] == "MCWP_5-10_MCPP.txt")
         assert suggested["suggested_document_type"] == "doctrine"
         assert suggested["suggestion_reason"]
-        assert payload["navadmin_ticker"][0]["status"] == "NAVADMIN"
-        assert payload["navadmin_ticker"][0]["published_at"] == "2026-04-29T13:30:00+00:00"
-        assert payload["alnav_ticker"][0]["status"] == "ALNAV"
+        assert payload["almar_ticker"][0]["status"] == "ALMAR"
+        assert payload["almar_ticker"][0]["summary"] == "ALMAR 021/26"
+        assert payload["almar_ticker"][0]["published_at"] == "2026-04-29T13:30:00+00:00"
+        assert "navadmin_ticker" not in payload and "alnav_ticker" not in payload
         assert payload["dod_ticker"][0]["status"] == "DoD"
         system_template = next(item for item in payload["template_library"] if item["template_source"] == "system")
         assert system_template["source_path"].startswith("/product-templates/system/")
         assert "#sys-" not in system_template["source_path"]
     finally:
         app.dependency_overrides.clear()
+
+
+def test_dashboard_bundle_has_round_table_and_runnable_combos() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert '{ id: "roundtable", label: "Round table" }' in component_source
+    # Honest modes: packet builder unless an external AI is configured; live table goes through the preview.
+    assert 'fetch("/agents/roundtable/capability"' in component_source
+    assert 'fetch("/agents/roundtable/packet"' in component_source
+    assert 'fetch("/agents/roundtable/external-processing-preview"' in component_source
+    assert "Staff call packet built — no analysis was performed" in component_source
+    assert "Build staff call packet" in component_source
+    assert "Convene with external AI" in component_source
+    assert "Chain packet built — no analysis was performed" in component_source
+    # No template run is ever presented as a seat's answer.
+    assert "Run this combo" not in component_source
+    assert "Ask the whole staff" not in component_source
+    # Doctrine notes: each agent card surfaces metadata.system_prompt and can copy it as a prompt.
+    assert 'doctrine: a.system_prompt || ""' in component_source
+    assert "Copy as a chatbot prompt" in component_source
+
+
+def test_dashboard_bundle_has_user_built_automations() -> None:
+    component_source = _decoded_dashboard_component_source()
+
+    assert 'fetch("/automations/templates"' in component_source
+    assert 'fetch("/automations/" + encodeURIComponent(requestKey)' in component_source
+    assert "Build a new automation" in component_source or "{{ autoFormTitle }}" in component_source
+    assert "Staff seats to consult" in component_source
+    assert "Run packet built — no analysis was performed" in component_source
+    assert "The app never runs them itself and produces no analysis." in component_source

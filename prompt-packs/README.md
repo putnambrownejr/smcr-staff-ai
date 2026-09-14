@@ -20,6 +20,7 @@ That's it. No coding, no installation, no terminal commands.
 | [General Marine](general-marine.md) | Any Marine, especially new joins | Check-in to a new unit, uniforms, drill prep, CAC/PKI issues, leadership |
 | [Staff Products & Writing](staff-products.md) | Staff officers, company XOs | OPORDs, FRAGOs, SITREPs, AARs, naval letters, briefs, ORM worksheets |
 | [Training & Operations](training-ops.md) | S-3, training officers, planners | MCPP/R2P2 planning, red-team challenges, exercise design, scenario building |
+| [Round Table](round-table.md) | Any staff officer with a SITREP or question | Convenes every staff seat in your AI: seats' scopes, standing questions, products, and doctrine notes, with a slot for your input; the AI answers as each seat, synthesizes, and drafts products |
 | [Reserve Admin](reserve-admin.md) | S-1, admin chiefs, individual Marines | DTS, MROWS, Drill Manager, FitReps, pay issues, AT/ADT orders |
 
 ## Tips

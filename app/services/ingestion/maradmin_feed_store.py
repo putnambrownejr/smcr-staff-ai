@@ -11,10 +11,26 @@ class MaradminFeedStore:
         self.root_dir.mkdir(parents=True, exist_ok=True)
 
     def save_many(self, records: list[MessageRecord]) -> list[MessageRecord]:
+        self._drop_superseded(records)
         for record in records:
             self._path(record.source_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
         self._trim_entries()
         return self.list(limit=len(records))
+
+    def _drop_superseded(self, records: list[MessageRecord]) -> None:
+        """Remove cached copies of the same message saved under an older source_id.
+
+        Message-number parsing improved over time (hash ids became ``maradmin-411-26``),
+        so an existing cache can hold the same URL twice. Keep one record per message.
+        """
+        incoming = {record.canonical_url: record.source_id for record in records if record.canonical_url}
+        if not incoming:
+            return
+        for path in sorted(self.root_dir.glob("*.json")):
+            existing = MessageRecord.model_validate_json(path.read_text(encoding="utf-8"))
+            new_id = incoming.get(existing.canonical_url)
+            if new_id is not None and new_id != existing.source_id:
+                path.unlink()
 
     def list(self, limit: int | None = None) -> list[MessageRecord]:
         records = [

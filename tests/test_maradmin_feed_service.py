@@ -31,6 +31,30 @@ def test_maradmin_feed_service_refreshes_and_caches_records(tmp_path: Path) -> N
     assert store.list(limit=10)[0].source_id.startswith("maradmin-")
 
 
+def test_maradmin_feed_store_replaces_hash_ids_with_numbered_ids(tmp_path: Path) -> None:
+    store = MaradminFeedStore(tmp_path / "maradmin_feed")
+    url = "https://example.test/maradmin/411"
+    store.save_many([MessageRecord(source_id="maradmin-abc123", title="Old cache", canonical_url=url)])
+    store.save_many([MessageRecord(source_id="maradmin-411-26", title="Parsed", canonical_url=url, message_number="411/26")])
+    assert [record.source_id for record in store.list()] == ["maradmin-411-26"]
+
+
+def test_maradmin_number_parsed_from_rss_header_when_title_lacks_it() -> None:
+    from app.services.ingestion.maradmin_scraper import message_record_from_feed_item
+
+    record = message_record_from_feed_item(
+        FeedItem(
+            title="JANUARY 2027 MUSIC UNIT LEADER COURSE ATTENDEES",
+            link="https://example.test/maradmin/409",
+            summary="R 101000Z SEP 26MARADMIN 409/26MSGID/MARADMIN/CMC CD WASHINGTON DC//SUBJ/JANUARY 2027",
+        )
+    )
+    assert record.message_number == "409/26"
+    assert record.fiscal_year == 2026
+    assert record.source_id == "maradmin-409/26"
+    assert record.parser_warnings == []
+
+
 def test_maradmin_feed_store_trims_to_newest_entries(tmp_path: Path) -> None:
     store = MaradminFeedStore(tmp_path / "maradmin_feed")
     base_time = datetime(2026, 1, 1, tzinfo=UTC)

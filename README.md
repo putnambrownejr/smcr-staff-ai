@@ -39,6 +39,13 @@ See the [prompt-packs/README.md](prompt-packs/README.md) for usage instructions.
 
 ## Quick start
 
+For a public, phone-friendly reference library and remote MCP service, see
+[the public library pilot](deploy/README.md). It is a separate read-only application
+with 22 published reference/template/prompt items; it does not expose personal
+dashboard data. Run it locally with `uv run --extra cloud python -m app.public_library`
+and open http://127.0.0.1:8010. Cloud Run deployment instructions are included;
+no cloud deployment is implied by installing the repository.
+
 **Prerequisites:** Python 3.12+, [uv](https://github.com/astral-sh/uv)
 
 ```bash
@@ -79,13 +86,13 @@ The configured endpoint must implement the chat-completions request/response sha
 
 ### 37 advisory agents
 
-21 standalone advisors + 16 echelon-adaptive staff archetypes. Each responds with structured advice, citations, confidence levels, and follow-up questions.
+21 standalone advisors + 16 echelon-adaptive staff archetypes. Eight legacy IDs resolve to surviving agents and modes. Responses include advisory text, source references or source-review markers, confidence levels, and follow-up questions. Local responses are deterministic checklists or structured planning scaffolds; an agent's name does not imply autonomous research or model-generated reasoning.
 
 | Category | Examples |
 |---|---|
 | **Staff archetypes** | S-1 through G-9, XO, SgtMaj, SJA, PAO, Surgeon, Chaplain |
-| **Standalone** | Planning Advisor, Staff Products, Drill Prep, Writing/Briefing, ORM, Red Team |
-| **MAGTF elements** | ACE, GCE, LCE |
+| **Standalone** | Planning Advisor, Staff Products, Writing/Briefing, ORM, Red Team; drill preparation is a Chief of Staff mode |
+| **MAGTF elements** | ACE, GCE; LCE is an S-4 mode |
 | **MOS-specific** | Infantry 03xx, Artillery 08xx, custom MOS recipes |
 
 Staff archetypes adapt behavior based on echelon (platoon → division) — staff prefix, scope, product names, and coordination requirements all shift automatically.
@@ -111,7 +118,7 @@ Browser-based local operations board with five lanes:
 - **Drill prep** — Date-to-tasks planner with .ics export
 - **Session handoffs** — Persist context between drill weekends
 - **Tracked actions** — Mark an action done from the Watch lane and Undo for ten seconds
-- **Source watch** — MARADMIN RSS, NAVADMIN, DoD releases, custom feeds
+- **Source watch** — MARADMIN and ALMAR RSS, DoD releases, custom feeds (NAVADMIN/ALNAV have no public feed, so they are portal links)
 - **Privacy sweep** — Pre-push review for PII/OPSEC leakage
 - **PKI/CAC troubleshooting** — Advisory playbooks for common certificate issues
 - **Career tracking** — PME gaps, FitRep reminders, billet discovery
@@ -247,12 +254,13 @@ curl http://127.0.0.1:8000/health
 
 - Does not call an external LLM silently or without operation-specific approval
 - Does not ingest classified or CUI material
-- Does not connect to email/calendar without explicit connector setup
+- Email and calendar providers are unimplemented stubs; connector consent plans do not enable live access
 - Does not make personnel, legal, medical, or command decisions
 - Does not replace official guidance or formal staff processes
 
 ## Security and governance
 
+- [RELEASE.md](RELEASE.md) — Snapshot support boundary, backup/restore, and receiving-user acceptance
 - [SECURITY.md](SECURITY.md) — Vulnerability reporting
 - [DISCLAIMER.md](DISCLAIMER.md) — Legal disclaimer
 - [docs/data_governance.md](docs/data_governance.md) — Data handling policy

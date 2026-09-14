@@ -32,7 +32,7 @@ areas to publication numbers and explains what each governs.
 | Publication | Title | What it governs |
 |---|---|---|
 | **MCWP 3-10** | MAGTF Ground Operations | Artillery as primary GCE firepower. Howitzers, mortars, rockets, counterfire. |
-| **MCWP 3-16** | Fire Support Coordination in the GCE | Core doctrine for fire support coordination, the FSCC, and fire support planning. |
+| **MCTP 3-10F** (formerly MCWP 3-16) | Fire Support Coordination in the GCE | Core doctrine for fire support coordination, the FSCC, FSCMs, and fire support planning. |
 | **MCWP 3-31** | MAGTF Fires and Effects | Broader fires-and-effects construct — targeting, assessment, airspace coordination, fire support coordination. |
 | **MCRP 3-16.6A** | Supporting Arms Observer, Spotter, and Controller | Call-for-fire format, observer procedures, adjustment techniques. |
 

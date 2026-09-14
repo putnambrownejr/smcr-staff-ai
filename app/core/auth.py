@@ -1,3 +1,4 @@
+import secrets
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Security, status
@@ -14,7 +15,7 @@ def require_local_api_key(api_key: Annotated[str | None, Security(api_key_header
     expected = get_settings().local_api_key or None
     if expected is None:
         return
-    if api_key != expected:
+    if not secrets.compare_digest((api_key or "").encode(), expected.encode()):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing or invalid local API key.",

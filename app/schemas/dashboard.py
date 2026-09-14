@@ -133,8 +133,7 @@ class DashboardWorkspaceResponse(BaseModel):
     template_library: list[DashboardTemplateReference] = Field(default_factory=list)
     section_memory_profile: SectionMemoryProfile | None = None
     maradmin_ticker: list[DashboardTickerItem] = Field(default_factory=list)
-    navadmin_ticker: list[DashboardTickerItem] = Field(default_factory=list)
-    alnav_ticker: list[DashboardTickerItem] = Field(default_factory=list)
+    almar_ticker: list[DashboardTickerItem] = Field(default_factory=list)
     dod_ticker: list[DashboardTickerItem] = Field(default_factory=list)
     custom_watch_feeds: list[DashboardCustomWatchFeed] = Field(default_factory=list)
     usmc_history: HistorySelection | None = None

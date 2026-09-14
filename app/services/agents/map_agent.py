@@ -51,7 +51,7 @@ _RESOURCE_CATEGORIES = {
     "terrain3d": (
         "Terrain Analysis & 3D",
         "LiDAR, high-res DEMs, 3D terrain visualization, slope/aspect modeling.",
-        ("OpenTopography", "Fatmap / Strava Heatmap (terrain)", "Google Earth (Web)"),
+        ("OpenTopography", "Strava Global Heatmap (terrain and movement)", "Google Earth (Web)"),
     ),
 }
 

@@ -102,6 +102,34 @@ Add a retirement mapping in `test_agent_registry.py`: `("old-id", "new-id")`.
 6. Remove from dashboard `<option>` elements
 7. Run `uv run ruff check --fix .` to catch unused imports
 
+## Merging an Agent into a Mode of a Surviving Agent
+
+Preferred over outright removal when the merged agent's id is referenced by saved
+chains, dashboard presets, seed data (`data/seed/exercise_cadence.example.json`),
+or custom MOS recipes. Pattern used in the Sep 2026 consolidation:
+
+1. Move the doctrine text into the survivor (`mos_depth` for a staff seat, or a
+   dedicated `_mode_response()` for a standalone agent).
+2. If the merged agent produced a structured `scenario_output`, keep its builder
+   as an *unregistered* delegate and wire it into `_MODE_DELEGATES` in
+   `staff_advisor_agent.py` so the `role` key in the handoff does not change.
+3. Add the id to `MERGED_AGENT_ALIASES` in `registry.py` as
+   `"old-id": ("surviving-id", "mode")`. `AgentRegistry.get("old-id")` then
+   returns a `MergedAgentAlias` that forces `agent_options.mode` and reports the
+   survivor's id; `list_metadata()` omits it.
+4. Add keyword triggers to `_MODE_KEYWORDS` (staff seats) or the survivor's own
+   signal tuple so a plain-language request still lands in the mode.
+5. Remove the id from the seed YAML, the registry expected-set test, and
+   `DEFAULT_PROMPTS`; add a row to
+   `test_merged_agents_resolve_to_surviving_agent_modes`.
+6. Delete the old module only if nothing imports its builder.
+
+Current modes: `staff-s4` (`lce`), `staff-s2` (`ipb`, `information_requirements`),
+`staff-g9` (`area_study`, `actor_network`), `staff-s1` (`family_readiness`),
+`chief-of-staff` (`drill_prep`), `leadership-advisor` (`reflect`),
+`writing-briefing-coach` (`fitrep_awards`), `red-team-assumptions-challenge`
+(`assumptions`, `evidence`, `hypotheses`).
+
 ## Adding a Staff Archetype
 
 Staff archetypes live in `staff_advisor_agent.py` as `StaffRoleArchetype` entries.

@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,7 +12,7 @@ from app.schemas.handoff_updates import (
     HandoffDraftUpdateResponse,
     HandoffUpdateDraftRequest,
 )
-from app.schemas.session import HandoffUpsertResponse, UserSessionHandoff
+from app.schemas.session import DrillHandoffJournalRequest, HandoffUpsertResponse, UserSessionHandoff
 from app.services.session.handoff_store import SessionHandoffStore
 from app.services.session.handoff_updater import HandoffUpdater
 
@@ -36,6 +37,16 @@ def upsert_handoff(
 ) -> HandoffUpsertResponse:
     if handoff.user_key != user_key:
         raise HTTPException(status_code=400, detail="Path user_key must match handoff.user_key.")
+    # Older clients do not know about the journal. Keep it when their profile
+    # update omits the field; an explicit [] still clears it intentionally.
+    if "drill_handoffs" not in handoff.model_fields_set:
+        existing = store.get(user_key)
+        if existing is not None:
+            handoff.drill_handoffs = existing.drill_handoffs
+            if "admin_watch_items" not in handoff.model_fields_set:
+                handoff.admin_watch_items = existing.admin_watch_items
+            if "recurring_drill_notes" not in handoff.model_fields_set:
+                handoff.recurring_drill_notes = existing.recurring_drill_notes
     try:
         saved = store.upsert(handoff)
     except ValueError as exc:
@@ -55,6 +66,26 @@ def get_handoff(
     if handoff is None:
         raise HTTPException(status_code=404, detail=f"Unknown handoff: {user_key}")
     return handoff
+
+
+@router.patch("/{user_key}/journal", response_model=UserSessionHandoff)
+def save_drill_journal(
+    user_key: str,
+    request: DrillHandoffJournalRequest,
+    store: Annotated[SessionHandoffStore, Depends(get_handoff_store)],
+) -> UserSessionHandoff:
+    if len({entry.id for entry in request.entries}) != len(request.entries):
+        raise HTTPException(status_code=422, detail="Handoff IDs must be unique.")
+    handoff = store.get(user_key) or UserSessionHandoff(user_key=user_key)
+    handoff.drill_handoffs = request.entries
+    handoff.updated_at = datetime.now(UTC)
+    latest = next((entry for entry in request.entries if not entry.archived), None)
+    handoff.admin_watch_items = [line.strip() for line in latest.admin.splitlines() if line.strip()] if latest else []
+    handoff.recurring_drill_notes = [line.strip() for line in latest.drill.splitlines() if line.strip()] if latest else []
+    try:
+        return store.upsert(handoff)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.post("/{user_key}/draft-update", response_model=HandoffDraftUpdateResponse)

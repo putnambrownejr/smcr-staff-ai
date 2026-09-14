@@ -1,7 +1,45 @@
+from pathlib import Path
+
 import pytest
 
 from app.services.agents.base import AgentContext
-from app.services.agents.registry import AgentRegistry
+from app.services.agents.registry import MERGED_AGENT_ALIASES, AgentRegistry, MergedAgentAlias
+
+
+def test_explicitly_empty_registry_does_not_enable_default_agents() -> None:
+    assert AgentRegistry([]).list_metadata() == []
+    assert AgentRegistry(iter(())).list_metadata() == []
+
+
+def test_shipped_registry_example_selects_the_current_agent_catalog() -> None:
+    path = Path(__file__).resolve().parents[1] / "data" / "seed" / "agent_registry.example.yaml"
+    configured = AgentRegistry.from_yaml(str(path))
+    assert {agent.id for agent in configured.list_metadata()} == {
+        agent.id for agent in AgentRegistry().list_metadata()
+    }
+
+
+def test_empty_yaml_allowlist_does_not_enable_default_agents(tmp_path: Path) -> None:
+    path = tmp_path / "agents.yaml"
+    path.write_text("agents: []\n", encoding="utf-8")
+    assert AgentRegistry.from_yaml(str(path)).list_metadata() == []
+
+
+def test_missing_yaml_allowlist_uses_default_agents(tmp_path: Path) -> None:
+    path = tmp_path / "agents.yaml"
+    path.write_text("{}\n", encoding="utf-8")
+    assert AgentRegistry.from_yaml(str(path)).list_metadata() == AgentRegistry().list_metadata()
+
+
+@pytest.mark.parametrize("legacy_id", MERGED_AGENT_ALIASES)
+def test_yaml_legacy_alias_selects_only_its_survivor(tmp_path: Path, legacy_id: str) -> None:
+    path = tmp_path / "agents.yaml"
+    path.write_text(f"agents:\n  - id: {legacy_id}\n", encoding="utf-8")
+    registry = AgentRegistry.from_yaml(str(path))
+    assert [item.id for item in registry.list_metadata()] == [MERGED_AGENT_ALIASES[legacy_id][0]]
+    alias = registry.get(legacy_id)
+    assert isinstance(alias, MergedAgentAlias)
+    assert alias.mode == MERGED_AGENT_ALIASES[legacy_id][1]
 
 
 @pytest.mark.parametrize(
@@ -50,6 +88,63 @@ def test_retired_agents_are_not_registered_and_replacements_remain(
     assert registry.get(replacement_id) is not None
 
 
+@pytest.mark.parametrize(
+    ("merged_id", "surviving_id", "mode"),
+    [
+        ("lce", "staff-s4", "lce"),
+        ("drill-prep-calendar", "chief-of-staff", "drill_prep"),
+        ("warrior-monk", "leadership-advisor", "reflect"),
+        ("family-deployment-readiness-advisor", "staff-s1", "family_readiness"),
+        ("ipb-assistant", "staff-s2", "ipb"),
+        ("information-requirements-manager", "staff-s2", "information_requirements"),
+        ("area-study-builder", "staff-g9", "area_study"),
+        ("actor-network-analyst", "staff-g9", "actor_network"),
+    ],
+)
+def test_merged_agents_resolve_to_surviving_agent_modes(merged_id: str, surviving_id: str, mode: str) -> None:
+    """Sep 2026 merges: retired ids leave the catalog but still resolve so chains and presets keep working."""
+    registry = AgentRegistry()
+    catalog = {metadata.id for metadata in registry.list_metadata()}
+
+    assert merged_id not in catalog
+    alias = registry.get(merged_id)
+    assert alias is not None
+    assert alias.metadata.id == surviving_id
+    assert getattr(alias, "mode", None) == mode
+
+    response = alias.run("Provide an advisory training-only staff response for this lane.", AgentContext())
+    assert response.agent_id == surviving_id
+    assert "DRAFT — Verify all references" in response.answer
+
+
+def test_merged_mode_delegates_keep_their_structured_handoff_roles() -> None:
+    registry = AgentRegistry()
+    expected = {
+        "ipb-assistant": "ipb",
+        "information-requirements-manager": "information_requirements",
+        "area-study-builder": "area_study",
+        "actor-network-analyst": "actor_network",
+    }
+    for merged_id, role in expected.items():
+        agent = registry.get(merged_id)
+        assert agent is not None
+        response = agent.run("Training scenario", AgentContext())
+        assert response.scenario_output is not None
+        assert response.scenario_output["role"] == role
+
+
+def test_staff_s4_answers_lce_tasks_directly() -> None:
+    registry = AgentRegistry()
+    agent = registry.get("staff-s4")
+    assert agent is not None
+
+    response = agent.run("Help me think through CLB sustainment and distribution support.", AgentContext())
+
+    assert "LCE" in response.answer
+    assert "Combat Logistics Battalion" in response.answer
+    assert "CSS estimate" in response.answer
+
+
 def test_agent_registry_loads_expected_agents() -> None:
     registry = AgentRegistry()
     ids = {metadata.id for metadata in registry.list_metadata()}
@@ -62,13 +157,11 @@ def test_agent_registry_loads_expected_agents() -> None:
         "assessment-learning-advisor",
         "writing-briefing-coach",
         "uniform-advisor",
-        "drill-prep-calendar",
         "staff-products",
         "orm-risk-management",
         "installation-practical-advisor",
         "pki-cac-troubleshooter",
         "leadership-advisor",
-        "warrior-monk",
         "gtcc-advisor",
         "financial-readiness-advisor",
         "fitness-planning-advisor",
@@ -76,16 +169,10 @@ def test_agent_registry_loads_expected_agents() -> None:
         "fires-advisor",
         "osint-research-assistant",
         "terrain-map-advisor",
-        # Source-aware planning specialists
-        "area-study-builder",
-        "actor-network-analyst",
-        "information-requirements-manager",
-        "ipb-assistant",
         "unit-checkin",
-        # MAGTF element agents
+        # MAGTF element agents (LCE merged into staff-s4)
         "ace",
         "gce",
-        "lce",
         # Consolidated staff archetypes
         "staff-xo",
         "staff-battle_captain",
@@ -373,7 +460,8 @@ def test_planning_advisor_covers_deliberate_rapid_and_opt_content() -> None:
 
     response = agent.run("Help me run deliberate planning for a new training event.", context=AgentContext())
 
-    assert "COA wargaming" in response.answer
+    assert "COA war game" in response.answer
+    assert "Problem framing" in response.answer
     assert "Deliberate MCPP rhythm" in response.answer
     assert "assumption log" in response.answer
     assert "OPT lead" in response.answer
@@ -605,8 +693,8 @@ def test_list_metadata_assigns_curated_categories() -> None:
     assert by_id["planning-advisor"].category == "Planning & Decision"
     assert by_id["ace"].category == "MAGTF Warfighting Elements"
     assert by_id["gce"].category == "MAGTF Warfighting Elements"
-    assert by_id["area-study-builder"].category == "Intelligence & Research"
-    assert by_id["ipb-assistant"].category == "Intelligence & Research"
+    assert by_id["osint-research-assistant"].category == "Intelligence & Research"
+    assert by_id["terrain-map-advisor"].category == "Intelligence & Research"
 
     # "staff-products" starts with "staff-" but is a real product agent, not a
     # virtual staff-council seat.
@@ -618,3 +706,38 @@ def test_list_metadata_assigns_curated_categories() -> None:
 
     counts = Counter(m.category for m in registry.list_metadata())
     assert all(n >= 2 for n in counts.values()), counts
+
+
+@pytest.mark.parametrize(
+    ("agent_id", "role"),
+    [
+        ("staff-opso", "opso"),
+        ("staff-provost", "provost"),
+        ("staff-g8", "g8"),
+        ("staff-surgeon", "surgeon"),
+        ("staff-sja", "sja"),
+        ("staff-pao", "pao"),
+        ("staff-xo", "xo"),
+    ],
+)
+def test_staff_seats_answer_scenarios_with_a_scenario_assessment(agent_id: str, role: str) -> None:
+    registry = AgentRegistry()
+    agent = registry.get(agent_id)
+    assert agent is not None
+
+    response = agent.run(
+        "Magnitude 7.4 earthquake in Haiti; airport damaged, 300 casualties, 50,000 displaced; MEU tasked for FHADR.",
+        AgentContext(request_is_training_or_fictional=True),
+    )
+
+    assert "SCENARIO ASSESSMENT" in response.answer
+    assert response.scenario_output_status.value == "template_only"
+    assert role in agent.metadata.system_prompt.lower() or agent.metadata.id == agent_id
+
+
+def test_staff_seat_system_prompt_carries_role_depth() -> None:
+    registry = AgentRegistry()
+    s4 = registry.get("staff-s4")
+    assert s4 is not None
+    assert "ROLE DEPTH" in s4.metadata.system_prompt
+    assert "Combat Logistics Battalion" in s4.metadata.system_prompt

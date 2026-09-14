@@ -11,6 +11,7 @@ from app.api.routes import (
     agent_notes,
     agents,
     analysis,
+    automations,
     battle_rhythm,
     bench_sections,
     billets,
@@ -26,6 +27,7 @@ from app.api.routes import (
     custom_mos_recipes,
     custom_watch_feeds,
     dashboard,
+    dashboard_editors,
     demo,
     documents,
     family_readiness,
@@ -106,7 +108,9 @@ def create_app() -> FastAPI:
     app.include_router(cadences.router)
     app.include_router(chief.router)
     app.include_router(chief_setup.router)
+    app.include_router(automations.router)
     app.include_router(dashboard.router)
+    app.include_router(dashboard_editors.router)
     app.include_router(org.router)
     app.include_router(opportunities.router)
     app.include_router(planning.router)

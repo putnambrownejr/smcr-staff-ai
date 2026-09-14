@@ -96,8 +96,9 @@ start.bat
 ./start.sh
 ```
 
-Both scripts install dependencies and start the server. First run takes ~30 seconds while
-packages download. You should see `Uvicorn running on http://0.0.0.0:8000` when it's ready.
+Both scripts install dependencies and start the server. The first run requires package
+downloads; its duration depends on your connection. With the default port, look for
+`Uvicorn running on http://127.0.0.1:8000` when it is ready (see `start.bat` and `start.sh`).
 
 ## 4. Open the dashboard
 
@@ -167,7 +168,7 @@ claude
 |---|---|
 | `start.bat` says "uv not found" | Run `pip install uv` then retry |
 | `python --version` shows 3.10 or 3.11 | Upgrade: `winget install Python.Python.3.12` |
-| Port 8000 already in use | Stop whatever is running on 8000, or change the port in `start.bat` |
+| Port 8000 already in use | Set `SMCR_PORT` to another available port before launching, then open the dashboard at that port. See `start.bat` / `start.sh`; do not stop an unrelated service. |
 | Dashboard won't load | Confirm the server is running — look for `Uvicorn running` in the terminal |
 | `setup-check.sh`: permission denied | Run `chmod +x setup-check.sh` first |
 

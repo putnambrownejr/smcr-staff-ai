@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import re
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import yaml
 
@@ -17,6 +19,7 @@ from app.schemas.user_docs import (
     UserDocUpdateRequest,
 )
 from app.services.session.handoff_store import is_valid_user_key
+from app.services.user_docs.export import render_product_docx, render_product_markdown
 
 logger = logging.getLogger(__name__)
 
@@ -160,8 +163,41 @@ class UserDocsStore:
                 f"# {project}\n\nCreated {datetime.now(UTC):%Y-%m-%d} via Save to project.\n",
                 encoding="utf-8",
             )
-        target = products_dir / f"{_slugify(entry.title)}.md"
-        target.write_text(_render_markdown(entry), encoding="utf-8")
+        stem = _slugify(entry.title)
+        markdown = render_product_markdown(entry)
+        word = render_product_docx(markdown)
+        version = 1
+        while True:
+            suffix = "" if version == 1 else f"-{version}"
+            target = products_dir / f"{stem}{suffix}.md"
+            word_target = target.with_suffix(".docx")
+            try:
+                # Reserve the name atomically; concurrent saves must not replace
+                # an existing product, even when their titles are identical.
+                output = target.open("x", encoding="utf-8")
+            except FileExistsError:
+                version += 1
+                continue
+            try:
+                word_output = word_target.open("xb")
+            except FileExistsError:
+                output.close()
+                target.unlink(missing_ok=True)
+                version += 1
+                continue
+            except OSError:
+                output.close()
+                target.unlink(missing_ok=True)
+                raise
+            try:
+                with output, word_output:
+                    output.write(markdown)
+                    word_output.write(word)
+            except OSError:
+                target.unlink(missing_ok=True)
+                word_target.unlink(missing_ok=True)
+                raise
+            break
         self.delete(category, user_key, doc_id)
         return Path(project_slug) / "products" / target.name
 
@@ -174,7 +210,17 @@ class UserDocsStore:
 
     def _write(self, path: Path, entry: UserDocEntry) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(_render_markdown(entry), encoding="utf-8")
+        temporary: Path | None = None
+        try:
+            with NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as output:
+                temporary = Path(output.name)
+                output.write(_render_markdown(entry))
+                output.flush()
+                os.fsync(output.fileno())
+            temporary.replace(path)
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
 
     def _read(self, path: Path) -> UserDocEntry | None:
         if not path.exists():
