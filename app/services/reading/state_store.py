@@ -11,6 +11,7 @@ from app.schemas.reading_state import (
     ReadingProgressStatus,
     UpsertReadingProgressRequest,
 )
+from app.services.storage.atomic_file import atomic_write_text
 
 
 class ReadingProgressStore:
@@ -48,7 +49,7 @@ class ReadingProgressStore:
             completed_at=request.completed_at if request.status == ReadingProgressStatus.completed else None,
             last_updated=datetime.now(UTC),
         )
-        self._path(user_key, book.slug).write_text(record.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(self._path(user_key, book.slug), record.model_dump_json(indent=2))
         return record
 
     def _path(self, user_key: str, slug: str) -> Path:

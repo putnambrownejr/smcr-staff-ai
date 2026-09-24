@@ -8,6 +8,7 @@ from typing import Literal
 
 from app.schemas.agent_notes import AgentNotesResponse
 from app.services.session.handoff_store import is_valid_user_key
+from app.services.storage.atomic_file import atomic_write_text
 
 logger = logging.getLogger(__name__)
 
@@ -52,4 +53,4 @@ class AgentNotesStore:
         return self.storage_dir / f"{digest}.json"
 
     def _save(self, user_key: str, data: AgentNotesResponse) -> None:
-        self._path(user_key).write_text(data.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(self._path(user_key), data.model_dump_json(indent=2))

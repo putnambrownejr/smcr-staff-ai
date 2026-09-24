@@ -63,6 +63,8 @@ Then open:
 - Dashboard: http://localhost:8000/dashboard
 - API docs: http://localhost:8000/docs
 
+The Compose port is published on the local machine only (`127.0.0.1:8000`).
+
 See [QUICKSTART.md](QUICKSTART.md) for the full walkthrough.
 
 ## LLM scenario inference (optional)
@@ -103,13 +105,16 @@ Runs all 16 staff archetypes in parallel for cross-lane deliberation on complex 
 
 ### Dashboard
 
-Browser-based local operations board with five lanes:
+Browser-based local operations board with seven navigation items (see
+`tests/e2e/test_dashboard_flows.py` for the current labels):
 
-- **Overview** — Act Now queue, readiness posture, onboarding
-- **Watch** — MARADMIN feed, battle rhythm, message watch, custom RSS
-- **Bench + Files** — Agent roster, module packs, local context, MOS recipes
-- **Workflows** — Staff products, admin workflows, training scenarios, ORM
-- **Workspace** — Profile, quick links, session handoff, settings
+- **Overview** — daily priorities and readiness cues
+- **Watch** — source updates and tracked actions
+- **Bench / Files** — source library, templates, and project files
+- **Workspace** — profile, handoff, and saved notes
+- **FitReps** — evaluation and counseling workspace
+- **AI** — agent and round table tools
+- **A Few Good...Links** — curated external links
 
 ### Key features
 

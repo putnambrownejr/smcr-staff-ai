@@ -6,6 +6,7 @@ from pathlib import Path
 
 from app.core.security import DEFAULT_WARNINGS
 from app.schemas.user_context import ActiveUserContext
+from app.services.storage.atomic_file import atomic_write_text
 
 
 class ActiveUserContextStore:
@@ -24,7 +25,7 @@ class ActiveUserContextStore:
                 ]
             )
         )
-        self._path(context.user_key).write_text(context.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(self._path(context.user_key), context.model_dump_json(indent=2))
         return context
 
     def get(self, user_key: str) -> ActiveUserContext | None:

@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from app.schemas.cadences import CadenceCreateRequest, CadenceRating, CadenceRecord
+from app.services.storage.atomic_file import atomic_write_text
 
 _BUILT_IN_CADENCES = (
     CadenceRecord(
@@ -126,4 +127,4 @@ class CadenceStore:
 
     def _write(self, user_key: str, records: list[CadenceRecord]) -> None:
         payload = {"records": [record.model_dump(mode="json") for record in records]}
-        self._path(user_key).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        atomic_write_text(self._path(user_key), json.dumps(payload, indent=2))

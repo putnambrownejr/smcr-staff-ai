@@ -6,6 +6,7 @@ from pathlib import Path
 
 from app.schemas.user_profile import FormatPreference, UserProfile
 from app.services.session.handoff_store import is_valid_user_key
+from app.services.storage.atomic_file import atomic_write_text
 
 
 class UserProfileStore:
@@ -44,7 +45,7 @@ class UserProfileStore:
             style_notes=style_notes.strip(),
             updated_at=datetime.now(UTC),
         )
-        self._path(user_key).write_text(profile.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(self._path(user_key), profile.model_dump_json(indent=2))
         return profile
 
     def delete(self, user_key: str) -> bool:

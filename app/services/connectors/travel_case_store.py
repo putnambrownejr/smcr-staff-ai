@@ -21,6 +21,7 @@ from app.services.connectors.travel_email_interpreter import (
     infer_attachment_receipt_categories,
 )
 from app.services.session.handoff_store import is_valid_user_key
+from app.services.storage.atomic_file import atomic_write_text
 
 
 class TravelCaseStore:
@@ -295,9 +296,9 @@ class TravelCaseStore:
         return record
 
     def _write(self, record: TravelCaseRecord) -> None:
-        self._path(record.trip_id, record.user_key).write_text(
+        atomic_write_text(
+            self._path(record.trip_id, record.user_key),
             record.model_dump_json(indent=2, exclude_computed_fields=True),
-            encoding="utf-8",
         )
 
     def _path(self, trip_id: str, user_key: str) -> Path:

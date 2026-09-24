@@ -15,6 +15,7 @@ from app.schemas.fitreps import (
     RsProfileSnapshotCreateRequest,
 )
 from app.services.session.handoff_store import is_valid_user_key
+from app.services.storage.atomic_file import atomic_write_text
 
 
 class FitrepStore:
@@ -126,4 +127,4 @@ class FitrepStore:
         return self.root_dir / f"{digest}.json"
 
     def _write(self, workspace: FitrepWorkspace) -> None:
-        self._path(workspace.user_key).write_text(workspace.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(self._path(workspace.user_key), workspace.model_dump_json(indent=2))

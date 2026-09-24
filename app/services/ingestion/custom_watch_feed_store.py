@@ -9,6 +9,7 @@ from app.schemas.custom_watch_feeds import (
     CustomWatchFeed,
     UpdateCustomWatchFeedRequest,
 )
+from app.services.storage.atomic_file import atomic_write_text
 
 
 class CustomWatchFeedStore:
@@ -102,7 +103,4 @@ class CustomWatchFeedStore:
         return self.metadata_dir / f"{feed_id}.json"
 
     def _write(self, record: CustomWatchFeed) -> None:
-        self._metadata_path(record.feed_id).write_text(
-            record.model_dump_json(indent=2),
-            encoding="utf-8",
-        )
+        atomic_write_text(self._metadata_path(record.feed_id), record.model_dump_json(indent=2))

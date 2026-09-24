@@ -10,6 +10,7 @@ from pathlib import Path
 
 from app.schemas.source_library import SavedSource, SourceLifecycle
 from app.services.rag.chunking import TextChunk
+from app.services.storage.atomic_file import atomic_write_text
 
 _SOURCE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
 _TERM_PATTERN = re.compile(r"[a-z0-9]+")
@@ -57,12 +58,12 @@ class SourceLibraryStore:
             }
         )
         paths["raw"].write_bytes(raw_bytes)
-        paths["text"].write_text(normalized_text, encoding="utf-8")
-        paths["chunks"].write_text(
+        atomic_write_text(paths["text"], normalized_text)
+        atomic_write_text(
+            paths["chunks"],
             json.dumps([_serialize_chunk(chunk) for chunk in materialized_chunks], indent=2),
-            encoding="utf-8",
         )
-        paths["metadata"].write_text(saved.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(paths["metadata"], saved.model_dump_json(indent=2))
         return saved
 
     def list(self, user_key: str) -> builtins.list[SavedSource]:
