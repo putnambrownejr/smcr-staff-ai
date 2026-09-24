@@ -11,6 +11,7 @@ from app.schemas.battle_rhythm import (
     BattleRhythmEntryInput,
 )
 from app.services.session.handoff_store import is_valid_user_key
+from app.services.storage.atomic_file import atomic_write_text
 
 
 class BattleRhythmStore:
@@ -47,7 +48,7 @@ class BattleRhythmStore:
             updated_at=datetime.now(UTC),
             warnings=_dedupe_strings(request.warnings),
         )
-        self._path(user_key).write_text(record.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(self._path(user_key), record.model_dump_json(indent=2))
         return record
 
     def _path(self, user_key: str) -> Path:

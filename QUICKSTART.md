@@ -145,20 +145,16 @@ claude
 
 1. **Profile** — Workspace tab → Profile & preferences → enter billet, unit, MOS
 2. **Session handoff** — Workspace tab → Session Handoff → add PME, FitRep, and drill dates so the Chief brief has context
-3. **Module packs** — Bench+Files lane → Module Packs → activate any packs in `modules/`
+3. **Module packs** — Bench / Files → Module Packs → activate any packs in `modules/`
 4. **Optional passkey** — Workspace → Advanced settings → set a passkey if sharing your machine
 
 ---
 
-## Five Lanes
+## Dashboard Navigation
 
-| Lane | Purpose |
-|---|---|
-| **Overview** | Readiness posture, Act Now queue, history fact, command-post summary |
-| **Watch** | MARADMIN feed, source watch, reading tracker |
-| **Bench + Files** | Section bench notebook (configurable), uploaded context files, module packs |
-| **Workflows** | Staff product scaffolds and planning-cell tools |
-| **Workspace** | Profile, settings, session handoff notes |
+The current navigation has seven items (labels asserted in
+`tests/e2e/test_dashboard_flows.py`): Overview, Watch, Bench / Files, Workspace,
+FitReps, AI, and A Few Good...Links.
 
 ---
 

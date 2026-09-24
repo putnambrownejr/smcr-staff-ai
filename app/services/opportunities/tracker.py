@@ -13,6 +13,7 @@ from app.schemas.opportunities import (
     OpportunityType,
 )
 from app.services.billets.recommender import recommend_billets
+from app.services.storage.atomic_file import atomic_write_text
 
 DEFAULT_OPPORTUNITY_WARNINGS = [
     "Opportunity data is advisory only and may change quickly. Verify through official channels.",
@@ -28,7 +29,7 @@ class OpportunityTracker:
     def track(self, opportunities: Sequence[ManualOpportunityRequest]) -> Sequence[OpportunityRecord]:
         tracked = [self._record_from_manual(opportunity) for opportunity in opportunities]
         for record in tracked:
-            self._path(record.opportunity_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
+            atomic_write_text(self._path(record.opportunity_id), record.model_dump_json(indent=2))
         return tracked
 
     def list(self, opportunity_type: OpportunityType | None = None) -> Sequence[OpportunityRecord]:

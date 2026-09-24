@@ -1,6 +1,6 @@
 from urllib.parse import urlsplit
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,6 +8,8 @@ class PublicSettings(BaseSettings):
     # Deliberately do not load the local app's .env or Settings.
     model_config = SettingsConfigDict(env_prefix="SMCR_PUBLIC_", env_file=None, extra="ignore")
     base_url: str = "http://127.0.0.1:8010"
+    requests_per_second: float = Field(default=10, gt=0, le=1000, allow_inf_nan=False)
+    request_burst: int = Field(default=40, ge=1, le=10000)
 
     @field_validator("base_url")
     @classmethod

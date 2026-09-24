@@ -13,7 +13,7 @@ machine — external scenario inference is optional and requires explicit approv
 The AI assistant (you, reading this) is the
 reasoning layer; the app provides structure, continuity storage, and workflow scaffolds.
 
-Five lanes: **Overview** · **Watch** · **Bench+Files** · **Workflows** · **Workspace**
+Seven navigation items: **Overview** · **Watch** · **Bench / Files** · **Workspace** · **FitReps** · **AI** · **A Few Good...Links**
 
 ---
 
@@ -35,8 +35,8 @@ downloaded this repo and needs to be walked through setup. Do this:
      server — the AI assistant (you) still works without it.
 4. **If the server starts:** direct them to http://localhost:8000/dashboard and walk
    them through: Workspace tab → Profile & preferences → fill in rank, MOS, billet,
-   unit. Then show them the five lanes (Overview, Watch, Bench+Files, Workflows,
-   Workspace).
+   unit. Then show them the seven navigation items (Overview, Watch, Bench / Files,
+   Workspace, FitReps, AI, A Few Good...Links).
 5. **On Windows, offer a desktop shortcut** so they don't have to come back to an AI
    assistant just to open the dashboard next time. Ask something like "Want a desktop
    icon so you can open this anytime without going through me?" If yes, run:
@@ -273,7 +273,7 @@ modules/
     contact-list.md
 ```
 
-Activate in the dashboard → Bench+Files → Module Packs → Activate.
+Activate in the dashboard → Bench / Files → Module Packs → Activate.
 
 ---
 

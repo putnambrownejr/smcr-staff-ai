@@ -15,6 +15,7 @@ from app.schemas.actions import (
     ActionStatus,
     ActionUpdateRequest,
 )
+from app.services.storage.atomic_file import atomic_write_text
 
 
 class ActionTracker:
@@ -25,7 +26,7 @@ class ActionTracker:
     def track(self, actions: list[ActionItemRequest]) -> list[ActionRecord]:
         tracked = [self._record_from_request(action) for action in actions]
         for record in tracked:
-            self._path(record.action_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
+            atomic_write_text(self._path(record.action_id), record.model_dump_json(indent=2))
         return tracked
 
     def list(
@@ -81,7 +82,7 @@ class ActionTracker:
             )
         )
         record.updated_at = datetime.now(UTC)
-        self._path(action_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(self._path(action_id), record.model_dump_json(indent=2))
         return record
 
     def add_link(self, action_id: str, link: ActionLinkRequest) -> ActionRecord | None:
@@ -93,7 +94,7 @@ class ActionTracker:
         record.links.append(link_record)
         record.history.append(ActionHistoryEntry(event="link_added", detail=link.label))
         record.updated_at = datetime.now(UTC)
-        self._path(action_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(self._path(action_id), record.model_dump_json(indent=2))
         return record
 
     def remove_link(self, action_id: str, link_id: str) -> ActionRecord | None:
@@ -106,7 +107,7 @@ class ActionTracker:
             return None
         record.history.append(ActionHistoryEntry(event="link_removed", detail=link_id))
         record.updated_at = datetime.now(UTC)
-        self._path(action_id).write_text(record.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(self._path(action_id), record.model_dump_json(indent=2))
         return record
 
     def delete(self, action_id: str) -> bool:

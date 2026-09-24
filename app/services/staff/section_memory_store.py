@@ -7,6 +7,7 @@ from pathlib import Path
 from app.core.security import DEFAULT_WARNINGS
 from app.schemas.section_memory import SectionMemoryEntry, SectionMemoryProfile, SectionMemoryProfileUpsertRequest
 from app.services.session.handoff_store import is_valid_user_key
+from app.services.storage.atomic_file import atomic_write_text
 
 
 class SectionMemoryStore:
@@ -36,7 +37,7 @@ class SectionMemoryStore:
                 }
             ),
         )
-        self._path(user_key).write_text(profile.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(self._path(user_key), profile.model_dump_json(indent=2))
         return profile
 
     def delete(self, user_key: str) -> bool:

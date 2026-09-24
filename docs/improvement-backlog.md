@@ -145,5 +145,5 @@ Audit found three gaps in the handoff → brief → action loop:
 | ID | Gap | Status |
 |----|-----|--------|
 | C1 | Stale handoff banner showed raw `PUT /handoffs/{user_key}` API instruction — no UI affordance | **fixed** (`6bb4522`) — replaced with link-button navigating to Workspace lane |
-| C2 | No handoff editor in dashboard — user cannot directly edit/save handoff notes from the UI; must use the API | open — needs a handoff notes form in the Workspace lane |
+| C2 | No handoff editor in dashboard — user cannot directly edit/save handoff notes from the UI; must use the API | **done** — Workspace handoff editor supports creating, editing, saving, archiving, and retrying failed saves; covered by `tests/e2e/test_dashboard_integrity.py` |
 | C3 | Action tracker (Act Now + watch lane) shows actions as read-only lists; no "Mark done" affordance; `PATCH /actions/{action_id}` exists but is not wired to any UI | **done (2026-07-10)** — Watch-lane actions now support Mark done, backend persistence, and a ten-second Undo; action UI moved to `actions.js` |

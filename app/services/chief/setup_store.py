@@ -6,6 +6,7 @@ from pathlib import Path
 
 from app.schemas.chief_setup import ChiefSetup, ChiefSetupUpsertRequest
 from app.services.session.handoff_store import is_valid_user_key
+from app.services.storage.atomic_file import atomic_write_text
 
 
 class ChiefSetupStore:
@@ -41,7 +42,7 @@ class ChiefSetupStore:
             standing_notes=request.standing_notes.strip(),
             updated_at=datetime.now(UTC),
         )
-        self._path(user_key).write_text(setup.model_dump_json(indent=2), encoding="utf-8")
+        atomic_write_text(self._path(user_key), setup.model_dump_json(indent=2))
         return setup
 
     def delete(self, user_key: str) -> bool:

@@ -8,6 +8,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from app.services.storage.atomic_file import atomic_write_text
+
 
 class CapabilityAuditRecord(BaseModel):
     undo_token: str
@@ -75,4 +77,4 @@ class CapabilityAuditStore:
 
     def _write(self, user_key: str, records: list[CapabilityAuditRecord]) -> None:
         payload = {"records": [record.model_dump(mode="json") for record in records]}
-        self._path(user_key).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        atomic_write_text(self._path(user_key), json.dumps(payload, indent=2))

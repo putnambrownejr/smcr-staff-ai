@@ -12,6 +12,7 @@ from app.schemas.automations import Automation, AutomationTemplate, AutomationUp
 from app.schemas.chief_setup import ChiefSetup
 from app.services.chief.setup_store import _clean_list
 from app.services.session.handoff_store import is_valid_user_key
+from app.services.storage.atomic_file import atomic_write_text
 
 AUTOMATION_TEMPLATES: tuple[AutomationTemplate, ...] = (
     AutomationTemplate(
@@ -178,7 +179,7 @@ class AutomationStore:
 
     def _write(self, user_key: str, items: list[Automation]) -> None:
         payload = {"automations": [item.model_dump(mode="json") for item in items]}
-        self._path(user_key).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        atomic_write_text(self._path(user_key), json.dumps(payload, indent=2))
 
 
 def _normalized(request: AutomationUpsertRequest) -> dict[str, object]:

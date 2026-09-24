@@ -72,7 +72,7 @@ Think: a well-organized field desk. Clean, purposeful, no wasted space.
 
 ### Interaction
 - Actions are always explicit (buttons, not hover tricks)
-- The lane navigation is tab-based — Overview / Watch / Bench+Files / Workflows / Workspace
+- The dashboard navigation is tab-based — Overview, Watch, Bench / Files, Workspace, FitReps, AI, and A Few Good...Links (labels asserted in `tests/e2e/test_dashboard_flows.py`)
 - Tool outputs appear inline below the form that triggered them
 - Floating `<dialog>` for quick-launch tools (Lone Planner, Staff Package)
 - No animations except `behavior: smooth` scroll — nothing for its own sake
@@ -100,9 +100,9 @@ Think: a well-organized field desk. Clean, purposeful, no wasted space.
 
 ---
 
-## Current State (as of 2026-06-03)
+## June 2026 Baseline (navigation checked 2026-09-24)
 
-**Dashboard lanes:** Overview (Act Now + readiness + source watch) / Watch / Bench+Files / Workflows / Workspace
+**Dashboard navigation:** Overview, Watch, Bench / Files, Workspace, FitReps, AI, and A Few Good...Links (labels asserted in `tests/e2e/test_dashboard_flows.py`)
 
 **Skill layer:** 9 operator skills covering chief brief, monitoring, meeting→actions, source trust, connector normalization, briefings, handoff
 
