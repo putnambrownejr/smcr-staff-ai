@@ -1,6 +1,9 @@
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from math import ceil
 from pathlib import Path
+from threading import Lock
+from time import monotonic
 
 from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse, PlainTextResponse
@@ -15,9 +18,32 @@ from app.public_library.settings import PublicSettings
 STATIC_DIR = Path(__file__).with_name("static")
 
 
+class RequestLimiter:
+    """Constant-memory token bucket, shared by all callers in one process."""
+
+    def __init__(self, rate: float, burst: int, clock: Callable[[], float] = monotonic) -> None:
+        self.rate = rate
+        self.burst = burst
+        self.tokens = float(burst)
+        self.clock = clock
+        self.updated = clock()
+        self.lock = Lock()
+
+    def retry_after(self) -> int:
+        with self.lock:
+            now = self.clock()
+            self.tokens = min(self.burst, self.tokens + max(0, now - self.updated) * self.rate)
+            self.updated = now
+            if self.tokens >= 1:
+                self.tokens -= 1
+                return 0
+            return max(1, ceil((1 - self.tokens) / self.rate))
+
+
 def create_app(settings: PublicSettings | None = None, catalog: PublicCatalog | None = None) -> FastAPI:
     settings = settings or PublicSettings()
     catalog = catalog or PublicCatalog.load()
+    limiter = RequestLimiter(settings.requests_per_second, settings.request_burst)
     mcp = create_mcp_server(catalog)
     mcp_app = mcp.streamable_http_app(
         json_response=True, stateless_http=True, max_request_body_size=16384,
@@ -40,13 +66,19 @@ def create_app(settings: PublicSettings | None = None, catalog: PublicCatalog | 
 
     @application.middleware("http")
     async def security_headers(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        # No client-IP trust assumptions. Health stays available for platform probes.
+        if request.url.path != "/health" and (retry := limiter.retry_after()):
+            response: Response = PlainTextResponse(
+                "Library is busy. Please retry shortly.", status_code=429,
+                headers={"Retry-After": str(retry), "Cache-Control": "no-store"},
+            )
         # Health probes need no configured host; all content routes do.
-        if request.url.path != "/health" and request.headers.get("host") not in settings.allowed_hosts:
-            return PlainTextResponse("Unrecognized host.", status_code=421)
-        origin = request.headers.get("origin")
-        if origin is not None and origin != settings.base_url:
-            return PlainTextResponse("Unrecognized origin.", status_code=403)
-        response = await call_next(request)
+        elif request.url.path != "/health" and request.headers.get("host") not in settings.allowed_hosts:
+            response = PlainTextResponse("Unrecognized host.", status_code=421)
+        elif (origin := request.headers.get("origin")) is not None and origin != settings.base_url:
+            response = PlainTextResponse("Unrecognized origin.", status_code=403)
+        else:
+            response = await call_next(request)
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; "
             "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"

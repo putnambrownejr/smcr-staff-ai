@@ -56,7 +56,26 @@ are deliberately not included. No existing skills or hooks were changed.
 
 ## Deploy to Google Cloud Run
 
-**Not deployed yet.** First choose a Google Cloud project with billing enabled and
+**Pilot deployed September 14, 2026 (America/Chicago).**
+
+- Website: https://smcr-public-library-mcxncfmn5a-uc.a.run.app
+- MCP: https://smcr-public-library-mcxncfmn5a-uc.a.run.app/mcp (no authentication)
+- Project: `project-c6859928-6e57-4ab0-8f1`; region: `us-central1`.
+- Cloud Build: `55435f71-e599-4a11-9313-292ba7fdd9f9`.
+- Revision: `smcr-public-library-00002-pkl`.
+- Image digest: `sha256:4c8943c09f80b5a160da6ab6d899ff8f5775e1733d9a8bc530f806bf201dda55`.
+- Verified over public HTTPS: portal/assets, catalog, connection metadata, and official
+  MCP client tool discovery, search, and retrieval. Personal dashboard routes return 404.
+  Actual ChatGPT/Claude/Gemini account connections still need a pilot test.
+
+Use the canonical URL above: the CLI also prints a numeric-project alias, which is
+not the configured application origin. Build uploads included only 17 allowlisted files.
+The project's default build account required `roles/storage.objectViewer` on its
+Cloud Build source bucket, `roles/artifactregistry.writer` on `smcr-public`, and
+`roles/logging.logWriter` on the project. The runtime uses its separate service account.
+[Cloud Build account permissions](https://docs.cloud.google.com/build/docs/cloud-build-service-account)
+
+For a new deployment, first choose a Google Cloud project with billing enabled and
 install/authenticate the [Google Cloud CLI](https://docs.cloud.google.com/sdk/docs/install).
 No custom domain is necessary: Cloud Run supplies an HTTPS URL and supports
 Streamable HTTP MCP servers. [Cloud Run MCP hosting](https://docs.cloud.google.com/run/docs/host-mcp-servers)
@@ -142,6 +161,46 @@ Provider documentation checked September 12, 2026; confirm availability at rollo
 This does not certify doctrine currency or authorization for official detachment use.
 
 ## Maintain and validate
+
+### Abuse controls and budget alerts (September 15, 2026)
+
+Deployed revision `smcr-public-library-00003-wk6`, build
+`16e064d5-00fb-4cbd-bd55-925896df4606`, image digest
+`sha256:d3131f134882d658054dcc2c1c1ff685228a411a1efada2dbd786aae03d85d62`.
+This supersedes the initial deployment recorded above. Validation: 26 unit/protocol
+tests, three browser tests, lint and type checks passed.
+
+The application uses a constant-memory token bucket shared by every caller in one
+process: 10 requests/second with a burst of 40. It covers website, API and MCP routes;
+only exact `/health` is exempt for probes. Excess traffic gets HTTP 429 with
+`Retry-After` and `Cache-Control: no-store`. Configure with
+`SMCR_PUBLIC_REQUESTS_PER_SECOND` and `SMCR_PUBLIC_REQUEST_BURST`.
+No client-IP header is trusted and no client identity is retained.
+
+This is overload mitigation, not edge DDoS protection or a spending cap. A caller
+can consume the shared bucket and affect other users. Each instance has its own
+bucket, restarts refill it, and rejected traffic still reaches Cloud Run. Existing
+two-instance scaling configuration is not a strict service-wide request ceiling.
+[429 semantics](https://www.rfc-editor.org/rfc/rfc6585#section-4)
+
+Created the project-scoped `SMCR pilot monthly alerts` budget: USD 10/month with
+current-spend thresholds 10%, 50%, 100% ($1/$5/$10), including credits. Default
+billing-account administrator/user notification recipients remain enabled. Budget
+ID: `3ebb7488-10b0-4f48-ae4d-5a90616c6700`. The existing account-wide $100 budget
+was preserved. Alerts are delayed notifications, not automatic shutdown.
+[Budget behavior](https://docs.cloud.google.com/billing/docs/how-to/budgets)
+
+Cloud Armor was evaluated but not provisioned. A global load-balancer forwarding
+rule costs $0.025/hour; one Armor Standard policy costs $0.006849315/hour and each
+rule $0.001369863/hour. At 730 hours, one forwarding rule, one policy and two rules
+are approximately $25.25/month before traffic, IP and other applicable charges.
+This exceeds the pilot's $10 alert budget even before usage. An edge deployment
+would also need an HTTPS frontend and ingress restrictions preventing direct
+`run.app` bypass, plus updated client URLs. Revisit if stronger protection is worth
+the fixed cost; the application limiter is not equivalent protection.
+[Armor pricing](https://cloud.google.com/armor/pricing),
+[load balancing pricing](https://cloud.google.com/load-balancing/pricing),
+[Cloud Run integration and bypass prevention](https://docs.cloud.google.com/armor/docs/integrating-cloud-armor)
 
 Edit the explicit allowlists in `scripts/build_public_catalog.py` only after
 reviewing the proposed publication content. Review the generated diff before release:
