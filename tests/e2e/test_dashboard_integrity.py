@@ -156,10 +156,7 @@ def test_project_move_requires_successful_draft_save(personal_page: Any, e2e_bas
         else:
             route.continue_()
 
-    alerts: list[str] = []
-
     def dismiss(dialog: Any) -> None:
-        alerts.append(dialog.message)
         dialog.accept()
 
     try:
@@ -170,14 +167,16 @@ def test_project_move_requires_successful_draft_save(personal_page: Any, e2e_bas
         folder = page.get_by_label("Project folder for Synthetic move check", exact=True)
         folder.fill("synthetic-move-check")
         row = folder.locator("xpath=..")
-        row.get_by_role("button", name="Save to project", exact=True).click()
         if save_succeeds:
+            row.get_by_role("button", name="Save to project", exact=True).click()
             expect(folder).to_have_count(0)
             assert calls == ["save", "move"]
         else:
+            with page.expect_event("dialog") as dialog_event:
+                row.get_by_role("button", name="Save to project", exact=True).click()
             expect(folder).to_be_visible()
             assert calls == ["save"]
-            assert alerts and "has not been moved" in alerts[0]
+            assert "has not been moved" in dialog_event.value.message
     finally:
         page.request.delete(e2e_base_url + endpoint)
 
