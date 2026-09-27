@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recover workspace · SMCR Staff AI</title>
+  <link rel="stylesheet" href="/static/dashboard/workspace-recovery.css">
+  <script src="/static/dashboard/workspace-recovery.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>Recover your workspace</h1>
+    <p>Dashboard workspace IDs are saved in this browser for each address separately. Your files remain in the same local app.</p>
+    <section id="old-address" hidden>
+      <h2>Copy your old workspace ID</h2>
+      <p>Copy this ID, then open <a id="new-address-link" href="http://localhost:8000/dashboard/workspace-recovery">the recovery page at localhost</a> and paste it there.</p>
+      <output id="current-key"></output>
+      <button id="copy-key" type="button">Copy ID</button>
+    </section>
+    <section id="new-address" hidden>
+      <h2>Use your old workspace ID</h2>
+      <p>Open this recovery page at the old 127.0.0.1 address first, copy the ID shown there, and paste it below.</p>
+      <form id="recover-form">
+        <label for="workspace-key">Workspace ID</label>
+        <input id="workspace-key" autocomplete="off" required>
+        <button type="submit">Open recovered workspace</button>
+      </form>
+    </section>
+    <p id="message" role="status"></p>
+    <p><a href="/dashboard">Back to dashboard</a></p>
+  </main>
+</body>
+</html>

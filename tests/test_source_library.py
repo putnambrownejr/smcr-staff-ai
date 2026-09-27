@@ -6,9 +6,15 @@ import pytest
 from pydantic import ValidationError
 
 from app.core.config import Settings, configured_storage_dirs, default_source_library_dir
-from app.schemas.source_library import SavedSource, SourceFetchApproval, SourceFetchRequest
+from app.schemas.source_library import SavedSource, SourceFetchApproval, SourceFetchPreview, SourceFetchRequest
+from app.schemas.source_state import VerifiedSourceStatus
 from app.services.rag.chunking import TextChunk
-from app.services.source_library.fetcher import PublicSourceFetcher, SourceFetchError
+from app.services.source_library.fetcher import FetchedPublicSource, PublicSourceFetcher, SourceFetchError
+from app.services.source_library.service import (
+    SourceLibraryRecheckRequest,
+    SourceLibraryReviewRequest,
+    SourceLibraryService,
+)
 from app.services.source_library.store import SourceLibraryStore
 
 
@@ -57,6 +63,69 @@ def test_store_isolates_users_and_removes_content(tmp_path: Path) -> None:
     assert store.get("user-a", saved.source_id) is None
     assert store.search("user-a", "alpha", None, 5) == []
     assert not (tmp_path / store.user_key_digest("user-a")).exists()
+
+
+def test_review_and_recheck_update_metadata_without_writing_source_content(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = SourceLibraryStore(tmp_path)
+    source = SavedSource(
+        source_id="source-alpha",
+        user_key_digest=store.user_key_digest("user-a"),
+        original_url="https://example.test/alpha",
+        canonical_url="https://example.test/alpha",
+        title="Alpha source",
+        media_type="text/html",
+        content_hash="a" * 64,
+        byte_size=12,
+        raw_content_path="",
+        normalized_text_path="",
+        chunks_path="",
+        chunk_count=0,
+    )
+    saved = store.save("user-a", source, b"<p>retained</p>", "retained text", [TextChunk(chunk_index=0, text="retained text")])
+    user_dir = tmp_path / store.user_key_digest("user-a")
+    content_paths = [user_dir / saved.raw_content_path, user_dir / saved.normalized_text_path, user_dir / saved.chunks_path]
+    content_before = [path.read_bytes() for path in content_paths]
+
+    class FakeFetcher:
+        def build_preview(self, user_key: str, request: SourceFetchRequest) -> object:
+            del user_key, request
+            return object()
+
+        def fetch_approved(self, user_key: str, request: SourceFetchRequest, approval: object, preview: object) -> FetchedPublicSource:
+            del user_key, request, approval, preview
+            return FetchedPublicSource(
+                raw_bytes=b"candidate", normalized_text="candidate", media_type="text/html", title="Alpha source",
+                content_hash="b" * 64, byte_size=9, canonical_url="https://example.test/alpha",
+            )
+
+    def reject_raw_write(_path: Path, _data: bytes) -> int:
+        pytest.fail("metadata-only operation attempted to write source bytes")
+
+    monkeypatch.setattr(Path, "write_bytes", reject_raw_write)
+    service = SourceLibraryService(store, FakeFetcher())  # type: ignore[arg-type]
+    reviewed = service.review(
+        saved.source_id,
+        SourceLibraryReviewRequest(user_key="user-a", status=VerifiedSourceStatus.current, notes="Reviewed"),
+    )
+    assert reviewed is not None and reviewed.review_notes == "Reviewed"
+    rechecked = service.recheck(
+        saved.source_id,
+        SourceLibraryRecheckRequest(
+            user_key="user-a",
+            preview=SourceFetchPreview(
+                url="https://example.test/alpha", host="example.test", approval_digest="c" * 64
+            ),
+            approval=SourceFetchApproval(approval_digest="c" * 64, acknowledged=True),
+        ),
+    )
+
+    assert rechecked is not None and rechecked.content_changed is True
+    persisted = store.get("user-a", saved.source_id)
+    assert persisted is not None
+    assert persisted.trust_status == VerifiedSourceStatus.watch
+    assert [path.read_bytes() for path in content_paths] == content_before
 
 
 def _fetcher(handler: httpx.MockTransport) -> PublicSourceFetcher:

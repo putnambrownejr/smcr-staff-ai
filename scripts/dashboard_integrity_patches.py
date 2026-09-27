@@ -536,7 +536,7 @@ _V2_ROUNDTABLE_BLOCK = (
     '          <div style="padding:12px;border:1px solid #d6bd7a;border-radius:6px;background:#17150e;display:grid;gap:8px;">\n'
     '            <strong style="font-size:0.8rem;color:#f5ebe9;">Approval required · {{ roundtablePreviewCalls }} external AI calls · {{ roundtablePreviewModel }}</strong>\n'
     '            <p style="margin:0;color:#c7cfd8;font-size:0.76rem;line-height:1.45;">Each seat sends its role notes plus your text to the external provider. Findings below are advisory pattern matches, not a classification decision. You are confirming this is UNCLASSIFIED and appropriate for that provider.</p>\n'
-    '            <details><summary style="cursor:pointer;color:#8a94a0;font-size:0.76rem;font-weight:600;">What will be sent (your text, sanitized · {{ roundtableRedactedCount }} redactions)</summary><pre style="margin:6px 0 0;white-space:pre-wrap;color:#c7cfd8;font-size:0.76rem;line-height:1.45;font-family:inherit;max-height:220px;overflow:auto;">{{ roundtablePreviewUserText }}</pre></details>\n'
+    '            <details open><summary style="cursor:pointer;color:#8a94a0;font-size:0.76rem;font-weight:600;">Full outbound preview for the selected disclosure mode · {{ roundtableRedactedCount }} flagged fields</summary><pre style="margin:6px 0 0;white-space:pre-wrap;color:#c7cfd8;font-size:0.76rem;line-height:1.45;font-family:inherit;max-height:300px;overflow:auto;">{{ roundtablePreviewText }}</pre></details>\n'
     '            <sc-if value="{{ roundtableHasFindings }}" hint-placeholder-val="{{ false }}">\n'
     '            <sc-for list="{{ roundtablePreviewFindings }}" as="f" hint-placeholder-count="1">\n'
     '              <p style="margin:0;color:#e8c27a;font-size:0.74rem;line-height:1.4;">⚠ {{ f.text }}</p>\n'
@@ -842,4 +842,13 @@ AI_PAGE_PATCHES.extend(
             "      actNow, maradmins, almars, feeds, actions, srcUpdates, srcUpdatesEmpty,\n",
         ),
     ]
+)
+
+AI_PAGE_PATCHES.append(
+    (
+        "Round table: display every outbound message for the selected disclosure mode",
+        "roundtablePreviewText }}",
+        '            <details><summary style="cursor:pointer;color:#8a94a0;font-size:0.76rem;font-weight:600;">What will be sent (your text, sanitized · {{ roundtableRedactedCount }} redactions)</summary><pre style="margin:6px 0 0;white-space:pre-wrap;color:#c7cfd8;font-size:0.76rem;line-height:1.45;font-family:inherit;max-height:220px;overflow:auto;">{{ roundtablePreviewUserText }}</pre></details>\n',
+        '            <details open><summary style="cursor:pointer;color:#8a94a0;font-size:0.76rem;font-weight:600;">Full outbound preview for the selected disclosure mode · {{ roundtableRedactedCount }} flagged fields</summary><pre style="margin:6px 0 0;white-space:pre-wrap;color:#c7cfd8;font-size:0.76rem;line-height:1.45;font-family:inherit;max-height:300px;overflow:auto;">{{ roundtablePreviewText }}</pre></details>\n',
+    )
 )

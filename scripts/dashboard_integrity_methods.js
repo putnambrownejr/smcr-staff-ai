@@ -750,7 +750,8 @@
     ].join("\n") : "";
     const packet = this.state.roundtablePacket || null;
     const preview = this.state.roundtablePreview || null;
-    const userMsg = preview && preview.sanitized_preview ? (preview.sanitized_preview.find((m) => m.role === "user") || {}).content : "";
+    const selectedMessages = preview ? (this.state.roundtableDisclosure === "original" ? preview.original_preview : preview.sanitized_preview) || [] : [];
+    const previewText = selectedMessages.map((m) => String(m.role || "message").toUpperCase() + "\n" + String(m.content || "")).join("\n\n");
     const findings = preview ? (preview.findings || []).map((f) => ({ text: (f.severity || "").toUpperCase() + " · " + (f.category || "") + " — " + (f.message || "") })) : [];
     const copy = (text, flag) => { navigator.clipboard && navigator.clipboard.writeText(text || ""); this.setState({ [flag]: true }); clearTimeout(this["_" + flag + "Timer"]); this["_" + flag + "Timer"] = setTimeout(() => this.setState({ [flag]: false }), 1500); };
     return {
@@ -779,7 +780,7 @@
       roundtablePreviewRequired: !!preview,
       roundtablePreviewCalls: preview ? String(preview.expected_call_count || 0) : "0",
       roundtablePreviewModel: preview ? ((preview.model || "") + (preview.provider ? " · " + preview.provider : "")) : "",
-      roundtablePreviewUserText: userMsg || "",
+      roundtablePreviewText: previewText,
       roundtablePreviewFindings: findings, roundtableHasFindings: findings.length > 0,
       roundtableRedactedCount: preview ? String((preview.redacted_fields || []).length) : "0",
       roundtableDisclosure: this.state.roundtableDisclosure || "sanitized", onRoundtableDisclosure: bind("roundtableDisclosure"),

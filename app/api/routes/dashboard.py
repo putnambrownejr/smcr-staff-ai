@@ -71,6 +71,7 @@ from app.services.templates.system_template_catalog import SystemTemplateCatalog
 
 router = APIRouter(tags=["dashboard"])
 _DASHBOARD_HTML = Path(__file__).resolve().parents[2] / "static" / "dashboard" / "index.html"
+_WORKSPACE_RECOVERY_HTML = _DASHBOARD_HTML.with_name("workspace-recovery.html")
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SEED_DIR = REPO_ROOT / "data" / "seed"
 _reference_library_cache: list[DashboardReferenceEntry] | None = None
@@ -105,6 +106,17 @@ def get_dashboard(request: Request) -> HTMLResponse:
     )
     html = html.replace("<head>", "<head>" + pwa_tags + shim_tags, 1)
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})
+
+
+@router.get("/dashboard/workspace-recovery", summary="Recover a workspace ID across local dashboard origins")
+def get_workspace_recovery() -> HTMLResponse:
+    return HTMLResponse(
+        _WORKSPACE_RECOVERY_HTML.read_text(encoding="utf-8"),
+        headers={
+            "Cache-Control": "no-store",
+            "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; frame-ancestors 'none'",
+        },
+    )
 
 
 @router.get(

@@ -78,6 +78,14 @@ def _decoded_dashboard_component_source() -> str:
     return decoded
 
 
+def test_roundtable_preview_displays_all_messages_for_selected_mode() -> None:
+    source = _decoded_dashboard_component_source()
+    assert 'this.state.roundtableDisclosure === "original" ? preview.original_preview : preview.sanitized_preview' in source
+    assert 'selectedMessages.map((m)' in source
+    assert "{{ roundtablePreviewText }}" in source
+    assert "{{ roundtablePreviewUserText }}" not in source
+
+
 def test_dashboard_bundle_is_wired_to_real_actions_api() -> None:
     """The compiled dashboard bundle is a static export from a design tool with
     all state (and demo data) hardcoded client-side -- see

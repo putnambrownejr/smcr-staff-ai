@@ -70,6 +70,10 @@ ignore_missing_imports = true
 module = ["playwright.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["app.public_library.server", "public_library.test_http"]
+warn_unused_ignores = false
+
 [dependency-groups]
 dev = [
     "playwright>=1.60.0",

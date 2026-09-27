@@ -1,0 +1,7 @@
+body { margin: 0; background: #0d1014; color: #eef2f6; font: 16px/1.5 system-ui, sans-serif; }
+main { max-width: 650px; margin: 8vh auto; padding: 24px; }
+section { border: 1px solid #313844; border-radius: 8px; padding: 18px; margin: 24px 0; }
+a { color: #9bc8ff; }
+button, input { font: inherit; padding: 8px 12px; margin: 8px 0; }
+input { display: block; width: min(100%, 35rem); box-sizing: border-box; }
+output { display: block; overflow-wrap: anywhere; font-family: monospace; }
