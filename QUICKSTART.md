@@ -107,6 +107,21 @@ downloads; its duration depends on your connection. With the default port, look 
 Your workspace opens automatically on first visit — no account creation needed.
 A unique profile ID is generated and stored in your browser.
 
+### Recovering work opened with an older Windows shortcut
+
+The older desktop shortcut used `http://127.0.0.1:8000`, while Quickstart uses
+`http://localhost:8000`. Browsers treat those as separate origins, so the same
+saved workspace can appear missing even though both addresses use the same
+underlying stored files. To restore the workspace in the current address:
+
+1. Open `http://127.0.0.1:8000/dashboard/workspace-recovery` and copy the
+   workspace ID shown there.
+2. Open `http://localhost:8000/dashboard/workspace-recovery`, paste that ID,
+   and submit. The recovery page will open the dashboard.
+
+This explicitly recovers the browser workspace; it does not automatically
+migrate data between the two addresses.
+
 ---
 
 ## Docker (Alternative)

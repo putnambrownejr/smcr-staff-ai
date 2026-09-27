@@ -227,26 +227,31 @@ def _run_roundtable(
     settings = get_settings()
     scope_label = _roundtable_scope_label(participants, request.synthesizer)
     agent_ids = [*participants, *([request.synthesizer] if request.synthesizer else [])]
+    expected_call_count = len(participants) * request.rounds + (1 if request.synthesizer else 0)
+    base_context = _build_agent_context(
+        request.context,
+        active_context_store,
+        options={"inference": request.inference},
+        approval=request.external_processing_approval,
+        preview_only=preview_only,
+        scope_label=scope_label,
+        expected_call_count=expected_call_count,
+    )
     roundtable_digest = build_chain_approval_digest(
         base_url=settings.llm_base_url,
         model=settings.llm_model,
         scenario=request.scenario,
         steps=[{"agent_id": agent_id} for agent_id in agent_ids],
-        context={**request.context, "roundtable_rounds": request.rounds},
+        context={**_approval_context(base_context), "roundtable_rounds": request.rounds},
     )
-    expected_call_count = len(participants) * request.rounds + (1 if request.synthesizer else 0)
 
     def context_factory(prior_assessments: dict[str, object]) -> AgentContext:
-        return _build_agent_context(
-            request.context,
-            active_context_store,
-            options={"inference": request.inference},
-            approval=request.external_processing_approval,
-            preview_only=preview_only,
-            scope_label=scope_label,
-            expected_call_count=expected_call_count,
-            approval_digest_override=roundtable_digest,
-            prior_assessments=prior_assessments,
+        return base_context.model_copy(
+            deep=True,
+            update={
+                "prior_assessments": prior_assessments,
+                "external_processing_approval_digest_override": roundtable_digest,
+            },
         )
 
     return RoundtableService(agents).run(
@@ -344,12 +349,25 @@ def _run_agent_chain(
     warnings: list[str] = []
     settings = get_settings()
     scope_label = "chain:" + "->".join(step.agent_id for step in request.steps)
+    base_context = _build_agent_context(
+        request.context,
+        active_context_store,
+        source_selection=request.source_selection,
+        source_evidence_resolver=source_evidence_resolver,
+        approval=request.external_processing_approval,
+        preview_only=preview_only,
+        scope_label=scope_label,
+        expected_call_count=len(request.steps),
+    )
     chain_digest = build_chain_approval_digest(
         base_url=settings.llm_base_url,
         model=settings.llm_model,
         scenario=request.scenario,
         steps=[step.model_dump() for step in request.steps],
-        context=dict(request.context),
+        context={
+            **_approval_context(base_context),
+            "source_selection": request.source_selection.model_dump(mode="json") if request.source_selection else None,
+        },
     )
 
     for step in request.steps:
@@ -357,17 +375,12 @@ def _run_agent_chain(
         if agent is None:
             raise HTTPException(status_code=404, detail=f"Unknown agent in chain: {step.agent_id}")
 
-        context = _build_agent_context(
-            request.context,
-            active_context_store,
-            source_selection=request.source_selection,
-            source_evidence_resolver=source_evidence_resolver,
-            approval=request.external_processing_approval,
-            preview_only=preview_only,
-            scope_label=scope_label,
-            expected_call_count=len(request.steps),
-            approval_digest_override=chain_digest,
-            prior_assessments=prior_assessments,
+        context = base_context.model_copy(
+            deep=True,
+            update={
+                "prior_assessments": prior_assessments,
+                "external_processing_approval_digest_override": chain_digest,
+            },
         )
         agent_input = step.input or request.scenario
         response = agent.run(agent_input, context)
@@ -409,6 +422,19 @@ def _run_agent_chain(
 
 def _unique_warnings(warnings: list[str]) -> list[str]:
     return list(dict.fromkeys(warnings))
+
+
+def _approval_context(context: AgentContext) -> dict[str, object]:
+    """Bind workflow approval to the resolved, frozen outbound context."""
+    return context.model_dump(
+        mode="json",
+        exclude={
+            "external_processing_approval",
+            "external_processing_preview_only",
+            "external_processing_approval_digest_override",
+            "prior_assessments",
+        },
+    )
 
 
 def _build_agent_context(

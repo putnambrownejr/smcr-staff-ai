@@ -78,7 +78,7 @@ def health_url(port: int) -> str:
 
 
 def dashboard_url(port: int) -> str:
-    return f"http://127.0.0.1:{port}/dashboard"
+    return f"http://localhost:{port}/dashboard"
 
 
 def show_message(text: str, *, icon: int = MB_ICONINFORMATION) -> None:

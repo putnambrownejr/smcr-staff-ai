@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 import app.services.external_processing.audit_store as audit_store_module
+from app.api.routes.agents import get_active_context_store
 from app.core.config import get_settings
 from app.core.security import external_processing_categories, redact_for_external_processing
 from app.main import app
@@ -20,6 +21,7 @@ from app.schemas.external_processing import (
     ExternalProcessingOutcome,
     ExternalProcessingPreview,
 )
+from app.schemas.user_context import ActiveUserContext
 from app.services.agents.base import DRAFT_NOTICE
 from app.services.agents.registry import agent_registry
 from app.services.external_processing.audit_store import ExternalProcessingAuditStore
@@ -28,6 +30,7 @@ from app.services.external_processing.preflight import (
     ExternalProcessingPreflightService,
 )
 from app.services.llm_client import _llm_settings
+from app.services.session.active_context_store import ActiveUserContextStore
 
 
 def test_local_only_decision_needs_no_digest_or_acknowledgement() -> None:
@@ -395,3 +398,66 @@ def test_chain_preview_uses_one_workflow_digest(configured_llm: None) -> None:
     assert preview["expected_call_count"] == 2
     assert preview["approval_digest"]
     assert preview["payload_digest"]
+
+
+@pytest.mark.parametrize(
+    ("preview_path", "run_path", "payload"),
+    [
+        (
+            "/agents/chain/external-processing-preview",
+            "/agents/chain",
+            {
+                "scenario": "A magnitude 7 earthquake exercise in Japan.",
+                "steps": [{"agent_id": "staff-g9"}],
+                "context": {"user_key": "approval-context-test", "request_is_training_or_fictional": True},
+            },
+        ),
+        (
+            "/agents/roundtable/external-processing-preview",
+            "/agents/roundtable",
+            {
+                "scenario": "A magnitude 7 earthquake exercise in Japan.",
+                "agents": ["staff-g9"],
+                "synthesizer": None,
+                "rounds": 1,
+                "context": {"user_key": "approval-context-test", "request_is_training_or_fictional": True},
+            },
+        ),
+    ],
+)
+def test_workflow_approval_expires_when_saved_context_changes(
+    configured_llm: None,
+    tmp_path: Path,
+    preview_path: str,
+    run_path: str,
+    payload: dict[str, object],
+) -> None:
+    store = ActiveUserContextStore(tmp_path / "active-context")
+    store.upsert(ActiveUserContext(user_key="approval-context-test", temporary_notes=["Fictional note A"]))
+    app.dependency_overrides[get_active_context_store] = lambda: store
+    client = TestClient(app)
+    try:
+        preview = client.post(preview_path, json=payload)
+        assert preview.status_code == 200
+        assert preview.json()["approval_digest"]
+
+        store.upsert(ActiveUserContext(user_key="approval-context-test", temporary_notes=["Fictional note B"]))
+        new_preview = client.post(preview_path, json=payload)
+        assert new_preview.status_code == 200
+        assert new_preview.json()["approval_digest"] != preview.json()["approval_digest"]
+
+        approved = {
+            **payload,
+            "external_processing_approval": {
+                "disclosure_mode": "sanitized",
+                "approval_digest": preview.json()["approval_digest"],
+                "acknowledged_finding_categories": preview.json()["finding_categories"],
+                "acknowledged": True,
+            },
+        }
+        with patch("app.services.llm_client.httpx.Client") as mock_client:
+            response = client.post(run_path, json=approved)
+        assert response.status_code == 409
+        mock_client.assert_not_called()
+    finally:
+        app.dependency_overrides.pop(get_active_context_store, None)

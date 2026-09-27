@@ -181,16 +181,5 @@ class SourceLibraryService:
         return SourceFetchRequest(url=source.original_url, title=source.title, publisher=source.publisher)
 
     def _replace_metadata(self, user_key: str, source: SavedSource) -> SavedSource:
-        """Rewrite metadata while preserving the retained immutable local source copy."""
-        user_root = (self._store.root_dir / self._store.user_key_digest(user_key)).resolve()
-        raw_path = (user_root / source.raw_content_path).resolve()
-        text_path = (user_root / source.normalized_text_path).resolve()
-        if not raw_path.is_relative_to(user_root) or not text_path.is_relative_to(user_root):
-            raise ValueError("Source-library path escapes user storage.")
-        return self._store.save(
-            user_key,
-            source,
-            raw_path.read_bytes(),
-            text_path.read_text(encoding="utf-8"),
-            self._store._read_chunks(user_key, source),  # noqa: SLF001 - store owns source chunk format
-        )
+        """Update trust metadata without rewriting the retained source copy."""
+        return self._store.update_metadata(user_key, source)

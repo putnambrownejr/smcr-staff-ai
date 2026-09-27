@@ -76,6 +76,34 @@ class SourceLibraryStore:
         sources = [source for path in metadata_dir.glob("*.json") if (source := self._read_source(path)) is not None]
         return sorted(sources, key=lambda source: source.retrieved_at, reverse=True)
 
+    def update_metadata(self, user_key: str, source: SavedSource) -> SavedSource:
+        """Atomically update metadata for an existing source without touching its content files."""
+        self._validate_user_key(user_key)
+        self._validate_source_id(source.source_id)
+        digest = self.user_key_digest(user_key)
+        if source.user_key_digest != digest:
+            raise ValueError("Source does not belong to this user.")
+
+        user_dir = self._user_dir(user_key)
+        paths = self._paths(user_dir, source.source_id)
+        existing = self._read_source(paths["metadata"])
+        if existing is None or existing.user_key_digest != digest:
+            raise ValueError("Source does not exist for this user.")
+        if not all(paths[name].is_file() for name in ("raw", "text", "chunks")):
+            raise ValueError("Source content files are missing.")
+
+        saved = source.model_copy(
+            update={
+                "user_key_digest": digest,
+                "raw_content_path": existing.raw_content_path,
+                "normalized_text_path": existing.normalized_text_path,
+                "chunks_path": existing.chunks_path,
+                "chunk_count": existing.chunk_count,
+            }
+        )
+        atomic_write_text(paths["metadata"], saved.model_dump_json(indent=2))
+        return saved
+
     def get(self, user_key: str, source_id: str) -> SavedSource | None:
         if not self._valid_user_key(user_key) or not self._valid_source_id(source_id):
             return None

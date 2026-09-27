@@ -1,9 +1,12 @@
 import logging
 import mimetypes
 from pathlib import Path
+from urllib.parse import urlsplit
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.routes import (
     actions,
@@ -82,6 +85,25 @@ def create_app() -> FastAPI:
             "Outputs are advisory drafts requiring human review."
         ),
     )
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["localhost", "127.0.0.1", "[::1]", "testserver"],
+    )
+
+    @app.middleware("http")
+    async def reject_cross_origin_writes(request: Request, call_next):  # type: ignore[no-untyped-def]
+        if request.method not in {"GET", "HEAD", "OPTIONS"}:
+            origin = request.headers.get("origin")
+            parsed = urlsplit(origin) if origin else None
+            same_origin = bool(
+                parsed
+                and parsed.scheme == request.url.scheme
+                and parsed.netloc.lower() == request.headers.get("host", "").lower()
+            )
+            if (origin and not same_origin) or request.headers.get("sec-fetch-site") == "cross-site":
+                return PlainTextResponse("Cross-origin write request rejected.", status_code=403)
+        return await call_next(request)
+
     app.include_router(health.router)
     app.include_router(history.router)
     app.include_router(actions.router)

@@ -58,7 +58,7 @@ def test_mcp_legacy_protocol_initialize_list_and_call(public_url: str) -> None:
 
 def test_official_mcp_client_over_http(public_url: str) -> None:
     pytest.importorskip("mcp")
-    from mcp import Client
+    from mcp import Client  # type: ignore[attr-defined]  # Runtime export lacks a package type declaration.
 
     async def exercise() -> None:
         async with Client(public_url + "/mcp", read_timeout_seconds=10) as client:

@@ -16,6 +16,17 @@ Saved automations hold standing instructions and build packets; they do not sche
 
 ## Preserve your work
 
+### Windows shortcut workspace recovery
+
+Older desktop shortcuts opened `http://127.0.0.1:8000`, while the Quickstart
+uses `http://localhost:8000`. These browser origins can show different
+workspace profiles even though both addresses use the same underlying stored
+files. To recover the profile from the older shortcut, open
+`http://127.0.0.1:8000/dashboard/workspace-recovery`, copy the displayed
+workspace ID, then open `http://localhost:8000/dashboard/workspace-recovery`,
+paste the ID, and submit. The recovery page then opens the dashboard. This is
+an explicit recovery step; data is not automatically migrated between origins.
+
 Stop the dashboard before backing up or restoring. Preserve both the local state and project files, plus any custom module packs:
 
 - Windows default state: `%LOCALAPPDATA%\smcr-staff-ai`.

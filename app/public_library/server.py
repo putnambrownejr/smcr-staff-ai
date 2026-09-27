@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from mcp.server import MCPServer
+from mcp.server import MCPServer  # type: ignore[attr-defined]  # Runtime export lacks a package type declaration.
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
@@ -25,7 +25,7 @@ def create_mcp_server(catalog: PublicCatalog) -> MCPServer:
         readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False,
     )
 
-    @server.tool(annotations=annotations)
+    @server.tool(annotations=annotations)  # type: ignore[untyped-decorator]
     def smcr_search_library(
         query: Annotated[str, Field(max_length=200, description="Keywords such as AAR, planning, or correspondence.")] = "",
         category: Category | None = None,
@@ -35,7 +35,7 @@ def create_mcp_server(catalog: PublicCatalog) -> MCPServer:
         """Find public references, draft templates, and prompt packs. Returns IDs and source links, not live policy."""
         return catalog.search(query, category, limit, offset)
 
-    @server.tool(annotations=annotations)
+    @server.tool(annotations=annotations)  # type: ignore[untyped-decorator]
     def smcr_get_library_item(
         item_id: Annotated[str, Field(min_length=2, max_length=80, description="Exact ID returned by smcr_search_library.")],
     ) -> LibraryItem:
